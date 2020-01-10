@@ -1,0 +1,479 @@
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2020 Databases and Information Systems Research Group, University of Basel, Switzerland
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ */
+
+package org.polypheny.simpleclient.scenario.gavel;
+
+
+import com.google.common.base.Joiner;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.sql.SQLException;
+import java.text.DecimalFormat;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.OptionalDouble;
+import java.util.Properties;
+import java.util.Vector;
+import java.util.concurrent.ConcurrentHashMap;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.polypheny.simpleclient.cli.ChronosCommand;
+import org.polypheny.simpleclient.executor.Executor;
+import org.polypheny.simpleclient.executor.PolyphenyDbExecutor;
+import org.polypheny.simpleclient.main.CsvWriter;
+import org.polypheny.simpleclient.main.ProgressReporter;
+import org.polypheny.simpleclient.main.QueryBuilder;
+import org.polypheny.simpleclient.main.QueryListEntry;
+import org.polypheny.simpleclient.scenario.Scenario;
+import org.polypheny.simpleclient.scenario.gavel.queryBuilder.ChangePasswordOfRandomUser;
+import org.polypheny.simpleclient.scenario.gavel.queryBuilder.ChangeRandomAuction;
+import org.polypheny.simpleclient.scenario.gavel.queryBuilder.CountAuction;
+import org.polypheny.simpleclient.scenario.gavel.queryBuilder.CountBid;
+import org.polypheny.simpleclient.scenario.gavel.queryBuilder.CountCategory;
+import org.polypheny.simpleclient.scenario.gavel.queryBuilder.CountUser;
+import org.polypheny.simpleclient.scenario.gavel.queryBuilder.DeleteAuctionsWithIdLargerThan;
+import org.polypheny.simpleclient.scenario.gavel.queryBuilder.DeleteBidsWithIdLargerThan;
+import org.polypheny.simpleclient.scenario.gavel.queryBuilder.DeleteCategoriesWithIdLargerThan;
+import org.polypheny.simpleclient.scenario.gavel.queryBuilder.DeleteUsersWithIdLargerThan;
+import org.polypheny.simpleclient.scenario.gavel.queryBuilder.InsertRandomAuction;
+import org.polypheny.simpleclient.scenario.gavel.queryBuilder.InsertRandomBid;
+import org.polypheny.simpleclient.scenario.gavel.queryBuilder.InsertUser;
+import org.polypheny.simpleclient.scenario.gavel.queryBuilder.SearchAuction;
+import org.polypheny.simpleclient.scenario.gavel.queryBuilder.SelectAllBidsOnRandomAuction;
+import org.polypheny.simpleclient.scenario.gavel.queryBuilder.SelectHighestBidOnRandomAuction;
+import org.polypheny.simpleclient.scenario.gavel.queryBuilder.SelectRandomAuction;
+import org.polypheny.simpleclient.scenario.gavel.queryBuilder.SelectRandomBid;
+import org.polypheny.simpleclient.scenario.gavel.queryBuilder.SelectRandomUser;
+import org.polypheny.simpleclient.scenario.gavel.queryBuilder.SelectTheHundredNextEndingAuctionsOfRandomCategory;
+import org.polypheny.simpleclient.scenario.gavel.queryBuilder.SelectTopTenCitiesByNumberOfCustomers;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+
+public class Gavel extends Scenario {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger( Gavel.class );
+
+    private final Config config;
+
+    private final Map<String, List<Long>> executionTimes;
+    private final Map<String, List<Long>> totalTimes;
+    private final List<Long> polyphenyDbTotalTimes;
+    private final List<Long> polyphenyDbTimes;
+    private final List<Long> measuredTimes;
+
+    private final Map<Integer, String> queryTypes;
+    private final Map<Integer, List<Long>> measuredTimePerQueryType;
+
+
+    public Gavel( String polyphenyDbUrl, Config config ) {
+        super( polyphenyDbUrl );
+        this.config = config;
+        executionTimes = new ConcurrentHashMap<>();
+        totalTimes = new ConcurrentHashMap<>();
+        polyphenyDbTotalTimes = Collections.synchronizedList( new LinkedList<>() );
+        polyphenyDbTimes = Collections.synchronizedList( new LinkedList<>() );
+        measuredTimes = Collections.synchronizedList( new LinkedList<>() );
+
+        queryTypes = new HashMap<>();
+        measuredTimePerQueryType = new ConcurrentHashMap<>();
+    }
+
+
+    @Override
+    public long execute( ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory, Executor executor, boolean warmUp ) throws SQLException {
+        LOGGER.info( "Analyzing currently stored data..." );
+        final int numberOfAuctions = (int) countNumberOfRecords( executor, new CountAuction() );
+        final int numberOfUsers = (int) countNumberOfRecords( executor, new CountUser() );
+        final int numberOfCategories = (int) countNumberOfRecords( executor, new CountCategory() );
+        final int numberOfBids = (int) countNumberOfRecords( executor, new CountBid() );
+        LOGGER.info( "Current number of elements in the database:\nAuctions: " + numberOfAuctions + " | Users: " + numberOfUsers + " | Categories: " + numberOfCategories + " | Bids: " + numberOfBids );
+
+        InsertRandomAuction.setNextId( numberOfAuctions + 1 );
+        InsertRandomBid.setNextId( numberOfBids + 1 );
+
+        LOGGER.info( "Preparing query list for the benchmark..." );
+        List<QueryListEntry> queryList = new Vector<>();
+        addNumberOfTimes( queryList, new InsertUser(), config.numberOfAddUserQueries );
+        addNumberOfTimes( queryList, new ChangePasswordOfRandomUser( numberOfUsers ), config.numberOfChangePasswordQueries );
+        addNumberOfTimes( queryList, new InsertRandomAuction( numberOfUsers, numberOfCategories, config ), config.numberOfAddAuctionQueries );
+        addNumberOfTimes( queryList, new InsertRandomBid( numberOfAuctions, numberOfUsers ), config.numberOfAddBidQueries );
+        addNumberOfTimes( queryList, new ChangeRandomAuction( numberOfAuctions, config ), config.numberOfChangeAuctionQueries );
+        addNumberOfTimes( queryList, new SelectRandomAuction( numberOfAuctions ), config.numberOfGetAuctionQueries );
+        addNumberOfTimes( queryList, new SelectTheHundredNextEndingAuctionsOfRandomCategory( numberOfCategories, config ), config.numberOfGetTheNextHundredEndingAuctionsOfACategoryQueries );
+        addNumberOfTimes( queryList, new SearchAuction(), config.numberOfSearchAuctionQueries );
+        addNumberOfTimes( queryList, new CountAuction(), config.numberOfCountAuctionsQueries );
+        addNumberOfTimes( queryList, new SelectTopTenCitiesByNumberOfCustomers(), config.numberOfTopTenCitiesByNumberOfCustomersQueries );
+        addNumberOfTimes( queryList, new CountBid(), config.numberOfCountBidsQueries );
+        addNumberOfTimes( queryList, new SelectRandomBid( numberOfBids ), config.numberOfGetBidQueries );
+        addNumberOfTimes( queryList, new SelectRandomUser( numberOfUsers ), config.numberOfGetUserQueries );
+        addNumberOfTimes( queryList, new SelectAllBidsOnRandomAuction( numberOfAuctions ), config.numberOfGetAllBidsOnAuctionQueries );
+        addNumberOfTimes( queryList, new SelectHighestBidOnRandomAuction( numberOfAuctions ), config.numberOfGetCurrentlyHighestBidOnAuctionQueries );
+        Collections.shuffle( queryList );
+
+        if ( outputDirectory != null ) {
+            LOGGER.info( "Dump query list..." );
+            try {
+                FileWriter fw = new FileWriter( outputDirectory.getPath() + File.separator + "queryList" );
+                queryList.forEach( query -> {
+                    try {
+                        fw.append( query.query.sqlQuery ).append( "\n" );
+                    } catch ( IOException e ) {
+                        e.printStackTrace();
+                    }
+                } );
+                fw.close();
+            } catch ( IOException e ) {
+                e.printStackTrace();
+            }
+        }
+
+        if ( warmUp ) {
+            LOGGER.info( "Warm-up..." );
+            if ( config.numberOfAddUserQueries > 0 ) {
+                executor.executeStatement( new InsertUser().getNewQuery() );
+            }
+            if ( config.numberOfChangePasswordQueries > 0 ) {
+                executor.executeStatement( new ChangePasswordOfRandomUser( numberOfUsers ).getNewQuery() );
+            }
+            if ( config.numberOfAddAuctionQueries > 0 ) {
+                executor.executeStatement( new InsertRandomAuction( numberOfUsers, numberOfCategories, config ).getNewQuery() );
+            }
+            if ( config.numberOfAddBidQueries > 0 ) {
+                executor.executeStatement( new InsertRandomBid( numberOfAuctions, numberOfUsers ).getNewQuery() );
+            }
+            if ( config.numberOfChangeAuctionQueries > 0 ) {
+                executor.executeStatement( new ChangeRandomAuction( numberOfAuctions, config ).getNewQuery() );
+            }
+            if ( config.numberOfGetAuctionQueries > 0 ) {
+                executor.executeQuery( new SelectRandomAuction( numberOfAuctions ).getNewQuery() );
+            }
+            if ( config.numberOfGetTheNextHundredEndingAuctionsOfACategoryQueries > 0 ) {
+                executor.executeQuery( new SelectTheHundredNextEndingAuctionsOfRandomCategory( numberOfCategories, config ).getNewQuery() );
+            }
+            if ( config.numberOfSearchAuctionQueries > 0 ) {
+                executor.executeQuery( new SearchAuction().getNewQuery() );
+            }
+            if ( config.numberOfCountAuctionsQueries > 0 ) {
+                executor.executeQuery( new CountAuction().getNewQuery() );
+            }
+            if ( config.numberOfTopTenCitiesByNumberOfCustomersQueries > 0 ) {
+                executor.executeQuery( new SelectTopTenCitiesByNumberOfCustomers().getNewQuery() );
+            }
+            if ( config.numberOfCountBidsQueries > 0 ) {
+                executor.executeQuery( new CountBid().getNewQuery() );
+            }
+            if ( config.numberOfGetBidQueries > 0 ) {
+                executor.executeQuery( new SelectRandomBid( numberOfBids ).getNewQuery() );
+            }
+            if ( config.numberOfGetUserQueries > 0 ) {
+                executor.executeQuery( new SelectRandomUser( numberOfUsers ).getNewQuery() );
+            }
+            if ( config.numberOfGetAllBidsOnAuctionQueries > 0 ) {
+                executor.executeQuery( new SelectAllBidsOnRandomAuction( numberOfAuctions ).getNewQuery() );
+            }
+            if ( config.numberOfGetCurrentlyHighestBidOnAuctionQueries > 0 ) {
+                executor.executeQuery( new SelectHighestBidOnRandomAuction( numberOfAuctions ).getNewQuery() );
+            }
+            try {
+                executor.executeCommit();
+                Thread.sleep( 5000 );
+            } catch ( InterruptedException e ) {
+                e.printStackTrace();
+            }
+        }
+
+        LOGGER.info( "Executing benchmark..." );
+        (new Thread( new ProgressReporter.ReportQueryListProgress( queryList, progressReporter ) )).start();
+        long startTime = System.nanoTime();
+
+        ArrayList<Thread> threads = new ArrayList<>();
+        for ( int i = 0; i < config.numberOfThreads; i++ ) {
+            //TODO
+            threads.add( new Thread( new EvaluationThread( queryList, csvWriter, new PolyphenyDbExecutor( polyphenyDbUrl, config ) ) ) );
+        }
+
+        for ( Thread thread : threads ) {
+            thread.start();
+        }
+
+        for ( Thread thread : threads ) {
+            try {
+                thread.join();
+            } catch ( InterruptedException e ) {
+                LOGGER.info( "Caught exception after thread.join()", e );
+            }
+        }
+
+        long runTime = System.nanoTime() - startTime;
+        LOGGER.error( "run time: " + (runTime / 1000000000) + " s" );
+
+        LOGGER.info( "Delete inserted rows" );
+        // !!!!!!!!!!!!!! Potential Bug !!!!!!!!!!!!!!!!
+        // Using hardcoded id's is not nice! But using the number of entries retrieved before can cause problems if the client is killed.
+        executor.executeStatement( new DeleteBidsWithIdLargerThan( 62270000 ).getNewQuery() );
+        executor.executeStatement( new DeleteUsersWithIdLargerThan( 1200000 ).getNewQuery() );
+        executor.executeStatement( new DeleteAuctionsWithIdLargerThan( 546000 ).getNewQuery() );
+        executor.executeStatement( new DeleteCategoriesWithIdLargerThan( 35 ).getNewQuery() );
+        executor.executeCommit();
+        InsertRandomAuction.setNextId( 750000 + 1 );
+        InsertRandomBid.setNextId( 71250000 + 1 );
+        return runTime;
+    }
+
+
+    private class EvaluationThread implements Runnable {
+
+        private final Executor executor;
+
+        private final List<QueryListEntry> theQueryList;
+
+        private final JSONParser parser;
+        private final CsvWriter csvWriter;
+
+
+        EvaluationThread( List<QueryListEntry> queryList, CsvWriter csvWriter, Executor executor ) {
+            this.csvWriter = csvWriter;
+            parser = new JSONParser();
+            this.executor = executor;
+            theQueryList = queryList;
+        }
+
+
+        public void run() {
+            long measuredTimeStart;
+            long measuredTime;
+            QueryListEntry queryListEntry;
+
+            while ( !theQueryList.isEmpty() ) {
+                measuredTimeStart = System.nanoTime();
+                queryListEntry = theQueryList.remove( 0 );
+                long time;
+                try {
+                    if ( queryListEntry.query.expectResultSet ) {
+                        time = executor.executeQuery( queryListEntry.query );
+                    } else {
+                        time = executor.executeStatement( queryListEntry.query );
+                    }
+                } catch ( SQLException e ) {
+                    throw new RuntimeException( e );
+                }
+                measuredTime = System.nanoTime() - measuredTimeStart;
+                //csvWriter.appendToCsv( "", measuredTime );
+                measuredTimes.add( measuredTime );
+                measuredTimePerQueryType.get( queryListEntry.templateId ).add( measuredTime );
+                if ( ChronosCommand.commit ) {
+                    try {
+                        executor.executeCommit();
+                    } catch ( SQLException e ) {
+                        throw new RuntimeException( e );
+                    }
+                }
+            }
+
+            try {
+                executor.executeCommit();
+            } catch ( SQLException e ) {
+                throw new RuntimeException( e );
+            }
+        }
+
+
+        private void parse( String data ) {
+            try {
+                long maxExecutionTime = 0;
+                JSONObject jsonObject = (JSONObject) parser.parse( data );
+                JSONArray jsonResults = (JSONArray) jsonObject.get( "results" );
+                for ( Object object : jsonResults ) {
+                    JSONObject result = (JSONObject) object;
+                    String dataStore = (String) result.get( "dataStore" );
+                    if ( !executionTimes.containsKey( dataStore ) ) {
+                        executionTimes.put( dataStore, new LinkedList<>() );
+                    }
+                    long e = (Long) result.get( "executionTime" );
+                    executionTimes.get( dataStore ).add( e );
+                    if ( !totalTimes.containsKey( dataStore ) ) {
+                        totalTimes.put( dataStore, new LinkedList<>() );
+                    }
+                    long et = (Long) result.get( "totalTime" );
+                    totalTimes.get( dataStore ).add( et );
+                    if ( e > maxExecutionTime ) {
+                        maxExecutionTime = e;
+                    }
+                }
+                long totalTime = (Long) jsonObject.get( "totalTime" );
+                polyphenyDbTotalTimes.add( totalTime );
+                polyphenyDbTimes.add( totalTime - maxExecutionTime );
+            } catch ( org.json.simple.parser.ParseException e ) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+
+
+    private long countNumberOfRecords( Executor executor, QueryBuilder queryBuilder ) throws SQLException {
+        return executor.executeQueryAndGetNumber( queryBuilder.getNewQuery() );
+    }
+
+
+    @Override
+    public void buildDatabase( ProgressReporter progressReporter ) throws SQLException {
+        LOGGER.info( "Generating Data..." );
+
+        DataGenerator dataGenerator = new DataGenerator( new PolyphenyDbExecutor( polyphenyDbUrl, config ), config, progressReporter );
+        dataGenerator.truncateTables();
+        dataGenerator.generateCategories();
+
+        ArrayList<Thread> threads = new ArrayList<>();
+
+        for ( int i = 0; i < config.numberOfUserGenerationThreads; i++ ) {
+            Runnable task = () -> {
+                try {
+                    new DataGenerator( new PolyphenyDbExecutor( polyphenyDbUrl, config ), config, progressReporter ).generateUsers( config.numberOfUsers / config.numberOfUserGenerationThreads );
+                } catch ( SQLException e ) {
+                    e.printStackTrace();
+                }
+            };
+            Thread thread = new Thread( task );
+            threads.add( thread );
+            thread.start();
+        }
+
+        if ( !config.parallelizeUserGenerationAndAuctionGeneration ) {
+            for ( Thread t : threads ) {
+                try {
+                    t.join();
+                } catch ( InterruptedException e ) {
+                    LOGGER.warn( "Caught exception after thread.join()", e );
+                }
+            }
+        }
+
+        int rangeSize = config.numberOfAuctions / config.numberOfAuctionGenerationThreads;
+        for ( int i = 1; i <= config.numberOfAuctionGenerationThreads; i++ ) {
+            final int start = ((i - 1) * rangeSize) + 1;
+            final int end = rangeSize * i;
+            Runnable task = () -> {
+                try {
+                    new DataGenerator( new PolyphenyDbExecutor( polyphenyDbUrl, config ), config, progressReporter ).generateAuctions( start, end );
+                } catch ( SQLException e ) {
+                    e.printStackTrace();
+                }
+            };
+            Thread thread = new Thread( task );
+            threads.add( thread );
+            thread.start();
+        }
+
+        for ( Thread t : threads ) {
+            try {
+                t.join();
+            } catch ( InterruptedException e ) {
+                LOGGER.warn( "Caught exception after thread.join()", e );
+            }
+        }
+    }
+
+
+    public void analyze( Properties properties ) {
+
+        executionTimes.forEach( ( dataStore, times ) -> {
+            properties.put( "executionTime." + dataStore, calculateMean( times ) );
+            properties.put( "number." + dataStore, times.size() );
+        } );
+
+        totalTimes.forEach( ( dataStore, times ) -> properties.put( "totalTime." + dataStore, calculateMean( times ) ) );
+
+        properties.put( "totalTime", calculateMean( polyphenyDbTotalTimes ) );
+        properties.put( "polyphenyDBTime", calculateMean( polyphenyDbTimes ) );
+    }
+
+
+    public void analyzeMeasuredTime( Properties properties ) {
+        properties.put( "measuredTime", calculateMean( measuredTimes ) );
+
+        measuredTimePerQueryType.forEach( ( templateId, time ) -> {
+            properties.put( "queryTypes_" + templateId + "_mean", calculateMean( time ) );
+            properties.put( "queryTypes_" + templateId + "_all", Joiner.on( ',' ).join( time ) );
+            properties.put( "queryTypes_" + templateId + "_example", queryTypes.get( templateId ) );
+        } );
+        properties.put( "queryTypes_maxId", queryTypes.size() );
+    }
+
+
+    private double calculateMean( List<Long> times ) {
+        DecimalFormat df = new DecimalFormat( "0.000" );
+        OptionalDouble meanOptional = times.stream().mapToLong( Long::longValue ).average();
+        if ( meanOptional.isPresent() ) {
+            // scale
+            double mean = meanOptional.getAsDouble() / 1000000;
+            String roundFormat = df.format( mean );
+            try {
+                return df.parse( roundFormat ).doubleValue();
+            } catch ( ParseException e ) {
+                e.printStackTrace();
+            }
+        }
+        return -1;
+    }
+
+
+    public String getTimesAsString( Properties properties ) {
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append( "\n\nData Store\t\t Execution Time\t\t Total Times\t\t # of Queries\n" );
+        for ( Map.Entry<?, ?> entry : properties.entrySet() ) {
+            String key = (String) entry.getKey();
+            if ( key.startsWith( "executionTime" ) ) {
+                String dataStore = key.replace( "executionTime.", "" );
+                stringBuilder.append( dataStore ).append( "\t\t" )
+                        .append( entry.getValue() ).append( " ms" ).append( "\t\t\t" )
+                        .append( properties.get( "totalTime." + dataStore ) ).append( " ms\t\t\t" )
+                        .append( properties.get( "number." + dataStore ) ).append( "\n" );
+            }
+        }
+        stringBuilder.append( "\n\n" );
+        stringBuilder.append( "Total Time:     " ).append( properties.get( "totalTime" ) ).append( " ms\n" );
+        stringBuilder.append( "Polypheny Stack:   " ).append( properties.get( "polyphenyDBTime" ) ).append( " ms\n" );
+        return stringBuilder.toString();
+    }
+
+
+    private void addNumberOfTimes( List<QueryListEntry> list, QueryBuilder queryBuilder, int numberOfTimes ) {
+        int id = queryTypes.size() + 1;
+        queryTypes.put( id, queryBuilder.getNewQuery().sqlQuery );
+        measuredTimePerQueryType.put( id, new LinkedList<>() );
+        for ( int i = 0; i < numberOfTimes; i++ ) {
+            list.add( new QueryListEntry( queryBuilder.getNewQuery(), id ) );
+        }
+    }
+}

@@ -1,0 +1,183 @@
+
+group "org.polypheny"
+description = "A lightweight Polyphony-DB client"
+
+def versionMajor = 1
+def versionMinor = 0
+def versionQualifier = "SNAPSHOT"
+version = versionMajor + "." + versionMinor + "-" + versionQualifier
+
+
+buildscript {
+    repositories {
+        mavenCentral()
+        jcenter()
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+    dependencies {
+        // Shadowing; used to make a fat jar (https://github.com/johnrengelman/shadow)
+        classpath group: "com.github.jengelman.gradle.plugins", name: "shadow", version: "5.0.0"
+        // Lombok (https://plugins.gradle.org/plugin/io.freefair.lombok)
+        classpath group: "io.freefair.gradle", name: "lombok-plugin", version: "3.6.6"
+    }
+}
+
+
+repositories {
+    mavenCentral()
+    maven {
+        // DBIS Nexus
+        url "https://dbis-nexus.dmi.unibas.ch/repository/maven2/"
+    }
+    maven {
+        url "https://clojars.org/repo/"
+    }
+    flatDir {
+        dirs "libs"
+    }
+    jcenter()
+}
+
+apply plugin: "java"
+apply plugin: "maven"
+apply plugin: "idea"
+apply plugin: "io.freefair.lombok"
+apply plugin: "com.github.johnrengelman.shadow"
+
+
+tasks.withType(JavaCompile) {
+    options.encoding = "UTF-8"
+}
+
+
+configurations.all {
+    // check for updates every build
+    resolutionStrategy.cacheChangingModulesFor 0, "seconds"
+}
+
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+
+dependencies {
+    compile group: 'commons-lang', name: 'commons-lang', version: '2.6'
+
+    compile group: 'ch.unibas.dmi.dbis.chronos', name: 'chronos-agent', version: '2.2.1'
+
+    //Drivers
+    compile group: 'org.polypheny', name: 'polypheny-jdbc-driver', version: '1.0-SNAPSHOT'
+    // https://mvnrepository.com/artifact/org.postgresql/postgresql
+    compile group: 'org.postgresql', name: 'postgresql', version: '42.2.1'
+
+    // https://mvnrepository.com/artifact/com.github.rvesse/airline
+    compile group: 'com.github.rvesse', name: 'airline', version: '2.7.0'
+    // https://mvnrepository.com/artifact/io.codearte.jfairy/jfairy
+    compile group: 'io.codearte.jfairy', name: 'jfairy', version: '0.5.3'
+    //csv
+    compile group: 'net.sf.opencsv', name: 'opencsv', version: '2.3'
+    // https://mvnrepository.com/artifact/com.googlecode.json-simple/json-simple
+    compile group: 'com.googlecode.json-simple', name: 'json-simple', version: '1.1.1'
+
+    // https://mvnrepository.com/artifact/com.mchange/c3p0
+    compile group: 'com.mchange', name: 'c3p0', version: '0.9.5.2'
+
+
+    ////// LOGGING
+    compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.22' // License: MIT
+    compile group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.7' // License: Apache 2.0
+    compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.7' // License: Apache 2.0
+
+
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+}
+
+
+def generatedDirName = "${project.buildDir}/generated"
+
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ["src/main/java"]
+            outputDir = file(project.buildDir.absolutePath + "/classes")
+        }
+        resources {
+            srcDirs = ["src/main/resources"]
+        }
+        output.resourcesDir = file(project.buildDir.absolutePath + "/classes")
+    }
+    test {
+        java {
+            srcDirs = ["src/test/java"]
+            outputDir = file(project.buildDir.absolutePath + "/test-classes")
+        }
+        resources {
+            srcDirs = ["src/test/resources"]
+        }
+        output.resourcesDir = file(project.buildDir.absolutePath + "/test-classes")
+    }
+}
+
+
+
+javadoc {
+    if(JavaVersion.current().isJava9Compatible()) {
+        options.addBooleanOption("html5", true)
+    }
+    // suppress most of the warnings
+    options.addStringOption("Xdoclint:none", "-quiet")
+    // Include private fields in JavaDoc
+    options.memberLevel = JavadocMemberLevel.PRIVATE
+
+    options.setOutputLevel(JavadocOutputLevel.QUIET)
+    options.quiet()
+}
+
+
+/**
+ * JARs
+ */
+jar {
+    manifest {
+        attributes "Manifest-Version": "1.0"
+        attributes "Copyright": "Databases and Information Systems Group, Department Mathematics and Computer Science, University of Basel, Switzerland"
+        attributes "Version": "$version"
+        attributes 'Main-Class': 'org.polypheny.simpleclient.cli.Main'
+    }
+}
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier "sources"
+    from sourceSets.main.allSource
+}
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier "javadoc"
+    from javadoc.destinationDir
+}
+shadowJar {
+    classifier = ''
+}
+assemble.dependsOn shadowJar
+artifacts {
+    //archives jar // regular jar containing only the compiled source
+    archives shadowJar // fat jar which additionally contains all dependencies
+    archives sourcesJar // jar file containing the java doc files
+    archives javadocJar // jar file containing the source files
+}
+
+
+/**
+ * IntelliJ
+ */
+idea {
+    module {
+        downloadJavadoc = true
+        downloadSources = true
+
+        inheritOutputDirs = false
+        outputDir = file("${project.buildDir}/classes")
+        testOutputDir = file("${project.buildDir}/test-classes")
+    }
+}

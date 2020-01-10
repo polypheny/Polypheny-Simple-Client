@@ -1,0 +1,31 @@
+# Icarus Client Config
+
+numberOfRequests = 10000
+numberOfThreads = 4
+
+numberOfCategories = 35
+numberOfUsers = 1000
+numberOfAuctions = 1000
+
+auctionTitleMinLength=2
+auctionTitleMaxLength=8
+
+auctionDescriptionMinLength=5
+auctionDescriptionMaxLength=15
+
+auctionDateMaxYearsInPast=4
+auctionNumberOfDays = 10
+
+minNumberOfBidsPerAuction = 30
+maxNumberOfBidsPerAuction = 200
+
+minNumberOfPicturesPerAuction=1
+maxNumberOfPicturesPerAuction=6
+
+maxBatchSize = 100
+
+numberOfUserGenerationThreads = 2
+numberOfAuctionGenerationThreads = 2
+parallelizeUserGenerationAndAuctionGeneration = true
+
+progressReportBase = 100
