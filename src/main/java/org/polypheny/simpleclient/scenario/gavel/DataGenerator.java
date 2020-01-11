@@ -33,6 +33,7 @@ import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
+import lombok.extern.slf4j.Slf4j;
 import org.joda.time.DateTime;
 import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.main.ProgressReporter;
@@ -48,12 +49,10 @@ import org.polypheny.simpleclient.scenario.gavel.queryBuilder.TruncateBid;
 import org.polypheny.simpleclient.scenario.gavel.queryBuilder.TruncateCategory;
 import org.polypheny.simpleclient.scenario.gavel.queryBuilder.TruncatePicture;
 import org.polypheny.simpleclient.scenario.gavel.queryBuilder.TruncateUser;
-import org.slf4j.LoggerFactory;
 
 
+@Slf4j
 class DataGenerator {
-
-    private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger( DataGenerator.class );
 
     private final Executor theExecutor;
     private final Config config;
@@ -71,7 +70,7 @@ class DataGenerator {
 
 
     void truncateTables() throws SQLException {
-        LOGGER.info( "Truncate Tables" );
+        log.info( "Truncate Tables" );
         theExecutor.executeStatement( (new TruncateCategory()).getNewQuery() );
         theExecutor.executeStatement( (new TruncateUser()).getNewQuery() );
         theExecutor.executeStatement( (new TruncateAuction()).getNewQuery() );

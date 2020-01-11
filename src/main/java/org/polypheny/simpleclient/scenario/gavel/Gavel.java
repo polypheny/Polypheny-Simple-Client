@@ -27,9 +27,11 @@ package org.polypheny.simpleclient.scenario.gavel;
 
 
 import com.google.common.base.Joiner;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.text.ParseException;
@@ -43,6 +45,7 @@ import java.util.OptionalDouble;
 import java.util.Properties;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -52,6 +55,7 @@ import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.executor.PolyphenyDbExecutor;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.main.ProgressReporter;
+import org.polypheny.simpleclient.main.Query;
 import org.polypheny.simpleclient.main.QueryBuilder;
 import org.polypheny.simpleclient.main.QueryListEntry;
 import org.polypheny.simpleclient.scenario.Scenario;
@@ -61,10 +65,6 @@ import org.polypheny.simpleclient.scenario.gavel.queryBuilder.CountAuction;
 import org.polypheny.simpleclient.scenario.gavel.queryBuilder.CountBid;
 import org.polypheny.simpleclient.scenario.gavel.queryBuilder.CountCategory;
 import org.polypheny.simpleclient.scenario.gavel.queryBuilder.CountUser;
-import org.polypheny.simpleclient.scenario.gavel.queryBuilder.DeleteAuctionsWithIdLargerThan;
-import org.polypheny.simpleclient.scenario.gavel.queryBuilder.DeleteBidsWithIdLargerThan;
-import org.polypheny.simpleclient.scenario.gavel.queryBuilder.DeleteCategoriesWithIdLargerThan;
-import org.polypheny.simpleclient.scenario.gavel.queryBuilder.DeleteUsersWithIdLargerThan;
 import org.polypheny.simpleclient.scenario.gavel.queryBuilder.InsertRandomAuction;
 import org.polypheny.simpleclient.scenario.gavel.queryBuilder.InsertRandomBid;
 import org.polypheny.simpleclient.scenario.gavel.queryBuilder.InsertUser;
@@ -233,7 +233,7 @@ public class Gavel extends Scenario {
         }
 
         long runTime = System.nanoTime() - startTime;
-        log.error( "run time: {} s", runTime / 1000000000 );
+        log.info( "run time: {} s", runTime / 1000000000 );
 
         log.info( "Delete inserted rows" );
         // !!!!!!!!!!!!!! Potential Bug !!!!!!!!!!!!!!!!
@@ -400,6 +400,24 @@ public class Gavel extends Scenario {
                 log.warn( "Caught exception after thread.join()", e );
             }
         }
+    }
+
+
+    public void createSchema() throws SQLException {
+        log.info( "Creating schema..." );
+        PolyphenyDbExecutor executor = new PolyphenyDbExecutor( polyphenyDbUrl, config );
+
+        InputStreamReader in = new InputStreamReader( ClassLoader.getSystemResourceAsStream( "gavel/schema.sql" ) );
+        try ( Stream<String> stream = new BufferedReader( in ).lines() ) {
+            stream.forEach( s -> {
+                try {
+                    executor.executeStatement( new Query( s, false ) );
+                } catch ( SQLException e ) {
+                    log.error( "Exception", e );
+                }
+            } );
+        }
+        executor.executeCommit();
     }
 
 

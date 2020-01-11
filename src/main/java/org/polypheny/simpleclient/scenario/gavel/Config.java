@@ -80,28 +80,26 @@ public class Config {
 
     public Config( Properties properties ) {
         resultMode = "DEBUG";
-
-        warmupResultMode = getStringProperty( properties, "warmupResultMode" );
-
+        warmupResultMode = "DEBUG";
+        store = "polypheny";
+        progressReportBase = getIntProperty( properties, "progressReportBase" );
         numberOfThreads = getIntProperty( properties, "numberOfThreads" );
 
-        store = "polypheny";
-
-        numberOfAddUserQueries = 0;
-        numberOfChangePasswordQueries = 0;
-        numberOfAddAuctionQueries = 0;
-        numberOfAddBidQueries = 0;
-        numberOfChangeAuctionQueries = 0;
-        numberOfGetAuctionQueries = 0;
-        numberOfGetTheNextHundredEndingAuctionsOfACategoryQueries = 0;
-        numberOfSearchAuctionQueries = 0;
-        numberOfCountAuctionsQueries = 0;
-        numberOfTopTenCitiesByNumberOfCustomersQueries = 0;
-        numberOfCountBidsQueries = 0;
-        numberOfGetBidQueries = 0;
-        numberOfGetUserQueries = 0;
-        numberOfGetAllBidsOnAuctionQueries = 0;
-        numberOfGetCurrentlyHighestBidOnAuctionQueries = 0;
+        numberOfAddUserQueries = getIntProperty( properties, "numberOfAddUserQueries" );
+        numberOfChangePasswordQueries = getIntProperty( properties, "numberOfChangePasswordQueries" );
+        numberOfAddAuctionQueries = getIntProperty( properties, "numberOfAddAuctionQueries" );
+        numberOfAddBidQueries = getIntProperty( properties, "numberOfAddBidQueries" );
+        numberOfChangeAuctionQueries = getIntProperty( properties, "numberOfChangeAuctionQueries" );
+        numberOfGetAuctionQueries = getIntProperty( properties, "numberOfGetAuctionQueries" );
+        numberOfGetTheNextHundredEndingAuctionsOfACategoryQueries = getIntProperty( properties, "numberOfGetTheNextHundredEndingAuctionsOfACategoryQueries" );
+        numberOfSearchAuctionQueries = getIntProperty( properties, "numberOfSearchAuctionQueries" );
+        numberOfCountAuctionsQueries = getIntProperty( properties, "numberOfCountAuctionsQueries" );
+        numberOfTopTenCitiesByNumberOfCustomersQueries = getIntProperty( properties, "numberOfTopTenCitiesByNumberOfCustomersQueries" );
+        numberOfCountBidsQueries = getIntProperty( properties, "numberOfCountBidsQueries" );
+        numberOfGetBidQueries = getIntProperty( properties, "numberOfGetBidQueries" );
+        numberOfGetUserQueries = getIntProperty( properties, "numberOfGetUserQueries" );
+        numberOfGetAllBidsOnAuctionQueries = getIntProperty( properties, "numberOfGetAllBidsOnAuctionQueries" );
+        numberOfGetCurrentlyHighestBidOnAuctionQueries = getIntProperty( properties, "numberOfGetCurrentlyHighestBidOnAuctionQueries" );
 
         numberOfUsers = getIntProperty( properties, "numberOfUsers" );
         numberOfAuctions = getIntProperty( properties, "numberOfAuctions" );
@@ -121,9 +119,6 @@ public class Config {
         numberOfUserGenerationThreads = getIntProperty( properties, "numberOfUserGenerationThreads" );
         numberOfAuctionGenerationThreads = getIntProperty( properties, "numberOfAuctionGenerationThreads" );
         parallelizeUserGenerationAndAuctionGeneration = getBooleanProperty( properties, "parallelizeUserGenerationAndAuctionGeneration" );
-
-        progressReportBase = getIntProperty( properties, "progressReportBase" );
-
     }
 
 
