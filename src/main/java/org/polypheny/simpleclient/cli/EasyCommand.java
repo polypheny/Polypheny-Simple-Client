@@ -58,10 +58,18 @@ public class EasyCommand implements CliRunnable {
             System.exit( 1 );
         }
 
+        int multiplier = 1;
+        if ( args.size() > 1 ) {
+            multiplier = Integer.parseInt( args.get( 1 ) );
+            if ( multiplier < 1 ) {
+                System.err.println( "Multiplier needs to be a integer > 0!" );
+            }
+        }
+
         if ( args.get( 0 ).equalsIgnoreCase( "data" ) ) {
-            Easy.data( polyphenyDbHost );
+            Easy.data( polyphenyDbHost, multiplier );
         } else if ( args.get( 0 ).equalsIgnoreCase( "workload" ) ) {
-            Easy.workload( polyphenyDbHost );
+            Easy.workload( polyphenyDbHost, multiplier );
         } else if ( args.get( 0 ).equalsIgnoreCase( "schema" ) ) {
             Easy.schema( polyphenyDbHost );
         } else {

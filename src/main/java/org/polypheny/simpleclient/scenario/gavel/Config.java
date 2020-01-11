@@ -78,44 +78,44 @@ public class Config {
     public final int progressReportBase;
 
 
-    public Config( Properties properties ) {
+    public Config( Properties properties, int multiplier ) {
         resultMode = "DEBUG";
         warmupResultMode = "DEBUG";
         store = "polypheny";
         progressReportBase = getIntProperty( properties, "progressReportBase" );
         numberOfThreads = getIntProperty( properties, "numberOfThreads" );
 
-        numberOfAddUserQueries = getIntProperty( properties, "numberOfAddUserQueries" );
-        numberOfChangePasswordQueries = getIntProperty( properties, "numberOfChangePasswordQueries" );
-        numberOfAddAuctionQueries = getIntProperty( properties, "numberOfAddAuctionQueries" );
-        numberOfAddBidQueries = getIntProperty( properties, "numberOfAddBidQueries" );
-        numberOfChangeAuctionQueries = getIntProperty( properties, "numberOfChangeAuctionQueries" );
-        numberOfGetAuctionQueries = getIntProperty( properties, "numberOfGetAuctionQueries" );
-        numberOfGetTheNextHundredEndingAuctionsOfACategoryQueries = getIntProperty( properties, "numberOfGetTheNextHundredEndingAuctionsOfACategoryQueries" );
-        numberOfSearchAuctionQueries = getIntProperty( properties, "numberOfSearchAuctionQueries" );
-        numberOfCountAuctionsQueries = getIntProperty( properties, "numberOfCountAuctionsQueries" );
-        numberOfTopTenCitiesByNumberOfCustomersQueries = getIntProperty( properties, "numberOfTopTenCitiesByNumberOfCustomersQueries" );
-        numberOfCountBidsQueries = getIntProperty( properties, "numberOfCountBidsQueries" );
-        numberOfGetBidQueries = getIntProperty( properties, "numberOfGetBidQueries" );
-        numberOfGetUserQueries = getIntProperty( properties, "numberOfGetUserQueries" );
-        numberOfGetAllBidsOnAuctionQueries = getIntProperty( properties, "numberOfGetAllBidsOnAuctionQueries" );
-        numberOfGetCurrentlyHighestBidOnAuctionQueries = getIntProperty( properties, "numberOfGetCurrentlyHighestBidOnAuctionQueries" );
+        numberOfAddUserQueries = getIntProperty( properties, "numberOfAddUserQueries" ) * multiplier;
+        numberOfChangePasswordQueries = getIntProperty( properties, "numberOfChangePasswordQueries" ) * multiplier;
+        numberOfAddAuctionQueries = getIntProperty( properties, "numberOfAddAuctionQueries" ) * multiplier;
+        numberOfAddBidQueries = getIntProperty( properties, "numberOfAddBidQueries" ) * multiplier;
+        numberOfChangeAuctionQueries = getIntProperty( properties, "numberOfChangeAuctionQueries" ) * multiplier;
+        numberOfGetAuctionQueries = getIntProperty( properties, "numberOfGetAuctionQueries" ) * multiplier;
+        numberOfGetTheNextHundredEndingAuctionsOfACategoryQueries = getIntProperty( properties, "numberOfGetTheNextHundredEndingAuctionsOfACategoryQueries" ) * multiplier;
+        numberOfSearchAuctionQueries = getIntProperty( properties, "numberOfSearchAuctionQueries" ) * multiplier;
+        numberOfCountAuctionsQueries = getIntProperty( properties, "numberOfCountAuctionsQueries" ) * multiplier;
+        numberOfTopTenCitiesByNumberOfCustomersQueries = getIntProperty( properties, "numberOfTopTenCitiesByNumberOfCustomersQueries" ) * multiplier;
+        numberOfCountBidsQueries = getIntProperty( properties, "numberOfCountBidsQueries" ) * multiplier;
+        numberOfGetBidQueries = getIntProperty( properties, "numberOfGetBidQueries" ) * multiplier;
+        numberOfGetUserQueries = getIntProperty( properties, "numberOfGetUserQueries" ) * multiplier;
+        numberOfGetAllBidsOnAuctionQueries = getIntProperty( properties, "numberOfGetAllBidsOnAuctionQueries" ) * multiplier;
+        numberOfGetCurrentlyHighestBidOnAuctionQueries = getIntProperty( properties, "numberOfGetCurrentlyHighestBidOnAuctionQueries" ) * multiplier;
 
-        numberOfUsers = getIntProperty( properties, "numberOfUsers" );
-        numberOfAuctions = getIntProperty( properties, "numberOfAuctions" );
-        numberOfCategories = getIntProperty( properties, "numberOfCategories" );
-        auctionTitleMinLength = getIntProperty( properties, "auctionTitleMinLength" );
-        auctionTitleMaxLength = getIntProperty( properties, "auctionTitleMaxLength" );
-        auctionDescriptionMinLength = getIntProperty( properties, "auctionDescriptionMinLength" );
-        auctionDescriptionMaxLength = getIntProperty( properties, "auctionDescriptionMaxLength" );
-        auctionDateMaxYearsInPast = getIntProperty( properties, "auctionDateMaxYearsInPast" );
-        auctionNumberOfDays = getIntProperty( properties, "auctionNumberOfDays" );
-        minNumberOfBidsPerAuction = getIntProperty( properties, "minNumberOfBidsPerAuction" );
-        maxNumberOfBidsPerAuction = getIntProperty( properties, "maxNumberOfBidsPerAuction" );
-        minNumberOfPicturesPerAuction = getIntProperty( properties, "minNumberOfPicturesPerAuction" );
-        maxNumberOfPicturesPerAuction = getIntProperty( properties, "maxNumberOfPicturesPerAuction" );
+        numberOfUsers = getIntProperty( properties, "numberOfUsers" ) * multiplier;
+        numberOfAuctions = getIntProperty( properties, "numberOfAuctions" ) * multiplier;
+        numberOfCategories = getIntProperty( properties, "numberOfCategories" ) * multiplier;
+        auctionTitleMinLength = getIntProperty( properties, "auctionTitleMinLength" ) * multiplier;
+        auctionTitleMaxLength = getIntProperty( properties, "auctionTitleMaxLength" ) * multiplier;
+        auctionDescriptionMinLength = getIntProperty( properties, "auctionDescriptionMinLength" ) * multiplier;
+        auctionDescriptionMaxLength = getIntProperty( properties, "auctionDescriptionMaxLength" ) * multiplier;
+        auctionDateMaxYearsInPast = getIntProperty( properties, "auctionDateMaxYearsInPast" ) * multiplier;
+        auctionNumberOfDays = getIntProperty( properties, "auctionNumberOfDays" ) * multiplier;
+        minNumberOfBidsPerAuction = getIntProperty( properties, "minNumberOfBidsPerAuction" ) * multiplier;
+        maxNumberOfBidsPerAuction = getIntProperty( properties, "maxNumberOfBidsPerAuction" ) * multiplier;
+        minNumberOfPicturesPerAuction = getIntProperty( properties, "minNumberOfPicturesPerAuction" ) * multiplier;
+        maxNumberOfPicturesPerAuction = getIntProperty( properties, "maxNumberOfPicturesPerAuction" ) * multiplier;
+
         maxBatchSize = getIntProperty( properties, "maxBatchSize" );
-
         numberOfUserGenerationThreads = getIntProperty( properties, "numberOfUserGenerationThreads" );
         numberOfAuctionGenerationThreads = getIntProperty( properties, "numberOfAuctionGenerationThreads" );
         parallelizeUserGenerationAndAuctionGeneration = getBooleanProperty( properties, "parallelizeUserGenerationAndAuctionGeneration" );

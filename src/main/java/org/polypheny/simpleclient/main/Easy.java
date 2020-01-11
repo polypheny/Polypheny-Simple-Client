@@ -13,11 +13,11 @@ import org.polypheny.simpleclient.scenario.gavel.Gavel;
 @Slf4j
 public class Easy {
 
-    public static void data( String polyphenyDbUrl ) {
+    public static void data( String polyphenyDbUrl, int multiplier ) {
         try {
             Properties props = new Properties();
             props.load( ClassLoader.getSystemResourceAsStream( "gavel/easy.properties" ) );
-            Config config = new Config( props );
+            Config config = new Config( props, multiplier );
             Gavel gavel = new Gavel( polyphenyDbUrl, config );
 
             ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
@@ -28,11 +28,11 @@ public class Easy {
     }
 
 
-    public static void workload( String polyphenyDbUrl ) {
+    public static void workload( String polyphenyDbUrl, int multiplier ) {
         try {
             Properties props = new Properties();
             props.load( ClassLoader.getSystemResourceAsStream( "gavel/easy.properties" ) );
-            Config config = new Config( props );
+            Config config = new Config( props, multiplier );
             Gavel gavel = new Gavel( polyphenyDbUrl, config );
 
             CsvWriter csvWriter = new CsvWriter( "results.csv" );
@@ -48,7 +48,7 @@ public class Easy {
         try {
             Properties props = new Properties();
             props.load( ClassLoader.getSystemResourceAsStream( "gavel/easy.properties" ) );
-            Config config = new Config( props );
+            Config config = new Config( props, 1 );
             Gavel gavel = new Gavel( polyphenyDbUrl, config );
 
             gavel.createSchema();
