@@ -183,12 +183,7 @@ class DataGenerator {
 
 
     private void addToMultiInsert( Query query ) throws SQLException {
-        if ( batchList.size() == 0 ) {
-            batchList.add( query );
-        } else {
-            batchList.add( query );
-
-        }
+        batchList.add( query );
         if ( batchList.size() >= config.maxBatchSize ) {
             executeMultiInsert();
         }

@@ -43,6 +43,7 @@ import java.util.OptionalDouble;
 import java.util.Properties;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
+import lombok.extern.slf4j.Slf4j;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -75,13 +76,10 @@ import org.polypheny.simpleclient.scenario.gavel.queryBuilder.SelectRandomBid;
 import org.polypheny.simpleclient.scenario.gavel.queryBuilder.SelectRandomUser;
 import org.polypheny.simpleclient.scenario.gavel.queryBuilder.SelectTheHundredNextEndingAuctionsOfRandomCategory;
 import org.polypheny.simpleclient.scenario.gavel.queryBuilder.SelectTopTenCitiesByNumberOfCustomers;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
+@Slf4j
 public class Gavel extends Scenario {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger( Gavel.class );
 
     private final Config config;
 
@@ -111,17 +109,17 @@ public class Gavel extends Scenario {
 
     @Override
     public long execute( ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory, Executor executor, boolean warmUp ) throws SQLException {
-        LOGGER.info( "Analyzing currently stored data..." );
+        log.info( "Analyzing currently stored data..." );
         final int numberOfAuctions = (int) countNumberOfRecords( executor, new CountAuction() );
         final int numberOfUsers = (int) countNumberOfRecords( executor, new CountUser() );
         final int numberOfCategories = (int) countNumberOfRecords( executor, new CountCategory() );
         final int numberOfBids = (int) countNumberOfRecords( executor, new CountBid() );
-        LOGGER.info( "Current number of elements in the database:\nAuctions: " + numberOfAuctions + " | Users: " + numberOfUsers + " | Categories: " + numberOfCategories + " | Bids: " + numberOfBids );
+        log.info( "Current number of elements in the database:\nAuctions: {} | Users: {} | Categories: {} | Bids: {}", numberOfAuctions, numberOfUsers, numberOfCategories, numberOfBids );
 
         InsertRandomAuction.setNextId( numberOfAuctions + 1 );
         InsertRandomBid.setNextId( numberOfBids + 1 );
 
-        LOGGER.info( "Preparing query list for the benchmark..." );
+        log.info( "Preparing query list for the benchmark..." );
         List<QueryListEntry> queryList = new Vector<>();
         addNumberOfTimes( queryList, new InsertUser(), config.numberOfAddUserQueries );
         addNumberOfTimes( queryList, new ChangePasswordOfRandomUser( numberOfUsers ), config.numberOfChangePasswordQueries );
@@ -141,7 +139,7 @@ public class Gavel extends Scenario {
         Collections.shuffle( queryList );
 
         if ( outputDirectory != null ) {
-            LOGGER.info( "Dump query list..." );
+            log.info( "Dump query list..." );
             try {
                 FileWriter fw = new FileWriter( outputDirectory.getPath() + File.separator + "queryList" );
                 queryList.forEach( query -> {
@@ -158,7 +156,7 @@ public class Gavel extends Scenario {
         }
 
         if ( warmUp ) {
-            LOGGER.info( "Warm-up..." );
+            log.info( "Warm-up..." );
             if ( config.numberOfAddUserQueries > 0 ) {
                 executor.executeStatement( new InsertUser().getNewQuery() );
             }
@@ -212,7 +210,7 @@ public class Gavel extends Scenario {
             }
         }
 
-        LOGGER.info( "Executing benchmark..." );
+        log.info( "Executing benchmark..." );
         (new Thread( new ProgressReporter.ReportQueryListProgress( queryList, progressReporter ) )).start();
         long startTime = System.nanoTime();
 
@@ -230,14 +228,14 @@ public class Gavel extends Scenario {
             try {
                 thread.join();
             } catch ( InterruptedException e ) {
-                LOGGER.info( "Caught exception after thread.join()", e );
+                log.info( "Caught exception after thread.join()", e );
             }
         }
 
         long runTime = System.nanoTime() - startTime;
-        LOGGER.error( "run time: " + (runTime / 1000000000) + " s" );
+        log.error( "run time: {} s", runTime / 1000000000 );
 
-        LOGGER.info( "Delete inserted rows" );
+        log.info( "Delete inserted rows" );
         // !!!!!!!!!!!!!! Potential Bug !!!!!!!!!!!!!!!!
         // Using hardcoded id's is not nice! But using the number of entries retrieved before can cause problems if the client is killed.
         executor.executeStatement( new DeleteBidsWithIdLargerThan( 62270000 ).getNewQuery() );
@@ -348,7 +346,7 @@ public class Gavel extends Scenario {
 
     @Override
     public void buildDatabase( ProgressReporter progressReporter ) throws SQLException {
-        LOGGER.info( "Generating Data..." );
+        log.info( "Generating Data..." );
 
         DataGenerator dataGenerator = new DataGenerator( new PolyphenyDbExecutor( polyphenyDbUrl, config ), config, progressReporter );
         dataGenerator.truncateTables();
@@ -374,7 +372,7 @@ public class Gavel extends Scenario {
                 try {
                     t.join();
                 } catch ( InterruptedException e ) {
-                    LOGGER.warn( "Caught exception after thread.join()", e );
+                    log.warn( "Caught exception after thread.join()", e );
                 }
             }
         }
@@ -399,7 +397,7 @@ public class Gavel extends Scenario {
             try {
                 t.join();
             } catch ( InterruptedException e ) {
-                LOGGER.warn( "Caught exception after thread.join()", e );
+                log.warn( "Caught exception after thread.join()", e );
             }
         }
     }

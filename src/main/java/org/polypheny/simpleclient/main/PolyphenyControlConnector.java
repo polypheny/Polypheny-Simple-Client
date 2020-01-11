@@ -33,13 +33,12 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
-import org.slf4j.LoggerFactory;
 
 
+@Slf4j
 class PolyphenyControlConnector {
-
-    private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger( PolyphenyControlConnector.class );
 
     private final String icarusWrapperUrl;
 
@@ -94,7 +93,7 @@ class PolyphenyControlConnector {
             rd.close();
             return response.toString();
         } catch ( IOException | UnirestException e ) {
-            LOGGER.error( "Exception while sending request", e );
+            log.error( "Exception while sending request", e );
         }
         return null;
     }
@@ -114,7 +113,7 @@ class PolyphenyControlConnector {
             }
             rd.close();
         } catch ( IOException | UnirestException e ) {
-            LOGGER.error( "Exception while sending request", e );
+            log.error( "Exception while sending request", e );
         }
     }
 }

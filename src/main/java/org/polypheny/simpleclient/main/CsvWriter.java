@@ -29,16 +29,15 @@ package org.polypheny.simpleclient.main;
 import au.com.bytecode.opencsv.CSVWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import lombok.extern.slf4j.Slf4j;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-import org.slf4j.LoggerFactory;
 
 
+@Slf4j
 public class CsvWriter {
-
-    private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger( CsvWriter.class );
 
     private JSONParser parser;
     private CSVWriter writer;
@@ -55,7 +54,7 @@ public class CsvWriter {
             parser = new JSONParser();
             queryNumber = 0;
         } catch ( IOException e ) {
-            LOGGER.error( "Exception while writing csv file", e );
+            log.error( "Exception while writing csv file", e );
         }
     }
 

@@ -32,14 +32,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
+import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.main.Query;
 import org.polypheny.simpleclient.scenario.gavel.Config;
-import org.slf4j.LoggerFactory;
 
 
+@Slf4j
 public class PolyphenyDbExecutor extends Executor {
-
-    private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger( PolyphenyDbExecutor.class );
 
     private final Statement executeStatement;
     private final Connection connection;
@@ -47,7 +46,7 @@ public class PolyphenyDbExecutor extends Executor {
     //private final ComboPooledDataSource cpds;
 
 
-    public PolyphenyDbExecutor( String PolypehnyDBURL, Config config ) {
+    public PolyphenyDbExecutor( String polyphenyDbUrl, Config config ) {
 
         /*cpds = new ComboPooledDataSource();
         try {
@@ -71,16 +70,13 @@ public class PolyphenyDbExecutor extends Executor {
         }
 
         try {
-            //TODO
-            String hostname = "localhost";
-            String url = "jdbc:polypheny://" + hostname + "/?wire_protocol=PROTO3";
+            String url = "jdbc:polypheny://" + polyphenyDbUrl + "/?wire_protocol=PROTO3";
 
             Properties props = new Properties();
             props.setProperty( "user", "pa" );
 
             connection = DriverManager.getConnection( url, props );
             executeStatement = connection.createStatement();
-
         } catch ( SQLException e ) {
             throw new RuntimeException( "Connection Failed." );
         }
@@ -89,7 +85,7 @@ public class PolyphenyDbExecutor extends Executor {
 
     @Override
     public long executeQuery( Query query ) throws SQLException {
-        LOGGER.info( query.sqlQuery );
+        log.info( query.sqlQuery );
 
         long start = System.nanoTime();
         //try ( Connection connection = cpds.getConnection() ) {
@@ -98,7 +94,7 @@ public class PolyphenyDbExecutor extends Executor {
         ResultSet resultSet = executeStatement.executeQuery( query.sqlQuery );
 
         while ( resultSet.next() ) {
-            //ignored
+            // walk to whole result set
         }
         return System.nanoTime() - start;
         //}
@@ -107,7 +103,7 @@ public class PolyphenyDbExecutor extends Executor {
 
     @Override
     public long executeQueryAndGetNumber( Query query ) throws SQLException {
-        LOGGER.info( query.sqlQuery );
+        log.info( query.sqlQuery );
 
         //try ( Connection connection = cpds.getConnection() ) {
         //ResultSet resultSet = connection.createStatement().executeQuery( query.sqlQuery );
@@ -138,7 +134,7 @@ public class PolyphenyDbExecutor extends Executor {
 
     @Override
     public long executeStatement( Query statement ) throws SQLException {
-        LOGGER.info( statement.sqlQuery );
+        log.info( statement.sqlQuery );
 
         long start = System.nanoTime();
         //try ( Connection connection = cpds.getConnection() ) {

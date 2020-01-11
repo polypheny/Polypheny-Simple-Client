@@ -4,8 +4,8 @@ description = "A lightweight Polyphony-DB client"
 
 def versionMajor = 1
 def versionMinor = 0
-def versionQualifier = "SNAPSHOT"
-version = versionMajor + "." + versionMinor + "-" + versionQualifier
+def versionQualifier = "-SNAPSHOT"
+version = versionMajor + "." + versionMinor + versionQualifier
 
 
 buildscript {
@@ -69,20 +69,17 @@ dependencies {
 
     //Drivers
     compile group: 'org.polypheny', name: 'polypheny-jdbc-driver', version: '1.0-SNAPSHOT'
-    // https://mvnrepository.com/artifact/org.postgresql/postgresql
     compile group: 'org.postgresql', name: 'postgresql', version: '42.2.1'
 
-    // https://mvnrepository.com/artifact/com.github.rvesse/airline
     compile group: 'com.github.rvesse', name: 'airline', version: '2.7.0'
-    // https://mvnrepository.com/artifact/io.codearte.jfairy/jfairy
     compile group: 'io.codearte.jfairy', name: 'jfairy', version: '0.5.3'
     //csv
     compile group: 'net.sf.opencsv', name: 'opencsv', version: '2.3'
-    // https://mvnrepository.com/artifact/com.googlecode.json-simple/json-simple
+    // json
     compile group: 'com.googlecode.json-simple', name: 'json-simple', version: '1.1.1'
 
-    // https://mvnrepository.com/artifact/com.mchange/c3p0
-    compile group: 'com.mchange', name: 'c3p0', version: '0.9.5.2'
+    // connection pool
+    compile group: 'com.mchange', name: 'c3p0', version: '0.9.5.5'
 
 
     ////// LOGGING

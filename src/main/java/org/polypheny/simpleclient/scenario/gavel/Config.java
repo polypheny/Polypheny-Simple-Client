@@ -28,12 +28,11 @@ package org.polypheny.simpleclient.scenario.gavel;
 
 import java.util.Map;
 import java.util.Properties;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 
+@Slf4j
 public class Config {
-
-    private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger( Config.class );
 
     public final String store;
 
@@ -226,7 +225,7 @@ public class Config {
     private String getStringProperty( Properties properties, String name ) {
         String str = getProperty( properties, name );
         if ( str == null ) {
-            LOGGER.error( "Property '" + name + "' not found in config" );
+            log.error( "Property '{}' not found in config", name );
             throw new RuntimeException( "Property '" + name + "' not found in config" );
         }
         return str;
@@ -236,7 +235,7 @@ public class Config {
     private int getIntProperty( Properties properties, String name ) {
         String str = getProperty( properties, name );
         if ( str == null ) {
-            LOGGER.error( "Property '" + name + "' not found in config" );
+            log.error( "Property '{}' not found in config", name );
             throw new RuntimeException( "Property '" + name + "' not found in config" );
         }
         return Integer.parseInt( str );
@@ -251,7 +250,7 @@ public class Config {
             case "false":
                 return false;
             default:
-                LOGGER.error( "Value for config property '" + name + "' is unknown. " + "Supported values are 'true' and 'false'. Current value is: " + str );
+                log.error( "Value for config property '{}' is unknown. Supported values are 'true' and 'false'. Current value is: {}", name, str );
                 throw new RuntimeException( "Value for config property '" + name + "' is unknown. " + "Supported values are 'true' and 'false'. Current value is: " + str );
         }
     }

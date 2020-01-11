@@ -27,8 +27,10 @@ package org.polypheny.simpleclient.main;
 
 
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
 
+@Slf4j
 public abstract class ProgressReporter {
 
     private volatile long progress;
@@ -44,8 +46,8 @@ public abstract class ProgressReporter {
 
     public void updateProgress() {
         progress++;
-        Double p = ((double) progress / (double) (numberOfThreads));
-        update( p.intValue() );
+        double p = ((double) progress / (double) (numberOfThreads));
+        update( (int) p );
     }
 
 
@@ -78,7 +80,7 @@ public abstract class ProgressReporter {
                 try {
                     Thread.sleep( 1000 );
                 } catch ( InterruptedException e ) {
-                    e.printStackTrace();
+                    log.debug( "Interrupt Exception", e );
                 }
             }
         }

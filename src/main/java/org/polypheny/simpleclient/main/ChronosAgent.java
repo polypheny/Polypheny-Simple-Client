@@ -47,21 +47,20 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.cli.ChronosCommand;
 import org.polypheny.simpleclient.executor.PolyphenyDbExecutor;
 import org.polypheny.simpleclient.executor.PostgresExecutor;
 import org.polypheny.simpleclient.scenario.gavel.Config;
 import org.polypheny.simpleclient.scenario.gavel.Gavel;
-import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 
+@Slf4j
 public class ChronosAgent extends AbstractChronosAgent {
-
-    private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger( ChronosAgent.class );
 
 
     public final String[] supports;
@@ -103,7 +102,7 @@ public class ChronosAgent extends AbstractChronosAgent {
         try {
             settings = readCDL( new ByteArrayInputStream( chronosJob.cdl.getBytes( StandardCharsets.UTF_8 ) ) );
         } catch ( XPathExpressionException | ParserConfigurationException | SAXException | IOException e ) {
-            LOGGER.error( "Exception while parsing cdl", e );
+            log.error( "Exception while parsing cdl", e );
         }
         String polyphenyDbUrl = "http://" + ChronosCommand.polyphenyDbHost + ":" + 8000 + "/request";
         assert settings != null;
@@ -173,7 +172,7 @@ public class ChronosAgent extends AbstractChronosAgent {
                 gavel.analyzeMeasuredTime( properties );
             }
             properties.put( "runtime", runtime );
-            LOGGER.info( gavel.getTimesAsString( properties ) );
+            log.info( gavel.getTimesAsString( properties ) );
         }
         return null;
     }
@@ -219,10 +218,10 @@ public class ChronosAgent extends AbstractChronosAgent {
                     }
                 }
             } else {
-                LOGGER.warn( "Not a evaluation job!" );
+                log.warn( "Not a evaluation job!" );
             }
         } else {
-            LOGGER.warn( "Not a valid CDL!" );
+            log.warn( "Not a valid CDL!" );
         }
         return settings;
     }
