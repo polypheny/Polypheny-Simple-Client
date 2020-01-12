@@ -77,7 +77,7 @@ public abstract class ProgressReporter {
         public void run() {
             while ( true ) {
                 theProgressReporter.update( totalNumber - theList.size(), totalNumber );
-                if ( theList.size() > 0 ) {
+                if ( theList.size() == 0 ) {
                     break;
                 }
                 try {

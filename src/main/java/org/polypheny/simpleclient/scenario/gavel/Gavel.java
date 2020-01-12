@@ -65,10 +65,6 @@ import org.polypheny.simpleclient.scenario.gavel.queryBuilder.CountAuction;
 import org.polypheny.simpleclient.scenario.gavel.queryBuilder.CountBid;
 import org.polypheny.simpleclient.scenario.gavel.queryBuilder.CountCategory;
 import org.polypheny.simpleclient.scenario.gavel.queryBuilder.CountUser;
-import org.polypheny.simpleclient.scenario.gavel.queryBuilder.DeleteAuctionsWithIdLargerThan;
-import org.polypheny.simpleclient.scenario.gavel.queryBuilder.DeleteBidsWithIdLargerThan;
-import org.polypheny.simpleclient.scenario.gavel.queryBuilder.DeleteCategoriesWithIdLargerThan;
-import org.polypheny.simpleclient.scenario.gavel.queryBuilder.DeleteUsersWithIdLargerThan;
 import org.polypheny.simpleclient.scenario.gavel.queryBuilder.InsertRandomAuction;
 import org.polypheny.simpleclient.scenario.gavel.queryBuilder.InsertRandomBid;
 import org.polypheny.simpleclient.scenario.gavel.queryBuilder.InsertUser;
@@ -242,13 +238,14 @@ public class Gavel extends Scenario {
         log.info( "Delete inserted rows" );
         // !!!!!!!!!!!!!! Potential Bug !!!!!!!!!!!!!!!!
         // Using hardcoded id's is not nice! But using the number of entries retrieved before can cause problems if the client is killed.
-        executor.executeStatement( new DeleteBidsWithIdLargerThan( 62270000 ).getNewQuery() );
+        /*executor.executeStatement( new DeleteBidsWithIdLargerThan( 62270000 ).getNewQuery() );
         executor.executeStatement( new DeleteUsersWithIdLargerThan( 1200000 ).getNewQuery() );
         executor.executeStatement( new DeleteAuctionsWithIdLargerThan( 546000 ).getNewQuery() );
         executor.executeStatement( new DeleteCategoriesWithIdLargerThan( 35 ).getNewQuery() );
         executor.executeCommit();
         InsertRandomAuction.setNextId( 750000 + 1 );
-        InsertRandomBid.setNextId( 71250000 + 1 );
+        InsertRandomBid.setNextId( 71250000 + 1 );*/
+        executor.executeCommit();
         return runTime;
     }
 

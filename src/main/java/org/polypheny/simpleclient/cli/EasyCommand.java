@@ -75,6 +75,13 @@ public class EasyCommand implements CliRunnable {
         } else {
             System.err.println( "Unknown task: " + args.get( 0 ) );
         }
+
+        try {
+            Thread.sleep( 2000 );
+        } catch ( InterruptedException e ) {
+            log.debug( "Interrupt Exception", e );
+        }
+
         System.out.println();
         return 0;
     }

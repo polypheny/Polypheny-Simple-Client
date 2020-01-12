@@ -103,16 +103,16 @@ public class Config {
 
         numberOfUsers = getIntProperty( properties, "numberOfUsers" ) * multiplier;
         numberOfAuctions = getIntProperty( properties, "numberOfAuctions" ) * multiplier;
-        numberOfCategories = getIntProperty( properties, "numberOfCategories" ) * multiplier;
-        auctionTitleMinLength = getIntProperty( properties, "auctionTitleMinLength" ) * multiplier;
-        auctionTitleMaxLength = getIntProperty( properties, "auctionTitleMaxLength" ) * multiplier;
-        auctionDescriptionMinLength = getIntProperty( properties, "auctionDescriptionMinLength" ) * multiplier;
-        auctionDescriptionMaxLength = getIntProperty( properties, "auctionDescriptionMaxLength" ) * multiplier;
-        auctionDateMaxYearsInPast = getIntProperty( properties, "auctionDateMaxYearsInPast" ) * multiplier;
-        auctionNumberOfDays = getIntProperty( properties, "auctionNumberOfDays" ) * multiplier;
-        minNumberOfBidsPerAuction = getIntProperty( properties, "minNumberOfBidsPerAuction" ) * multiplier;
+        numberOfCategories = getIntProperty( properties, "numberOfCategories" );
+        auctionTitleMinLength = getIntProperty( properties, "auctionTitleMinLength" );
+        auctionTitleMaxLength = getIntProperty( properties, "auctionTitleMaxLength" );
+        auctionDescriptionMinLength = getIntProperty( properties, "auctionDescriptionMinLength" );
+        auctionDescriptionMaxLength = getIntProperty( properties, "auctionDescriptionMaxLength" );
+        auctionDateMaxYearsInPast = getIntProperty( properties, "auctionDateMaxYearsInPast" );
+        auctionNumberOfDays = getIntProperty( properties, "auctionNumberOfDays" );
+        minNumberOfBidsPerAuction = getIntProperty( properties, "minNumberOfBidsPerAuction" );
         maxNumberOfBidsPerAuction = getIntProperty( properties, "maxNumberOfBidsPerAuction" ) * multiplier;
-        minNumberOfPicturesPerAuction = getIntProperty( properties, "minNumberOfPicturesPerAuction" ) * multiplier;
+        minNumberOfPicturesPerAuction = getIntProperty( properties, "minNumberOfPicturesPerAuction" );
         maxNumberOfPicturesPerAuction = getIntProperty( properties, "maxNumberOfPicturesPerAuction" ) * multiplier;
 
         maxBatchSize = getIntProperty( properties, "maxBatchSize" );
