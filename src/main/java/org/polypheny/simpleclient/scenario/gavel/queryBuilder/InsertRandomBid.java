@@ -52,7 +52,7 @@ public class InsertRandomBid extends QueryBuilder {
         sb.append( "INSERT INTO bid(id, amount, \"timestamp\", \"user\", auction) VALUES (" );
         sb.append( nextId++ ).append( "," );
         sb.append( ThreadLocalRandom.current().nextInt( 1, 1000 ) ).append( "," );
-        sb.append( "'" ).append( new DateTime().toString( "yyyy-MM-dd HH:mm:ss" ) ).append( "'," );
+        sb.append( "timestamp '" ).append( new DateTime().toString( "yyyy-MM-dd HH:mm:ss" ) ).append( "'," );
         sb.append( ThreadLocalRandom.current().nextInt( 1, numberOfUsers + 1 ) ).append( "," );
         sb.append( ThreadLocalRandom.current().nextInt( 1, numberOfAuctions + 1 ) );
         sb.append( ")" );

@@ -203,7 +203,7 @@ public class Gavel extends Scenario {
                 executor.executeCommit();
                 Thread.sleep( 5000 );
             } catch ( InterruptedException e ) {
-                e.printStackTrace();
+                log.debug( "Caught InterruptedException", e );
             }
         }
 
@@ -277,6 +277,7 @@ public class Gavel extends Scenario {
                         time = executor.executeStatement( queryListEntry.query );
                     }
                 } catch ( SQLException e ) {
+                    log.error( "Caught exception while executing queries", e );
                     throw new RuntimeException( e );
                 }
                 measuredTime = System.nanoTime() - measuredTimeStart;
@@ -289,6 +290,7 @@ public class Gavel extends Scenario {
                     try {
                         executor.executeCommit();
                     } catch ( SQLException e ) {
+                        log.error( "Caught exception while committing", e );
                         throw new RuntimeException( e );
                     }
                 }
@@ -297,6 +299,7 @@ public class Gavel extends Scenario {
             try {
                 executor.executeCommit();
             } catch ( SQLException e ) {
+                log.error( "Caught exception while committing", e );
                 throw new RuntimeException( e );
             }
 

@@ -54,7 +54,7 @@ public class InsertUser extends QueryBuilder {
         sb.append( "'" ).append( person.lastName() ).append( "'," );
         sb.append( "'" ).append( person.firstName() ).append( "'," );
         sb.append( "'" ).append( person.sex().name().substring( 0, 1 ).toLowerCase() ).append( "'," );
-        sb.append( "'" ).append( person.dateOfBirth().toString( "yyyy-MM-dd" ) ).append( "'," );
+        sb.append( "date '" ).append( person.dateOfBirth().toString( "yyyy-MM-dd" ) ).append( "'," );
         sb.append( "'" ).append( person.getAddress().getCity() ).append( "'," );
         sb.append( "'" ).append( person.getAddress().getPostalCode() ).append( "'," );
         sb.append( "'Switzerland'" );

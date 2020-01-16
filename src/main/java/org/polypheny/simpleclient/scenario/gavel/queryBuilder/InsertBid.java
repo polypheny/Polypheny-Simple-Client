@@ -54,7 +54,7 @@ public class InsertBid extends QueryBuilder {
         sb.append( "INSERT INTO bid(id, amount, \"timestamp\", \"user\", auction) VALUES (" );
         sb.append( nextId++ ).append( "," );
         sb.append( amount ).append( "," );
-        sb.append( "'" ).append( date.toString( "yyyy-MM-dd HH:mm:ss" ) ).append( "'," );
+        sb.append( "timestamp '" ).append( date.toString( "yyyy-MM-dd HH:mm:ss" ) ).append( "'," );
         sb.append( userId ).append( "," );
         sb.append( auctionId ); // This could maybe gets an bug if e.g. parallelized
         sb.append( ")" );

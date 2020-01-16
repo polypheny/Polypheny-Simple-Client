@@ -8,7 +8,11 @@
         </Console>
     </Appenders>
     <Loggers>
+        <logger name="org.polypheny" level="WARN">
+            <AppenderRef ref="ConsoleAppender"/>
+        </logger>
         <logger name="org.polypheny.jdbc.Driver" level="ERROR">
+            <AppenderRef ref="ConsoleAppender"/>
         </logger>
         <Root level="warn"/>
     </Loggers>

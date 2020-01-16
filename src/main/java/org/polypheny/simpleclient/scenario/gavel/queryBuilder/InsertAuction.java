@@ -59,8 +59,8 @@ public class InsertAuction extends QueryBuilder {
         sb.append( nextId++ ).append( "," );
         sb.append( "'" ).append( title ).append( "'," );
         sb.append( "'" ).append( description ).append( "'," );
-        sb.append( "'" ).append( startDate.toString( "yyyy-MM-dd HH:mm:ss" ) ).append( "'," );
-        sb.append( "'" ).append( endDate.toString( "yyyy-MM-dd HH:mm:ss" ) ).append( "'," );
+        sb.append( "timestamp '" ).append( startDate.toString( "yyyy-MM-dd HH:mm:ss" ) ).append( "'," );
+        sb.append( "timestamp '" ).append( endDate.toString( "yyyy-MM-dd HH:mm:ss" ) ).append( "'," );
         sb.append( categoryId ).append( "," );
         sb.append( userId );
         sb.append( ")" );

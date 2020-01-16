@@ -80,8 +80,8 @@ public class InsertRandomAuction extends QueryBuilder {
         sb.append( nextId++ ).append( "," );
         sb.append( "'" ).append( title ).append( "'," );
         sb.append( "'" ).append( description ).append( "'," );
-        sb.append( "'" ).append( startDate.toString( "yyyy-MM-dd HH:mm:ss" ) ).append( "'," );
-        sb.append( "'" ).append( endDate.toString( "yyyy-MM-dd HH:mm:ss" ) ).append( "'," );
+        sb.append( "timestamp '" ).append( startDate.toString( "yyyy-MM-dd HH:mm:ss" ) ).append( "'," );
+        sb.append( "timestamp '" ).append( endDate.toString( "yyyy-MM-dd HH:mm:ss" ) ).append( "'," );
         sb.append( ThreadLocalRandom.current().nextInt( 1, numberOfCategories + 1 ) ).append( "," );
         sb.append( ThreadLocalRandom.current().nextInt( 1, numberOfUsers + 1 ) );
         sb.append( ")" );
