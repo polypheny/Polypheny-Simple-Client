@@ -1,27 +1,3 @@
-/*
- * The MIT License (MIT)
- *
- * Copyright (c) 2020 Databases and Information Systems Research Group, University of Basel, Switzerland
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- *
- */
 
 package org.polypheny.simpleclient.main;
 
@@ -45,8 +21,8 @@ public class ProgressBar extends ProgressReporter {
 
 
     /**
-     * called whenever the progress bar needs to be updated.
-     * that is whenever progress was made.
+     * Called whenever the progress bar needs to be updated.
+     * That is whenever progress was made.
      *
      * @param done an int representing the work done so far
      * @param total an int representing the total work
@@ -62,8 +38,7 @@ public class ProgressBar extends ProgressReporter {
             progress.append( '#' );
         }
 
-        System.out.printf( format, percent, progress,
-                workchars[done % workchars.length] );
+        System.out.printf( format, percent, progress, workchars[done % workchars.length] );
 
         if ( done == total && !finished ) {
             finished = true;
