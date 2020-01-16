@@ -26,7 +26,7 @@
 package org.polypheny.simpleclient.main;
 
 
-import au.com.bytecode.opencsv.CSVWriter;
+import com.opencsv.CSVWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
@@ -46,7 +46,7 @@ public class CsvWriter {
 
     CsvWriter( String path ) {
         try {
-            writer = new CSVWriter( new FileWriter( path ), ';' );
+            writer = new CSVWriter( new FileWriter( path ) );
 
             String[] entries = new String[]{ "Data Store", "Query Number", "Query Class", "Execution Time", "Total Time", "Measured Time" };
             writer.writeNext( entries );
