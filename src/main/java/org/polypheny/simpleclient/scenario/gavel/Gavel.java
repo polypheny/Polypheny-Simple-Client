@@ -143,12 +143,12 @@ public class Gavel extends Scenario {
                     try {
                         fw.append( query.query.sqlQuery ).append( "\n" );
                     } catch ( IOException e ) {
-                        e.printStackTrace();
+                        log.error( "Error while dumping query list", e );
                     }
                 } );
                 fw.close();
             } catch ( IOException e ) {
-                e.printStackTrace();
+                log.error( "Error while dumping query list", e );
             }
         }
 
@@ -433,7 +433,7 @@ public class Gavel extends Scenario {
             try {
                 return df.parse( roundFormat ).doubleValue();
             } catch ( ParseException e ) {
-                e.printStackTrace();
+                log.error( "Exception", e );
             }
         }
         return -1;

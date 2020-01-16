@@ -30,7 +30,6 @@ import ch.unibas.dmi.dbis.chronos.agent.AbstractChronosAgent;
 import ch.unibas.dmi.dbis.chronos.agent.ChronosJob;
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
@@ -117,7 +116,7 @@ public class ChronosAgent extends AbstractChronosAgent {
             try {
                 gavel.buildDatabase( progressReporter );
             } catch ( SQLException e ) {
-                e.printStackTrace();
+                log.error( "Error while inserting data", e );
             }
         } else {
             final CsvWriter csvWriter;
@@ -142,7 +141,7 @@ public class ChronosAgent extends AbstractChronosAgent {
                 try {
                     runtime = gavel.execute( progressReporter, csvWriter, outputDirectory, new PolyphenyDbExecutor( polyphenyDbUrl, config ), warmUp );
                 } catch ( SQLException e ) {
-                    e.printStackTrace();
+                    log.error( "Error while executing query", e );
                 }
                 gavel.analyze( properties );
                 gavel.analyzeMeasuredTime( properties );/*
@@ -173,7 +172,7 @@ public class ChronosAgent extends AbstractChronosAgent {
                         System.err.println( "Unknown Store: " + config.store );
                     }
                 } catch ( IOException | SQLException e ) {
-                    e.printStackTrace();
+                    log.error( "Error while executing query", e );
                 }
                 gavel.analyzeMeasuredTime( properties );
             }
@@ -247,16 +246,6 @@ public class ChronosAgent extends AbstractChronosAgent {
 
     void updateProgress( ChronosJob job, int progress ) {
         setProgress( job, (byte) progress );
-    }
-
-
-    private static void writeConfig( Properties properties, String path ) {
-        try ( FileWriter writer = new FileWriter( path ) ) {
-            properties.store( writer, "" );
-        } catch ( IOException e ) {
-            e.printStackTrace();
-        }
-        // ignored
     }
 
 
