@@ -49,6 +49,7 @@ import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.cli.ChronosCommand;
+import org.polypheny.simpleclient.cli.Main;
 import org.polypheny.simpleclient.executor.PolyphenyDbExecutor;
 import org.polypheny.simpleclient.executor.PostgresExecutor;
 import org.polypheny.simpleclient.scenario.gavel.Config;
@@ -119,7 +120,12 @@ public class ChronosAgent extends AbstractChronosAgent {
                 e.printStackTrace();
             }
         } else {
-            CsvWriter csvWriter = new CsvWriter( outputDirectory.getPath() + File.separator + "results.csv" );
+            final CsvWriter csvWriter;
+            if ( Main.WRITE_CSV ) {
+                csvWriter = new CsvWriter( outputDirectory.getPath() + File.separator + "results.csv" );
+            } else {
+                csvWriter = null;
+            }
             ProgressReporter progressReporter = new ChronosProgressReporter( chronosJob, this, config.numberOfThreads, config.progressReportBase );
             long runtime = 0;
             if ( config.store.equals( "polypheny" ) ) {/*

@@ -255,3 +255,5 @@ nbdist/
 
 # Avoid ignoring PolySqlParser jar file (.jar files are usually ignored)
 !/libs/PolySqlParser-1.0.jar
+
+/results.csv

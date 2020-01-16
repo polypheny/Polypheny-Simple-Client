@@ -82,7 +82,6 @@ public class EasyCommand implements CliRunnable {
             log.debug( "Interrupt Exception", e );
         }
 
-        System.out.println();
         return 0;
     }
 

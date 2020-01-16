@@ -47,9 +47,9 @@ public class ChangePasswordOfRandomUser extends QueryBuilder {
     public String generateSql() {
         Fairy fairy = Fairy.create();
         Person person = fairy.person();
-        return "UPDATE \"user\" SET password ="
+        return "UPDATE \"user\" SET \"password\" ="
                 + "'" + person.password() + "' "
-                + "WHERE id = "
+                + "WHERE \"id\" = "
                 + ThreadLocalRandom.current().nextInt( 1, numberOfUsers + 1 );
     }
 

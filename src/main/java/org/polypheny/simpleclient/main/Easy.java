@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
+import org.polypheny.simpleclient.cli.Main;
 import org.polypheny.simpleclient.executor.PolyphenyDbExecutor;
 import org.polypheny.simpleclient.scenario.gavel.Config;
 import org.polypheny.simpleclient.scenario.gavel.Gavel;
@@ -35,7 +36,12 @@ public class Easy {
             Config config = new Config( props, multiplier );
             Gavel gavel = new Gavel( polyphenyDbUrl, config );
 
-            CsvWriter csvWriter = new CsvWriter( "results.csv" );
+            final CsvWriter csvWriter;
+            if ( Main.WRITE_CSV ) {
+                csvWriter = new CsvWriter( "results.csv" );
+            } else {
+                csvWriter = null;
+            }
             ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
             long runtime = gavel.execute( progressReporter, csvWriter, null, new PolyphenyDbExecutor( polyphenyDbUrl, config ), false );
         } catch ( IOException | SQLException e ) {

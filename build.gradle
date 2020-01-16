@@ -68,7 +68,7 @@ dependencies {
 
     compile group: 'ch.unibas.dmi.dbis.chronos', name: 'chronos-agent', version: '2.2.1'
 
-    //Drivers
+    // JDBC Drivers
     compile group: 'org.polypheny', name: 'polypheny-jdbc-driver', version: '1.1'
     compile group: 'org.postgresql', name: 'postgresql', version: '42.2.1'
 
@@ -76,8 +76,6 @@ dependencies {
     compile group: 'io.codearte.jfairy', name: 'jfairy', version: '0.5.3'
     //csv
     compile group: 'com.opencsv', name: 'opencsv', version: '5.0'
-    // json
-    compile group: 'com.googlecode.json-simple', name: 'json-simple', version: '1.1.1'
 
     // connection pool
     compile group: 'com.mchange', name: 'c3p0', version: '0.9.5.5'

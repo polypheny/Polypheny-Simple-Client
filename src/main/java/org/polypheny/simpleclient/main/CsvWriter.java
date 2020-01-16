@@ -29,54 +29,36 @@ package org.polypheny.simpleclient.main;
 import com.opencsv.CSVWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicInteger;
 import lombok.extern.slf4j.Slf4j;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 
 
 @Slf4j
 public class CsvWriter {
 
-    private JSONParser parser;
+    private AtomicInteger queryNumber;
     private CSVWriter writer;
-    private volatile int queryNumber;
 
 
     CsvWriter( String path ) {
         try {
+            queryNumber = new AtomicInteger();
             writer = new CSVWriter( new FileWriter( path ) );
-
-            String[] entries = new String[]{ "Data Store", "Query Number", "Query Class", "Execution Time", "Total Time", "Measured Time" };
+            String[] entries = new String[]{ "Number", "Measured Time", "Query" };
             writer.writeNext( entries );
-
-            parser = new JSONParser();
-            queryNumber = 0;
         } catch ( IOException e ) {
             log.error( "Exception while writing csv file", e );
         }
     }
 
 
-    public synchronized void appendToCsv( String data, long measuredTime ) {
-        try {
-            queryNumber++;
-            JSONObject jsonObject = (JSONObject) parser.parse( data );
-            long queryClass = (long) jsonObject.get( "queryClass" );
-            JSONArray jsonResults = (JSONArray) jsonObject.get( "results" );
-            String[] entries;
-            for ( Object object : jsonResults ) {
-                JSONObject result = (JSONObject) object;
-                String dataStore = (String) result.get( "dataStore" );
-                long executionTime = (Long) result.get( "executionTime" );
-                long totalTime = (Long) result.get( "totalTime" );
-                entries = new String[]{ dataStore, "" + queryNumber, "" + queryClass, "" + executionTime, "" + totalTime, "" + measuredTime };
-                writer.writeNext( entries );
-            }
-        } catch ( ParseException e ) {
-            e.printStackTrace();
-        }
+    public void appendToCsv( String query, long measuredTime ) {
+        writer.writeNext( new String[]{ queryNumber.incrementAndGet() + "", "" + measuredTime, query } );
+    }
+
+
+    public void flush() throws IOException {
+        writer.flush();
     }
 
 

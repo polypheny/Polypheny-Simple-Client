@@ -47,9 +47,6 @@ import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
 import org.polypheny.simpleclient.cli.ChronosCommand;
 import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.executor.PolyphenyDbExecutor;
@@ -253,16 +250,12 @@ public class Gavel extends Scenario {
     private class EvaluationThread implements Runnable {
 
         private final Executor executor;
-
         private final List<QueryListEntry> theQueryList;
-
-        private final JSONParser parser;
         private final CsvWriter csvWriter;
 
 
         EvaluationThread( List<QueryListEntry> queryList, CsvWriter csvWriter, Executor executor ) {
             this.csvWriter = csvWriter;
-            parser = new JSONParser();
             this.executor = executor;
             theQueryList = queryList;
         }
@@ -287,7 +280,9 @@ public class Gavel extends Scenario {
                     throw new RuntimeException( e );
                 }
                 measuredTime = System.nanoTime() - measuredTimeStart;
-                //csvWriter.appendToCsv( "", measuredTime );
+                if ( csvWriter != null ) {
+                    csvWriter.appendToCsv( queryListEntry.query.sqlQuery, measuredTime );
+                }
                 measuredTimes.add( measuredTime );
                 measuredTimePerQueryType.get( queryListEntry.templateId ).add( measuredTime );
                 if ( ChronosCommand.commit ) {
@@ -304,36 +299,13 @@ public class Gavel extends Scenario {
             } catch ( SQLException e ) {
                 throw new RuntimeException( e );
             }
-        }
 
-
-        private void parse( String data ) {
-            try {
-                long maxExecutionTime = 0;
-                JSONObject jsonObject = (JSONObject) parser.parse( data );
-                JSONArray jsonResults = (JSONArray) jsonObject.get( "results" );
-                for ( Object object : jsonResults ) {
-                    JSONObject result = (JSONObject) object;
-                    String dataStore = (String) result.get( "dataStore" );
-                    if ( !executionTimes.containsKey( dataStore ) ) {
-                        executionTimes.put( dataStore, new LinkedList<>() );
-                    }
-                    long e = (Long) result.get( "executionTime" );
-                    executionTimes.get( dataStore ).add( e );
-                    if ( !totalTimes.containsKey( dataStore ) ) {
-                        totalTimes.put( dataStore, new LinkedList<>() );
-                    }
-                    long et = (Long) result.get( "totalTime" );
-                    totalTimes.get( dataStore ).add( et );
-                    if ( e > maxExecutionTime ) {
-                        maxExecutionTime = e;
-                    }
+            if ( csvWriter != null ) {
+                try {
+                    csvWriter.flush();
+                } catch ( IOException e ) {
+                    log.warn( "Exception while flushing csv writer", e );
                 }
-                long totalTime = (Long) jsonObject.get( "totalTime" );
-                polyphenyDbTotalTimes.add( totalTime );
-                polyphenyDbTimes.add( totalTime - maxExecutionTime );
-            } catch ( org.json.simple.parser.ParseException e ) {
-                e.printStackTrace();
             }
         }
 
@@ -360,7 +332,7 @@ public class Gavel extends Scenario {
                 try {
                     new DataGenerator( new PolyphenyDbExecutor( polyphenyDbUrl, config ), config, progressReporter ).generateUsers( config.numberOfUsers / config.numberOfUserGenerationThreads );
                 } catch ( SQLException e ) {
-                    e.printStackTrace();
+                    log.error( "Exception while generating data", e );
                 }
             };
             Thread thread = new Thread( task );
@@ -386,7 +358,7 @@ public class Gavel extends Scenario {
                 try {
                     new DataGenerator( new PolyphenyDbExecutor( polyphenyDbUrl, config ), config, progressReporter ).generateAuctions( start, end );
                 } catch ( SQLException e ) {
-                    e.printStackTrace();
+                    log.error( "Exception while generating data", e );
                 }
             };
             Thread thread = new Thread( task );

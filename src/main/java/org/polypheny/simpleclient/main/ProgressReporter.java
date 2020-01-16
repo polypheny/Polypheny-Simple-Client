@@ -27,26 +27,27 @@ package org.polypheny.simpleclient.main;
 
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 import lombok.extern.slf4j.Slf4j;
 
 
 @Slf4j
 public abstract class ProgressReporter {
 
-    private volatile long progress;
+    private AtomicLong progress;
     private final int numberOfThreads;
     public final int base;
 
 
     ProgressReporter( int numberOfThreads, int base ) {
+        progress = new AtomicLong();
         this.numberOfThreads = numberOfThreads;
         this.base = base;
     }
 
 
     public void updateProgress() {
-        progress++;
-        double p = ((double) progress / (double) (numberOfThreads));
+        double p = ((double) progress.incrementAndGet() / (double) (numberOfThreads));
         update( (int) p );
     }
 
