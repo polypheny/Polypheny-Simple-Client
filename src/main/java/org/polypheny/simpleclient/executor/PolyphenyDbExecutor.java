@@ -70,7 +70,7 @@ public class PolyphenyDbExecutor extends Executor {
         }
 
         try {
-            String url = "jdbc:polypheny://" + polyphenyDbUrl + "/?wire_protocol=PROTO3";
+            String url = "jdbc:polypheny://" + polyphenyDbUrl + "/?serialization=PROTOBUF";
 
             Properties props = new Properties();
             props.setProperty( "user", "pa" );
