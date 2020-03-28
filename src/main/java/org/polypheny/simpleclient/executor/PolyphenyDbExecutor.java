@@ -46,7 +46,7 @@ public class PolyphenyDbExecutor extends Executor {
     //private final ComboPooledDataSource cpds;
 
 
-    public PolyphenyDbExecutor( String polyphenyDbUrl, Config config ) {
+    public PolyphenyDbExecutor( String polyphenyHost, Config config ) {
 
         /*cpds = new ComboPooledDataSource();
         try {
@@ -70,7 +70,7 @@ public class PolyphenyDbExecutor extends Executor {
         }
 
         try {
-            String url = "jdbc:polypheny://" + polyphenyDbUrl + "/?serialization=PROTOBUF";
+            String url = "jdbc:polypheny://" + polyphenyHost + "/?serialization=PROTOBUF";
 
             Properties props = new Properties();
             props.setProperty( "user", "pa" );

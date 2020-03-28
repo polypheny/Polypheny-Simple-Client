@@ -27,6 +27,7 @@ package org.polypheny.simpleclient.main;
 
 
 import ch.unibas.dmi.dbis.chronos.agent.AbstractChronosAgent;
+import ch.unibas.dmi.dbis.chronos.agent.ChronosHttpClient.ChronosLogHandler;
 import ch.unibas.dmi.dbis.chronos.agent.ChronosJob;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -34,11 +35,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.net.InetAddress;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -64,11 +67,17 @@ public class ChronosAgent extends AbstractChronosAgent {
 
 
     public final String[] supports;
+    PolyphenyControlConnector polyphenyControlConnector = null;
 
 
     public ChronosAgent( InetAddress address, int port, boolean secure, boolean useHostname, String environment, String supports ) {
         super( address, port, secure, useHostname, environment );
         this.supports = new String[]{ supports };
+        try {
+            polyphenyControlConnector = new PolyphenyControlConnector( ChronosCommand.polyphenyDbHost + ":8070" );
+        } catch ( URISyntaxException e ) {
+            log.error( "Exception while connecting to Polypheny Control", e );
+        }
     }
 
 
@@ -80,6 +89,49 @@ public class ChronosAgent extends AbstractChronosAgent {
 
     @Override
     protected Object prepare( ChronosJob chronosJob, final File inputDirectory, final File outputDirectory, Properties properties, Object o ) {
+        // Parse CDL
+        Map<String, String> settings = null;
+        try {
+            settings = readCDL( new ByteArrayInputStream( chronosJob.cdl.getBytes( StandardCharsets.UTF_8 ) ) );
+        } catch ( XPathExpressionException | ParserConfigurationException | SAXException | IOException e ) {
+            log.error( "Exception while parsing cdl", e );
+        }
+        Config config = new Config( settings );
+        Gavel gavel = new Gavel( ChronosCommand.polyphenyDbHost, config );
+
+        // Restart Polypheny
+        polyphenyControlConnector.stopPolypheny();
+        try {
+            TimeUnit.SECONDS.sleep( 3 );
+        } catch ( InterruptedException e ) {
+            // ignore
+        }
+        polyphenyControlConnector.startPolypheny();
+        try {
+            TimeUnit.SECONDS.sleep( 5 );
+        } catch ( InterruptedException e ) {
+            // ignore
+        }
+
+        // Create schema
+        try {
+            gavel.createSchema();
+        } catch ( SQLException e ) {
+            log.error( "Error while creating schema", e );
+        }
+
+        // Insert data
+        ProgressReporter progressReporter = new ChronosProgressReporter(
+                chronosJob,
+                this,
+                config.numberOfUserGenerationThreads + config.numberOfAuctionGenerationThreads,
+                config.progressReportBase );
+        try {
+            gavel.buildDatabase( progressReporter );
+        } catch ( SQLException e ) {
+            log.error( "Error while inserting data", e );
+        }
+
         return null;
     }
 
@@ -104,81 +156,70 @@ public class ChronosAgent extends AbstractChronosAgent {
         } catch ( XPathExpressionException | ParserConfigurationException | SAXException | IOException e ) {
             log.error( "Exception while parsing cdl", e );
         }
-        String polyphenyDbUrl = "http://" + ChronosCommand.polyphenyDbHost + ":" + 8000 + "/request";
+
         assert settings != null;
         Config config = new Config( settings );
-        Gavel gavel = new Gavel( polyphenyDbUrl, config );
+        Gavel gavel = new Gavel( ChronosCommand.polyphenyDbHost, config );
 
-        PolyphenyControlConnector polyphenyControlConnector = new PolyphenyControlConnector( "http://" + ChronosCommand.polyphenyDbHost + ":9090" );
-
-        if ( settings.get( "type" ).equals( "DataGeneration" ) ) {
-            ProgressReporter progressReporter = new ChronosProgressReporter( chronosJob, this, config.numberOfUserGenerationThreads + config.numberOfAuctionGenerationThreads, config.progressReportBase );
-            try {
-                gavel.buildDatabase( progressReporter );
-            } catch ( SQLException e ) {
-                log.error( "Error while inserting data", e );
-            }
+        final CsvWriter csvWriter;
+        if ( Main.WRITE_CSV ) {
+            csvWriter = new CsvWriter( outputDirectory.getPath() + File.separator + "results.csv" );
         } else {
-            final CsvWriter csvWriter;
-            if ( Main.WRITE_CSV ) {
-                csvWriter = new CsvWriter( outputDirectory.getPath() + File.separator + "results.csv" );
-            } else {
-                csvWriter = null;
-            }
-            ProgressReporter progressReporter = new ChronosProgressReporter( chronosJob, this, config.numberOfThreads, config.progressReportBase );
-            long runtime = 0;
-            if ( config.store.equals( "polypheny" ) ) {/*
-                LOG.log( Level.INFO, "Setting Icarus configuration" );
-                settings.forEach( ( key, value ) -> {
-                    if ( key.startsWith( "icarus_" ) ) {
-                        icarusWrapperConnector.setConfig( key.substring( 7 ), value );
-                    }
-                } );
-                LOG.log( Level.INFO, "Restarting Icarus" );
-                icarusWrapperConnector.stopIcarus();
-                icarusWrapperConnector.startIcarus();
-*/
-                try {
-                    runtime = gavel.execute( progressReporter, csvWriter, outputDirectory, new PolyphenyDbExecutor( polyphenyDbUrl, config ), warmUp );
-                } catch ( SQLException e ) {
-                    log.error( "Error while executing query", e );
-                }
-                gavel.analyze( properties );
-                gavel.analyzeMeasuredTime( properties );/*
-                // store icarus properties for documentation
-                try {
-                    Properties p = new Properties();
-                    p.load( new StringReader( icarusWrapperConnector.getConfig() ) );
-                    writeConfig( p,outputDirectory.getPath() + File.separator + "icarus.properties" );
-                } catch ( IOException e ) {
-                    e.printStackTrace();
-                }
-                // store icarus version for documentation
-                try {
-                    FileWriter fw = new FileWriter(outputDirectory.getPath() + File.separator + "icarus.version" );
-                    fw.append( icarusWrapperConnector.getVersion() );
-                    fw.close();
-                } catch ( IOException e ) {
-                    e.printStackTrace();
-                }*/
-            } else {
-                HashMap<String, Properties> storeProperties;
-                try {
-                    storeProperties = getStoreProperties( polyphenyControlConnector );
-                    if ( config.store.equals( "postgres" ) ) {
-                        storeProperties.get( "postgressqlhdd" ).put( "host", storeProperties.get( "postgressqlhdd" ).getProperty( "host" ).replaceAll( "127.0.0.1", ChronosCommand.polyphenyDbHost ) );
-                        runtime = gavel.execute( progressReporter, csvWriter, outputDirectory, new PostgresExecutor( storeProperties.get( "postgressqlhdd" ) ), warmUp );
-                    } else {
-                        System.err.println( "Unknown Store: " + config.store );
-                    }
-                } catch ( IOException | SQLException e ) {
-                    log.error( "Error while executing query", e );
-                }
-                gavel.analyzeMeasuredTime( properties );
-            }
-            properties.put( "runtime", runtime );
-            log.info( gavel.getTimesAsString( properties ) );
+            csvWriter = null;
         }
+        ProgressReporter progressReporter = new ChronosProgressReporter( chronosJob, this, config.numberOfThreads, config.progressReportBase );
+        long runtime = 0;
+        if ( config.store.equals( "polypheny" ) ) {
+            /*
+            LOG.log( Level.INFO, "Setting Icarus configuration" );
+            settings.forEach( ( key, value ) -> {
+                if ( key.startsWith( "icarus_" ) ) {
+                    icarusWrapperConnector.setConfig( key.substring( 7 ), value );
+                }
+            } );
+            */
+
+            try {
+                runtime = gavel.execute( progressReporter, csvWriter, outputDirectory, new PolyphenyDbExecutor( ChronosCommand.polyphenyDbHost, config ), warmUp );
+            } catch ( SQLException e ) {
+                log.error( "Error while executing query", e );
+            }
+            gavel.analyze( properties );
+            gavel.analyzeMeasuredTime( properties );/*
+            // store icarus properties for documentation
+            try {
+                Properties p = new Properties();
+                p.load( new StringReader( icarusWrapperConnector.getConfig() ) );
+                writeConfig( p,outputDirectory.getPath() + File.separator + "icarus.properties" );
+            } catch ( IOException e ) {
+                e.printStackTrace();
+            }
+            // store icarus version for documentation
+            try {
+                FileWriter fw = new FileWriter(outputDirectory.getPath() + File.separator + "icarus.version" );
+                fw.append( icarusWrapperConnector.getVersion() );
+                fw.close();
+            } catch ( IOException e ) {
+                e.printStackTrace();
+            }*/
+        } else {
+            HashMap<String, Properties> storeProperties;
+            try {
+                storeProperties = getStoreProperties( polyphenyControlConnector );
+                if ( config.store.equals( "postgres" ) ) {
+                    storeProperties.get( "postgressqlhdd" ).put( "host", storeProperties.get( "postgressqlhdd" ).getProperty( "host" ).replaceAll( "127.0.0.1", ChronosCommand.polyphenyDbHost ) );
+                    runtime = gavel.execute( progressReporter, csvWriter, outputDirectory, new PostgresExecutor( storeProperties.get( "postgressqlhdd" ) ), warmUp );
+                } else {
+                    System.err.println( "Unknown Store: " + config.store );
+                }
+            } catch ( IOException | SQLException e ) {
+                log.error( "Error while executing query", e );
+            }
+            gavel.analyzeMeasuredTime( properties );
+        }
+        properties.put( "runtime", runtime );
+        log.info( gavel.getTimesAsString( properties ) );
+
         return null;
     }
 
@@ -246,6 +287,18 @@ public class ChronosAgent extends AbstractChronosAgent {
 
     void updateProgress( ChronosJob job, int progress ) {
         setProgress( job, (byte) progress );
+    }
+
+
+    @Override
+    protected void addChronosLogHandler( ChronosLogHandler chronosLogHandler ) {
+        polyphenyControlConnector.setChronosLogHandler( chronosLogHandler );
+    }
+
+
+    @Override
+    protected void removeChronosLogHandler( ChronosLogHandler chronosLogHandler ) {
+        polyphenyControlConnector.setChronosLogHandler( null );
     }
 
 

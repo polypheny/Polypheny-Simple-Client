@@ -6,12 +6,26 @@
             <PatternLayout pattern="%highlight{%d{HH:mm:ss.SSS} %level [%t]: %msg%n}{FATAL=bg_red, ERROR=red, WARN=yellow bold, INFO=black, DEBUG=green bold, TRACE=blue}" disableAnsi="false"/>
             <ThresholdFilter level="trace" onMatch="ACCEPT" onMismatch="DENY"/>
         </Console>
+        <Console name="ConsoleAppenderChronos" target="SYSTEM_OUT" follow="true">
+            <PatternLayout pattern="%highlight{%d{HH:mm:ss.SSS} %level CHRONOS --> %msg%n}{FATAL=bg_red, ERROR=red, WARN=yellow bold, INFO=black, DEBUG=green bold, TRACE=blue}" disableAnsi="false"/>
+            <ThresholdFilter level="trace" onMatch="ACCEPT" onMismatch="DENY"/>
+        </Console>
+        <Console name="ConsoleAppenderPolyphenyDb" target="SYSTEM_OUT" follow="true">
+            <PatternLayout pattern="%highlight{%d{HH:mm:ss.SSS} %level POLYPHENY-DB: %msg%n}{FATAL=bg_red, ERROR=red, WARN=yellow bold, INFO=black, DEBUG=green bold, TRACE=blue}" disableAnsi="false"/>
+            <ThresholdFilter level="trace" onMatch="ACCEPT" onMismatch="DENY"/>
+        </Console>
     </Appenders>
     <Loggers>
-        <logger name="org.polypheny" level="WARN">
-            <AppenderRef ref="ConsoleAppender"/>
+        <logger name="org.polypheny.simpleclient.main.PolyphenyControlConnector" level="INFO" additivity="false">
+            <AppenderRef ref="ConsoleAppenderPolyphenyDb"/>
         </logger>
         <logger name="org.polypheny.jdbc.Driver" level="ERROR">
+            <AppenderRef ref="ConsoleAppender"/>
+        </logger>
+        <logger name="ch.unibas.dmi.dbis.chronos.agent" level="INFO">
+            <AppenderRef ref="ConsoleAppenderChronos"/>
+        </logger>
+        <logger name="org.polypheny" level="WARN">
             <AppenderRef ref="ConsoleAppender"/>
         </logger>
         <Root level="warn"/>
