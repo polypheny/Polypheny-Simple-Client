@@ -31,6 +31,7 @@ import ch.unibas.dmi.dbis.chronos.agent.ChronosHttpClient.ChronosLogHandler;
 import ch.unibas.dmi.dbis.chronos.agent.ChronosJob;
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
@@ -193,15 +194,15 @@ public class ChronosAgent extends AbstractChronosAgent {
                 writeConfig( p,outputDirectory.getPath() + File.separator + "icarus.properties" );
             } catch ( IOException e ) {
                 e.printStackTrace();
-            }
-            // store icarus version for documentation
+            }*/
+            // Store Polypheny version for documentation
             try {
-                FileWriter fw = new FileWriter(outputDirectory.getPath() + File.separator + "icarus.version" );
-                fw.append( icarusWrapperConnector.getVersion() );
+                FileWriter fw = new FileWriter( outputDirectory.getPath() + File.separator + "polypheny.version" );
+                fw.append( polyphenyControlConnector.getVersion() );
                 fw.close();
             } catch ( IOException e ) {
-                e.printStackTrace();
-            }*/
+                log.error( "Error while logging polypheny version", e );
+            }
         } else {
             HashMap<String, Properties> storeProperties;
             try {
