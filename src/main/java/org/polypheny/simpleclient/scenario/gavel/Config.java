@@ -36,9 +36,6 @@ public class Config {
 
     public final String store;
 
-    public final String resultMode;
-    public final String warmupResultMode;
-
     public final int numberOfThreads;
     public final int numberOfAddUserQueries;
     public final int numberOfChangePasswordQueries;
@@ -79,8 +76,6 @@ public class Config {
 
 
     public Config( Properties properties, int multiplier ) {
-        resultMode = "DEBUG";
-        warmupResultMode = "DEBUG";
         store = "polypheny";
         progressReportBase = getIntProperty( properties, "progressReportBase" );
         numberOfThreads = getIntProperty( properties, "numberOfThreads" );
@@ -123,97 +118,51 @@ public class Config {
 
 
     public Config( Map<String, String> cdl ) {
-        if ( !cdl.containsKey( "type" ) ) {
-            throw new RuntimeException( "Invalid CDL: Attribute \"type\" is missing" );
-        }
-        if ( cdl.get( "type" ).equalsIgnoreCase( "Benchmark" ) ) {
-            resultMode = cdl.get( "resultMode" );
-            warmupResultMode = cdl.get( "warmupResultMode" );
+        numberOfThreads = Integer.parseInt( cdl.get( "numberOfThreads" ) );
+        store = cdl.get( "store" );
 
-            numberOfThreads = Integer.parseInt( cdl.get( "numberOfThreads" ) );
-            store = cdl.get( "store" );
+        // Benchmark
+        numberOfGetAuctionQueries = Integer.parseInt( cdl.get( "numberOfGetAuctionQueries" ) );
+        numberOfGetBidQueries = Integer.parseInt( cdl.get( "numberOfGetBidQueries" ) );
+        numberOfGetUserQueries = Integer.parseInt( cdl.get( "numberOfGetUserQueries" ) );
+        numberOfGetAllBidsOnAuctionQueries = Integer.parseInt( cdl.get( "numberOfGetAllBidsOnAuctionQueries" ) );
+        numberOfGetCurrentlyHighestBidOnAuctionQueries = Integer.parseInt( cdl.get( "numberOfGetCurrentlyHighestBidOnAuctionQueries" ) );
+        numberOfSearchAuctionQueries = Integer.parseInt( cdl.get( "numberOfSearchAuctionQueries" ) );
 
-            numberOfGetAuctionQueries = Integer.parseInt( cdl.get( "numberOfGetAuctionQueries" ) );
-            numberOfGetBidQueries = Integer.parseInt( cdl.get( "numberOfGetBidQueries" ) );
-            numberOfGetUserQueries = Integer.parseInt( cdl.get( "numberOfGetUserQueries" ) );
-            numberOfGetAllBidsOnAuctionQueries = Integer.parseInt( cdl.get( "numberOfGetAllBidsOnAuctionQueries" ) );
-            numberOfGetCurrentlyHighestBidOnAuctionQueries = Integer.parseInt( cdl.get( "numberOfGetCurrentlyHighestBidOnAuctionQueries" ) );
-            numberOfSearchAuctionQueries = Integer.parseInt( cdl.get( "numberOfSearchAuctionQueries" ) );
+        numberOfChangePasswordQueries = Integer.parseInt( cdl.get( "numberOfChangePasswordQueries" ) );
+        numberOfChangeAuctionQueries = Integer.parseInt( cdl.get( "numberOfChangeAuctionQueries" ) );
 
-            numberOfChangePasswordQueries = Integer.parseInt( cdl.get( "numberOfChangePasswordQueries" ) );
-            numberOfChangeAuctionQueries = Integer.parseInt( cdl.get( "numberOfChangeAuctionQueries" ) );
+        numberOfAddAuctionQueries = Integer.parseInt( cdl.get( "numberOfAddAuctionQueries" ) );
+        numberOfAddUserQueries = Integer.parseInt( cdl.get( "numberOfAddUserQueries" ) );
+        numberOfAddBidQueries = Integer.parseInt( cdl.get( "numberOfAddBidQueries" ) );
 
-            numberOfAddAuctionQueries = Integer.parseInt( cdl.get( "numberOfAddAuctionQueries" ) );
-            numberOfAddUserQueries = Integer.parseInt( cdl.get( "numberOfAddUserQueries" ) );
-            numberOfAddBidQueries = Integer.parseInt( cdl.get( "numberOfAddBidQueries" ) );
+        numberOfGetTheNextHundredEndingAuctionsOfACategoryQueries = Integer.parseInt( cdl.get( "numberOfGetTheNextHundredEndingAuctionsOfACategoryQueries" ) );
+        numberOfCountAuctionsQueries = Integer.parseInt( cdl.get( "numberOfCountAuctionsQueries" ) );
+        numberOfCountBidsQueries = Integer.parseInt( cdl.get( "numberOfCountBidsQueries" ) );
 
-            numberOfGetTheNextHundredEndingAuctionsOfACategoryQueries = Integer.parseInt( cdl.get( "numberOfGetTheNextHundredEndingAuctionsOfACategoryQueries" ) );
-            numberOfCountAuctionsQueries = Integer.parseInt( cdl.get( "numberOfCountAuctionsQueries" ) );
-            numberOfCountBidsQueries = Integer.parseInt( cdl.get( "numberOfCountBidsQueries" ) );
+        numberOfTopTenCitiesByNumberOfCustomersQueries = Integer.parseInt( cdl.get( "numberOfTopTenCitiesByNumberOfCustomersQueries" ) );
 
-            numberOfTopTenCitiesByNumberOfCustomersQueries = Integer.parseInt( cdl.get( "numberOfTopTenCitiesByNumberOfCustomersQueries" ) );
+        // Data Generation
+        numberOfUsers = Integer.parseInt( cdl.get( "numberOfUsers" ) );
+        numberOfAuctions = Integer.parseInt( cdl.get( "numberOfAuctions" ) );
+        numberOfCategories = Integer.parseInt( cdl.get( "numberOfCategories" ) );
+        auctionTitleMinLength = Integer.parseInt( cdl.get( "auctionTitleMinLength" ) );
+        auctionTitleMaxLength = Integer.parseInt( cdl.get( "auctionTitleMaxLength" ) );
+        auctionDescriptionMinLength = Integer.parseInt( cdl.get( "auctionDescriptionMinLength" ) );
+        auctionDescriptionMaxLength = Integer.parseInt( cdl.get( "auctionDescriptionMaxLength" ) );
+        auctionDateMaxYearsInPast = Integer.parseInt( cdl.get( "auctionDateMaxYearsInPast" ) );
+        auctionNumberOfDays = Integer.parseInt( cdl.get( "auctionNumberOfDays" ) );
+        minNumberOfBidsPerAuction = Integer.parseInt( cdl.get( "minNumberOfBidsPerAuction" ) );
+        maxNumberOfBidsPerAuction = Integer.parseInt( cdl.get( "maxNumberOfBidsPerAuction" ) );
+        minNumberOfPicturesPerAuction = Integer.parseInt( cdl.get( "minNumberOfPicturesPerAuction" ) );
+        maxNumberOfPicturesPerAuction = Integer.parseInt( cdl.get( "maxNumberOfPicturesPerAuction" ) );
+        maxBatchSize = Integer.parseInt( cdl.get( "maxBatchSize" ) );
+        numberOfUserGenerationThreads = Integer.parseInt( cdl.get( "numberOfUserGenerationThreads" ) );
+        numberOfAuctionGenerationThreads = Integer.parseInt( cdl.get( "numberOfAuctionGenerationThreads" ) );
 
-            numberOfUsers = 0;
-            numberOfAuctions = 0;
-            numberOfCategories = 0;
-            auctionTitleMinLength = 2;
-            auctionTitleMaxLength = 8;
-            auctionDescriptionMinLength = 5;
-            auctionDescriptionMaxLength = 15;
-            auctionDateMaxYearsInPast = 4;
-            auctionNumberOfDays = 10;
-            minNumberOfBidsPerAuction = 30;
-            maxNumberOfBidsPerAuction = 200;
-            minNumberOfPicturesPerAuction = 1;
-            maxNumberOfPicturesPerAuction = 6;
-            maxBatchSize = 0;
-            numberOfUserGenerationThreads = 0;
-            numberOfAuctionGenerationThreads = 0;
-            parallelizeUserGenerationAndAuctionGeneration = false;
-        } else if ( cdl.get( "type" ).equalsIgnoreCase( "DataGeneration" ) ) {
-            resultMode = "DEBUG";
-            warmupResultMode = "DEBUG";
-            store = "polypheny";
-            numberOfThreads = 0;
-            numberOfAddUserQueries = 0;
-            numberOfChangePasswordQueries = 0;
-            numberOfAddAuctionQueries = 0;
-            numberOfAddBidQueries = 0;
-            numberOfChangeAuctionQueries = 0;
-            numberOfGetAuctionQueries = 0;
-            numberOfGetTheNextHundredEndingAuctionsOfACategoryQueries = 0;
-            numberOfSearchAuctionQueries = 0;
-            numberOfCountAuctionsQueries = 0;
-            numberOfTopTenCitiesByNumberOfCustomersQueries = 0;
-            numberOfCountBidsQueries = 0;
-            numberOfGetBidQueries = 0;
-            numberOfGetUserQueries = 0;
-            numberOfGetAllBidsOnAuctionQueries = 0;
-            numberOfGetCurrentlyHighestBidOnAuctionQueries = 0;
+        parallelizeUserGenerationAndAuctionGeneration = Boolean.parseBoolean( cdl.get( "parallelizeUserGenerationAndAuctionGeneration" ) );
 
-            numberOfUsers = Integer.parseInt( cdl.get( "numberOfUsers" ) );
-            numberOfAuctions = Integer.parseInt( cdl.get( "numberOfAuctions" ) );
-            numberOfCategories = Integer.parseInt( cdl.get( "numberOfCategories" ) );
-            auctionTitleMinLength = Integer.parseInt( cdl.get( "auctionTitleMinLength" ) );
-            auctionTitleMaxLength = Integer.parseInt( cdl.get( "auctionTitleMaxLength" ) );
-            auctionDescriptionMinLength = Integer.parseInt( cdl.get( "auctionDescriptionMinLength" ) );
-            auctionDescriptionMaxLength = Integer.parseInt( cdl.get( "auctionDescriptionMaxLength" ) );
-            auctionDateMaxYearsInPast = Integer.parseInt( cdl.get( "auctionDateMaxYearsInPast" ) );
-            auctionNumberOfDays = Integer.parseInt( cdl.get( "auctionNumberOfDays" ) );
-            minNumberOfBidsPerAuction = Integer.parseInt( cdl.get( "minNumberOfBidsPerAuction" ) );
-            maxNumberOfBidsPerAuction = Integer.parseInt( cdl.get( "maxNumberOfBidsPerAuction" ) );
-            minNumberOfPicturesPerAuction = Integer.parseInt( cdl.get( "minNumberOfPicturesPerAuction" ) );
-            maxNumberOfPicturesPerAuction = Integer.parseInt( cdl.get( "maxNumberOfPicturesPerAuction" ) );
-            maxBatchSize = Integer.parseInt( cdl.get( "maxBatchSize" ) );
-            numberOfUserGenerationThreads = Integer.parseInt( cdl.get( "numberOfUserGenerationThreads" ) );
-            numberOfAuctionGenerationThreads = Integer.parseInt( cdl.get( "numberOfAuctionGenerationThreads" ) );
-
-            parallelizeUserGenerationAndAuctionGeneration = Boolean.parseBoolean( cdl.get( "parallelizeUserGenerationAndAuctionGeneration" ) );
-        } else {
-            throw new RuntimeException( "Unknown value of attribute \"type\": " + cdl.get( "type" ) );
-        }
         progressReportBase = 100;
-
     }
 
 
