@@ -89,6 +89,15 @@ class PolyphenyControlConnector {
     }
 
 
+    void setClientType() {
+        try {
+            Unirest.post( controlUrl + "/client/type" ).field( "clientId", clientId ).field( "clientType", "BENCHMARKER" ).asString();
+        } catch ( UnirestException e ) {
+            log.error( "Error while setting client type", e );
+        }
+    }
+
+
     public String getConfig() {
         return executeGet( "/config/get" );
     }
@@ -167,6 +176,7 @@ class PolyphenyControlConnector {
 
             if ( data.containsKey( "clientId" ) ) {
                 clientId = Integer.parseInt( data.get( "clientId" ) );
+                setClientType();
             }
             if ( data.containsKey( "logOutput" ) ) {
                 if ( chronosLogHandler != null ) {
