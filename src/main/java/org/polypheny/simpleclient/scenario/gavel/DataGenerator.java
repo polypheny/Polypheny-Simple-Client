@@ -33,12 +33,14 @@ import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.joda.time.DateTime;
 import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.main.ProgressReporter;
 import org.polypheny.simpleclient.main.Query;
 import org.polypheny.simpleclient.main.QueryBuilder;
+import org.polypheny.simpleclient.scenario.gavel.Gavel.DataGenerationThreadMonitor;
 import org.polypheny.simpleclient.scenario.gavel.queryBuilder.InsertAuction;
 import org.polypheny.simpleclient.scenario.gavel.queryBuilder.InsertBid;
 import org.polypheny.simpleclient.scenario.gavel.queryBuilder.InsertCategory;
@@ -60,12 +62,19 @@ class DataGenerator {
 
     private final List<Query> batchList;
 
+    @Getter
+    private DataGenerationThreadMonitor threadMonitor;
+    private boolean aborted;
 
-    DataGenerator( Executor executor, Config config, ProgressReporter progressReporter ) {
+
+    DataGenerator( Executor executor, Config config, ProgressReporter progressReporter, DataGenerationThreadMonitor threadMonitor ) {
         theExecutor = executor;
         this.config = config;
         this.progressReporter = progressReporter;
         batchList = new LinkedList<>();
+        this.threadMonitor = threadMonitor;
+        threadMonitor.registerDataGenerator( this );
+        aborted = false;
     }
 
 
@@ -83,6 +92,9 @@ class DataGenerator {
         int numberOfCategories = config.numberOfCategories;
         QueryBuilder queryBuilder = new InsertCategory();
         for ( int i = 0; i < numberOfCategories; i++ ) {
+            if ( aborted ) {
+                break;
+            }
             addToMultiInsert( queryBuilder.getNewQuery() );
         }
         executeMultiInsert();
@@ -93,6 +105,9 @@ class DataGenerator {
         int mod = numberOfUsers / progressReporter.base;
         QueryBuilder queryBuilder = new InsertUser();
         for ( int i = 0; i < numberOfUsers; i++ ) {
+            if ( aborted ) {
+                break;
+            }
             addToMultiInsert( queryBuilder.getNewQuery() );
             if ( (i % mod) == 0 ) {
                 progressReporter.updateProgress();
@@ -130,6 +145,9 @@ class DataGenerator {
         String title;
         String description;
         for ( int i = start; i <= end; i++ ) {
+            if ( aborted ) {
+                break;
+            }
             if ( (i % mod) == 0 ) {
                 progressReporter.updateProgress();
             }
@@ -210,4 +228,7 @@ class DataGenerator {
     }
 
 
+    public void abort() {
+        aborted = true;
+    }
 }

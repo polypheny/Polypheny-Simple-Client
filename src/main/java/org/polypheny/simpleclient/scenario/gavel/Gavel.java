@@ -374,7 +374,9 @@ public class Gavel extends Scenario {
     public void buildDatabase( ProgressReporter progressReporter ) throws SQLException {
         log.info( "Generating Data..." );
 
-        DataGenerator dataGenerator = new DataGenerator( new PolyphenyDbExecutor( polyphenyDbUrl, config ), config, progressReporter );
+        DataGenerationThreadMonitor threadMonitor = new DataGenerationThreadMonitor();
+
+        DataGenerator dataGenerator = new DataGenerator( new PolyphenyDbExecutor( polyphenyDbUrl, config ), config, progressReporter, threadMonitor );
         dataGenerator.truncateTables();
         dataGenerator.generateCategories();
 
@@ -383,9 +385,10 @@ public class Gavel extends Scenario {
         for ( int i = 0; i < config.numberOfUserGenerationThreads; i++ ) {
             Runnable task = () -> {
                 try {
-                    DataGenerator dg = new DataGenerator( new PolyphenyDbExecutor( polyphenyDbUrl, config ), config, progressReporter );
+                    DataGenerator dg = new DataGenerator( new PolyphenyDbExecutor( polyphenyDbUrl, config ), config, progressReporter, threadMonitor );
                     dg.generateUsers( config.numberOfUsers / config.numberOfUserGenerationThreads );
                 } catch ( SQLException e ) {
+                    threadMonitor.notifyAboutError( e );
                     log.error( "Exception while generating data", e );
                 }
             };
@@ -399,6 +402,7 @@ public class Gavel extends Scenario {
                 try {
                     t.join();
                 } catch ( InterruptedException e ) {
+                    threadMonitor.notifyAboutError( e );
                     throw new RuntimeException( "Unexpected interrupt", e );
                 }
             }
@@ -410,9 +414,10 @@ public class Gavel extends Scenario {
             final int end = rangeSize * i;
             Runnable task = () -> {
                 try {
-                    DataGenerator dg = new DataGenerator( new PolyphenyDbExecutor( polyphenyDbUrl, config ), config, progressReporter );
+                    DataGenerator dg = new DataGenerator( new PolyphenyDbExecutor( polyphenyDbUrl, config ), config, progressReporter, threadMonitor );
                     dg.generateAuctions( start, end );
                 } catch ( SQLException e ) {
+                    threadMonitor.notifyAboutError( e );
                     log.error( "Exception while generating data", e );
                 }
             };
@@ -425,8 +430,46 @@ public class Gavel extends Scenario {
             try {
                 t.join();
             } catch ( InterruptedException e ) {
+                threadMonitor.notifyAboutError( e );
                 throw new RuntimeException( "Unexpected interrupt", e );
             }
+        }
+
+        if ( threadMonitor.aborted ) {
+            throw new RuntimeException( "Exception while generating data", threadMonitor.exception );
+        }
+    }
+
+
+    static class DataGenerationThreadMonitor {
+
+        private List<DataGenerator> dataGenerators;
+        @Getter
+        private boolean aborted;
+        @Getter
+        private Exception exception = null;
+
+
+        DataGenerationThreadMonitor() {
+            this.dataGenerators = new LinkedList<>();
+            aborted = false;
+        }
+
+
+        void registerDataGenerator( DataGenerator instance ) {
+            dataGenerators.add( instance );
+        }
+
+
+        public void abortAll() {
+            this.aborted = true;
+            dataGenerators.forEach( DataGenerator::abort );
+        }
+
+
+        public void notifyAboutError( Exception e ) {
+            exception = e;
+            abortAll();
         }
     }
 
@@ -441,7 +484,7 @@ public class Gavel extends Scenario {
                 try {
                     executor.executeStatement( new Query( s, false ) );
                 } catch ( SQLException e ) {
-                    log.error( "Exception", e );
+                    throw new RuntimeException( "Exception while creating schema", e );
                 }
             } );
         }

@@ -254,7 +254,7 @@ class PolyphenyControlConnector {
                         chronosLogHandler.publish( logStr );
                         chronosLogHandler.flush();
                     }
-                    log.info( data.get( logStr ) );
+                    log.info( logStr );
                 }
             }
         }
