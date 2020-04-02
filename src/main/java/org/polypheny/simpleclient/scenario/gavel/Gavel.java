@@ -26,7 +26,6 @@
 package org.polypheny.simpleclient.scenario.gavel;
 
 
-import com.google.common.base.Joiner;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
@@ -46,6 +45,8 @@ import java.util.Properties;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.cli.ChronosCommand;
 import org.polypheny.simpleclient.executor.Executor;
@@ -203,7 +204,7 @@ public class Gavel extends Scenario {
                 executor.executeCommit();
                 Thread.sleep( 5000 );
             } catch ( InterruptedException e ) {
-                log.debug( "Caught InterruptedException", e );
+                throw new RuntimeException( "Unexpected interrupt", e );
             }
         }
 
@@ -211,13 +212,16 @@ public class Gavel extends Scenario {
         (new Thread( new ProgressReporter.ReportQueryListProgress( queryList, progressReporter ) )).start();
         long startTime = System.nanoTime();
 
-        ArrayList<Thread> threads = new ArrayList<>();
+        ArrayList<EvaluationThread> threads = new ArrayList<>();
         for ( int i = 0; i < config.numberOfThreads; i++ ) {
             //TODO
-            threads.add( new Thread( new EvaluationThread( queryList, csvWriter, new PolyphenyDbExecutor( polyphenyDbUrl, config ) ) ) );
+            threads.add( new EvaluationThread( queryList, csvWriter, new PolyphenyDbExecutor( polyphenyDbUrl, config ) ) );
         }
 
-        for ( Thread thread : threads ) {
+        EvaluationThreadMonitor threadMonitor = new EvaluationThreadMonitor( threads );
+        threads.forEach( t -> t.setThreadMonitor( threadMonitor ) );
+
+        for ( EvaluationThread thread : threads ) {
             thread.start();
         }
 
@@ -225,14 +229,18 @@ public class Gavel extends Scenario {
             try {
                 thread.join();
             } catch ( InterruptedException e ) {
-                log.info( "Caught exception after thread.join()", e );
+                throw new RuntimeException( "Unexpected interrupt", e );
             }
+        }
+
+        if ( threadMonitor.aborted ) {
+            throw new RuntimeException( "Exception while executing benchmark", threadMonitor.exception );
         }
 
         long runTime = System.nanoTime() - startTime;
         log.info( "run time: {} s", runTime / 1000000000 );
 
-        log.info( "Delete inserted rows" );
+        //log.info( "Delete inserted rows" );
         // !!!!!!!!!!!!!! Potential Bug !!!!!!!!!!!!!!!!
         // Using hardcoded id's is not nice! But using the number of entries retrieved before can cause problems if the client is killed.
         /*executor.executeStatement( new DeleteBidsWithIdLargerThan( 62270000 ).getNewQuery() );
@@ -247,37 +255,42 @@ public class Gavel extends Scenario {
     }
 
 
-    private class EvaluationThread implements Runnable {
+    private class EvaluationThread extends Thread {
 
         private final Executor executor;
         private final List<QueryListEntry> theQueryList;
         private final CsvWriter csvWriter;
+        private boolean abort = false;
+        @Setter
+        private EvaluationThreadMonitor threadMonitor;
 
 
         EvaluationThread( List<QueryListEntry> queryList, CsvWriter csvWriter, Executor executor ) {
+            super( "EvaluationThread" );
             this.csvWriter = csvWriter;
             this.executor = executor;
             theQueryList = queryList;
         }
 
 
+        @Override
         public void run() {
             long measuredTimeStart;
             long measuredTime;
             QueryListEntry queryListEntry;
 
-            while ( !theQueryList.isEmpty() ) {
+            while ( !theQueryList.isEmpty() && !abort ) {
                 measuredTimeStart = System.nanoTime();
                 queryListEntry = theQueryList.remove( 0 );
-                long time;
                 try {
                     if ( queryListEntry.query.expectResultSet ) {
-                        time = executor.executeQuery( queryListEntry.query );
+                        executor.executeQuery( queryListEntry.query );
                     } else {
-                        time = executor.executeStatement( queryListEntry.query );
+                        executor.executeStatement( queryListEntry.query );
                     }
                 } catch ( SQLException e ) {
                     log.error( "Caught exception while executing queries", e );
+                    threadMonitor.notifyAboutError( e );
                     throw new RuntimeException( e );
                 }
                 measuredTime = System.nanoTime() - measuredTimeStart;
@@ -291,6 +304,7 @@ public class Gavel extends Scenario {
                         executor.executeCommit();
                     } catch ( SQLException e ) {
                         log.error( "Caught exception while committing", e );
+                        threadMonitor.notifyAboutError( e );
                         throw new RuntimeException( e );
                     }
                 }
@@ -300,6 +314,7 @@ public class Gavel extends Scenario {
                 executor.executeCommit();
             } catch ( SQLException e ) {
                 log.error( "Caught exception while committing", e );
+                threadMonitor.notifyAboutError( e );
                 throw new RuntimeException( e );
             }
 
@@ -307,9 +322,44 @@ public class Gavel extends Scenario {
                 try {
                     csvWriter.flush();
                 } catch ( IOException e ) {
+                    threadMonitor.notifyAboutError( e );
                     log.warn( "Exception while flushing csv writer", e );
                 }
             }
+        }
+
+
+        public void abort() {
+            this.abort = true;
+        }
+
+    }
+
+
+    private class EvaluationThreadMonitor {
+
+        private final List<EvaluationThread> threads;
+        @Getter
+        private Exception exception;
+        @Getter
+        private boolean aborted;
+
+
+        public EvaluationThreadMonitor( List<EvaluationThread> threads ) {
+            this.threads = threads;
+            this.aborted = false;
+        }
+
+
+        public void abortAll() {
+            this.aborted = true;
+            threads.forEach( EvaluationThread::abort );
+        }
+
+
+        public void notifyAboutError( Exception e ) {
+            exception = e;
+            abortAll();
         }
 
     }
@@ -333,7 +383,8 @@ public class Gavel extends Scenario {
         for ( int i = 0; i < config.numberOfUserGenerationThreads; i++ ) {
             Runnable task = () -> {
                 try {
-                    new DataGenerator( new PolyphenyDbExecutor( polyphenyDbUrl, config ), config, progressReporter ).generateUsers( config.numberOfUsers / config.numberOfUserGenerationThreads );
+                    DataGenerator dg = new DataGenerator( new PolyphenyDbExecutor( polyphenyDbUrl, config ), config, progressReporter );
+                    dg.generateUsers( config.numberOfUsers / config.numberOfUserGenerationThreads );
                 } catch ( SQLException e ) {
                     log.error( "Exception while generating data", e );
                 }
@@ -348,7 +399,7 @@ public class Gavel extends Scenario {
                 try {
                     t.join();
                 } catch ( InterruptedException e ) {
-                    log.warn( "Caught exception after thread.join()", e );
+                    throw new RuntimeException( "Unexpected interrupt", e );
                 }
             }
         }
@@ -359,7 +410,8 @@ public class Gavel extends Scenario {
             final int end = rangeSize * i;
             Runnable task = () -> {
                 try {
-                    new DataGenerator( new PolyphenyDbExecutor( polyphenyDbUrl, config ), config, progressReporter ).generateAuctions( start, end );
+                    DataGenerator dg = new DataGenerator( new PolyphenyDbExecutor( polyphenyDbUrl, config ), config, progressReporter );
+                    dg.generateAuctions( start, end );
                 } catch ( SQLException e ) {
                     log.error( "Exception while generating data", e );
                 }
@@ -373,7 +425,7 @@ public class Gavel extends Scenario {
             try {
                 t.join();
             } catch ( InterruptedException e ) {
-                log.warn( "Caught exception after thread.join()", e );
+                throw new RuntimeException( "Unexpected interrupt", e );
             }
         }
     }
@@ -416,7 +468,7 @@ public class Gavel extends Scenario {
 
         measuredTimePerQueryType.forEach( ( templateId, time ) -> {
             properties.put( "queryTypes_" + templateId + "_mean", calculateMean( time ) );
-            properties.put( "queryTypes_" + templateId + "_all", Joiner.on( ',' ).join( time ) );
+            //properties.put( "queryTypes_" + templateId + "_all", Joiner.on( ',' ).join( time ) );
             properties.put( "queryTypes_" + templateId + "_example", queryTypes.get( templateId ) );
         } );
         properties.put( "queryTypes_maxId", queryTypes.size() );

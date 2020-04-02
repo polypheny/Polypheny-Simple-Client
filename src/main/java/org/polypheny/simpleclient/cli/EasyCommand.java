@@ -79,7 +79,7 @@ public class EasyCommand implements CliRunnable {
         try {
             Thread.sleep( 2000 );
         } catch ( InterruptedException e ) {
-            log.debug( "Interrupt Exception", e );
+            throw new RuntimeException( "Unexpected interrupt", e );
         }
 
         return 0;

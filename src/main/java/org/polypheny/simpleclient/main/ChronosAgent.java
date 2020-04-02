@@ -100,18 +100,32 @@ public class ChronosAgent extends AbstractChronosAgent {
         Config config = new Config( settings );
         Gavel gavel = new Gavel( ChronosCommand.polyphenyDbHost, config );
 
-        // Restart Polypheny
+        // Stop Polypheny
         polyphenyControlConnector.stopPolypheny();
         try {
             TimeUnit.SECONDS.sleep( 3 );
         } catch ( InterruptedException e ) {
-            // ignore
+            throw new RuntimeException( "Unexpected interrupt", e );
         }
+
+        // Update settings
+        Map<String, String> conf = new HashMap<>();
+        conf.put( "pcrtl.pdbms.branch", config.pdbBranch.trim() );
+        conf.put( "pcrtl.ui.branch", config.puiBranch.trim() );
+        conf.put( "pcrtl.java.heap", "10" );
+        conf.put( "pcrtl.buildmode", "both" );
+        conf.put( "pcrtl.clean", "keep" );
+        polyphenyControlConnector.setConfig( conf );
+
+        // Pull branch and update polypheny
+        polyphenyControlConnector.updatePolypheny();
+
+        // Start Polypheny
         polyphenyControlConnector.startPolypheny();
         try {
             TimeUnit.SECONDS.sleep( 5 );
         } catch ( InterruptedException e ) {
-            // ignore
+            throw new RuntimeException( "Unexpected interrupt", e );
         }
 
         // Create schema
@@ -125,8 +139,7 @@ public class ChronosAgent extends AbstractChronosAgent {
         ProgressReporter progressReporter = new ChronosProgressReporter(
                 chronosJob,
                 this,
-                config.numberOfUserGenerationThreads + config.numberOfAuctionGenerationThreads,
-                config.progressReportBase );
+                config.numberOfUserGenerationThreads + config.numberOfAuctionGenerationThreads, config.progressReportBase );
         try {
             gavel.buildDatabase( progressReporter );
         } catch ( SQLException e ) {

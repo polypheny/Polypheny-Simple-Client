@@ -34,6 +34,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class Config {
 
+    public final String pdbBranch;
+    public final String puiBranch;
+
     public final String store;
 
     public final int numberOfThreads;
@@ -76,6 +79,8 @@ public class Config {
 
 
     public Config( Properties properties, int multiplier ) {
+        pdbBranch = null;
+        puiBranch = null;
         store = "polypheny";
         progressReportBase = getIntProperty( properties, "progressReportBase" );
         numberOfThreads = getIntProperty( properties, "numberOfThreads" );
@@ -118,6 +123,8 @@ public class Config {
 
 
     public Config( Map<String, String> cdl ) {
+        pdbBranch = cdl.get( "pdbBranch" );
+        puiBranch = cdl.get( "puiBranch" );
         numberOfThreads = Integer.parseInt( cdl.get( "numberOfThreads" ) );
         store = cdl.get( "store" );
 

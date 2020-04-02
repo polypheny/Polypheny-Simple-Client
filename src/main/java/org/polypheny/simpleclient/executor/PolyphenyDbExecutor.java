@@ -85,7 +85,7 @@ public class PolyphenyDbExecutor extends Executor {
 
     @Override
     public long executeQuery( Query query ) throws SQLException {
-        log.info( query.sqlQuery );
+        log.debug( query.sqlQuery );
 
         long start = System.nanoTime();
         //try ( Connection connection = cpds.getConnection() ) {
@@ -103,7 +103,7 @@ public class PolyphenyDbExecutor extends Executor {
 
     @Override
     public long executeQueryAndGetNumber( Query query ) throws SQLException {
-        log.info( query.sqlQuery );
+        log.debug( query.sqlQuery );
 
         //try ( Connection connection = cpds.getConnection() ) {
         //ResultSet resultSet = connection.createStatement().executeQuery( query.sqlQuery );

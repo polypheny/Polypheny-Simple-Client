@@ -88,7 +88,7 @@ public abstract class ProgressReporter {
                 try {
                     Thread.sleep( 1000 );
                 } catch ( InterruptedException e ) {
-                    log.debug( "Interrupt Exception", e );
+                    throw new RuntimeException( "Unexpected interrupt", e );
                 }
             }
         }

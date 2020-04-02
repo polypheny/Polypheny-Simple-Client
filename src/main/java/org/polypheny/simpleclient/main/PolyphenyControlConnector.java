@@ -40,6 +40,7 @@ import java.lang.reflect.Type;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
@@ -52,6 +53,8 @@ class PolyphenyControlConnector {
     private final String controlUrl;
     private static int clientId = -1;
     private ChronosLogHandler chronosLogHandler;
+
+    private Gson gson = new Gson();
 
 
     PolyphenyControlConnector( String controlUrl ) throws URISyntaxException {
@@ -81,11 +84,40 @@ class PolyphenyControlConnector {
     }
 
 
-    void setConfig( String key, String value ) {
+    public void updatePolypheny() {
+        // Check if in status idling
+        String status = getStatus();
+        if ( !status.equals( "idling" ) ) {
+            throw new RuntimeException( "Unable to update Polypheny while it is running" );
+        }
+        // Trigger update
+        try {
+            Unirest.post( controlUrl + "/control/update" ).field( "clientId", clientId ).asString();
+        } catch ( UnirestException e ) {
+            log.error( "Error while updating Polypheny-DB", e );
+        }
+        // Wait for update to finish
+        status = getStatus();
+        while ( !status.equals( "idling" ) ) {
+            try {
+                TimeUnit.SECONDS.sleep( 1 );
+            } catch ( InterruptedException e ) {
+                throw new RuntimeException( "Unexpected interrupt", e );
+            }
+        }
+    }
+
+
+    void setConfig( Map<String, String> map ) {
         JSONObject obj = new JSONObject();
-        obj.put( "key", key );
-        obj.put( "value", value );
-        executePost( "/config/set", obj.toString() );
+        for ( Map.Entry<String, String> entry : map.entrySet() ) {
+            obj.put( entry.getKey(), entry.getValue() );
+        }
+        try {
+            Unirest.post( controlUrl + "/config/set" ).field( "clientId", clientId ).field( "config", obj.toString() ).asString();
+        } catch ( UnirestException e ) {
+            log.error( "Error while setting client type", e );
+        }
     }
 
 
@@ -105,6 +137,11 @@ class PolyphenyControlConnector {
 
     String getVersion() {
         return executeGet( "/control/version" );
+    }
+
+
+    String getStatus() {
+        return gson.fromJson( executeGet( "/control/status" ), String.class );
     }
 
 
@@ -190,28 +227,33 @@ class PolyphenyControlConnector {
                     chronosLogHandler.publish( data.get( "startOutput" ) );
                     chronosLogHandler.flush();
                 }
-                log.info( data.get( "logOutput" ) );
+                log.info( data.get( "startOutput" ) );
             }
             if ( data.containsKey( "stopOutput" ) ) {
                 if ( chronosLogHandler != null ) {
                     chronosLogHandler.publish( data.get( "stopOutput" ) );
                     chronosLogHandler.flush();
                 }
-                log.info( data.get( "logOutput" ) );
+                log.info( data.get( "stopOutput" ) );
             }
             if ( data.containsKey( "restartOutput" ) ) {
                 if ( chronosLogHandler != null ) {
                     chronosLogHandler.publish( data.get( "restartOutput" ) );
                     chronosLogHandler.flush();
                 }
-                log.info( data.get( "logOutput" ) );
+                log.info( data.get( "restartOutput" ) );
             }
             if ( data.containsKey( "updateOutput" ) ) {
-                if ( chronosLogHandler != null ) {
-                    chronosLogHandler.publish( data.get( "updateOutput" ) );
-                    chronosLogHandler.flush();
+                String logStr = data.get( "updateOutput" );
+                if ( logStr.startsWith( "Task :" ) && (logStr.endsWith( "started" ) || logStr.endsWith( "skipped" ) || logStr.endsWith( "UP-TO-DATE" )) ) {
+                    // Ignore this to avoid cluttering the log. These are gradle log massage where everything is fine
+                } else {
+                    if ( chronosLogHandler != null ) {
+                        chronosLogHandler.publish( logStr );
+                        chronosLogHandler.flush();
+                    }
+                    log.info( data.get( logStr ) );
                 }
-                log.info( data.get( "logOutput" ) );
             }
         }
 
