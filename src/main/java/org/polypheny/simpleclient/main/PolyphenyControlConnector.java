@@ -67,6 +67,7 @@ class PolyphenyControlConnector {
 
 
     void stopPolypheny() {
+        setClientType(); // Set the client type (again) - does not hurt and makes sure its set
         try {
             Unirest.post( controlUrl + "/control/stop" ).field( "clientId", clientId ).asString();
         } catch ( UnirestException e ) {
@@ -76,6 +77,7 @@ class PolyphenyControlConnector {
 
 
     void startPolypheny() {
+        setClientType(); // Set the client type (again) - does not hurt and makes sure its set
         try {
             Unirest.post( controlUrl + "/control/start" ).field( "clientId", clientId ).asString();
         } catch ( UnirestException e ) {
