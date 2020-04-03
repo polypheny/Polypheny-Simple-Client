@@ -63,7 +63,7 @@ public class ChronosCommand implements CliRunnable {
     @Option(name = { "-c", "--commit" }, title = "Commit after every statement", arity = 1, description = "Commit")
     private String c = "false";
 
-    public static boolean commit = false;
+    public static boolean commit = true;
 
 
     @Override

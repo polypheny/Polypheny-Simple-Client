@@ -184,15 +184,6 @@ public class ChronosAgent extends AbstractChronosAgent {
         ProgressReporter progressReporter = new ChronosProgressReporter( chronosJob, this, config.numberOfThreads, config.progressReportBase );
         long runtime = 0;
         if ( config.store.equals( "polypheny" ) ) {
-            /*
-            LOG.log( Level.INFO, "Setting Icarus configuration" );
-            settings.forEach( ( key, value ) -> {
-                if ( key.startsWith( "icarus_" ) ) {
-                    icarusWrapperConnector.setConfig( key.substring( 7 ), value );
-                }
-            } );
-            */
-
             try {
                 runtime = gavel.execute( progressReporter, csvWriter, outputDirectory, new PolyphenyDbExecutor( ChronosCommand.polyphenyDbHost, config ), warmUp );
             } catch ( SQLException e ) {

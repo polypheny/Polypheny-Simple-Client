@@ -100,13 +100,13 @@ class PolyphenyControlConnector {
         }
         // Wait for update to finish
         status = getStatus();
-        while ( !status.equals( "idling" ) ) {
+        do {
             try {
                 TimeUnit.SECONDS.sleep( 1 );
             } catch ( InterruptedException e ) {
                 throw new RuntimeException( "Unexpected interrupt", e );
             }
-        }
+        } while ( !status.equals( "idling" ) );
     }
 
 
@@ -247,7 +247,7 @@ class PolyphenyControlConnector {
             }
             if ( data.containsKey( "updateOutput" ) ) {
                 String logStr = data.get( "updateOutput" );
-                if ( logStr.startsWith( "Task :" ) && (logStr.endsWith( "started" ) || logStr.endsWith( "skipped" ) || logStr.endsWith( "UP-TO-DATE" )) ) {
+                if ( logStr.startsWith( "Task :" ) && (logStr.endsWith( "started" ) || logStr.endsWith( "skipped" ) || logStr.endsWith( "UP-TO-DATE" ) || logStr.endsWith( "SUCCESS" )) ) {
                     // Ignore this to avoid cluttering the log. These are gradle log massage where everything is fine
                 } else {
                     if ( chronosLogHandler != null ) {
