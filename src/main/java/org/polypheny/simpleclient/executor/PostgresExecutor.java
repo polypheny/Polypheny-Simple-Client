@@ -30,7 +30,6 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Properties;
 import org.polypheny.simpleclient.main.Query;
 
 
@@ -40,7 +39,7 @@ public class PostgresExecutor extends Executor {
     private final Statement executeStatement;
 
 
-    public PostgresExecutor( Properties properties ) {
+    public PostgresExecutor( String host ) {
 
         try {
             Class.forName( "org.postgresql.Driver" );
@@ -50,7 +49,7 @@ public class PostgresExecutor extends Executor {
 
         try {
             //TODO pass as parameter
-            connection = DriverManager.getConnection( "jdbc:postgresql://127.0.0.1:5432/test", "postgres", "12345" );
+            connection = DriverManager.getConnection( "jdbc:postgresql://" + host + ":5432/test", "postgres", "12345" );
             connection.setAutoCommit( false );
             executeStatement = connection.createStatement();
         } catch ( SQLException e ) {

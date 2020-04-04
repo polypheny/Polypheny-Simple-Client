@@ -29,27 +29,17 @@ package org.polypheny.simpleclient.main;
 import ch.unibas.dmi.dbis.chronos.agent.AbstractChronosAgent;
 import ch.unibas.dmi.dbis.chronos.agent.ChronosHttpClient.ChronosLogHandler;
 import ch.unibas.dmi.dbis.chronos.agent.ChronosJob;
-import java.io.ByteArrayInputStream;
+import ch.unibas.dmi.dbis.chronos.agent.ExecutionException;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringReader;
 import java.net.InetAddress;
 import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpression;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.cli.ChronosCommand;
 import org.polypheny.simpleclient.cli.Main;
@@ -57,10 +47,6 @@ import org.polypheny.simpleclient.executor.PolyphenyDbExecutor;
 import org.polypheny.simpleclient.executor.PostgresExecutor;
 import org.polypheny.simpleclient.scenario.gavel.Config;
 import org.polypheny.simpleclient.scenario.gavel.Gavel;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 
 
 @Slf4j
@@ -91,11 +77,11 @@ public class ChronosAgent extends AbstractChronosAgent {
     @Override
     protected Object prepare( ChronosJob chronosJob, final File inputDirectory, final File outputDirectory, Properties properties, Object o ) {
         // Parse CDL
-        Map<String, String> settings = null;
+        Map<String, String> settings;
         try {
-            settings = readCDL( new ByteArrayInputStream( chronosJob.cdl.getBytes( StandardCharsets.UTF_8 ) ) );
-        } catch ( XPathExpressionException | ParserConfigurationException | SAXException | IOException e ) {
-            log.error( "Exception while parsing cdl", e );
+            settings = chronosJob.getParsedCdl();
+        } catch ( ExecutionException e ) {
+            throw new RuntimeException( "Exception while parsing cdl", e );
         }
         Config config = new Config( settings );
         Gavel gavel = new Gavel( ChronosCommand.polyphenyDbHost, config );
@@ -128,6 +114,15 @@ public class ChronosAgent extends AbstractChronosAgent {
             throw new RuntimeException( "Unexpected interrupt", e );
         }
 
+        // Store Polypheny version for documentation
+        try {
+            FileWriter fw = new FileWriter( outputDirectory.getPath() + File.separator + "polypheny.version" );
+            fw.append( polyphenyControlConnector.getVersion() );
+            fw.close();
+        } catch ( IOException e ) {
+            log.error( "Error while logging polypheny version", e );
+        }
+
         // Create schema
         try {
             gavel.createSchema();
@@ -136,43 +131,36 @@ public class ChronosAgent extends AbstractChronosAgent {
         }
 
         // Insert data
-        ProgressReporter progressReporter = new ChronosProgressReporter(
-                chronosJob,
-                this,
-                config.numberOfUserGenerationThreads + config.numberOfAuctionGenerationThreads, config.progressReportBase );
-        try {
-            gavel.buildDatabase( progressReporter );
-        } catch ( SQLException e ) {
-            log.error( "Error while inserting data", e );
-        }
+        int numberOfThreads = config.numberOfUserGenerationThreads + config.numberOfAuctionGenerationThreads;
+        ProgressReporter progressReporter = new ChronosProgressReporter( chronosJob, this, numberOfThreads, config.progressReportBase );
+        gavel.buildDatabase( progressReporter );
 
-        return null;
+        return config;
     }
 
 
     @Override
     protected Object warmUp( ChronosJob chronosJob, final File inputDirectory, final File outputDirectory, Properties properties, Object o ) {
-        return Boolean.TRUE;
+        Config config = (Config) o;
+        Gavel gavel = new Gavel( ChronosCommand.polyphenyDbHost, config );
+
+        ProgressReporter progressReporter = new ChronosProgressReporter( chronosJob, this, config.numberOfThreads, config.progressReportBase );
+        if ( config.store.equals( "polypheny" ) ) {
+            gavel.warmUp( progressReporter, new PolyphenyDbExecutor( ChronosCommand.polyphenyDbHost, config ) );
+        } else {
+            if ( config.store.equals( "postgres" ) ) {
+                gavel.warmUp( progressReporter, new PostgresExecutor( ChronosCommand.polyphenyDbHost ) );
+            } else {
+                System.err.println( "Unknown Store: " + config.store );
+            }
+        }
+        return config;
     }
 
 
     @Override
     protected Object execute( ChronosJob chronosJob, final File inputDirectory, final File outputDirectory, Properties properties, Object o ) {
-
-        boolean warmUp = false;
-        if ( o != null ) {
-            warmUp = (Boolean) o;
-        }
-
-        Map<String, String> settings = null;
-        try {
-            settings = readCDL( new ByteArrayInputStream( chronosJob.cdl.getBytes( StandardCharsets.UTF_8 ) ) );
-        } catch ( XPathExpressionException | ParserConfigurationException | SAXException | IOException e ) {
-            log.error( "Exception while parsing cdl", e );
-        }
-
-        assert settings != null;
-        Config config = new Config( settings );
+        Config config = (Config) o;
         Gavel gavel = new Gavel( ChronosCommand.polyphenyDbHost, config );
 
         final CsvWriter csvWriter;
@@ -184,54 +172,26 @@ public class ChronosAgent extends AbstractChronosAgent {
         ProgressReporter progressReporter = new ChronosProgressReporter( chronosJob, this, config.numberOfThreads, config.progressReportBase );
         long runtime = 0;
         if ( config.store.equals( "polypheny" ) ) {
-            try {
-                runtime = gavel.execute( progressReporter, csvWriter, outputDirectory, new PolyphenyDbExecutor( ChronosCommand.polyphenyDbHost, config ), warmUp );
-            } catch ( SQLException e ) {
-                log.error( "Error while executing query", e );
-            }
+            runtime = gavel.execute( progressReporter, csvWriter, outputDirectory, new PolyphenyDbExecutor( ChronosCommand.polyphenyDbHost, config ) );
             gavel.analyze( properties );
-            gavel.analyzeMeasuredTime( properties );/*
-            // store icarus properties for documentation
-            try {
-                Properties p = new Properties();
-                p.load( new StringReader( icarusWrapperConnector.getConfig() ) );
-                writeConfig( p,outputDirectory.getPath() + File.separator + "icarus.properties" );
-            } catch ( IOException e ) {
-                e.printStackTrace();
-            }*/
-            // Store Polypheny version for documentation
-            try {
-                FileWriter fw = new FileWriter( outputDirectory.getPath() + File.separator + "polypheny.version" );
-                fw.append( polyphenyControlConnector.getVersion() );
-                fw.close();
-            } catch ( IOException e ) {
-                log.error( "Error while logging polypheny version", e );
-            }
         } else {
-            HashMap<String, Properties> storeProperties;
-            try {
-                storeProperties = getStoreProperties( polyphenyControlConnector );
-                if ( config.store.equals( "postgres" ) ) {
-                    storeProperties.get( "postgressqlhdd" ).put( "host", storeProperties.get( "postgressqlhdd" ).getProperty( "host" ).replaceAll( "127.0.0.1", ChronosCommand.polyphenyDbHost ) );
-                    runtime = gavel.execute( progressReporter, csvWriter, outputDirectory, new PostgresExecutor( storeProperties.get( "postgressqlhdd" ) ), warmUp );
-                } else {
-                    System.err.println( "Unknown Store: " + config.store );
-                }
-            } catch ( IOException | SQLException e ) {
-                log.error( "Error while executing query", e );
+            if ( config.store.equals( "postgres" ) ) {
+                runtime = gavel.execute( progressReporter, csvWriter, outputDirectory, new PostgresExecutor( ChronosCommand.polyphenyDbHost ) );
+            } else {
+                System.err.println( "Unknown Store: " + config.store );
             }
-            gavel.analyzeMeasuredTime( properties );
         }
+        gavel.analyzeMeasuredTime( properties );
         properties.put( "runtime", runtime );
         log.info( gavel.getTimesAsString( properties ) );
 
-        return null;
+        return config;
     }
 
 
     @Override
     protected Object analyze( ChronosJob chronosJob, final File inputDirectory, final File outputDirectory, Properties properties, Object o ) {
-        return null;
+        return o;
     }
 
 
@@ -241,45 +201,8 @@ public class ChronosAgent extends AbstractChronosAgent {
     }
 
 
-    private Map<String, String> readCDL( InputStream is ) throws XPathExpressionException, ParserConfigurationException, IOException, SAXException {
-        Map<String, String> settings = new HashMap<>();
-        DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-        DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-        Document doc = dBuilder.parse( is );
-
-        doc.getDocumentElement().normalize();
-
-        XPathFactory xpathFactory = XPathFactory.newInstance();
-        // XPath to find empty text nodes.
-        XPathExpression xpathExp = xpathFactory.newXPath().compile( "//text()[normalize-space(.) = '']" );
-        NodeList emptyTextNodes = (NodeList) xpathExp.evaluate( doc, XPathConstants.NODESET );
-
-        // Remove each empty text node from document.
-        for ( int i = 0; i < emptyTextNodes.getLength(); i++ ) {
-            Node emptyTextNode = emptyTextNodes.item( i );
-            emptyTextNode.getParentNode().removeChild( emptyTextNode );
-        }
-        if ( doc.getDocumentElement().getNodeName().equals( "chronos" ) ) {
-            if ( doc.getDocumentElement().getChildNodes().item( 1 ).getNodeName().equals( "evaluation" ) ) {
-                NodeList nList = doc.getDocumentElement().getChildNodes().item( 1 ).getChildNodes();
-                for ( int i = 0; i < nList.getLength(); i++ ) {
-                    Node nNode = nList.item( i );
-                    if ( nNode.hasChildNodes() ) {
-                        settings.put( nNode.getNodeName(), nNode.getFirstChild().getNodeValue() );
-                    }
-                }
-            } else {
-                log.warn( "Not a evaluation job!" );
-            }
-        } else {
-            log.warn( "Not a valid CDL!" );
-        }
-        return settings;
-    }
-
-
     @Override
-    protected void aborted( ChronosJob arg0 ) {
+    protected void aborted( ChronosJob chronosJob ) {
 
     }
 
@@ -306,39 +229,4 @@ public class ChronosAgent extends AbstractChronosAgent {
         polyphenyControlConnector.setChronosLogHandler( null );
     }
 
-
-    private HashMap<String, Properties> getStoreProperties( PolyphenyControlConnector polyphenyControlConnector ) throws IOException {
-        Properties properties = new Properties();
-        properties.load( new StringReader( polyphenyControlConnector.getConfig() ) );
-        String PREFIX = "executor";
-        HashMap<String, Properties> props = new HashMap<>();
-        String key, value, temp, name;
-        // Iterate through the properties file
-        for ( Map.Entry<Object, Object> entry : properties.entrySet() ) {
-            key = (String) entry.getKey();
-            value = (String) entry.getValue();
-
-            // Check if it is a executor property
-            if ( key.startsWith( PREFIX + "." ) && !key.startsWith( PREFIX + ".general." ) ) {
-                // remove the 'executor.' part
-                temp = key.substring( PREFIX.length() + 1 );
-
-                // extract name and the key part
-                if ( !temp.contains( "." ) ) {
-                    name = temp;
-                    key = "__CLASS__";
-                } else {
-                    name = temp.substring( 0, temp.indexOf( "." ) );
-                    key = temp.substring( name.length() + 1 );
-                }
-
-                if ( !props.containsKey( name ) ) {
-                    props.put( name, new Properties() );
-                }
-
-                props.get( name ).put( key, value );
-            }
-        }
-        return props;
-    }
 }

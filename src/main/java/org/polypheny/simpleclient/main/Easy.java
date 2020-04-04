@@ -23,7 +23,7 @@ public class Easy {
 
             ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
             gavel.buildDatabase( progressReporter );
-        } catch ( IOException | SQLException e ) {
+        } catch ( IOException e ) {
             log.error( "Exception while executing workload" );
         }
     }
@@ -43,8 +43,8 @@ public class Easy {
                 csvWriter = null;
             }
             ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
-            long runtime = gavel.execute( progressReporter, csvWriter, null, new PolyphenyDbExecutor( polyphenyDbUrl, config ), false );
-        } catch ( IOException | SQLException e ) {
+            long runtime = gavel.execute( progressReporter, csvWriter, null, new PolyphenyDbExecutor( polyphenyDbUrl, config ) );
+        } catch ( IOException e ) {
             log.error( "Exception while executing workload" );
         }
     }
