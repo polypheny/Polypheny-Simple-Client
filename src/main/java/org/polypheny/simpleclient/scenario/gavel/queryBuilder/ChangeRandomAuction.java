@@ -26,8 +26,8 @@
 package org.polypheny.simpleclient.scenario.gavel.queryBuilder;
 
 
-import io.codearte.jfairy.Fairy;
-import io.codearte.jfairy.producer.text.TextProducer;
+import com.devskiller.jfairy.Fairy;
+import com.devskiller.jfairy.producer.text.TextProducer;
 import java.util.concurrent.ThreadLocalRandom;
 import org.polypheny.simpleclient.main.QueryBuilder;
 import org.polypheny.simpleclient.scenario.gavel.Config;

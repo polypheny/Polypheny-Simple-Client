@@ -26,9 +26,10 @@
 package org.polypheny.simpleclient.scenario.gavel.queryBuilder.not_used;
 
 
-import io.codearte.jfairy.Fairy;
-import io.codearte.jfairy.producer.DateProducer;
-import org.joda.time.DateTime;
+import com.devskiller.jfairy.Fairy;
+import com.devskiller.jfairy.producer.DateProducer;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import org.polypheny.simpleclient.main.QueryBuilder;
 import org.polypheny.simpleclient.scenario.gavel.Config;
 
@@ -49,11 +50,11 @@ public class CountRunningAuctionsPerCategory extends QueryBuilder {
 
     @Override
     public String generateSql() {
-        DateTime date = dateProducer.randomDateInThePast( auctionDateMaxYearsInPast );
+        LocalDateTime date = dateProducer.randomDateInThePast( auctionDateMaxYearsInPast );
         return "SELECT c.name, count(a.id) " +
                 " FROM auction a, category c " +
                 " WHERE a.category = c.id" +
-                " AND a.end_date > '" + date.toString( "yyyy-MM-dd HH:mm:ss" ) + "'" +
+                " AND a.end_date > '" + date.format( DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss" ) ) + "'" +
                 " GROUP BY c.name";
     }
 }

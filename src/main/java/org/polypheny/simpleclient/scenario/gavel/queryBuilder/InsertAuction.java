@@ -26,7 +26,8 @@
 package org.polypheny.simpleclient.scenario.gavel.queryBuilder;
 
 
-import org.joda.time.DateTime;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import org.polypheny.simpleclient.main.QueryBuilder;
 
 
@@ -34,14 +35,14 @@ public class InsertAuction extends QueryBuilder {
 
     private final int userId;
     private final int categoryId;
-    private final DateTime startDate;
-    private final DateTime endDate;
+    private final LocalDateTime startDate;
+    private final LocalDateTime endDate;
     private final String title;
     private final String description;
     private static int nextId = 1;
 
 
-    public InsertAuction( int userId, int categoryId, DateTime startDate, DateTime endDate, String title, String description ) {
+    public InsertAuction( int userId, int categoryId, LocalDateTime startDate, LocalDateTime endDate, String title, String description ) {
         super( false );
         this.userId = userId;
         this.categoryId = categoryId;
@@ -59,8 +60,8 @@ public class InsertAuction extends QueryBuilder {
         sb.append( nextId++ ).append( "," );
         sb.append( "'" ).append( title ).append( "'," );
         sb.append( "'" ).append( description ).append( "'," );
-        sb.append( "timestamp '" ).append( startDate.toString( "yyyy-MM-dd HH:mm:ss" ) ).append( "'," );
-        sb.append( "timestamp '" ).append( endDate.toString( "yyyy-MM-dd HH:mm:ss" ) ).append( "'," );
+        sb.append( "timestamp '" ).append( startDate.format( DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss" ) ) ).append( "'," );
+        sb.append( "timestamp '" ).append( endDate.format( DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss" ) ) ).append( "'," );
         sb.append( categoryId ).append( "," );
         sb.append( userId );
         sb.append( ")" );

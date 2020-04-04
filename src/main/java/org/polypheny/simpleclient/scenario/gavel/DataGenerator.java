@@ -26,16 +26,16 @@
 package org.polypheny.simpleclient.scenario.gavel;
 
 
-import io.codearte.jfairy.Fairy;
-import io.codearte.jfairy.producer.DateProducer;
-import io.codearte.jfairy.producer.text.TextProducer;
+import com.devskiller.jfairy.Fairy;
+import com.devskiller.jfairy.producer.DateProducer;
+import com.devskiller.jfairy.producer.text.TextProducer;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.joda.time.DateTime;
 import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.main.ProgressReporter;
 import org.polypheny.simpleclient.main.Query;
@@ -136,8 +136,8 @@ class DataGenerator {
         TextProducer text = Fairy.create().textProducer();
         DateProducer dateProducer = Fairy.create().dateProducer();
 
-        DateTime startDate;
-        DateTime endDate;
+        LocalDateTime startDate;
+        LocalDateTime endDate;
         int user;
         int numberOfBids;
         int numberOfPictures;
@@ -166,8 +166,8 @@ class DataGenerator {
             int lastBid = 0;
             int amount;
             int u;
-            DateTime dt;
-            DateTime dtLast = startDate;
+            LocalDateTime dt;
+            LocalDateTime dtLast = startDate;
             for ( int j = 0; j < numberOfBids; j++ ) {
                 amount = ThreadLocalRandom.current().nextInt( lastBid + 1, lastBid + 1000 );
                 u = ThreadLocalRandom.current().nextInt( 1, numberOfUsers + 1 );
@@ -179,7 +179,7 @@ class DataGenerator {
                         u--;
                     }
                 }
-                dt = dateProducer.randomDateBetweenTwoDates( dtLast, endDate );
+                dt = dateProducer.randomDateBetweenTwoDates( dtLast, endDate.minusHours( numberOfBids - j ) );
                 lastBid = amount;
                 amount = amount * 100;
                 addToMultiInsert( new InsertBid( i, u, amount, dt ).getNewQuery() );

@@ -26,10 +26,11 @@
 package org.polypheny.simpleclient.scenario.gavel.queryBuilder;
 
 
-import io.codearte.jfairy.Fairy;
-import io.codearte.jfairy.producer.DateProducer;
+import com.devskiller.jfairy.Fairy;
+import com.devskiller.jfairy.producer.DateProducer;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.concurrent.ThreadLocalRandom;
-import org.joda.time.DateTime;
 import org.polypheny.simpleclient.main.QueryBuilder;
 import org.polypheny.simpleclient.scenario.gavel.Config;
 
@@ -53,9 +54,9 @@ public class SelectTheHundredNextEndingAuctionsOfRandomCategory extends QueryBui
 
     @Override
     public String generateSql() {
-        DateTime date = dateProducer.randomDateInThePast( auctionDateMaxYearsInPast );
+        LocalDateTime date = dateProducer.randomDateInThePast( auctionDateMaxYearsInPast );
         int category = ThreadLocalRandom.current().nextInt( 1, numberOfCategories + 1 );
         return "SELECT a.id, a.title, a.end_date FROM auction a WHERE a.category =" + category + " AND " +
-                "a.end_date > '" + date.toString( "yyyy-MM-dd HH:mm:ss" ) + "' ORDER BY end_date desc LIMIT 100";
+                "a.end_date > '" + date.format( DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss" ) ) + "' ORDER BY end_date desc LIMIT 100";
     }
 }

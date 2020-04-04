@@ -26,7 +26,8 @@
 package org.polypheny.simpleclient.scenario.gavel.queryBuilder;
 
 
-import org.joda.time.DateTime;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import org.polypheny.simpleclient.main.QueryBuilder;
 
 
@@ -35,11 +36,11 @@ public class InsertBid extends QueryBuilder {
     private final int auctionId;
     private final int userId;
     private final int amount;
-    private final DateTime date;
+    private final LocalDateTime date;
     private static int nextId = 1;
 
 
-    public InsertBid( int auctionId, int userId, int amount, DateTime date ) {
+    public InsertBid( int auctionId, int userId, int amount, LocalDateTime date ) {
         super( false );
         this.auctionId = auctionId;
         this.userId = userId;
@@ -54,7 +55,7 @@ public class InsertBid extends QueryBuilder {
         sb.append( "INSERT INTO bid(id, amount, \"timestamp\", \"user\", auction) VALUES (" );
         sb.append( nextId++ ).append( "," );
         sb.append( amount ).append( "," );
-        sb.append( "timestamp '" ).append( date.toString( "yyyy-MM-dd HH:mm:ss" ) ).append( "'," );
+        sb.append( "timestamp '" ).append( date.format( DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss" ) ) ).append( "'," );
         sb.append( userId ).append( "," );
         sb.append( auctionId ); // This could maybe gets an bug if e.g. parallelized
         sb.append( ")" );

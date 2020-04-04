@@ -26,8 +26,9 @@
 package org.polypheny.simpleclient.scenario.gavel.queryBuilder;
 
 
-import io.codearte.jfairy.Fairy;
-import io.codearte.jfairy.producer.person.Person;
+import com.devskiller.jfairy.Fairy;
+import com.devskiller.jfairy.producer.person.Person;
+import java.time.format.DateTimeFormatter;
 import org.polypheny.simpleclient.main.QueryBuilder;
 
 
@@ -49,12 +50,12 @@ public class InsertUser extends QueryBuilder {
         StringBuilder sb = new StringBuilder();
         sb.append( "INSERT INTO \"user\"(id, email, password, last_name, first_name, gender, birthday, city, zip_code, country) VALUES (" );
         sb.append( nextId++ ).append( "," );
-        sb.append( "'" ).append( person.email() ).append( "'," );
-        sb.append( "'" ).append( person.password() ).append( "'," );
-        sb.append( "'" ).append( person.lastName() ).append( "'," );
-        sb.append( "'" ).append( person.firstName() ).append( "'," );
-        sb.append( "'" ).append( person.sex().name().substring( 0, 1 ).toLowerCase() ).append( "'," );
-        sb.append( "date '" ).append( person.dateOfBirth().toString( "yyyy-MM-dd" ) ).append( "'," );
+        sb.append( "'" ).append( person.getEmail() ).append( "'," );
+        sb.append( "'" ).append( person.getPassword() ).append( "'," );
+        sb.append( "'" ).append( person.getLastName() ).append( "'," );
+        sb.append( "'" ).append( person.getFirstName() ).append( "'," );
+        sb.append( "'" ).append( person.getSex().name().substring( 0, 1 ).toLowerCase() ).append( "'," );
+        sb.append( "date '" ).append( person.getDateOfBirth().format( DateTimeFormatter.ofPattern( "yyyy-MM-dd" ) ) ).append( "'," );
         sb.append( "'" ).append( person.getAddress().getCity() ).append( "'," );
         sb.append( "'" ).append( person.getAddress().getPostalCode() ).append( "'," );
         sb.append( "'Switzerland'" );

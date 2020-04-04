@@ -26,8 +26,8 @@
 package org.polypheny.simpleclient.scenario.gavel.queryBuilder;
 
 
-import io.codearte.jfairy.Fairy;
-import io.codearte.jfairy.producer.person.Person;
+import com.devskiller.jfairy.Fairy;
+import com.devskiller.jfairy.producer.person.Person;
 import java.util.concurrent.ThreadLocalRandom;
 import org.polypheny.simpleclient.main.QueryBuilder;
 
@@ -48,7 +48,7 @@ public class ChangePasswordOfRandomUser extends QueryBuilder {
         Fairy fairy = Fairy.create();
         Person person = fairy.person();
         return "UPDATE \"user\" SET \"password\" ="
-                + "'" + person.password() + "' "
+                + "'" + person.getPassword() + "' "
                 + "WHERE \"id\" = "
                 + ThreadLocalRandom.current().nextInt( 1, numberOfUsers + 1 );
     }
