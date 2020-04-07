@@ -117,6 +117,15 @@ public class ChronosAgent extends AbstractChronosAgent {
             log.error( "Error while logging polypheny version", e );
         }
 
+        // Store Simple Client Version for documentation
+        try {
+            FileWriter fw = new FileWriter( outputDirectory.getPath() + File.separator + "client.version" );
+            fw.append( getSimpleClientVersion() );
+            fw.close();
+        } catch ( IOException e ) {
+            log.error( "Error while logging simple client version", e );
+        }
+
         // Create schema
         scenario.createSchema();
 
@@ -227,6 +236,15 @@ public class ChronosAgent extends AbstractChronosAgent {
             throw new RuntimeException( "Exception while parsing cdl", e );
         }
         return new Config( settings );
+    }
+
+
+    private String getSimpleClientVersion() {
+        String v = ChronosAgent.class.getPackage().getImplementationVersion();
+        if ( v == null ) {
+            return "Unknown";
+        }
+        return v;
     }
 
 }

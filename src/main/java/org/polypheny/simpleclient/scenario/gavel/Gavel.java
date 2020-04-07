@@ -158,7 +158,6 @@ public class Gavel extends Scenario {
 
         ArrayList<EvaluationThread> threads = new ArrayList<>();
         for ( int i = 0; i < config.numberOfThreads; i++ ) {
-            //TODO
             threads.add( new EvaluationThread( queryList, csvWriter, new PolyphenyDbExecutor( polyphenyDbUrl, config ) ) );
         }
 
