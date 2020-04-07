@@ -72,7 +72,11 @@ public class ChronosLog4JAppender extends AbstractAppender {
                 chronosLogHandler.publish( sw.toString() );
             }
             if ( event.isEndOfBatch() ) {
-                chronosLogHandler.flush();
+                try {
+                    chronosLogHandler.flush();
+                } catch ( InterruptedException e ) {
+                    LOGGER.warn( "Error while flushing chronos log handler", e );
+                }
             }
         }
     }

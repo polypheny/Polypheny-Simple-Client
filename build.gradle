@@ -65,7 +65,9 @@ java {
 dependencies {
     compile group: 'commons-lang', name: 'commons-lang', version: '2.6' // License: Apache 2.0
 
-    compile group: 'ch.unibas.dmi.dbis.chronos', name: 'chronos-agent', version: '2.3.0' // License: MIT
+    compile group: 'ch.unibas.dmi.dbis.chronos', name: 'chronos-agent', version: '2.3.1' // License: MIT
+
+    compile group: 'com.mashape.unirest', name: 'unirest-java', version: '1.4.9' // License: MIT
 
     // JDBC Drivers
     compile group: 'org.polypheny', name: 'polypheny-jdbc-driver', version: '1.3' // License: Apache 2.0
