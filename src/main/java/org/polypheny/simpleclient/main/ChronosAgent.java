@@ -213,13 +213,13 @@ public class ChronosAgent extends AbstractChronosAgent {
 
     @Override
     protected void addChronosLogHandler( ChronosLogHandler chronosLogHandler ) {
-        polyphenyControlConnector.setChronosLogHandler( chronosLogHandler );
+        ChronosLog4JAppender.setChronosLogHandler( chronosLogHandler );
     }
 
 
     @Override
     protected void removeChronosLogHandler( ChronosLogHandler chronosLogHandler ) {
-        polyphenyControlConnector.setChronosLogHandler( null );
+        ChronosLog4JAppender.setChronosLogHandler( null );
     }
 
 

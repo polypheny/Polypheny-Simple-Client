@@ -1,6 +1,6 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 
-<Configuration status="INFO">
+<Configuration packages="org.polypheny.simpleclient.main" status="INFO">
     <Appenders>
         <Console name="ConsoleAppender" target="SYSTEM_OUT" follow="true">
             <PatternLayout pattern="%highlight{%d{HH:mm:ss.SSS} %level [%t]: %msg%n}{FATAL=bg_red, ERROR=red, WARN=yellow bold, INFO=black, DEBUG=green bold, TRACE=blue}" disableAnsi="false"/>
@@ -14,19 +14,24 @@
             <PatternLayout pattern="%highlight{%d{HH:mm:ss.SSS} %level POLYPHENY-DB: %msg%n}{FATAL=bg_red, ERROR=red, WARN=yellow bold, INFO=black, DEBUG=green bold, TRACE=blue}" disableAnsi="false"/>
             <ThresholdFilter level="trace" onMatch="ACCEPT" onMismatch="DENY"/>
         </Console>
+        <ChronosAppender name="ChronosAppender"/>
     </Appenders>
     <Loggers>
-        <logger name="org.polypheny.simpleclient.main.PolyphenyControlConnector" level="INFO" additivity="false">
+        <logger name="CONTROL_MESSAGES_LOGGER" level="INFO" additivity="false">
             <AppenderRef ref="ConsoleAppenderPolyphenyDb"/>
+            <AppenderRef ref="ChronosAppender"/>
         </logger>
-        <logger name="org.polypheny.jdbc.Driver" level="ERROR">
+        <logger name="org.polypheny.jdbc.Driver" level="ERROR" additivity="false">
             <AppenderRef ref="ConsoleAppender"/>
+            <AppenderRef ref="ChronosAppender"/>
         </logger>
         <logger name="ch.unibas.dmi.dbis.chronos.agent" level="INFO">
             <AppenderRef ref="ConsoleAppenderChronos"/>
+            <AppenderRef ref="ChronosAppender"/>
         </logger>
-        <logger name="org.polypheny" level="WARN">
+        <logger name="org.polypheny" level="WARN" additivity="false">
             <AppenderRef ref="ConsoleAppender"/>
+            <AppenderRef ref="ChronosAppender"/>
         </logger>
         <Root level="warn"/>
     </Loggers>

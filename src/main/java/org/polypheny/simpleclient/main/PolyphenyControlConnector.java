@@ -45,6 +45,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 @Slf4j
@@ -195,6 +197,7 @@ class PolyphenyControlConnector {
     private class WebSocket extends WebSocketClient {
 
         private Gson gson = new Gson();
+        private final Logger CONTROL_MESSAGES_LOGGER = LoggerFactory.getLogger( "CONTROL_MESSAGES_LOGGER" );
 
 
         public WebSocket( URI serverUri ) {
@@ -218,43 +221,23 @@ class PolyphenyControlConnector {
                 setClientType();
             }
             if ( data.containsKey( "logOutput" ) ) {
-                if ( chronosLogHandler != null ) {
-                    chronosLogHandler.publish( data.get( "logOutput" ) );
-                    chronosLogHandler.flush();
-                }
-                log.info( data.get( "logOutput" ) );
+                CONTROL_MESSAGES_LOGGER.info( data.get( "logOutput" ) );
             }
             if ( data.containsKey( "startOutput" ) ) {
-                if ( chronosLogHandler != null ) {
-                    chronosLogHandler.publish( data.get( "startOutput" ) );
-                    chronosLogHandler.flush();
-                }
-                log.info( data.get( "startOutput" ) );
+                CONTROL_MESSAGES_LOGGER.info( data.get( "startOutput" ) );
             }
             if ( data.containsKey( "stopOutput" ) ) {
-                if ( chronosLogHandler != null ) {
-                    chronosLogHandler.publish( data.get( "stopOutput" ) );
-                    chronosLogHandler.flush();
-                }
-                log.info( data.get( "stopOutput" ) );
+                CONTROL_MESSAGES_LOGGER.info( data.get( "stopOutput" ) );
             }
             if ( data.containsKey( "restartOutput" ) ) {
-                if ( chronosLogHandler != null ) {
-                    chronosLogHandler.publish( data.get( "restartOutput" ) );
-                    chronosLogHandler.flush();
-                }
-                log.info( data.get( "restartOutput" ) );
+                CONTROL_MESSAGES_LOGGER.info( data.get( "restartOutput" ) );
             }
             if ( data.containsKey( "updateOutput" ) ) {
                 String logStr = data.get( "updateOutput" );
                 if ( logStr.startsWith( "Task :" ) && (logStr.endsWith( "started" ) || logStr.endsWith( "skipped" ) || logStr.endsWith( "UP-TO-DATE" ) || logStr.endsWith( "SUCCESS" )) ) {
                     // Ignore this to avoid cluttering the log. These are gradle log massage where everything is fine
                 } else {
-                    if ( chronosLogHandler != null ) {
-                        chronosLogHandler.publish( logStr );
-                        chronosLogHandler.flush();
-                    }
-                    log.info( logStr );
+                    CONTROL_MESSAGES_LOGGER.info( logStr );
                 }
             }
         }
