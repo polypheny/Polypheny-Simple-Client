@@ -35,7 +35,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URISyntaxException;
-import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -45,6 +44,7 @@ import org.polypheny.simpleclient.cli.ChronosCommand;
 import org.polypheny.simpleclient.cli.Main;
 import org.polypheny.simpleclient.executor.PolyphenyDbExecutor;
 import org.polypheny.simpleclient.executor.PostgresExecutor;
+import org.polypheny.simpleclient.scenario.Scenario;
 import org.polypheny.simpleclient.scenario.gavel.Config;
 import org.polypheny.simpleclient.scenario.gavel.Gavel;
 
@@ -77,14 +77,8 @@ public class ChronosAgent extends AbstractChronosAgent {
     @Override
     protected Object prepare( ChronosJob chronosJob, final File inputDirectory, final File outputDirectory, Properties properties, Object o ) {
         // Parse CDL
-        Map<String, String> settings;
-        try {
-            settings = chronosJob.getParsedCdl();
-        } catch ( ExecutionException e ) {
-            throw new RuntimeException( "Exception while parsing cdl", e );
-        }
-        Config config = new Config( settings );
-        Gavel gavel = new Gavel( ChronosCommand.polyphenyDbHost, config );
+        Config config = parseConfig( chronosJob );
+        Scenario scenario = new Gavel( ChronosCommand.polyphenyDbHost, config );
 
         // Stop Polypheny
         polyphenyControlConnector.stopPolypheny();
@@ -124,44 +118,40 @@ public class ChronosAgent extends AbstractChronosAgent {
         }
 
         // Create schema
-        try {
-            gavel.createSchema();
-        } catch ( SQLException e ) {
-            log.error( "Error while creating schema", e );
-        }
+        scenario.createSchema();
 
         // Insert data
         int numberOfThreads = config.numberOfUserGenerationThreads + config.numberOfAuctionGenerationThreads;
         ProgressReporter progressReporter = new ChronosProgressReporter( chronosJob, this, numberOfThreads, config.progressReportBase );
-        gavel.buildDatabase( progressReporter );
+        scenario.generateData( progressReporter );
 
-        return config;
+        return scenario;
     }
 
 
     @Override
     protected Object warmUp( ChronosJob chronosJob, final File inputDirectory, final File outputDirectory, Properties properties, Object o ) {
-        Config config = (Config) o;
-        Gavel gavel = new Gavel( ChronosCommand.polyphenyDbHost, config );
+        Config config = parseConfig( chronosJob );
+        Scenario scenario = (Scenario) o;
 
         ProgressReporter progressReporter = new ChronosProgressReporter( chronosJob, this, config.numberOfThreads, config.progressReportBase );
         if ( config.store.equals( "polypheny" ) ) {
-            gavel.warmUp( progressReporter, new PolyphenyDbExecutor( ChronosCommand.polyphenyDbHost, config ) );
+            scenario.warmUp( progressReporter, new PolyphenyDbExecutor( ChronosCommand.polyphenyDbHost, config ) );
         } else {
             if ( config.store.equals( "postgres" ) ) {
-                gavel.warmUp( progressReporter, new PostgresExecutor( ChronosCommand.polyphenyDbHost ) );
+                scenario.warmUp( progressReporter, new PostgresExecutor( ChronosCommand.polyphenyDbHost ) );
             } else {
                 System.err.println( "Unknown Store: " + config.store );
             }
         }
-        return config;
+        return scenario;
     }
 
 
     @Override
     protected Object execute( ChronosJob chronosJob, final File inputDirectory, final File outputDirectory, Properties properties, Object o ) {
-        Config config = (Config) o;
-        Gavel gavel = new Gavel( ChronosCommand.polyphenyDbHost, config );
+        Config config = parseConfig( chronosJob );
+        Scenario scenario = (Scenario) o;
 
         final CsvWriter csvWriter;
         if ( Main.WRITE_CSV ) {
@@ -172,26 +162,25 @@ public class ChronosAgent extends AbstractChronosAgent {
         ProgressReporter progressReporter = new ChronosProgressReporter( chronosJob, this, config.numberOfThreads, config.progressReportBase );
         long runtime = 0;
         if ( config.store.equals( "polypheny" ) ) {
-            runtime = gavel.execute( progressReporter, csvWriter, outputDirectory, new PolyphenyDbExecutor( ChronosCommand.polyphenyDbHost, config ) );
-            gavel.analyze( properties );
+            runtime = scenario.execute( progressReporter, csvWriter, outputDirectory, new PolyphenyDbExecutor( ChronosCommand.polyphenyDbHost, config ) );
+        } else if ( config.store.equals( "postgres" ) ) {
+            runtime = scenario.execute( progressReporter, csvWriter, outputDirectory, new PostgresExecutor( ChronosCommand.polyphenyDbHost ) );
         } else {
-            if ( config.store.equals( "postgres" ) ) {
-                runtime = gavel.execute( progressReporter, csvWriter, outputDirectory, new PostgresExecutor( ChronosCommand.polyphenyDbHost ) );
-            } else {
-                System.err.println( "Unknown Store: " + config.store );
-            }
+            System.err.println( "Unknown Store: " + config.store );
         }
-        gavel.analyzeMeasuredTime( properties );
         properties.put( "runtime", runtime );
-        log.info( gavel.getTimesAsString( properties ) );
 
-        return config;
+        return scenario;
     }
 
 
     @Override
     protected Object analyze( ChronosJob chronosJob, final File inputDirectory, final File outputDirectory, Properties properties, Object o ) {
-        return o;
+        Scenario scenario = (Scenario) o;
+
+        scenario.analyze( properties );
+
+        return scenario;
     }
 
 
@@ -213,11 +202,6 @@ public class ChronosAgent extends AbstractChronosAgent {
     }
 
 
-    void updateProgress( ChronosJob job, int progress ) {
-        setProgress( job, (byte) progress );
-    }
-
-
     @Override
     protected void addChronosLogHandler( ChronosLogHandler chronosLogHandler ) {
         polyphenyControlConnector.setChronosLogHandler( chronosLogHandler );
@@ -227,6 +211,22 @@ public class ChronosAgent extends AbstractChronosAgent {
     @Override
     protected void removeChronosLogHandler( ChronosLogHandler chronosLogHandler ) {
         polyphenyControlConnector.setChronosLogHandler( null );
+    }
+
+
+    void updateProgress( ChronosJob job, int progress ) {
+        setProgress( job, (byte) progress );
+    }
+
+
+    private Config parseConfig( ChronosJob chronosJob ) {
+        Map<String, String> settings;
+        try {
+            settings = chronosJob.getParsedCdl();
+        } catch ( ExecutionException e ) {
+            throw new RuntimeException( "Exception while parsing cdl", e );
+        }
+        return new Config( settings );
     }
 
 }

@@ -44,7 +44,6 @@ import java.util.OptionalDouble;
 import java.util.Properties;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Stream;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -81,12 +80,7 @@ public class Gavel extends Scenario {
 
     private final Config config;
 
-    private final Map<String, List<Long>> executionTimes;
-    private final Map<String, List<Long>> totalTimes;
-    private final List<Long> polyphenyDbTotalTimes;
-    private final List<Long> polyphenyDbTimes;
     private final List<Long> measuredTimes;
-
     private final Map<Integer, String> queryTypes;
     private final Map<Integer, List<Long>> measuredTimePerQueryType;
 
@@ -94,10 +88,6 @@ public class Gavel extends Scenario {
     public Gavel( String polyphenyDbUrl, Config config ) {
         super( polyphenyDbUrl );
         this.config = config;
-        executionTimes = new ConcurrentHashMap<>();
-        totalTimes = new ConcurrentHashMap<>();
-        polyphenyDbTotalTimes = Collections.synchronizedList( new LinkedList<>() );
-        polyphenyDbTimes = Collections.synchronizedList( new LinkedList<>() );
         measuredTimes = Collections.synchronizedList( new LinkedList<>() );
 
         queryTypes = new HashMap<>();
@@ -193,17 +183,6 @@ public class Gavel extends Scenario {
 
         long runTime = System.nanoTime() - startTime;
         log.info( "run time: {} s", runTime / 1000000000 );
-
-        //log.info( "Delete inserted rows" );
-        // !!!!!!!!!!!!!! Potential Bug !!!!!!!!!!!!!!!!
-        // Using hardcoded id's is not nice! But using the number of entries retrieved before can cause problems if the client is killed.
-        /*executor.executeStatement( new DeleteBidsWithIdLargerThan( 62270000 ).getNewQuery() );
-        executor.executeStatement( new DeleteUsersWithIdLargerThan( 1200000 ).getNewQuery() );
-        executor.executeStatement( new DeleteAuctionsWithIdLargerThan( 546000 ).getNewQuery() );
-        executor.executeStatement( new DeleteCategoriesWithIdLargerThan( 35 ).getNewQuery() );
-        executor.executeCommit();
-        InsertRandomAuction.setNextId( 750000 + 1 );
-        InsertRandomBid.setNextId( 71250000 + 1 );*/
 
         try {
             executor.executeCommit();
@@ -410,8 +389,29 @@ public class Gavel extends Scenario {
 
 
     @Override
-    public void buildDatabase( ProgressReporter progressReporter ) {
-        log.info( "Generating Data..." );
+    public void createSchema() {
+        log.info( "Creating schema..." );
+        PolyphenyDbExecutor executor = new PolyphenyDbExecutor( polyphenyDbUrl, config );
+
+        try (
+                InputStreamReader in = new InputStreamReader( ClassLoader.getSystemResourceAsStream( "gavel/schema.sql" ) );
+                BufferedReader bf = new BufferedReader( in )
+        ) {
+            String line = bf.readLine();
+            while ( line != null ) {
+                executor.executeStatement( new Query( line, false ) );
+                line = bf.readLine();
+            }
+            executor.executeCommit();
+        } catch ( IOException | SQLException e ) {
+            throw new RuntimeException( "Exception while creating schema", e );
+        }
+    }
+
+
+    @Override
+    public void generateData( ProgressReporter progressReporter ) {
+        log.info( "Generating data..." );
 
         DataGenerationThreadMonitor threadMonitor = new DataGenerationThreadMonitor();
 
@@ -515,39 +515,8 @@ public class Gavel extends Scenario {
     }
 
 
-    public void createSchema() throws SQLException {
-        log.info( "Creating schema..." );
-        PolyphenyDbExecutor executor = new PolyphenyDbExecutor( polyphenyDbUrl, config );
-
-        InputStreamReader in = new InputStreamReader( ClassLoader.getSystemResourceAsStream( "gavel/schema.sql" ) );
-        try ( Stream<String> stream = new BufferedReader( in ).lines() ) {
-            stream.forEach( s -> {
-                try {
-                    executor.executeStatement( new Query( s, false ) );
-                } catch ( SQLException e ) {
-                    throw new RuntimeException( "Exception while creating schema", e );
-                }
-            } );
-        }
-        executor.executeCommit();
-    }
-
-
+    @Override
     public void analyze( Properties properties ) {
-
-        executionTimes.forEach( ( dataStore, times ) -> {
-            properties.put( "executionTime." + dataStore, calculateMean( times ) );
-            properties.put( "number." + dataStore, times.size() );
-        } );
-
-        totalTimes.forEach( ( dataStore, times ) -> properties.put( "totalTime." + dataStore, calculateMean( times ) ) );
-
-        properties.put( "totalTime", calculateMean( polyphenyDbTotalTimes ) );
-        properties.put( "polyphenyDBTime", calculateMean( polyphenyDbTimes ) );
-    }
-
-
-    public void analyzeMeasuredTime( Properties properties ) {
         properties.put( "measuredTime", calculateMean( measuredTimes ) );
 
         measuredTimePerQueryType.forEach( ( templateId, time ) -> {
@@ -573,26 +542,6 @@ public class Gavel extends Scenario {
             }
         }
         return -1;
-    }
-
-
-    public String getTimesAsString( Properties properties ) {
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append( "\n\nData Store\t\t Execution Time\t\t Total Times\t\t # of Queries\n" );
-        for ( Map.Entry<?, ?> entry : properties.entrySet() ) {
-            String key = (String) entry.getKey();
-            if ( key.startsWith( "executionTime" ) ) {
-                String dataStore = key.replace( "executionTime.", "" );
-                stringBuilder.append( dataStore ).append( "\t\t" )
-                        .append( entry.getValue() ).append( " ms" ).append( "\t\t\t" )
-                        .append( properties.get( "totalTime." + dataStore ) ).append( " ms\t\t\t" )
-                        .append( properties.get( "number." + dataStore ) ).append( "\n" );
-            }
-        }
-        stringBuilder.append( "\n\n" );
-        stringBuilder.append( "Total Time:     " ).append( properties.get( "totalTime" ) ).append( " ms\n" );
-        stringBuilder.append( "Polypheny Stack:   " ).append( properties.get( "polyphenyDBTime" ) ).append( " ms\n" );
-        return stringBuilder.toString();
     }
 
 

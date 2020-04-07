@@ -2,7 +2,6 @@ package org.polypheny.simpleclient.main;
 
 
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.cli.Main;
@@ -22,7 +21,7 @@ public class Easy {
             Gavel gavel = new Gavel( polyphenyDbUrl, config );
 
             ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
-            gavel.buildDatabase( progressReporter );
+            gavel.generateData( progressReporter );
         } catch ( IOException e ) {
             log.error( "Exception while executing workload" );
         }
@@ -58,7 +57,7 @@ public class Easy {
             Gavel gavel = new Gavel( polyphenyDbUrl, config );
 
             gavel.createSchema();
-        } catch ( IOException | SQLException e ) {
+        } catch ( IOException e ) {
             log.error( "Exception while executing workload" );
         }
     }
