@@ -26,6 +26,7 @@
 package org.polypheny.simpleclient.scenario.gavel;
 
 
+import com.google.common.base.Joiner;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
@@ -520,7 +521,7 @@ public class Gavel extends Scenario {
 
         measuredTimePerQueryType.forEach( ( templateId, time ) -> {
             properties.put( "queryTypes_" + templateId + "_mean", calculateMean( time ) );
-            //properties.put( "queryTypes_" + templateId + "_all", Joiner.on( ',' ).join( time ) );
+            properties.put( "queryTypes_" + templateId + "_all", Joiner.on( ',' ).join( time ) );
             properties.put( "queryTypes_" + templateId + "_example", queryTypes.get( templateId ) );
         } );
         properties.put( "queryTypes_maxId", queryTypes.size() );
@@ -547,7 +548,7 @@ public class Gavel extends Scenario {
     private void addNumberOfTimes( List<QueryListEntry> list, QueryBuilder queryBuilder, int numberOfTimes ) {
         int id = queryTypes.size() + 1;
         queryTypes.put( id, queryBuilder.getNewQuery().sqlQuery );
-        measuredTimePerQueryType.put( id, new LinkedList<>() );
+        measuredTimePerQueryType.put( id, Collections.synchronizedList( new LinkedList<>() ) );
         for ( int i = 0; i < numberOfTimes; i++ ) {
             list.add( new QueryListEntry( queryBuilder.getNewQuery(), id ) );
         }
