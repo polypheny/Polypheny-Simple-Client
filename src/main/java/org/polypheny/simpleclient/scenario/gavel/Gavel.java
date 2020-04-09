@@ -309,6 +309,11 @@ public class Gavel extends Scenario {
                 } catch ( SQLException e ) {
                     log.error( "Caught exception while executing queries", e );
                     threadMonitor.notifyAboutError( e );
+                    try {
+                        executor.executeRollback();
+                    } catch ( SQLException ex ) {
+                        log.error( "Error while rollback", e );
+                    }
                     throw new RuntimeException( e );
                 }
                 measuredTime = System.nanoTime() - measuredTimeStart;
@@ -323,6 +328,11 @@ public class Gavel extends Scenario {
                     } catch ( SQLException e ) {
                         log.error( "Caught exception while committing", e );
                         threadMonitor.notifyAboutError( e );
+                        try {
+                            executor.executeRollback();
+                        } catch ( SQLException ex ) {
+                            log.error( "Error while rollback", e );
+                        }
                         throw new RuntimeException( e );
                     }
                 }
@@ -333,6 +343,11 @@ public class Gavel extends Scenario {
             } catch ( SQLException e ) {
                 log.error( "Caught exception while committing", e );
                 threadMonitor.notifyAboutError( e );
+                try {
+                    executor.executeRollback();
+                } catch ( SQLException ex ) {
+                    log.error( "Error while rollback", e );
+                }
                 throw new RuntimeException( e );
             }
 
@@ -427,11 +442,17 @@ public class Gavel extends Scenario {
 
         for ( int i = 0; i < config.numberOfUserGenerationThreads; i++ ) {
             Runnable task = () -> {
+                PolyphenyDbExecutor executor = new PolyphenyDbExecutor( polyphenyDbUrl, config );
                 try {
-                    DataGenerator dg = new DataGenerator( new PolyphenyDbExecutor( polyphenyDbUrl, config ), config, progressReporter, threadMonitor );
+                    DataGenerator dg = new DataGenerator( executor, config, progressReporter, threadMonitor );
                     dg.generateUsers( config.numberOfUsers / config.numberOfUserGenerationThreads );
                 } catch ( SQLException e ) {
                     threadMonitor.notifyAboutError( e );
+                    try {
+                        executor.executeRollback();
+                    } catch ( SQLException ex ) {
+                        log.error( "Error while rollback", e );
+                    }
                     log.error( "Exception while generating data", e );
                 }
             };
@@ -455,11 +476,17 @@ public class Gavel extends Scenario {
             final int start = ((i - 1) * rangeSize) + 1;
             final int end = rangeSize * i;
             Runnable task = () -> {
+                PolyphenyDbExecutor executor = new PolyphenyDbExecutor( polyphenyDbUrl, config );
                 try {
-                    DataGenerator dg = new DataGenerator( new PolyphenyDbExecutor( polyphenyDbUrl, config ), config, progressReporter, threadMonitor );
+                    DataGenerator dg = new DataGenerator( executor, config, progressReporter, threadMonitor );
                     dg.generateAuctions( start, end );
                 } catch ( SQLException e ) {
                     threadMonitor.notifyAboutError( e );
+                    try {
+                        executor.executeRollback();
+                    } catch ( SQLException ex ) {
+                        log.error( "Error while rollback", e );
+                    }
                     log.error( "Exception while generating data", e );
                 }
             };

@@ -87,4 +87,10 @@ public class PostgresExecutor extends Executor {
     public void executeCommit() throws SQLException {
         connection.commit();
     }
+
+
+    @Override
+    public void executeRollback() throws SQLException {
+        connection.rollback();
+    }
 }

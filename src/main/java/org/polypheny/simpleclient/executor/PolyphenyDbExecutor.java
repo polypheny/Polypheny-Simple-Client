@@ -133,6 +133,12 @@ public class PolyphenyDbExecutor extends Executor {
 
 
     @Override
+    public void executeRollback() throws SQLException {
+        connection.rollback();
+    }
+
+
+    @Override
     public long executeStatement( Query statement ) throws SQLException {
         log.info( statement.sqlQuery );
 

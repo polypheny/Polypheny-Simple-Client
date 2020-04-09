@@ -40,4 +40,6 @@ public abstract class Executor {
 
     public abstract void executeCommit() throws SQLException;
 
+    public abstract void executeRollback() throws SQLException;
+
 }
