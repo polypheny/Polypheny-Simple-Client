@@ -42,4 +42,6 @@ public abstract class Executor {
 
     public abstract void executeRollback() throws SQLException;
 
+    public abstract void closeConnection() throws SQLException;
+
 }

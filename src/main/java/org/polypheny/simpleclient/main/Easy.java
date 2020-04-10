@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.cli.Main;
-import org.polypheny.simpleclient.executor.PolyphenyDbExecutor;
 import org.polypheny.simpleclient.scenario.gavel.Config;
 import org.polypheny.simpleclient.scenario.gavel.Gavel;
 
@@ -42,7 +41,7 @@ public class Easy {
                 csvWriter = null;
             }
             ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
-            long runtime = gavel.execute( progressReporter, csvWriter, null, new PolyphenyDbExecutor( polyphenyDbUrl, config ) );
+            gavel.execute( progressReporter, csvWriter, null );
         } catch ( IOException e ) {
             log.error( "Exception while executing workload" );
         }

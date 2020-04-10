@@ -93,4 +93,15 @@ public class PostgresExecutor extends Executor {
     public void executeRollback() throws SQLException {
         connection.rollback();
     }
+
+
+    @Override
+    public void closeConnection() throws SQLException {
+        if ( executeStatement != null ) {
+            executeStatement.close();
+        }
+        if ( connection != null ) {
+            connection.close();
+        }
+    }
 }

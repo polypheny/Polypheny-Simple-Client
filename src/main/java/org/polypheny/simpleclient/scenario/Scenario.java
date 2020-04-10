@@ -28,7 +28,6 @@ package org.polypheny.simpleclient.scenario;
 
 import java.io.File;
 import java.util.Properties;
-import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.main.ProgressReporter;
 
@@ -47,9 +46,9 @@ public abstract class Scenario {
 
     public abstract void generateData( ProgressReporter progressReporter );
 
-    public abstract long execute( ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory, Executor executor );
+    public abstract long execute( ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory );
 
-    public abstract void warmUp( ProgressReporter progressReporter, Executor executor );
+    public abstract void warmUp( ProgressReporter progressReporter );
 
     public abstract void analyze( Properties properties );
 

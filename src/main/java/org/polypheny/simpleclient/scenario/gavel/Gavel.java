@@ -97,43 +97,30 @@ public class Gavel extends Scenario {
 
 
     @Override
-    public long execute( ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory, Executor executor ) {
+    public long execute( ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory ) {
         log.info( "Analyzing currently stored data..." );
-        final int numberOfAuctions;
-        final int numberOfUsers;
-        final int numberOfCategories;
-        final int numberOfBids;
-        try {
-            numberOfAuctions = (int) countNumberOfRecords( executor, new CountAuction() );
-            numberOfUsers = (int) countNumberOfRecords( executor, new CountUser() );
-            numberOfCategories = (int) countNumberOfRecords( executor, new CountCategory() );
-            numberOfBids = (int) countNumberOfRecords( executor, new CountBid() );
-            executor.executeCommit();
-        } catch ( SQLException e ) {
-            throw new RuntimeException( "Exception while analyzing currently stored data" );
-        }
-        log.info( "Current number of elements in the database:\nAuctions: {} | Users: {} | Categories: {} | Bids: {}", numberOfAuctions, numberOfUsers, numberOfCategories, numberOfBids );
+        Map<String, Integer> numbers = getNumbers();
 
-        InsertRandomAuction.setNextId( numberOfAuctions + 1 );
-        InsertRandomBid.setNextId( numberOfBids + 1 );
+        InsertRandomAuction.setNextId( numbers.get( "auctions" ) + 1 );
+        InsertRandomBid.setNextId( numbers.get( "bids" ) + 1 );
 
         log.info( "Preparing query list for the benchmark..." );
         List<QueryListEntry> queryList = new Vector<>();
         addNumberOfTimes( queryList, new InsertUser(), config.numberOfAddUserQueries );
-        addNumberOfTimes( queryList, new ChangePasswordOfRandomUser( numberOfUsers ), config.numberOfChangePasswordQueries );
-        addNumberOfTimes( queryList, new InsertRandomAuction( numberOfUsers, numberOfCategories, config ), config.numberOfAddAuctionQueries );
-        addNumberOfTimes( queryList, new InsertRandomBid( numberOfAuctions, numberOfUsers ), config.numberOfAddBidQueries );
-        addNumberOfTimes( queryList, new ChangeRandomAuction( numberOfAuctions, config ), config.numberOfChangeAuctionQueries );
-        addNumberOfTimes( queryList, new SelectRandomAuction( numberOfAuctions ), config.numberOfGetAuctionQueries );
-        addNumberOfTimes( queryList, new SelectTheHundredNextEndingAuctionsOfRandomCategory( numberOfCategories, config ), config.numberOfGetTheNextHundredEndingAuctionsOfACategoryQueries );
+        addNumberOfTimes( queryList, new ChangePasswordOfRandomUser( numbers.get( "users" ) ), config.numberOfChangePasswordQueries );
+        addNumberOfTimes( queryList, new InsertRandomAuction( numbers.get( "users" ), numbers.get( "categories" ), config ), config.numberOfAddAuctionQueries );
+        addNumberOfTimes( queryList, new InsertRandomBid( numbers.get( "auctions" ), numbers.get( "users" ) ), config.numberOfAddBidQueries );
+        addNumberOfTimes( queryList, new ChangeRandomAuction( numbers.get( "auctions" ), config ), config.numberOfChangeAuctionQueries );
+        addNumberOfTimes( queryList, new SelectRandomAuction( numbers.get( "auctions" ) ), config.numberOfGetAuctionQueries );
+        addNumberOfTimes( queryList, new SelectTheHundredNextEndingAuctionsOfRandomCategory( numbers.get( "categories" ), config ), config.numberOfGetTheNextHundredEndingAuctionsOfACategoryQueries );
         addNumberOfTimes( queryList, new SearchAuction(), config.numberOfSearchAuctionQueries );
         addNumberOfTimes( queryList, new CountAuction(), config.numberOfCountAuctionsQueries );
         addNumberOfTimes( queryList, new SelectTopTenCitiesByNumberOfCustomers(), config.numberOfTopTenCitiesByNumberOfCustomersQueries );
         addNumberOfTimes( queryList, new CountBid(), config.numberOfCountBidsQueries );
-        addNumberOfTimes( queryList, new SelectRandomBid( numberOfBids ), config.numberOfGetBidQueries );
-        addNumberOfTimes( queryList, new SelectRandomUser( numberOfUsers ), config.numberOfGetUserQueries );
-        addNumberOfTimes( queryList, new SelectAllBidsOnRandomAuction( numberOfAuctions ), config.numberOfGetAllBidsOnAuctionQueries );
-        addNumberOfTimes( queryList, new SelectHighestBidOnRandomAuction( numberOfAuctions ), config.numberOfGetCurrentlyHighestBidOnAuctionQueries );
+        addNumberOfTimes( queryList, new SelectRandomBid( numbers.get( "bids" ) ), config.numberOfGetBidQueries );
+        addNumberOfTimes( queryList, new SelectRandomUser( numbers.get( "users" ) ), config.numberOfGetUserQueries );
+        addNumberOfTimes( queryList, new SelectAllBidsOnRandomAuction( numbers.get( "auctions" ) ), config.numberOfGetAllBidsOnAuctionQueries );
+        addNumberOfTimes( queryList, new SelectHighestBidOnRandomAuction( numbers.get( "auctions" ) ), config.numberOfGetCurrentlyHighestBidOnAuctionQueries );
         Collections.shuffle( queryList );
 
         if ( outputDirectory != null ) {
@@ -184,58 +171,46 @@ public class Gavel extends Scenario {
         long runTime = System.nanoTime() - startTime;
         log.info( "run time: {} s", runTime / 1000000000 );
 
-        try {
-            executor.executeCommit();
-        } catch ( SQLException e ) {
-            throw new RuntimeException( "Exception while final commit" );
+        for ( EvaluationThread thread : threads ) {
+            thread.closeExecutor();
         }
+
         return runTime;
     }
 
 
     @Override
-    public void warmUp( ProgressReporter progressReporter, Executor executor ) {
+    public void warmUp( ProgressReporter progressReporter ) {
         log.info( "Analyzing currently stored data..." );
-        final int numberOfAuctions;
-        final int numberOfUsers;
-        final int numberOfCategories;
-        final int numberOfBids;
-        try {
-            numberOfAuctions = (int) countNumberOfRecords( executor, new CountAuction() );
-            numberOfUsers = (int) countNumberOfRecords( executor, new CountUser() );
-            numberOfCategories = (int) countNumberOfRecords( executor, new CountCategory() );
-            numberOfBids = (int) countNumberOfRecords( executor, new CountBid() );
-            executor.executeCommit();
-        } catch ( SQLException e ) {
-            throw new RuntimeException( "Exception while analyzing currently stored data" );
-        }
-        log.info( "Current number of elements in the database:\nAuctions: {} | Users: {} | Categories: {} | Bids: {}", numberOfAuctions, numberOfUsers, numberOfCategories, numberOfBids );
+        Map<String, Integer> numbers = getNumbers();
 
-        InsertRandomAuction.setNextId( numberOfAuctions + 1 );
-        InsertRandomBid.setNextId( numberOfBids + 1 );
+        InsertRandomAuction.setNextId( numbers.get( "auctions" ) + 1 );
+        InsertRandomBid.setNextId( numbers.get( "bids" ) + 1 );
 
         log.info( "Warm-up..." );
+        PolyphenyDbExecutor executor = null;
         try {
+            executor = new PolyphenyDbExecutor( polyphenyDbUrl, config );
             if ( config.numberOfAddUserQueries > 0 ) {
                 executor.executeStatement( new InsertUser().getNewQuery() );
             }
             if ( config.numberOfChangePasswordQueries > 0 ) {
-                executor.executeStatement( new ChangePasswordOfRandomUser( numberOfUsers ).getNewQuery() );
+                executor.executeStatement( new ChangePasswordOfRandomUser( numbers.get( "users" ) ).getNewQuery() );
             }
             if ( config.numberOfAddAuctionQueries > 0 ) {
-                executor.executeStatement( new InsertRandomAuction( numberOfUsers, numberOfCategories, config ).getNewQuery() );
+                executor.executeStatement( new InsertRandomAuction( numbers.get( "users" ), numbers.get( "categories" ), config ).getNewQuery() );
             }
             if ( config.numberOfAddBidQueries > 0 ) {
-                executor.executeStatement( new InsertRandomBid( numberOfAuctions, numberOfUsers ).getNewQuery() );
+                executor.executeStatement( new InsertRandomBid( numbers.get( "auctions" ), numbers.get( "users" ) ).getNewQuery() );
             }
             if ( config.numberOfChangeAuctionQueries > 0 ) {
-                executor.executeStatement( new ChangeRandomAuction( numberOfAuctions, config ).getNewQuery() );
+                executor.executeStatement( new ChangeRandomAuction( numbers.get( "auctions" ), config ).getNewQuery() );
             }
             if ( config.numberOfGetAuctionQueries > 0 ) {
-                executor.executeQuery( new SelectRandomAuction( numberOfAuctions ).getNewQuery() );
+                executor.executeQuery( new SelectRandomAuction( numbers.get( "auctions" ) ).getNewQuery() );
             }
             if ( config.numberOfGetTheNextHundredEndingAuctionsOfACategoryQueries > 0 ) {
-                executor.executeQuery( new SelectTheHundredNextEndingAuctionsOfRandomCategory( numberOfCategories, config ).getNewQuery() );
+                executor.executeQuery( new SelectTheHundredNextEndingAuctionsOfRandomCategory( numbers.get( "categories" ), config ).getNewQuery() );
             }
             if ( config.numberOfSearchAuctionQueries > 0 ) {
                 executor.executeQuery( new SearchAuction().getNewQuery() );
@@ -250,20 +225,21 @@ public class Gavel extends Scenario {
                 executor.executeQuery( new CountBid().getNewQuery() );
             }
             if ( config.numberOfGetBidQueries > 0 ) {
-                executor.executeQuery( new SelectRandomBid( numberOfBids ).getNewQuery() );
+                executor.executeQuery( new SelectRandomBid( numbers.get( "bids" ) ).getNewQuery() );
             }
             if ( config.numberOfGetUserQueries > 0 ) {
-                executor.executeQuery( new SelectRandomUser( numberOfUsers ).getNewQuery() );
+                executor.executeQuery( new SelectRandomUser( numbers.get( "users" ) ).getNewQuery() );
             }
             if ( config.numberOfGetAllBidsOnAuctionQueries > 0 ) {
-                executor.executeQuery( new SelectAllBidsOnRandomAuction( numberOfAuctions ).getNewQuery() );
+                executor.executeQuery( new SelectAllBidsOnRandomAuction( numbers.get( "auctions" ) ).getNewQuery() );
             }
             if ( config.numberOfGetCurrentlyHighestBidOnAuctionQueries > 0 ) {
-                executor.executeQuery( new SelectHighestBidOnRandomAuction( numberOfAuctions ).getNewQuery() );
+                executor.executeQuery( new SelectHighestBidOnRandomAuction( numbers.get( "auctions" ) ).getNewQuery() );
             }
-            executor.executeCommit();
         } catch ( SQLException e ) {
             throw new RuntimeException( "Error while executing warm-up queries", e );
+        } finally {
+            commitAndCloseExecutor( executor );
         }
         try {
             Thread.sleep( 5000 );
@@ -366,6 +342,11 @@ public class Gavel extends Scenario {
             this.abort = true;
         }
 
+
+        public void closeExecutor() {
+            commitAndCloseExecutor( executor );
+        }
+
     }
 
 
@@ -406,20 +387,21 @@ public class Gavel extends Scenario {
     @Override
     public void createSchema() {
         log.info( "Creating schema..." );
-        PolyphenyDbExecutor executor = new PolyphenyDbExecutor( polyphenyDbUrl, config );
-
+        PolyphenyDbExecutor executor = null;
         try (
                 InputStreamReader in = new InputStreamReader( ClassLoader.getSystemResourceAsStream( "gavel/schema.sql" ) );
                 BufferedReader bf = new BufferedReader( in )
         ) {
+            executor = new PolyphenyDbExecutor( polyphenyDbUrl, config );
             String line = bf.readLine();
             while ( line != null ) {
                 executor.executeStatement( new Query( line, false ) );
                 line = bf.readLine();
             }
-            executor.executeCommit();
         } catch ( IOException | SQLException e ) {
             throw new RuntimeException( "Exception while creating schema", e );
+        } finally {
+            commitAndCloseExecutor( executor );
         }
     }
 
@@ -430,12 +412,15 @@ public class Gavel extends Scenario {
 
         DataGenerationThreadMonitor threadMonitor = new DataGenerationThreadMonitor();
 
-        DataGenerator dataGenerator = new DataGenerator( new PolyphenyDbExecutor( polyphenyDbUrl, config ), config, progressReporter, threadMonitor );
+        PolyphenyDbExecutor polyphenyDbExecutor = new PolyphenyDbExecutor( polyphenyDbUrl, config );
+        DataGenerator dataGenerator = new DataGenerator( polyphenyDbExecutor, config, progressReporter, threadMonitor );
         try {
             dataGenerator.truncateTables();
             dataGenerator.generateCategories();
         } catch ( SQLException e ) {
             throw new RuntimeException( "Exception while generating data", e );
+        } finally {
+            commitAndCloseExecutor( polyphenyDbExecutor );
         }
 
         ArrayList<Thread> threads = new ArrayList<>();
@@ -454,6 +439,12 @@ public class Gavel extends Scenario {
                         log.error( "Error while rollback", e );
                     }
                     log.error( "Exception while generating data", e );
+                } finally {
+                    try {
+                        executor.closeConnection();
+                    } catch ( SQLException e ) {
+                        log.error( "Error while closing connection", e );
+                    }
                 }
             };
             Thread thread = new Thread( task );
@@ -488,6 +479,12 @@ public class Gavel extends Scenario {
                         log.error( "Error while rollback", e );
                     }
                     log.error( "Exception while generating data", e );
+                } finally {
+                    try {
+                        executor.closeConnection();
+                    } catch ( SQLException e ) {
+                        log.error( "Error while closing connection", e );
+                    }
                 }
             };
             Thread thread = new Thread( task );
@@ -578,6 +575,45 @@ public class Gavel extends Scenario {
         measuredTimePerQueryType.put( id, Collections.synchronizedList( new LinkedList<>() ) );
         for ( int i = 0; i < numberOfTimes; i++ ) {
             list.add( new QueryListEntry( queryBuilder.getNewQuery(), id ) );
+        }
+    }
+
+
+    private Map<String, Integer> getNumbers() {
+        Map<String, Integer> numbers = new HashMap<>();
+        PolyphenyDbExecutor executor = null;
+        try {
+            executor = new PolyphenyDbExecutor( polyphenyDbUrl, config );
+            numbers.put( "auctions", (int) countNumberOfRecords( executor, new CountAuction() ) );
+            numbers.put( "users", (int) countNumberOfRecords( executor, new CountUser() ) );
+            numbers.put( "categories", (int) countNumberOfRecords( executor, new CountCategory() ) );
+            numbers.put( "bids", (int) countNumberOfRecords( executor, new CountBid() ) );
+        } catch ( SQLException e ) {
+            throw new RuntimeException( "Exception while analyzing currently stored data" );
+        } finally {
+            commitAndCloseExecutor( executor );
+        }
+        log.info( "Current number of elements in the database:\nAuctions: {} | Users: {} | Categories: {} | Bids: {}", numbers.get( "auction" ), numbers.get( "user" ), numbers.get( "categories" ), numbers.get( "bids" ) );
+        return numbers;
+    }
+
+
+    private void commitAndCloseExecutor( Executor executor ) {
+        if ( executor != null ) {
+            try {
+                executor.executeCommit();
+            } catch ( SQLException e ) {
+                try {
+                    executor.executeRollback();
+                } catch ( SQLException ex ) {
+                    log.error( "Error while rollback connection", e );
+                }
+            }
+            try {
+                executor.closeConnection();
+            } catch ( SQLException e ) {
+                log.error( "Error while closing connection", e );
+            }
         }
     }
 }

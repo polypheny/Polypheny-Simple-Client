@@ -42,8 +42,6 @@ import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.cli.ChronosCommand;
 import org.polypheny.simpleclient.cli.Main;
-import org.polypheny.simpleclient.executor.PolyphenyDbExecutor;
-import org.polypheny.simpleclient.executor.PostgresExecutor;
 import org.polypheny.simpleclient.scenario.Scenario;
 import org.polypheny.simpleclient.scenario.gavel.Config;
 import org.polypheny.simpleclient.scenario.gavel.Gavel;
@@ -145,10 +143,10 @@ public class ChronosAgent extends AbstractChronosAgent {
 
         ProgressReporter progressReporter = new ChronosProgressReporter( chronosJob, this, config.numberOfThreads, config.progressReportBase );
         if ( config.store.equals( "polypheny" ) ) {
-            scenario.warmUp( progressReporter, new PolyphenyDbExecutor( ChronosCommand.polyphenyDbHost, config ) );
+            scenario.warmUp( progressReporter );
         } else {
             if ( config.store.equals( "postgres" ) ) {
-                scenario.warmUp( progressReporter, new PostgresExecutor( ChronosCommand.polyphenyDbHost ) );
+                scenario.warmUp( progressReporter );
             } else {
                 System.err.println( "Unknown Store: " + config.store );
             }
@@ -171,9 +169,9 @@ public class ChronosAgent extends AbstractChronosAgent {
         ProgressReporter progressReporter = new ChronosProgressReporter( chronosJob, this, config.numberOfThreads, config.progressReportBase );
         long runtime = 0;
         if ( config.store.equals( "polypheny" ) ) {
-            runtime = scenario.execute( progressReporter, csvWriter, outputDirectory, new PolyphenyDbExecutor( ChronosCommand.polyphenyDbHost, config ) );
+            runtime = scenario.execute( progressReporter, csvWriter, outputDirectory );
         } else if ( config.store.equals( "postgres" ) ) {
-            runtime = scenario.execute( progressReporter, csvWriter, outputDirectory, new PostgresExecutor( ChronosCommand.polyphenyDbHost ) );
+            runtime = scenario.execute( progressReporter, csvWriter, outputDirectory );
         } else {
             System.err.println( "Unknown Store: " + config.store );
         }

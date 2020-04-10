@@ -139,6 +139,17 @@ public class PolyphenyDbExecutor extends Executor {
 
 
     @Override
+    public void closeConnection() throws SQLException {
+        if ( executeStatement != null ) {
+            executeStatement.close();
+        }
+        if ( connection != null ) {
+            connection.close();
+        }
+    }
+
+
+    @Override
     public long executeStatement( Query statement ) throws SQLException {
         log.info( statement.sqlQuery );
 
