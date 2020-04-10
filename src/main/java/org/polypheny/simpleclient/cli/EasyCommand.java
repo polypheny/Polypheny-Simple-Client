@@ -44,7 +44,7 @@ public class EasyCommand implements CliRunnable {
     @Inject
     private HelpOption<EasyCommand> help;
 
-    @Arguments(description = "Hostname or IP-Address of the Chronos server.")
+    @Arguments(description = "Task { schema | data | workload } and multiplier.")
     private List<String> args;
 
     @Option(name = { "-pdb", "--polyphenydb" }, title = "Polypheny-DB Host", arity = 1, description = "Polypheny-DB Host")
@@ -63,6 +63,7 @@ public class EasyCommand implements CliRunnable {
             multiplier = Integer.parseInt( args.get( 1 ) );
             if ( multiplier < 1 ) {
                 System.err.println( "Multiplier needs to be a integer > 0!" );
+                System.exit( 1 );
             }
         }
 
