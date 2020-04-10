@@ -78,6 +78,17 @@ public class ChronosAgent extends AbstractChronosAgent {
         Config config = parseConfig( chronosJob );
         Scenario scenario = new Gavel( ChronosCommand.polyphenyDbHost, config );
 
+        // Store hostname of node
+        try {
+            String hostname = InetAddress.getLocalHost().getHostName();
+            FileWriter fw = new FileWriter( outputDirectory.getPath() + File.separator + "node.hostname" );
+            fw.append( hostname );
+            fw.close();
+            log.warn( "Executing on Node " + hostname );
+        } catch ( IOException e ) {
+            throw new RuntimeException( "Error while getting hostname", e );
+        }
+
         // Stop Polypheny
         polyphenyControlConnector.stopPolypheny();
         try {
