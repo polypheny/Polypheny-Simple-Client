@@ -34,7 +34,6 @@ import java.sql.Statement;
 import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.main.Query;
-import org.polypheny.simpleclient.scenario.gavel.Config;
 
 
 @Slf4j
@@ -43,26 +42,8 @@ public class PolyphenyDbExecutor extends Executor {
     private final Statement executeStatement;
     private final Connection connection;
 
-    //private final ComboPooledDataSource cpds;
 
-
-    public PolyphenyDbExecutor( String polyphenyHost, Config config ) {
-
-        /*cpds = new ComboPooledDataSource();
-        try {
-            cpds.setDriverClass("org.polypheny.jdbc.Driver"); //loads the jdbc driver
-            cpds.setJdbcUrl("jdbc:polypheny://localhost/?wire_protocol=PROTO3");
-            cpds.setUser("pa");
-
-            cpds.setMinPoolSize(config.numberOfThreads);
-            cpds.setMaxPoolSize(config.numberOfThreads);
-            cpds.setInitialPoolSize(config.numberOfThreads);
-
-            cpds.setPreferredTestQuery("SELECT 1;");
-        } catch (PropertyVetoException e) {
-            e.printStackTrace();
-        }*/
-
+    public PolyphenyDbExecutor( String polyphenyHost ) {
         try {
             Class.forName( "org.polypheny.jdbc.Driver" );
         } catch ( ClassNotFoundException e ) {
@@ -88,16 +69,13 @@ public class PolyphenyDbExecutor extends Executor {
         log.debug( query.sqlQuery );
 
         long start = System.nanoTime();
-        //try ( Connection connection = cpds.getConnection() ) {
-        //ResultSet resultSet = connection.createStatement().executeQuery( query.sqlQuery );
 
         ResultSet resultSet = executeStatement.executeQuery( query.sqlQuery );
-
         while ( resultSet.next() ) {
             // walk to whole result set
         }
+
         return System.nanoTime() - start;
-        //}
     }
 
 
@@ -105,24 +83,17 @@ public class PolyphenyDbExecutor extends Executor {
     public long executeQueryAndGetNumber( Query query ) throws SQLException {
         log.debug( query.sqlQuery );
 
-        //try ( Connection connection = cpds.getConnection() ) {
-        //ResultSet resultSet = connection.createStatement().executeQuery( query.sqlQuery );
         ResultSet resultSet = executeStatement.executeQuery( query.sqlQuery );
 
         long count;
 
         if ( resultSet.next() ) {
             count = resultSet.getLong( 1 );
-            /*if ( !resultSet.isLast() ) {
-                throw new RuntimeException( "Result Set is too big" );
-            }*/
         } else {
             throw new RuntimeException( "Result Set has size 0." );
         }
 
         return count;
-        //}
-
     }
 
 
@@ -154,11 +125,7 @@ public class PolyphenyDbExecutor extends Executor {
         log.info( statement.sqlQuery );
 
         long start = System.nanoTime();
-        //try ( Connection connection = cpds.getConnection() ) {
-        //connection.createStatement().executeQuery( statement.sqlQuery );
         executeStatement.execute( statement.sqlQuery );
-
         return System.nanoTime() - start;
-        //}
     }
 }

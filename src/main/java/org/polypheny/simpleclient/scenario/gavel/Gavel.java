@@ -146,7 +146,7 @@ public class Gavel extends Scenario {
 
         ArrayList<EvaluationThread> threads = new ArrayList<>();
         for ( int i = 0; i < config.numberOfThreads; i++ ) {
-            threads.add( new EvaluationThread( queryList, csvWriter, new PolyphenyDbExecutor( polyphenyDbUrl, config ) ) );
+            threads.add( new EvaluationThread( queryList, csvWriter, new PolyphenyDbExecutor( polyphenyDbUrl ) ) );
         }
 
         EvaluationThreadMonitor threadMonitor = new EvaluationThreadMonitor( threads );
@@ -190,7 +190,7 @@ public class Gavel extends Scenario {
         log.info( "Warm-up..." );
         PolyphenyDbExecutor executor = null;
         try {
-            executor = new PolyphenyDbExecutor( polyphenyDbUrl, config );
+            executor = new PolyphenyDbExecutor( polyphenyDbUrl );
             if ( config.numberOfAddUserQueries > 0 ) {
                 executor.executeStatement( new InsertUser().getNewQuery() );
             }
@@ -392,7 +392,7 @@ public class Gavel extends Scenario {
                 InputStreamReader in = new InputStreamReader( ClassLoader.getSystemResourceAsStream( "gavel/schema.sql" ) );
                 BufferedReader bf = new BufferedReader( in )
         ) {
-            executor = new PolyphenyDbExecutor( polyphenyDbUrl, config );
+            executor = new PolyphenyDbExecutor( polyphenyDbUrl );
             String line = bf.readLine();
             while ( line != null ) {
                 executor.executeStatement( new Query( line, false ) );
@@ -412,7 +412,7 @@ public class Gavel extends Scenario {
 
         DataGenerationThreadMonitor threadMonitor = new DataGenerationThreadMonitor();
 
-        PolyphenyDbExecutor polyphenyDbExecutor = new PolyphenyDbExecutor( polyphenyDbUrl, config );
+        PolyphenyDbExecutor polyphenyDbExecutor = new PolyphenyDbExecutor( polyphenyDbUrl );
         DataGenerator dataGenerator = new DataGenerator( polyphenyDbExecutor, config, progressReporter, threadMonitor );
         try {
             dataGenerator.truncateTables();
@@ -427,7 +427,7 @@ public class Gavel extends Scenario {
 
         for ( int i = 0; i < config.numberOfUserGenerationThreads; i++ ) {
             Runnable task = () -> {
-                PolyphenyDbExecutor executor = new PolyphenyDbExecutor( polyphenyDbUrl, config );
+                PolyphenyDbExecutor executor = new PolyphenyDbExecutor( polyphenyDbUrl );
                 try {
                     DataGenerator dg = new DataGenerator( executor, config, progressReporter, threadMonitor );
                     dg.generateUsers( config.numberOfUsers / config.numberOfUserGenerationThreads );
@@ -467,7 +467,7 @@ public class Gavel extends Scenario {
             final int start = ((i - 1) * rangeSize) + 1;
             final int end = rangeSize * i;
             Runnable task = () -> {
-                PolyphenyDbExecutor executor = new PolyphenyDbExecutor( polyphenyDbUrl, config );
+                PolyphenyDbExecutor executor = new PolyphenyDbExecutor( polyphenyDbUrl );
                 try {
                     DataGenerator dg = new DataGenerator( executor, config, progressReporter, threadMonitor );
                     dg.generateAuctions( start, end );
@@ -508,7 +508,7 @@ public class Gavel extends Scenario {
 
     static class DataGenerationThreadMonitor {
 
-        private List<DataGenerator> dataGenerators;
+        private final List<DataGenerator> dataGenerators;
         @Getter
         private boolean aborted;
         @Getter
@@ -583,7 +583,7 @@ public class Gavel extends Scenario {
         Map<String, Integer> numbers = new HashMap<>();
         PolyphenyDbExecutor executor = null;
         try {
-            executor = new PolyphenyDbExecutor( polyphenyDbUrl, config );
+            executor = new PolyphenyDbExecutor( polyphenyDbUrl );
             numbers.put( "auctions", (int) countNumberOfRecords( executor, new CountAuction() ) );
             numbers.put( "users", (int) countNumberOfRecords( executor, new CountUser() ) );
             numbers.put( "categories", (int) countNumberOfRecords( executor, new CountCategory() ) );

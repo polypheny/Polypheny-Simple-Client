@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public abstract class ProgressReporter {
 
-    private AtomicLong progress;
+    private final AtomicLong progress;
     private final int numberOfThreads;
     public final int base;
 

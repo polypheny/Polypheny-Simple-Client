@@ -32,8 +32,7 @@ import java.sql.SQLException;
 public interface CliRunnable {
 
     /**
-     * Runs the command and returns an exit code that the application should
-     * return
+     * Runs the command and returns an exit code that the application should return
      *
      * @return Exit code
      */

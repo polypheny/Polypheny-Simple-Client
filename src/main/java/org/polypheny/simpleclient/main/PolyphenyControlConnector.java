@@ -26,7 +26,6 @@
 package org.polypheny.simpleclient.main;
 
 
-import ch.unibas.dmi.dbis.chronos.agent.ChronosHttpClient.ChronosLogHandler;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.mashape.unirest.http.HttpResponse;
@@ -54,9 +53,8 @@ class PolyphenyControlConnector {
 
     private final String controlUrl;
     private static int clientId = -1;
-    private ChronosLogHandler chronosLogHandler;
 
-    private Gson gson = new Gson();
+    private final Gson gson = new Gson();
 
 
     PolyphenyControlConnector( String controlUrl ) throws URISyntaxException {
@@ -149,11 +147,6 @@ class PolyphenyControlConnector {
     }
 
 
-    void setChronosLogHandler( ChronosLogHandler chronosLogHandler ) {
-        this.chronosLogHandler = chronosLogHandler;
-    }
-
-
     private String executeGet( String command ) {
         HttpResponse<InputStream> httpResponse;
         try {
@@ -196,7 +189,7 @@ class PolyphenyControlConnector {
 
     private class WebSocket extends WebSocketClient {
 
-        private Gson gson = new Gson();
+        private final Gson gson = new Gson();
         private final Logger CONTROL_MESSAGES_LOGGER = LoggerFactory.getLogger( "CONTROL_MESSAGES_LOGGER" );
 
 

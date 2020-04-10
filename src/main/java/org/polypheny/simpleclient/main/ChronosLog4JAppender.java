@@ -35,7 +35,7 @@ public class ChronosLog4JAppender extends AbstractAppender {
     public static ChronosLog4JAppender createAppender(
             @PluginAttribute("name") String name,
             @PluginAttribute("ignoreExceptions") boolean ignoreExceptions,
-            @PluginElement("Layout") Layout layout,
+            @PluginElement("Layout") Layout<? extends Serializable> layout,
             @PluginElement("Filters") Filter filter ) {
 
         if ( name == null ) {

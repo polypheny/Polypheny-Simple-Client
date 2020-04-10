@@ -2,6 +2,7 @@ package org.polypheny.simpleclient.main;
 
 
 import java.io.IOException;
+import java.util.Objects;
 import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.cli.Main;
@@ -12,53 +13,45 @@ import org.polypheny.simpleclient.scenario.gavel.Gavel;
 @Slf4j
 public class Easy {
 
-    public static void data( String polyphenyDbUrl, int multiplier ) {
-        try {
-            Properties props = new Properties();
-            props.load( ClassLoader.getSystemResourceAsStream( "gavel/easy.properties" ) );
-            Config config = new Config( props, multiplier );
-            Gavel gavel = new Gavel( polyphenyDbUrl, config );
+    public static void schema( String polyphenyDbUrl ) {
+        Config config = new Config( getProperties(), 1 );
+        Gavel gavel = new Gavel( polyphenyDbUrl, config );
+        gavel.createSchema();
+    }
 
-            ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
-            gavel.generateData( progressReporter );
-        } catch ( IOException e ) {
-            log.error( "Exception while executing workload" );
-        }
+
+    public static void data( String polyphenyDbUrl, int multiplier ) {
+        Config config = new Config( getProperties(), multiplier );
+        Gavel gavel = new Gavel( polyphenyDbUrl, config );
+
+        ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
+        gavel.generateData( progressReporter );
     }
 
 
     public static void workload( String polyphenyDbUrl, int multiplier ) {
-        try {
-            Properties props = new Properties();
-            props.load( ClassLoader.getSystemResourceAsStream( "gavel/easy.properties" ) );
-            Config config = new Config( props, multiplier );
-            Gavel gavel = new Gavel( polyphenyDbUrl, config );
+        Config config = new Config( getProperties(), multiplier );
+        Gavel gavel = new Gavel( polyphenyDbUrl, config );
 
-            final CsvWriter csvWriter;
-            if ( Main.WRITE_CSV ) {
-                csvWriter = new CsvWriter( "results.csv" );
-            } else {
-                csvWriter = null;
-            }
-            ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
-            gavel.execute( progressReporter, csvWriter, null );
-        } catch ( IOException e ) {
-            log.error( "Exception while executing workload" );
+        final CsvWriter csvWriter;
+        if ( Main.WRITE_CSV ) {
+            csvWriter = new CsvWriter( "results.csv" );
+        } else {
+            csvWriter = null;
         }
+        ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
+        gavel.execute( progressReporter, csvWriter, null );
     }
 
 
-    public static void schema( String polyphenyDbUrl ) {
+    private static Properties getProperties() {
+        Properties props = new Properties();
         try {
-            Properties props = new Properties();
-            props.load( ClassLoader.getSystemResourceAsStream( "gavel/easy.properties" ) );
-            Config config = new Config( props, 1 );
-            Gavel gavel = new Gavel( polyphenyDbUrl, config );
-
-            gavel.createSchema();
+            props.load( Objects.requireNonNull( ClassLoader.getSystemResourceAsStream( "gavel/easy.properties" ) ) );
         } catch ( IOException e ) {
-            log.error( "Exception while executing workload" );
+            log.error( "Exception while reading properties file", e );
         }
+        return props;
     }
 
 }
