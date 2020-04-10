@@ -93,6 +93,14 @@ public class ChronosAgent extends AbstractChronosAgent {
         conf.put( "pcrtl.java.heap", "10" );
         conf.put( "pcrtl.buildmode", "both" );
         conf.put( "pcrtl.clean", "keep" );
+        String args = "";
+        if ( config.resetCatalog ) {
+            args += "-resetCatalog ";
+        }
+        if ( config.memoryCatalog ) {
+            args += "-memoryCatalog ";
+        }
+        conf.put( "pcrtl.pdbms.args", args.trim() );
         polyphenyControlConnector.setConfig( conf );
 
         // Pull branch and update polypheny
