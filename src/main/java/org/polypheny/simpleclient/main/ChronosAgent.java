@@ -84,7 +84,7 @@ public class ChronosAgent extends AbstractChronosAgent {
             FileWriter fw = new FileWriter( outputDirectory.getPath() + File.separator + "node.hostname" );
             fw.append( hostname );
             fw.close();
-            log.warn( "Executing on Node " + hostname );
+            log.warn( "Executing on node: " + hostname );
         } catch ( IOException e ) {
             throw new RuntimeException( "Error while getting hostname", e );
         }

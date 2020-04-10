@@ -57,7 +57,7 @@ public class InsertBid extends QueryBuilder {
         sb.append( amount ).append( "," );
         sb.append( "timestamp '" ).append( date.format( DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss" ) ) ).append( "'," );
         sb.append( userId ).append( "," );
-        sb.append( auctionId ); // This could maybe gets an bug if e.g. parallelized
+        sb.append( auctionId ); // This could gets a bug if e.g. parallelized
         sb.append( ")" );
         return sb.toString();
     }
