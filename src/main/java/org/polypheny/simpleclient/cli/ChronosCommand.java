@@ -44,8 +44,8 @@ public class ChronosCommand implements CliRunnable {
     @Inject
     private HelpOption<ChronosCommand> help;
 
-    @Option(name = { "-cc", "--chronos" }, description = "Hostname or IP-Address of the Chronos server.")
-    private String hostname = "chronos.dmi.unibas.ch";
+    @Option(name = { "-cc", "--chronos" }, description = "Hostname or IP-Address of the Chronos Control.")
+    private String chronos = "chronos.dmi.unibas.ch";
 
     @Option(name = { "-p", "--port" }, description = "Port of the REST API of the Chronos server.")
     private int port = 443;
@@ -57,8 +57,8 @@ public class ChronosCommand implements CliRunnable {
     @Option(name = { "-s", "--supports" }, description = "Identifier of the supported system(s) in Chronos.")
     private String supports = "";
 
-    @Option(name = { "-pdb", "--polyphenydb" }, title = "Polypheny-DB IP", arity = 1, description = "Polypheny-DB IP")
-    public static String polyphenyDbHost = "127.0.0.1";
+    @Option(name = { "--host" }, title = "Hostname", arity = 1, description = "Hostname or IP of the system to benchmark.")
+    public static String hostname = "127.0.0.1";
 
     @Option(name = { "-c", "--commit" }, title = "Commit after every statement", arity = 1, description = "Commit")
     private String c = "false";
@@ -70,9 +70,9 @@ public class ChronosCommand implements CliRunnable {
     public int run() {
         InetAddress address = null;
         try {
-            address = InetAddress.getByName( hostname );
+            address = InetAddress.getByName( chronos );
         } catch ( UnknownHostException e ) {
-            System.err.println( "The given host '" + hostname + "' cannot be resolved." );
+            System.err.println( "The given host '" + chronos + "' cannot be resolved." );
             System.exit( 1 );
         }
 

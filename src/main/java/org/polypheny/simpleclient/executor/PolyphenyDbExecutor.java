@@ -26,24 +26,17 @@
 package org.polypheny.simpleclient.executor;
 
 
-import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
-import org.polypheny.simpleclient.main.Query;
 
 
 @Slf4j
 public class PolyphenyDbExecutor extends Executor {
 
-    private final Statement executeStatement;
-    private final Connection connection;
 
-
-    public PolyphenyDbExecutor( String polyphenyHost ) {
+    private PolyphenyDbExecutor( String polyphenyHost ) {
         try {
             Class.forName( "org.polypheny.jdbc.Driver" );
         } catch ( ClassNotFoundException e ) {
@@ -57,75 +50,25 @@ public class PolyphenyDbExecutor extends Executor {
             props.setProperty( "user", "pa" );
 
             connection = DriverManager.getConnection( url, props );
-            executeStatement = connection.createStatement();
         } catch ( SQLException e ) {
             throw new RuntimeException( "Connection Failed." );
         }
     }
 
 
-    @Override
-    public long executeQuery( Query query ) throws SQLException {
-        log.debug( query.sqlQuery );
+    public static class PolyphenyDBExecutorFactory extends Executor.ExecutorFactory {
 
-        long start = System.nanoTime();
+        private final String host;
 
-        ResultSet resultSet = executeStatement.executeQuery( query.sqlQuery );
-        while ( resultSet.next() ) {
-            // walk to whole result set
+
+        public PolyphenyDBExecutorFactory( String host ) {
+            this.host = host;
         }
 
-        return System.nanoTime() - start;
-    }
 
-
-    @Override
-    public long executeQueryAndGetNumber( Query query ) throws SQLException {
-        log.debug( query.sqlQuery );
-
-        ResultSet resultSet = executeStatement.executeQuery( query.sqlQuery );
-
-        long count;
-
-        if ( resultSet.next() ) {
-            count = resultSet.getLong( 1 );
-        } else {
-            throw new RuntimeException( "Result Set has size 0." );
+        @Override
+        public Executor createInstance() {
+            return new PolyphenyDbExecutor( host );
         }
-
-        return count;
-    }
-
-
-    @Override
-    public void executeCommit() throws SQLException {
-        connection.commit();
-    }
-
-
-    @Override
-    public void executeRollback() throws SQLException {
-        connection.rollback();
-    }
-
-
-    @Override
-    public void closeConnection() throws SQLException {
-        if ( executeStatement != null ) {
-            executeStatement.close();
-        }
-        if ( connection != null ) {
-            connection.close();
-        }
-    }
-
-
-    @Override
-    public long executeStatement( Query statement ) throws SQLException {
-        log.info( statement.sqlQuery );
-
-        long start = System.nanoTime();
-        executeStatement.execute( statement.sqlQuery );
-        return System.nanoTime() - start;
     }
 }

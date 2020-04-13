@@ -26,22 +26,84 @@
 package org.polypheny.simpleclient.executor;
 
 
+import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
+import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.main.Query;
 
 
+@Slf4j
 public abstract class Executor {
 
-    public abstract long executeQuery( Query query ) throws SQLException;
+    protected Connection connection;
+    protected Statement executeStatement;
 
-    public abstract long executeStatement( Query statement ) throws SQLException;
 
-    public abstract long executeQueryAndGetNumber( Query query ) throws SQLException;
+    public long executeQuery( Query query ) throws SQLException {
+        log.debug( query.sqlQuery );
 
-    public abstract void executeCommit() throws SQLException;
+        long start = System.nanoTime();
 
-    public abstract void executeRollback() throws SQLException;
+        ResultSet resultSet = executeStatement.executeQuery( query.sqlQuery );
+        while ( resultSet.next() ) {
+            // walk to whole result set
+        }
 
-    public abstract void closeConnection() throws SQLException;
+        return System.nanoTime() - start;
+    }
+
+
+    public long executeQueryAndGetNumber( Query query ) throws SQLException {
+        log.debug( query.sqlQuery );
+
+        ResultSet resultSet = executeStatement.executeQuery( query.sqlQuery );
+
+        long count;
+
+        if ( resultSet.next() ) {
+            count = resultSet.getLong( 1 );
+        } else {
+            throw new RuntimeException( "Result Set has size 0." );
+        }
+
+        return count;
+    }
+
+
+    public void executeCommit() throws SQLException {
+        connection.commit();
+    }
+
+
+    public void executeRollback() throws SQLException {
+        connection.rollback();
+    }
+
+
+    public void closeConnection() throws SQLException {
+        if ( executeStatement != null ) {
+            executeStatement.close();
+        }
+        if ( connection != null ) {
+            connection.close();
+        }
+    }
+
+
+    public long executeStatement( Query statement ) throws SQLException {
+        log.info( statement.sqlQuery );
+
+        long start = System.nanoTime();
+        executeStatement.execute( statement.sqlQuery );
+        return System.nanoTime() - start;
+    }
+
+
+    public abstract static class ExecutorFactory {
+
+        public abstract Executor createInstance();
+    }
 
 }

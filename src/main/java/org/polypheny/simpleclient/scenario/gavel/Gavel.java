@@ -50,7 +50,6 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.cli.ChronosCommand;
 import org.polypheny.simpleclient.executor.Executor;
-import org.polypheny.simpleclient.executor.PolyphenyDbExecutor;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.main.ProgressReporter;
 import org.polypheny.simpleclient.main.Query;
@@ -86,8 +85,8 @@ public class Gavel extends Scenario {
     private final Map<Integer, List<Long>> measuredTimePerQueryType;
 
 
-    public Gavel( String polyphenyDbUrl, Config config ) {
-        super( polyphenyDbUrl );
+    public Gavel( Executor.ExecutorFactory executorFactory, Config config ) {
+        super( executorFactory );
         this.config = config;
         measuredTimes = Collections.synchronizedList( new LinkedList<>() );
 
@@ -146,7 +145,7 @@ public class Gavel extends Scenario {
 
         ArrayList<EvaluationThread> threads = new ArrayList<>();
         for ( int i = 0; i < config.numberOfThreads; i++ ) {
-            threads.add( new EvaluationThread( queryList, csvWriter, new PolyphenyDbExecutor( polyphenyDbUrl ) ) );
+            threads.add( new EvaluationThread( queryList, csvWriter, executorFactory.createInstance() ) );
         }
 
         EvaluationThreadMonitor threadMonitor = new EvaluationThreadMonitor( threads );
@@ -188,9 +187,9 @@ public class Gavel extends Scenario {
         InsertRandomBid.setNextId( numbers.get( "bids" ) + 1 );
 
         log.info( "Warm-up..." );
-        PolyphenyDbExecutor executor = null;
+        Executor executor = null;
         try {
-            executor = new PolyphenyDbExecutor( polyphenyDbUrl );
+            executor = executorFactory.createInstance();
             if ( config.numberOfAddUserQueries > 0 ) {
                 executor.executeStatement( new InsertUser().getNewQuery() );
             }
@@ -387,12 +386,13 @@ public class Gavel extends Scenario {
     @Override
     public void createSchema() {
         log.info( "Creating schema..." );
-        PolyphenyDbExecutor executor = null;
+        Executor executor = null;
         try (
-                InputStreamReader in = new InputStreamReader( ClassLoader.getSystemResourceAsStream( "gavel/schema.sql" ) );
+                //InputStreamReader in = new InputStreamReader( ClassLoader.getSystemResourceAsStream( "gavel/schema.sql" ) );
+                InputStreamReader in = new InputStreamReader( ClassLoader.getSystemResourceAsStream( "gavel/schema-without-keys-and-constraints.sql" ) );
                 BufferedReader bf = new BufferedReader( in )
         ) {
-            executor = new PolyphenyDbExecutor( polyphenyDbUrl );
+            executor = executorFactory.createInstance();
             String line = bf.readLine();
             while ( line != null ) {
                 executor.executeStatement( new Query( line, false ) );
@@ -412,22 +412,22 @@ public class Gavel extends Scenario {
 
         DataGenerationThreadMonitor threadMonitor = new DataGenerationThreadMonitor();
 
-        PolyphenyDbExecutor polyphenyDbExecutor = new PolyphenyDbExecutor( polyphenyDbUrl );
-        DataGenerator dataGenerator = new DataGenerator( polyphenyDbExecutor, config, progressReporter, threadMonitor );
+        Executor executor1 = executorFactory.createInstance();
+        DataGenerator dataGenerator = new DataGenerator( executor1, config, progressReporter, threadMonitor );
         try {
-            dataGenerator.truncateTables();
+            //dataGenerator.truncateTables();
             dataGenerator.generateCategories();
         } catch ( SQLException e ) {
             throw new RuntimeException( "Exception while generating data", e );
         } finally {
-            commitAndCloseExecutor( polyphenyDbExecutor );
+            commitAndCloseExecutor( executor1 );
         }
 
         ArrayList<Thread> threads = new ArrayList<>();
 
         for ( int i = 0; i < config.numberOfUserGenerationThreads; i++ ) {
             Runnable task = () -> {
-                PolyphenyDbExecutor executor = new PolyphenyDbExecutor( polyphenyDbUrl );
+                Executor executor = executorFactory.createInstance();
                 try {
                     DataGenerator dg = new DataGenerator( executor, config, progressReporter, threadMonitor );
                     dg.generateUsers( config.numberOfUsers / config.numberOfUserGenerationThreads );
@@ -467,7 +467,7 @@ public class Gavel extends Scenario {
             final int start = ((i - 1) * rangeSize) + 1;
             final int end = rangeSize * i;
             Runnable task = () -> {
-                PolyphenyDbExecutor executor = new PolyphenyDbExecutor( polyphenyDbUrl );
+                Executor executor = executorFactory.createInstance();
                 try {
                     DataGenerator dg = new DataGenerator( executor, config, progressReporter, threadMonitor );
                     dg.generateAuctions( start, end );
@@ -581,9 +581,9 @@ public class Gavel extends Scenario {
 
     private Map<String, Integer> getNumbers() {
         Map<String, Integer> numbers = new HashMap<>();
-        PolyphenyDbExecutor executor = null;
+        Executor executor = null;
         try {
-            executor = new PolyphenyDbExecutor( polyphenyDbUrl );
+            executor = executorFactory.createInstance();
             numbers.put( "auctions", (int) countNumberOfRecords( executor, new CountAuction() ) );
             numbers.put( "users", (int) countNumberOfRecords( executor, new CountUser() ) );
             numbers.put( "categories", (int) countNumberOfRecords( executor, new CountCategory() ) );

@@ -26,20 +26,13 @@
 package org.polypheny.simpleclient.executor;
 
 
-import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.sql.Statement;
-import org.polypheny.simpleclient.main.Query;
 
 
 public class PostgresExecutor extends Executor {
 
-    private final Connection connection;
-    private final Statement executeStatement;
-
-
-    public PostgresExecutor( String host ) {
+    private PostgresExecutor( String host ) {
 
         try {
             Class.forName( "org.postgresql.Driver" );
@@ -48,60 +41,29 @@ public class PostgresExecutor extends Executor {
         }
 
         try {
-            //TODO pass as parameter
-            connection = DriverManager.getConnection( "jdbc:postgresql://" + host + ":5432/test", "postgres", "12345" );
+            connection = DriverManager.getConnection( "jdbc:postgresql://" + host + ":5432/test", "postgres", "postgres" );
             connection.setAutoCommit( false );
             executeStatement = connection.createStatement();
         } catch ( SQLException e ) {
             throw new RuntimeException( "Connection Failed." );
-
         }
 
     }
 
 
-    @Override
-    public long executeQuery( Query query ) throws SQLException {
-        executeStatement.executeQuery( query.sqlQuery );
-        //TODO
-        return -1;
-    }
+    public static class PostgresExecutorFactory extends Executor.ExecutorFactory {
+
+        private final String host;
 
 
-    @Override
-    public long executeStatement( Query statement ) throws SQLException {
-        executeStatement.execute( statement.sqlQuery );
-        //TODO
-        return -1;
-    }
-
-
-    @Override
-    public long executeQueryAndGetNumber( Query query ) throws SQLException {
-        //TODO
-        return -1;
-    }
-
-
-    @Override
-    public void executeCommit() throws SQLException {
-        connection.commit();
-    }
-
-
-    @Override
-    public void executeRollback() throws SQLException {
-        connection.rollback();
-    }
-
-
-    @Override
-    public void closeConnection() throws SQLException {
-        if ( executeStatement != null ) {
-            executeStatement.close();
+        public PostgresExecutorFactory( String host ) {
+            this.host = host;
         }
-        if ( connection != null ) {
-            connection.close();
+
+
+        @Override
+        public Executor createInstance() {
+            return new PostgresExecutor( host );
         }
     }
 }

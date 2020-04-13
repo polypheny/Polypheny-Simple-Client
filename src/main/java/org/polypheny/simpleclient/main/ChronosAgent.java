@@ -35,6 +35,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URISyntaxException;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -42,6 +43,9 @@ import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.cli.ChronosCommand;
 import org.polypheny.simpleclient.cli.Main;
+import org.polypheny.simpleclient.executor.Executor;
+import org.polypheny.simpleclient.executor.PolyphenyDbExecutor.PolyphenyDBExecutorFactory;
+import org.polypheny.simpleclient.executor.PostgresExecutor.PostgresExecutorFactory;
 import org.polypheny.simpleclient.scenario.Scenario;
 import org.polypheny.simpleclient.scenario.gavel.Config;
 import org.polypheny.simpleclient.scenario.gavel.Gavel;
@@ -59,7 +63,7 @@ public class ChronosAgent extends AbstractChronosAgent {
         super( address, port, secure, useHostname, environment );
         this.supports = new String[]{ supports };
         try {
-            polyphenyControlConnector = new PolyphenyControlConnector( ChronosCommand.polyphenyDbHost + ":8070" );
+            polyphenyControlConnector = new PolyphenyControlConnector( ChronosCommand.hostname + ":8070" );
         } catch ( URISyntaxException e ) {
             log.error( "Exception while connecting to Polypheny Control", e );
         }
@@ -76,7 +80,18 @@ public class ChronosAgent extends AbstractChronosAgent {
     protected Object prepare( ChronosJob chronosJob, final File inputDirectory, final File outputDirectory, Properties properties, Object o ) {
         // Parse CDL
         Config config = parseConfig( chronosJob );
-        Scenario scenario = new Gavel( ChronosCommand.polyphenyDbHost, config );
+
+        // Create Executor Factory
+        Executor.ExecutorFactory executorFactory;
+        if ( config.store.equals( "polypheny" ) ) {
+            executorFactory = new PolyphenyDBExecutorFactory( ChronosCommand.hostname );
+        } else if ( config.store.equals( "postgres" ) ) {
+            executorFactory = new PostgresExecutorFactory( ChronosCommand.hostname );
+        } else {
+            throw new RuntimeException( "Unknown system: " + config.store );
+        }
+
+        Scenario scenario = new Gavel( executorFactory, config );
 
         // Store hostname of node
         try {
@@ -89,49 +104,69 @@ public class ChronosAgent extends AbstractChronosAgent {
             throw new RuntimeException( "Error while getting hostname", e );
         }
 
-        // Stop Polypheny
-        polyphenyControlConnector.stopPolypheny();
-        try {
-            TimeUnit.SECONDS.sleep( 3 );
-        } catch ( InterruptedException e ) {
-            throw new RuntimeException( "Unexpected interrupt", e );
-        }
+        if ( config.store.equals( "polypheny" ) ) {
+            // Stop Polypheny
+            polyphenyControlConnector.stopPolypheny();
+            try {
+                TimeUnit.SECONDS.sleep( 3 );
+            } catch ( InterruptedException e ) {
+                throw new RuntimeException( "Unexpected interrupt", e );
+            }
 
-        // Update settings
-        Map<String, String> conf = new HashMap<>();
-        conf.put( "pcrtl.pdbms.branch", config.pdbBranch.trim() );
-        conf.put( "pcrtl.ui.branch", config.puiBranch.trim() );
-        conf.put( "pcrtl.java.heap", "10" );
-        conf.put( "pcrtl.buildmode", "both" );
-        conf.put( "pcrtl.clean", "keep" );
-        String args = "";
-        if ( config.resetCatalog ) {
-            args += "-resetCatalog ";
-        }
-        if ( config.memoryCatalog ) {
-            args += "-memoryCatalog ";
-        }
-        conf.put( "pcrtl.pdbms.args", args.trim() );
-        polyphenyControlConnector.setConfig( conf );
+            // Update settings
+            Map<String, String> conf = new HashMap<>();
+            conf.put( "pcrtl.pdbms.branch", config.pdbBranch.trim() );
+            conf.put( "pcrtl.ui.branch", config.puiBranch.trim() );
+            conf.put( "pcrtl.java.heap", "10" );
+            conf.put( "pcrtl.buildmode", "both" );
+            conf.put( "pcrtl.clean", "keep" );
+            String args = "";
+            if ( config.resetCatalog ) {
+                args += "-resetCatalog ";
+            }
+            if ( config.memoryCatalog ) {
+                args += "-memoryCatalog ";
+            }
+            conf.put( "pcrtl.pdbms.args", args.trim() );
+            polyphenyControlConnector.setConfig( conf );
 
-        // Pull branch and update polypheny
-        polyphenyControlConnector.updatePolypheny();
+            // Pull branch and update polypheny
+            polyphenyControlConnector.updatePolypheny();
 
-        // Start Polypheny
-        polyphenyControlConnector.startPolypheny();
-        try {
-            TimeUnit.SECONDS.sleep( 5 );
-        } catch ( InterruptedException e ) {
-            throw new RuntimeException( "Unexpected interrupt", e );
-        }
+            // Start Polypheny
+            polyphenyControlConnector.startPolypheny();
+            try {
+                TimeUnit.SECONDS.sleep( 5 );
+            } catch ( InterruptedException e ) {
+                throw new RuntimeException( "Unexpected interrupt", e );
+            }
 
-        // Store Polypheny version for documentation
-        try {
-            FileWriter fw = new FileWriter( outputDirectory.getPath() + File.separator + "polypheny.version" );
-            fw.append( polyphenyControlConnector.getVersion() );
-            fw.close();
-        } catch ( IOException e ) {
-            log.error( "Error while logging polypheny version", e );
+            // Store Polypheny version for documentation
+            try {
+                FileWriter fw = new FileWriter( outputDirectory.getPath() + File.separator + "polypheny.version" );
+                fw.append( polyphenyControlConnector.getVersion() );
+                fw.close();
+            } catch ( IOException e ) {
+                log.error( "Error while logging polypheny version", e );
+            }
+        } else if ( config.store.equals( "postgres" ) ) {
+            // Drop all existing tables
+            Executor executor = executorFactory.createInstance();
+            try {
+                executor.executeStatement( new Query( "DROP SCHEMA public CASCADE;", false ) );
+                executor.executeStatement( new Query( "CREATE SCHEMA public;", false ) );
+                executor.executeStatement( new Query( "GRANT ALL ON SCHEMA public TO postgres;", false ) );
+                executor.executeStatement( new Query( "GRANT ALL ON SCHEMA public TO public;", false ) );
+                executor.executeCommit();
+            } catch ( SQLException e ) {
+                throw new RuntimeException( "Exception while dropping tables on postgres", e );
+            } finally {
+                try {
+                    executor.closeConnection();
+                } catch ( SQLException e ) {
+                    log.error( "Exception while closing connection", e );
+                }
+            }
         }
 
         // Store Simple Client Version for documentation
