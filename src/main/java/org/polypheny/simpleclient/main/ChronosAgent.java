@@ -45,6 +45,7 @@ import org.polypheny.simpleclient.cli.ChronosCommand;
 import org.polypheny.simpleclient.cli.Main;
 import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.executor.PolyphenyDbExecutor.PolyphenyDBExecutorFactory;
+import org.polypheny.simpleclient.executor.PostgresExecutor;
 import org.polypheny.simpleclient.executor.PostgresExecutor.PostgresExecutorFactory;
 import org.polypheny.simpleclient.scenario.Scenario;
 import org.polypheny.simpleclient.scenario.gavel.Config;
@@ -83,12 +84,12 @@ public class ChronosAgent extends AbstractChronosAgent {
 
         // Create Executor Factory
         Executor.ExecutorFactory executorFactory;
-        if ( config.store.equals( "polypheny" ) ) {
+        if ( config.system.equals( "polypheny" ) ) {
             executorFactory = new PolyphenyDBExecutorFactory( ChronosCommand.hostname );
-        } else if ( config.store.equals( "postgres" ) ) {
+        } else if ( config.system.equals( "postgres" ) ) {
             executorFactory = new PostgresExecutorFactory( ChronosCommand.hostname );
         } else {
-            throw new RuntimeException( "Unknown system: " + config.store );
+            throw new RuntimeException( "Unknown system: " + config.system );
         }
 
         Scenario scenario = new Gavel( executorFactory, config );
@@ -104,7 +105,16 @@ public class ChronosAgent extends AbstractChronosAgent {
             throw new RuntimeException( "Error while getting hostname", e );
         }
 
-        if ( config.store.equals( "polypheny" ) ) {
+        // Store Simple Client Version for documentation
+        try {
+            FileWriter fw = new FileWriter( outputDirectory.getPath() + File.separator + "client.version" );
+            fw.append( getSimpleClientVersion() );
+            fw.close();
+        } catch ( IOException e ) {
+            log.error( "Error while logging simple client version", e );
+        }
+
+        if ( config.system.equals( "polypheny" ) ) {
             // Stop Polypheny
             polyphenyControlConnector.stopPolypheny();
             try {
@@ -149,14 +159,50 @@ public class ChronosAgent extends AbstractChronosAgent {
             } catch ( IOException e ) {
                 log.error( "Error while logging polypheny version", e );
             }
-        } else if ( config.store.equals( "postgres" ) ) {
+
+            // Configure data stores
+            Executor executor = executorFactory.createInstance();
+            try {
+                // Remove hsqldb store
+                executor.executeStatement( new Query( "ALTER STORES DROP hsqldb", false ) );
+                if ( config.dataStore.equals( "hsqldb" ) ) {
+                    executor.executeStatement( new Query( "alter stores add foo using 'org.polypheny.db.adapter.jdbc.stores.HsqldbStore' with '{maxConnections:\"25\",path:., trxControlMode:locks,trxIsolationLevel:read_committed,type:Memory}'", false ) );
+                } else if ( config.dataStore.equals( "postgres" ) ) {
+                    executor.executeStatement( new Query( "alter stores add postgres using 'org.polypheny.db.adapter.jdbc.stores.PostgresqlStore' with '{\"database\":\"test\",\"host\":\"localhost\",\"maxConnections\":\"25\",\"password\":\"postgres\",\"username\":\"postgres\",\"port\":\"5432\"}'", false ) );
+                    // Drop all existing tables
+                    Executor postgresExecutor = new PostgresExecutor( ChronosCommand.hostname );
+                    try {
+                        postgresExecutor.reset();
+                        postgresExecutor.executeCommit();
+                    } catch ( SQLException e ) {
+                        throw new RuntimeException( "Exception while dropping tables on postgres", e );
+                    } finally {
+                        try {
+                            postgresExecutor.closeConnection();
+                        } catch ( SQLException e ) {
+                            log.error( "Exception while closing connection", e );
+                        }
+                    }
+                } else if ( config.dataStore.equals( "monetdb" ) ) {
+                    executor.executeStatement( new Query( "ALTER STORES DROP monetdb", false ) ); // TODO
+                } else if ( config.dataStore.equals( "cassandra" ) ) {
+                    executor.executeStatement( new Query( "alter stores add cassandra using 'org.polypheny.db.adapter.cassandra.CassandraStore' with '{\"type\":\"Embedded\",\"host\":\"localhost\",\"port\":\"9042\",\"keyspace\":\"cassandra\",\"username\":\"cassandra\",\"password\":\"cass\"}'\n", false ) );
+                }
+                executor.executeCommit();
+            } catch ( SQLException e ) {
+                throw new RuntimeException( "Exception while configuring stores", e );
+            } finally {
+                try {
+                    executor.closeConnection();
+                } catch ( SQLException e ) {
+                    log.error( "Exception while closing connection", e );
+                }
+            }
+        } else if ( config.system.equals( "postgres" ) ) {
             // Drop all existing tables
             Executor executor = executorFactory.createInstance();
             try {
-                executor.executeStatement( new Query( "DROP SCHEMA public CASCADE;", false ) );
-                executor.executeStatement( new Query( "CREATE SCHEMA public;", false ) );
-                executor.executeStatement( new Query( "GRANT ALL ON SCHEMA public TO postgres;", false ) );
-                executor.executeStatement( new Query( "GRANT ALL ON SCHEMA public TO public;", false ) );
+                executor.reset();
                 executor.executeCommit();
             } catch ( SQLException e ) {
                 throw new RuntimeException( "Exception while dropping tables on postgres", e );
@@ -169,19 +215,11 @@ public class ChronosAgent extends AbstractChronosAgent {
             }
         }
 
-        // Store Simple Client Version for documentation
-        try {
-            FileWriter fw = new FileWriter( outputDirectory.getPath() + File.separator + "client.version" );
-            fw.append( getSimpleClientVersion() );
-            fw.close();
-        } catch ( IOException e ) {
-            log.error( "Error while logging simple client version", e );
-        }
-
         // Create schema
         scenario.createSchema();
 
         // Insert data
+        log.info( "Inserting data..." );
         int numberOfThreads = config.numberOfUserGenerationThreads + config.numberOfAuctionGenerationThreads;
         ProgressReporter progressReporter = new ChronosProgressReporter( chronosJob, this, numberOfThreads, config.progressReportBase );
         scenario.generateData( progressReporter );
@@ -196,13 +234,13 @@ public class ChronosAgent extends AbstractChronosAgent {
         Scenario scenario = (Scenario) o;
 
         ProgressReporter progressReporter = new ChronosProgressReporter( chronosJob, this, config.numberOfThreads, config.progressReportBase );
-        if ( config.store.equals( "polypheny" ) ) {
+        if ( config.system.equals( "polypheny" ) ) {
             scenario.warmUp( progressReporter );
         } else {
-            if ( config.store.equals( "postgres" ) ) {
+            if ( config.system.equals( "postgres" ) ) {
                 scenario.warmUp( progressReporter );
             } else {
-                System.err.println( "Unknown Store: " + config.store );
+                System.err.println( "Unknown Store: " + config.system );
             }
         }
         return scenario;
@@ -222,12 +260,12 @@ public class ChronosAgent extends AbstractChronosAgent {
         }
         ProgressReporter progressReporter = new ChronosProgressReporter( chronosJob, this, config.numberOfThreads, config.progressReportBase );
         long runtime = 0;
-        if ( config.store.equals( "polypheny" ) ) {
+        if ( config.system.equals( "polypheny" ) ) {
             runtime = scenario.execute( progressReporter, csvWriter, outputDirectory );
-        } else if ( config.store.equals( "postgres" ) ) {
+        } else if ( config.system.equals( "postgres" ) ) {
             runtime = scenario.execute( progressReporter, csvWriter, outputDirectory );
         } else {
-            System.err.println( "Unknown Store: " + config.store );
+            System.err.println( "Unknown Store: " + config.system );
         }
         properties.put( "runtime", runtime );
 

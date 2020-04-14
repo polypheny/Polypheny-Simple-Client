@@ -40,6 +40,7 @@ public abstract class Executor {
     protected Connection connection;
     protected Statement executeStatement;
 
+    public abstract void reset() throws SQLException;
 
     public long executeQuery( Query query ) throws SQLException {
         log.debug( query.sqlQuery );

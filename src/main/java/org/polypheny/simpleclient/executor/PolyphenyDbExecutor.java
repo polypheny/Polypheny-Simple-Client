@@ -50,9 +50,16 @@ public class PolyphenyDbExecutor extends Executor {
             props.setProperty( "user", "pa" );
 
             connection = DriverManager.getConnection( url, props );
+            executeStatement = connection.createStatement();
         } catch ( SQLException e ) {
             throw new RuntimeException( "Connection Failed." );
         }
+    }
+
+
+    @Override
+    public void reset() throws SQLException {
+        throw new RuntimeException( "Unsupported operation" );
     }
 
 

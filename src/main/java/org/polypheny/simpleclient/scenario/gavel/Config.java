@@ -34,12 +34,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class Config {
 
+    public final String system;
+
     public final String pdbBranch;
     public final String puiBranch;
     public final boolean memoryCatalog;
     public final boolean resetCatalog;
-
-    public final String store;
+    public final String dataStore;
 
     public final int numberOfThreads;
     public final int numberOfAddUserQueries;
@@ -81,12 +82,14 @@ public class Config {
 
 
     public Config( Properties properties, int multiplier ) {
+        system = "polypheny";
+
         pdbBranch = null;
         puiBranch = null;
         resetCatalog = false;
         memoryCatalog = false;
+        dataStore = "hsqldb";
 
-        store = "polypheny";
         progressReportBase = getIntProperty( properties, "progressReportBase" );
         numberOfThreads = getIntProperty( properties, "numberOfThreads" );
 
@@ -128,6 +131,8 @@ public class Config {
 
 
     public Config( Map<String, String> cdl ) {
+        system = cdl.get( "store" );
+
         pdbBranch = cdl.get( "pdbBranch" );
         puiBranch = cdl.get( "puiBranch" );
 
@@ -135,7 +140,8 @@ public class Config {
         memoryCatalog = Boolean.parseBoolean( cdl.get( "memoryCatalog" ) );
 
         numberOfThreads = Integer.parseInt( cdl.get( "numberOfThreads" ) );
-        store = cdl.get( "store" );
+
+        dataStore = cdl.get( "dataStore" );
 
         // Benchmark
         numberOfGetAuctionQueries = Integer.parseInt( cdl.get( "numberOfGetAuctionQueries" ) );

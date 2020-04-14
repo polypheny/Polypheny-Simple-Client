@@ -28,11 +28,12 @@ package org.polypheny.simpleclient.executor;
 
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import org.polypheny.simpleclient.main.Query;
 
 
 public class PostgresExecutor extends Executor {
 
-    private PostgresExecutor( String host ) {
+    public PostgresExecutor( String host ) {
 
         try {
             Class.forName( "org.postgresql.Driver" );
@@ -48,6 +49,14 @@ public class PostgresExecutor extends Executor {
             throw new RuntimeException( "Connection Failed." );
         }
 
+    }
+
+
+    public void reset() throws SQLException {
+        executeStatement( new Query( "DROP SCHEMA public CASCADE;", false ) );
+        executeStatement( new Query( "CREATE SCHEMA public;", false ) );
+        executeStatement( new Query( "GRANT ALL ON SCHEMA public TO postgres;", false ) );
+        executeStatement( new Query( "GRANT ALL ON SCHEMA public TO public;", false ) );
     }
 
 
