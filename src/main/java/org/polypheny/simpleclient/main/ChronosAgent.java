@@ -198,6 +198,8 @@ public class ChronosAgent extends AbstractChronosAgent {
                     log.error( "Exception while closing connection", e );
                 }
             }
+            // Create schema
+            scenario.createSchema( true );
         } else if ( config.system.equals( "postgres" ) ) {
             // Drop all existing tables
             Executor executor = executorFactory.createInstance();
@@ -213,10 +215,9 @@ public class ChronosAgent extends AbstractChronosAgent {
                     log.error( "Exception while closing connection", e );
                 }
             }
+            // Create schema
+            scenario.createSchema( false );
         }
-
-        // Create schema
-        scenario.createSchema();
 
         // Insert data
         log.info( "Inserting data..." );

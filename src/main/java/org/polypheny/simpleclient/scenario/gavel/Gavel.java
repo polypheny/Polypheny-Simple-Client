@@ -31,6 +31,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.sql.SQLException;
 import java.text.DecimalFormat;
@@ -384,14 +385,20 @@ public class Gavel extends Scenario {
 
 
     @Override
-    public void createSchema() {
+    public void createSchema( boolean includingKeys ) {
         log.info( "Creating schema..." );
         Executor executor = null;
-        try (
-                //InputStreamReader in = new InputStreamReader( ClassLoader.getSystemResourceAsStream( "gavel/schema.sql" ) );
-                InputStreamReader in = new InputStreamReader( ClassLoader.getSystemResourceAsStream( "gavel/schema-without-keys-and-constraints.sql" ) );
-                BufferedReader bf = new BufferedReader( in )
-        ) {
+        InputStream file;
+        if ( includingKeys ) {
+            file = ClassLoader.getSystemResourceAsStream( "gavel/schema.sql" );
+        } else {
+            file = ClassLoader.getSystemResourceAsStream( "gavel/schema-without-keys-and-constraints.sql" );
+        }
+        // Check if file != null
+        if ( file == null ) {
+            throw new RuntimeException( "Unable to load schema definition file" );
+        }
+        try ( BufferedReader bf = new BufferedReader( new InputStreamReader( file ) ) ) {
             executor = executorFactory.createInstance();
             String line = bf.readLine();
             while ( line != null ) {

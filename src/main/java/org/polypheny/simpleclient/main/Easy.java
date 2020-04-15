@@ -17,7 +17,7 @@ public class Easy {
     public static void schema( String polyphenyDbUrl ) {
         Config config = new Config( getProperties(), 1 );
         Gavel gavel = new Gavel( new PolyphenyDBExecutorFactory( polyphenyDbUrl ), config );
-        gavel.createSchema();
+        gavel.createSchema( true );
     }
 
 

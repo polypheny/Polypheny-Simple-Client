@@ -43,7 +43,7 @@ public abstract class Scenario {
     }
 
 
-    public abstract void createSchema();
+    public abstract void createSchema( boolean includingKeys );
 
     public abstract void generateData( ProgressReporter progressReporter );
 
