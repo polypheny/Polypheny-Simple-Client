@@ -51,6 +51,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.cli.ChronosCommand;
 import org.polypheny.simpleclient.executor.Executor;
+import org.polypheny.simpleclient.main.ChronosAgent;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.main.ProgressReporter;
 import org.polypheny.simpleclient.main.Query;
@@ -552,7 +553,9 @@ public class Gavel extends Scenario {
 
         measuredTimePerQueryType.forEach( ( templateId, time ) -> {
             properties.put( "queryTypes_" + templateId + "_mean", calculateMean( time ) );
-            properties.put( "queryTypes_" + templateId + "_all", Joiner.on( ',' ).join( time ) );
+            if ( ChronosAgent.STORE_INDIVIDUAL_QUERY_TIMES ) {
+                properties.put( "queryTypes_" + templateId + "_all", Joiner.on( ',' ).join( time ) );
+            }
             properties.put( "queryTypes_" + templateId + "_example", queryTypes.get( templateId ) );
         } );
         properties.put( "queryTypes_maxId", queryTypes.size() );

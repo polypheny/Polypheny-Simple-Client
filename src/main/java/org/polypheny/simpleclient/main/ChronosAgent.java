@@ -55,6 +55,9 @@ import org.polypheny.simpleclient.scenario.gavel.Gavel;
 @Slf4j
 public class ChronosAgent extends AbstractChronosAgent {
 
+    // Whether the individual execution time of every query should be stored in the result json
+    // This massively increases the amount of data stored in the Chronos Control database
+    public static final boolean STORE_INDIVIDUAL_QUERY_TIMES = false;
 
     public final String[] supports;
     PolyphenyControlConnector polyphenyControlConnector = null;
