@@ -40,7 +40,7 @@ public class PolyphenyDbExecutor extends Executor {
         try {
             Class.forName( "org.polypheny.jdbc.Driver" );
         } catch ( ClassNotFoundException e ) {
-            throw new RuntimeException( "Driver not found." );
+            throw new RuntimeException( "Driver not found.", e );
         }
 
         try {
@@ -52,7 +52,7 @@ public class PolyphenyDbExecutor extends Executor {
             connection = DriverManager.getConnection( url, props );
             executeStatement = connection.createStatement();
         } catch ( SQLException e ) {
-            throw new RuntimeException( "Connection Failed." );
+            throw new RuntimeException( "Connection failed.", e );
         }
     }
 

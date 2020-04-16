@@ -25,24 +25,26 @@
 
 package org.polypheny.simpleclient.executor;
 
-
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.LinkedList;
+import java.util.List;
 import org.polypheny.simpleclient.main.Query;
 
 
-public class PostgresExecutor extends Executor {
+public class MonetdbExecutor extends Executor {
 
-    public PostgresExecutor( String host ) {
+    public MonetdbExecutor( String host ) {
 
         try {
-            Class.forName( "org.postgresql.Driver" );
+            Class.forName( "nl.cwi.monetdb.jdbc.MonetDriver" );
         } catch ( ClassNotFoundException e ) {
-            throw new RuntimeException( "Driver not found." );
+            throw new RuntimeException( "Connection failed.", e );
         }
 
         try {
-            connection = DriverManager.getConnection( "jdbc:postgresql://" + host + ":5432/test", "postgres", "postgres" );
+            connection = DriverManager.getConnection( "jdbc:monetdb://" + host + ":50000/test", "monetdb", "monetdb" );
             connection.setAutoCommit( false );
             executeStatement = connection.createStatement();
         } catch ( SQLException e ) {
@@ -53,26 +55,36 @@ public class PostgresExecutor extends Executor {
 
 
     public void reset() throws SQLException {
-        executeStatement( new Query( "DROP SCHEMA public CASCADE;", false ) );
-        executeStatement( new Query( "CREATE SCHEMA public;", false ) );
-        executeStatement( new Query( "GRANT ALL ON SCHEMA public TO postgres;", false ) );
-        executeStatement( new Query( "GRANT ALL ON SCHEMA public TO public;", false ) );
+        List<String> tables = getListOfTables();
+        for ( String table : tables ) {
+            executeStatement( new Query( "DROP TABLE \"" + table + "\";", false ) );
+        }
     }
 
 
-    public static class PostgresExecutorFactory extends Executor.ExecutorFactory {
+    public List<String> getListOfTables() throws SQLException {
+        ResultSet resultSet = executeStatement.executeQuery( "select tables.name from tables where tables.system=false;" );
+        List<String> list = new LinkedList<>();
+        while ( resultSet.next() ) {
+            list.add( resultSet.getString( 1 ) );
+        }
+        return list;
+    }
+
+
+    public static class MonetdbExecutorFactory extends ExecutorFactory {
 
         private final String host;
 
 
-        public PostgresExecutorFactory( String host ) {
+        public MonetdbExecutorFactory( String host ) {
             this.host = host;
         }
 
 
         @Override
         public Executor createInstance() {
-            return new PostgresExecutor( host );
+            return new MonetdbExecutor( host );
         }
     }
 }

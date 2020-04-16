@@ -44,6 +44,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.cli.ChronosCommand;
 import org.polypheny.simpleclient.cli.Main;
 import org.polypheny.simpleclient.executor.Executor;
+import org.polypheny.simpleclient.executor.MonetdbExecutor;
+import org.polypheny.simpleclient.executor.MonetdbExecutor.MonetdbExecutorFactory;
 import org.polypheny.simpleclient.executor.PolyphenyDbExecutor.PolyphenyDBExecutorFactory;
 import org.polypheny.simpleclient.executor.PostgresExecutor;
 import org.polypheny.simpleclient.executor.PostgresExecutor.PostgresExecutorFactory;
@@ -91,6 +93,8 @@ public class ChronosAgent extends AbstractChronosAgent {
             executorFactory = new PolyphenyDBExecutorFactory( ChronosCommand.hostname );
         } else if ( config.system.equals( "postgres" ) ) {
             executorFactory = new PostgresExecutorFactory( ChronosCommand.hostname );
+        } else if ( config.system.equals( "monetdb" ) ) {
+            executorFactory = new MonetdbExecutorFactory( ChronosCommand.hostname );
         } else {
             throw new RuntimeException( "Unknown system: " + config.system );
         }
@@ -187,7 +191,21 @@ public class ChronosAgent extends AbstractChronosAgent {
                         }
                     }
                 } else if ( config.dataStore.equals( "monetdb" ) ) {
-                    executor.executeStatement( new Query( "ALTER STORES DROP monetdb", false ) ); // TODO
+                    executor.executeStatement( new Query( "alter stores add postgres using 'org.polypheny.db.adapter.jdbc.stores.MonetdbStore' with '{\"database\":\"test\",\"host\":\"localhost\",\"maxConnections\":\"25\",\"password\":\"monetdb\",\"username\":\"monetdb\",\"port\":\"50000\"}'", false ) );
+                    // Drop all existing tables
+                    Executor monetdbExecutor = new MonetdbExecutor( ChronosCommand.hostname );
+                    try {
+                        monetdbExecutor.reset();
+                        monetdbExecutor.executeCommit();
+                    } catch ( SQLException e ) {
+                        throw new RuntimeException( "Exception while dropping tables on monetdb", e );
+                    } finally {
+                        try {
+                            monetdbExecutor.closeConnection();
+                        } catch ( SQLException e ) {
+                            log.error( "Exception while closing connection", e );
+                        }
+                    }
                 } else if ( config.dataStore.equals( "cassandra" ) ) {
                     executor.executeStatement( new Query( "alter stores add cassandra using 'org.polypheny.db.adapter.cassandra.CassandraStore' with '{\"type\":\"Embedded\",\"host\":\"localhost\",\"port\":\"9042\",\"keyspace\":\"cassandra\",\"username\":\"cassandra\",\"password\":\"cass\"}'\n", false ) );
                 }
@@ -220,6 +238,23 @@ public class ChronosAgent extends AbstractChronosAgent {
             }
             // Create schema
             scenario.createSchema( false );
+        } else if ( config.system.equals( "monetdb" ) ) {
+            // Drop all existing tables
+            Executor executor = executorFactory.createInstance();
+            try {
+                executor.reset();
+                executor.executeCommit();
+            } catch ( SQLException e ) {
+                throw new RuntimeException( "Exception while dropping tables on monetdb", e );
+            } finally {
+                try {
+                    executor.closeConnection();
+                } catch ( SQLException e ) {
+                    log.error( "Exception while closing connection", e );
+                }
+            }
+            // Create schema
+            scenario.createSchema( false );
         }
 
         // Insert data
@@ -243,8 +278,10 @@ public class ChronosAgent extends AbstractChronosAgent {
         } else {
             if ( config.system.equals( "postgres" ) ) {
                 scenario.warmUp( progressReporter );
+            } else if ( config.system.equals( "monetdb" ) ) {
+                scenario.warmUp( progressReporter );
             } else {
-                System.err.println( "Unknown Store: " + config.system );
+                throw new RuntimeException( "Unknown Store: " + config.system );
             }
         }
         return scenario;
@@ -268,8 +305,10 @@ public class ChronosAgent extends AbstractChronosAgent {
             runtime = scenario.execute( progressReporter, csvWriter, outputDirectory );
         } else if ( config.system.equals( "postgres" ) ) {
             runtime = scenario.execute( progressReporter, csvWriter, outputDirectory );
+        } else if ( config.system.equals( "monetdb" ) ) {
+            runtime = scenario.execute( progressReporter, csvWriter, outputDirectory );
         } else {
-            System.err.println( "Unknown Store: " + config.system );
+            throw new RuntimeException( "Unknown Store: " + config.system );
         }
         properties.put( "runtime", runtime );
 

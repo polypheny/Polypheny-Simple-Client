@@ -74,6 +74,7 @@ dependencies {
     // JDBC Drivers
     compile group: 'org.polypheny', name: 'polypheny-jdbc-driver', version: '1.3' // License: Apache 2.0
     compile group: 'org.postgresql', name: 'postgresql', version: '42.2.1'
+    compile group: 'monetdb', name: 'monetdb-jdbc', version: '2.29' // License: Mozilla Public License 2.0
 
     // JSON
     compile group: 'com.google.code.gson', name: 'gson', version: '2.8.6' // License: Apache 2.0
