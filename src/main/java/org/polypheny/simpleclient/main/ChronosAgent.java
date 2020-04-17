@@ -175,7 +175,6 @@ public class ChronosAgent extends AbstractChronosAgent {
                 if ( config.dataStore.equals( "hsqldb" ) ) {
                     executor.executeStatement( new Query( "alter stores add foo using 'org.polypheny.db.adapter.jdbc.stores.HsqldbStore' with '{maxConnections:\"25\",path:., trxControlMode:locks,trxIsolationLevel:read_committed,type:Memory}'", false ) );
                 } else if ( config.dataStore.equals( "postgres" ) ) {
-                    executor.executeStatement( new Query( "alter stores add postgres using 'org.polypheny.db.adapter.jdbc.stores.PostgresqlStore' with '{\"database\":\"test\",\"host\":\"localhost\",\"maxConnections\":\"25\",\"password\":\"postgres\",\"username\":\"postgres\",\"port\":\"5432\"}'", false ) );
                     // Drop all existing tables
                     Executor postgresExecutor = new PostgresExecutor( ChronosCommand.hostname );
                     try {
@@ -190,8 +189,9 @@ public class ChronosAgent extends AbstractChronosAgent {
                             log.error( "Exception while closing connection", e );
                         }
                     }
+                    // Deploy store in Polypheny-DB
+                    executor.executeStatement( new Query( "alter stores add postgres using 'org.polypheny.db.adapter.jdbc.stores.PostgresqlStore' with '{\"database\":\"test\",\"host\":\"localhost\",\"maxConnections\":\"25\",\"password\":\"postgres\",\"username\":\"postgres\",\"port\":\"5432\"}'", false ) );
                 } else if ( config.dataStore.equals( "monetdb" ) ) {
-                    executor.executeStatement( new Query( "alter stores add postgres using 'org.polypheny.db.adapter.jdbc.stores.MonetdbStore' with '{\"database\":\"test\",\"host\":\"localhost\",\"maxConnections\":\"25\",\"password\":\"monetdb\",\"username\":\"monetdb\",\"port\":\"50000\"}'", false ) );
                     // Drop all existing tables
                     Executor monetdbExecutor = new MonetdbExecutor( ChronosCommand.hostname );
                     try {
@@ -206,6 +206,8 @@ public class ChronosAgent extends AbstractChronosAgent {
                             log.error( "Exception while closing connection", e );
                         }
                     }
+                    // Deploy store in Polypheny-DB
+                    executor.executeStatement( new Query( "alter stores add monetdb using 'org.polypheny.db.adapter.jdbc.stores.MonetdbStore' with '{\"database\":\"test\",\"host\":\"localhost\",\"maxConnections\":\"25\",\"password\":\"monetdb\",\"username\":\"monetdb\",\"port\":\"50000\"}'", false ) );
                 } else if ( config.dataStore.equals( "cassandra" ) ) {
                     executor.executeStatement( new Query( "alter stores add cassandra using 'org.polypheny.db.adapter.cassandra.CassandraStore' with '{\"type\":\"Embedded\",\"host\":\"localhost\",\"port\":\"9042\",\"keyspace\":\"cassandra\",\"username\":\"cassandra\",\"password\":\"cass\"}'\n", false ) );
                 }
