@@ -188,6 +188,12 @@ public class ChronosAgent extends AbstractChronosAgent {
                     case "cassandra":
                         deployCassandra( executor );
                         break;
+                    case "monetdb+postgres":
+                        resetPostgres();
+                        resetMonetDb();
+                        deployPostgres( executor );
+                        deployMonetDb( executor );
+                        break;
                     case "all":
                         resetPostgres();
                         resetMonetDb();
