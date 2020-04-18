@@ -121,15 +121,15 @@ public class ChronosAgent extends AbstractChronosAgent {
             log.error( "Error while logging simple client version", e );
         }
 
-        if ( config.system.equals( "polypheny" ) ) {
-            // Stop Polypheny
-            polyphenyControlConnector.stopPolypheny();
-            try {
-                TimeUnit.SECONDS.sleep( 3 );
-            } catch ( InterruptedException e ) {
-                throw new RuntimeException( "Unexpected interrupt", e );
-            }
+        // Stop Polypheny
+        polyphenyControlConnector.stopPolypheny();
+        try {
+            TimeUnit.SECONDS.sleep( 3 );
+        } catch ( InterruptedException e ) {
+            throw new RuntimeException( "Unexpected interrupt", e );
+        }
 
+        if ( config.system.equals( "polypheny" ) ) {
             // Update settings
             Map<String, String> conf = new HashMap<>();
             conf.put( "pcrtl.pdbms.branch", config.pdbBranch.trim() );
@@ -172,44 +172,32 @@ public class ChronosAgent extends AbstractChronosAgent {
             try {
                 // Remove hsqldb store
                 executor.executeStatement( new Query( "ALTER STORES DROP hsqldb", false ) );
-                if ( config.dataStore.equals( "hsqldb" ) ) {
-                    executor.executeStatement( new Query( "alter stores add foo using 'org.polypheny.db.adapter.jdbc.stores.HsqldbStore' with '{maxConnections:\"25\",path:., trxControlMode:locks,trxIsolationLevel:read_committed,type:Memory}'", false ) );
-                } else if ( config.dataStore.equals( "postgres" ) ) {
-                    // Drop all existing tables
-                    Executor postgresExecutor = new PostgresExecutor( ChronosCommand.hostname );
-                    try {
-                        postgresExecutor.reset();
-                        postgresExecutor.executeCommit();
-                    } catch ( SQLException e ) {
-                        throw new RuntimeException( "Exception while dropping tables on postgres", e );
-                    } finally {
-                        try {
-                            postgresExecutor.closeConnection();
-                        } catch ( SQLException e ) {
-                            log.error( "Exception while closing connection", e );
-                        }
-                    }
-                    // Deploy store in Polypheny-DB
-                    executor.executeStatement( new Query( "alter stores add postgres using 'org.polypheny.db.adapter.jdbc.stores.PostgresqlStore' with '{\"database\":\"test\",\"host\":\"localhost\",\"maxConnections\":\"25\",\"password\":\"postgres\",\"username\":\"postgres\",\"port\":\"5432\"}'", false ) );
-                } else if ( config.dataStore.equals( "monetdb" ) ) {
-                    // Drop all existing tables
-                    Executor monetdbExecutor = new MonetdbExecutor( ChronosCommand.hostname );
-                    try {
-                        monetdbExecutor.reset();
-                        monetdbExecutor.executeCommit();
-                    } catch ( SQLException e ) {
-                        throw new RuntimeException( "Exception while dropping tables on monetdb", e );
-                    } finally {
-                        try {
-                            monetdbExecutor.closeConnection();
-                        } catch ( SQLException e ) {
-                            log.error( "Exception while closing connection", e );
-                        }
-                    }
-                    // Deploy store in Polypheny-DB
-                    executor.executeStatement( new Query( "alter stores add monetdb using 'org.polypheny.db.adapter.jdbc.stores.MonetdbStore' with '{\"database\":\"test\",\"host\":\"localhost\",\"maxConnections\":\"25\",\"password\":\"monetdb\",\"username\":\"monetdb\",\"port\":\"50000\"}'", false ) );
-                } else if ( config.dataStore.equals( "cassandra" ) ) {
-                    executor.executeStatement( new Query( "alter stores add cassandra using 'org.polypheny.db.adapter.cassandra.CassandraStore' with '{\"type\":\"Embedded\",\"host\":\"localhost\",\"port\":\"9042\",\"keyspace\":\"cassandra\",\"username\":\"cassandra\",\"password\":\"cass\"}'\n", false ) );
+                // Deploy store
+                switch ( config.dataStore ) {
+                    case "hsqldb":
+                        deployHsqldb( executor );
+                        break;
+                    case "postgres":
+                        resetPostgres();
+                        deployPostgres( executor );
+                        break;
+                    case "monetdb":
+                        resetMonetDb();
+                        deployMonetDb( executor );
+                        break;
+                    case "cassandra":
+                        deployCassandra( executor );
+                        break;
+                    case "all":
+                        resetPostgres();
+                        resetMonetDb();
+                        deployHsqldb( executor );
+                        deployPostgres( executor );
+                        deployMonetDb( executor );
+                        deployCassandra( executor );
+                        break;
+                    default:
+                        throw new RuntimeException( "Unknown data store: " + config.dataStore );
                 }
                 executor.executeCommit();
             } catch ( SQLException e ) {
@@ -240,38 +228,10 @@ public class ChronosAgent extends AbstractChronosAgent {
             // Create schema
             scenario.createSchema( true );
         } else if ( config.system.equals( "postgres" ) ) {
-            // Drop all existing tables
-            Executor executor = executorFactory.createInstance();
-            try {
-                executor.reset();
-                executor.executeCommit();
-            } catch ( SQLException e ) {
-                throw new RuntimeException( "Exception while dropping tables on postgres", e );
-            } finally {
-                try {
-                    executor.closeConnection();
-                } catch ( SQLException e ) {
-                    log.error( "Exception while closing connection", e );
-                }
-            }
-            // Create schema
+            resetPostgres();
             scenario.createSchema( false );
         } else if ( config.system.equals( "monetdb" ) ) {
-            // Drop all existing tables
-            Executor executor = executorFactory.createInstance();
-            try {
-                executor.reset();
-                executor.executeCommit();
-            } catch ( SQLException e ) {
-                throw new RuntimeException( "Exception while dropping tables on monetdb", e );
-            } finally {
-                try {
-                    executor.closeConnection();
-                } catch ( SQLException e ) {
-                    log.error( "Exception while closing connection", e );
-                }
-            }
-            // Create schema
+            resetMonetDb();
             scenario.createSchema( false );
         }
 
@@ -376,6 +336,61 @@ public class ChronosAgent extends AbstractChronosAgent {
 
     void updateProgress( ChronosJob job, int progress ) {
         setProgress( job, (byte) progress );
+    }
+
+
+    private void resetPostgres() {
+        Executor postgresExecutor = new PostgresExecutor( ChronosCommand.hostname );
+        try {
+            postgresExecutor.reset();
+            postgresExecutor.executeCommit();
+        } catch ( SQLException e ) {
+            throw new RuntimeException( "Exception while dropping tables on postgres", e );
+        } finally {
+            try {
+                postgresExecutor.closeConnection();
+            } catch ( SQLException e ) {
+                log.error( "Exception while closing connection", e );
+            }
+        }
+    }
+
+
+    private void resetMonetDb() {
+        Executor monetdbExecutor = new MonetdbExecutor( ChronosCommand.hostname );
+        try {
+            monetdbExecutor.reset();
+            monetdbExecutor.executeCommit();
+        } catch ( SQLException e ) {
+            throw new RuntimeException( "Exception while dropping tables on monetdb", e );
+        } finally {
+            try {
+                monetdbExecutor.closeConnection();
+            } catch ( SQLException e ) {
+                log.error( "Exception while closing connection", e );
+            }
+        }
+    }
+
+
+    private void deployHsqldb( Executor executor ) throws SQLException {
+        executor.executeStatement( new Query( "alter stores add hsqldb using 'org.polypheny.db.adapter.jdbc.stores.HsqldbStore' with '{maxConnections:\"25\",path:., trxControlMode:locks,trxIsolationLevel:read_committed,type:Memory}'", false ) );
+    }
+
+
+    private void deployMonetDb( Executor executor ) throws SQLException {
+        executor.executeStatement( new Query( "alter stores add monetdb using 'org.polypheny.db.adapter.jdbc.stores.MonetdbStore' with '{\"database\":\"test\",\"host\":\"localhost\",\"maxConnections\":\"25\",\"password\":\"monetdb\",\"username\":\"monetdb\",\"port\":\"50000\"}'", false ) );
+
+    }
+
+
+    private void deployPostgres( Executor executor ) throws SQLException {
+        executor.executeStatement( new Query( "alter stores add postgres using 'org.polypheny.db.adapter.jdbc.stores.PostgresqlStore' with '{\"database\":\"test\",\"host\":\"localhost\",\"maxConnections\":\"25\",\"password\":\"postgres\",\"username\":\"postgres\",\"port\":\"5432\"}'", false ) );
+    }
+
+
+    private void deployCassandra( Executor executor ) throws SQLException {
+        executor.executeStatement( new Query( "alter stores add cassandra using 'org.polypheny.db.adapter.cassandra.CassandraStore' with '{\"type\":\"Embedded\",\"host\":\"localhost\",\"port\":\"9042\",\"keyspace\":\"cassandra\",\"username\":\"cassandra\",\"password\":\"cass\"}'\n", false ) );
     }
 
 
