@@ -221,6 +221,22 @@ public class ChronosAgent extends AbstractChronosAgent {
                     log.error( "Exception while closing connection", e );
                 }
             }
+
+            // Update polypheny config
+            executor = executorFactory.createInstance();
+            try {
+                executor.executeStatement( new Query( "ALTER CONFIG 'statistics/activeTracking' SET false", false ) );
+                executor.executeCommit();
+            } catch ( SQLException e ) {
+                throw new RuntimeException( "Exception while updating polypheny config", e );
+            } finally {
+                try {
+                    executor.closeConnection();
+                } catch ( SQLException e ) {
+                    log.error( "Exception while closing connection", e );
+                }
+            }
+
             // Create schema
             scenario.createSchema( true );
         } else if ( config.system.equals( "postgres" ) ) {
