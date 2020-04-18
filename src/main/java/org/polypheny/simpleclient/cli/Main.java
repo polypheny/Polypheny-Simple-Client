@@ -35,6 +35,7 @@ import java.sql.SQLException;
 public class Main {
 
     public static final boolean WRITE_CSV = false;
+    public static final boolean DUMP_QUERY_LIST = false;
 
 
     public static void main( String[] args ) throws SQLException {

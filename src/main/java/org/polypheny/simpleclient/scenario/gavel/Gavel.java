@@ -50,6 +50,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.cli.ChronosCommand;
+import org.polypheny.simpleclient.cli.Main;
 import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.main.ChronosAgent;
 import org.polypheny.simpleclient.main.CsvWriter;
@@ -124,7 +125,7 @@ public class Gavel extends Scenario {
         addNumberOfTimes( queryList, new SelectHighestBidOnRandomAuction( numbers.get( "auctions" ) ), config.numberOfGetCurrentlyHighestBidOnAuctionQueries );
         Collections.shuffle( queryList );
 
-        if ( outputDirectory != null ) {
+        if ( outputDirectory != null && Main.DUMP_QUERY_LIST ) {
             log.info( "Dump query list..." );
             try {
                 FileWriter fw = new FileWriter( outputDirectory.getPath() + File.separator + "queryList" );
