@@ -251,17 +251,8 @@ public class ChronosAgent extends AbstractChronosAgent {
         Scenario scenario = (Scenario) o;
 
         ProgressReporter progressReporter = new ChronosProgressReporter( chronosJob, this, config.numberOfThreads, config.progressReportBase );
-        if ( config.system.equals( "polypheny" ) ) {
-            scenario.warmUp( progressReporter );
-        } else {
-            if ( config.system.equals( "postgres" ) ) {
-                scenario.warmUp( progressReporter );
-            } else if ( config.system.equals( "monetdb" ) ) {
-                scenario.warmUp( progressReporter );
-            } else {
-                throw new RuntimeException( "Unknown Store: " + config.system );
-            }
-        }
+        scenario.warmUp( progressReporter );
+
         return scenario;
     }
 
@@ -278,16 +269,7 @@ public class ChronosAgent extends AbstractChronosAgent {
             csvWriter = null;
         }
         ProgressReporter progressReporter = new ChronosProgressReporter( chronosJob, this, config.numberOfThreads, config.progressReportBase );
-        long runtime = 0;
-        if ( config.system.equals( "polypheny" ) ) {
-            runtime = scenario.execute( progressReporter, csvWriter, outputDirectory );
-        } else if ( config.system.equals( "postgres" ) ) {
-            runtime = scenario.execute( progressReporter, csvWriter, outputDirectory );
-        } else if ( config.system.equals( "monetdb" ) ) {
-            runtime = scenario.execute( progressReporter, csvWriter, outputDirectory );
-        } else {
-            throw new RuntimeException( "Unknown Store: " + config.system );
-        }
+        long runtime = scenario.execute( progressReporter, csvWriter, outputDirectory );
         properties.put( "runtime", runtime );
 
         return scenario;
