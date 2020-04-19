@@ -57,7 +57,8 @@ public class MonetdbExecutor extends Executor {
     public void reset() throws SQLException {
         List<String> tables = getListOfTables();
         for ( String table : tables ) {
-            executeStatement( new Query( "DROP TABLE \"public\".\"" + table + "\";", false ) );
+            executeStatement( new Query( "DROP TABLE IF EXISTS \"" + table + "\";", false ) );
+            executeStatement( new Query( "DROP TABLE IF EXISTS \"public\".\"" + table + "\";", false ) );
         }
         executeStatement( new Query( "CREATE SCHEMA IF NOT EXISTS \"public\";", false ) );
     }
@@ -86,6 +87,12 @@ public class MonetdbExecutor extends Executor {
         @Override
         public Executor createInstance() {
             return new MonetdbExecutor( host );
+        }
+
+
+        @Override
+        public int getMaxNumberOfThreads() {
+            return 1;
         }
     }
 }

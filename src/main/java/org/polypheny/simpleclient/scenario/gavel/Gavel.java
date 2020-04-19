@@ -147,7 +147,12 @@ public class Gavel extends Scenario {
         long startTime = System.nanoTime();
 
         ArrayList<EvaluationThread> threads = new ArrayList<>();
-        for ( int i = 0; i < config.numberOfThreads; i++ ) {
+        int numberOfThreads = config.numberOfThreads;
+        if ( executorFactory.getMaxNumberOfThreads() > 0 && config.numberOfThreads > executorFactory.getMaxNumberOfThreads() ) {
+            numberOfThreads = executorFactory.getMaxNumberOfThreads();
+            log.warn( "Limiting number of executor threads to {} threads (instead of {} as specified by the job)", numberOfThreads, executorFactory.getMaxNumberOfThreads() );
+        }
+        for ( int i = 0; i < numberOfThreads; i++ ) {
             threads.add( new EvaluationThread( queryList, csvWriter, executorFactory.createInstance() ) );
         }
 
@@ -433,13 +438,19 @@ public class Gavel extends Scenario {
         }
 
         ArrayList<Thread> threads = new ArrayList<>();
-
-        for ( int i = 0; i < config.numberOfUserGenerationThreads; i++ ) {
+        int numberOfUserGenerationThreads;
+        if ( executorFactory.getMaxNumberOfThreads() > 0 && config.numberOfUserGenerationThreads > executorFactory.getMaxNumberOfThreads() ) {
+            numberOfUserGenerationThreads = executorFactory.getMaxNumberOfThreads();
+            log.warn( "Limiting number of executor threads to {} threads (instead of {} as specified by the job)", numberOfUserGenerationThreads, config.numberOfUserGenerationThreads );
+        } else {
+            numberOfUserGenerationThreads = config.numberOfUserGenerationThreads;
+        }
+        for ( int i = 0; i < numberOfUserGenerationThreads; i++ ) {
             Runnable task = () -> {
                 Executor executor = executorFactory.createInstance();
                 try {
                     DataGenerator dg = new DataGenerator( executor, config, progressReporter, threadMonitor );
-                    dg.generateUsers( config.numberOfUsers / config.numberOfUserGenerationThreads );
+                    dg.generateUsers( config.numberOfUsers / numberOfUserGenerationThreads );
                 } catch ( SQLException e ) {
                     threadMonitor.notifyAboutError( e );
                     try {
@@ -471,8 +482,13 @@ public class Gavel extends Scenario {
             }
         }
 
-        int rangeSize = config.numberOfAuctions / config.numberOfAuctionGenerationThreads;
-        for ( int i = 1; i <= config.numberOfAuctionGenerationThreads; i++ ) {
+        int numberOfAuctionGenerationThreads = config.numberOfAuctionGenerationThreads;
+        if ( executorFactory.getMaxNumberOfThreads() > 0 && config.numberOfAuctionGenerationThreads > executorFactory.getMaxNumberOfThreads() ) {
+            numberOfAuctionGenerationThreads = executorFactory.getMaxNumberOfThreads();
+            log.warn( "Limiting number of auction generation threads to {} threads (instead of {} as specified by the job)", numberOfAuctionGenerationThreads, config.numberOfAuctionGenerationThreads );
+        }
+        int rangeSize = config.numberOfAuctions / numberOfAuctionGenerationThreads;
+        for ( int i = 1; i <= numberOfAuctionGenerationThreads; i++ ) {
             final int start = ((i - 1) * rangeSize) + 1;
             final int end = rangeSize * i;
             Runnable task = () -> {

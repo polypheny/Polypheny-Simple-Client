@@ -77,5 +77,11 @@ public class PolyphenyDbExecutor extends Executor {
         public Executor createInstance() {
             return new PolyphenyDbExecutor( host );
         }
+
+
+        @Override
+        public int getMaxNumberOfThreads() {
+            return 0;
+        }
     }
 }

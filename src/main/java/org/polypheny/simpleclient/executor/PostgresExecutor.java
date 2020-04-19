@@ -74,5 +74,11 @@ public class PostgresExecutor extends Executor {
         public Executor createInstance() {
             return new PostgresExecutor( host );
         }
+
+
+        @Override
+        public int getMaxNumberOfThreads() {
+            return 0;
+        }
     }
 }

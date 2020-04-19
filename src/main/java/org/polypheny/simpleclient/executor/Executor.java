@@ -42,6 +42,7 @@ public abstract class Executor {
 
     public abstract void reset() throws SQLException;
 
+
     public long executeQuery( Query query ) throws SQLException {
         log.debug( query.sqlQuery );
 
@@ -105,6 +106,9 @@ public abstract class Executor {
     public abstract static class ExecutorFactory {
 
         public abstract Executor createInstance();
+
+        // Allows to limit number of concurrent executor threads, 0 means no limit
+        public abstract int getMaxNumberOfThreads();
     }
 
 }
