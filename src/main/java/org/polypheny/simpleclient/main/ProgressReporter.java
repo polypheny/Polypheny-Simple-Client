@@ -56,7 +56,7 @@ public abstract class ProgressReporter {
 
 
     protected void update( int done, int totalNumber ) {
-        if ( totalNumber == 0 ) { // Avoid / by zero
+        if ( totalNumber < 100 ) { // Avoid / by zero
             update( 0 );
         } else {
             update( (done / (totalNumber / 100)) );
