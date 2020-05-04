@@ -41,6 +41,7 @@ public class Config {
     public final boolean memoryCatalog;
     public final boolean resetCatalog;
     public final String dataStore;
+    public final String router;
 
     public final int numberOfThreads;
     public final int numberOfAddUserQueries;
@@ -89,6 +90,8 @@ public class Config {
         resetCatalog = false;
         memoryCatalog = false;
         dataStore = "hsqldb";
+
+        router = "icarus";
 
         progressReportBase = getIntProperty( properties, "progressReportBase" );
         numberOfThreads = getIntProperty( properties, "numberOfThreads" );
@@ -142,6 +145,7 @@ public class Config {
         numberOfThreads = Integer.parseInt( cdl.get( "numberOfThreads" ) );
 
         dataStore = cdl.get( "dataStore" );
+        router = cdl.get( "router" );
 
         // Benchmark
         numberOfGetAuctionQueries = Integer.parseInt( cdl.get( "numberOfGetAuctionQueries" ) );

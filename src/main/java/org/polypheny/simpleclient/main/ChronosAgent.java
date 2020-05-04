@@ -153,7 +153,7 @@ public class ChronosAgent extends AbstractChronosAgent {
             // Start Polypheny
             polyphenyControlConnector.startPolypheny();
             try {
-                TimeUnit.SECONDS.sleep( 5 );
+                TimeUnit.SECONDS.sleep( 10 );
             } catch ( InterruptedException e ) {
                 throw new RuntimeException( "Unexpected interrupt", e );
             }
@@ -219,7 +219,19 @@ public class ChronosAgent extends AbstractChronosAgent {
             // Update polypheny config
             executor = executorFactory.createInstance();
             try {
+                // disable active tracking (dynamic querying)
                 executor.executeStatement( new Query( "ALTER CONFIG 'statistics/activeTracking' SET false", false ) );
+                // Set router
+                switch ( config.router ) {
+                    case "simpel":
+                        executor.executeStatement( new Query( "ALTER CONFIG 'routing/router' SET 'org.polypheny.db.router.SimpleRouter$SimpleRouterFactory'", false ) );
+                        break;
+                    case "icarus":
+                        executor.executeStatement( new Query( "ALTER CONFIG 'routing/router' SET 'org.polypheny.db.router.IcarusRouter$IcarusRouterFactory'", false ) );
+                        break;
+                    default:
+                        throw new RuntimeException( "Unknown configuration value for router: " + config.router );
+                }
                 executor.executeCommit();
             } catch ( SQLException e ) {
                 throw new RuntimeException( "Exception while updating polypheny config", e );
