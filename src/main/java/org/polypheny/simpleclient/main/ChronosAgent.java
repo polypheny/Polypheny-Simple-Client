@@ -136,7 +136,7 @@ public class ChronosAgent extends AbstractChronosAgent {
             conf.put( "pcrtl.ui.branch", config.puiBranch.trim() );
             conf.put( "pcrtl.java.heap", "10" );
             conf.put( "pcrtl.buildmode", "both" );
-            conf.put( "pcrtl.clean", "keep" );
+            conf.put( "pcrtl.clean.mode", "branchChange" );
             String args = "";
             if ( config.resetCatalog ) {
                 args += "-resetCatalog ";
