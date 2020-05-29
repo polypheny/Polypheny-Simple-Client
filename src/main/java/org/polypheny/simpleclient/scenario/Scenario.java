@@ -28,17 +28,17 @@ package org.polypheny.simpleclient.scenario;
 
 import java.io.File;
 import java.util.Properties;
-import org.polypheny.simpleclient.executor.Executor;
+import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.main.ProgressReporter;
 
 
 public abstract class Scenario {
 
-    protected final Executor.ExecutorFactory executorFactory;
+    protected final ExecutorFactory executorFactory;
 
 
-    protected Scenario( Executor.ExecutorFactory executorFactory ) {
+    protected Scenario( ExecutorFactory executorFactory ) {
         this.executorFactory = executorFactory;
     }
 

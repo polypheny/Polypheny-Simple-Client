@@ -27,23 +27,49 @@ package org.polypheny.simpleclient.scenario.gavel.queryBuilder;
 
 
 import java.util.concurrent.ThreadLocalRandom;
-import org.polypheny.simpleclient.main.QueryBuilder;
+import org.polypheny.simpleclient.query.Query;
+import org.polypheny.simpleclient.query.QueryBuilder;
 
 
 public class SelectHighestBidOnRandomAuction extends QueryBuilder {
+
+    private static final boolean EXPECT_RESULT = true;
 
     private final int numberOfAuctions;
 
 
     public SelectHighestBidOnRandomAuction( int numberOfAuctions ) {
-        super( true );
         this.numberOfAuctions = numberOfAuctions;
     }
 
 
     @Override
-    public String generateSql() {
-        int id = ThreadLocalRandom.current().nextInt( 1, numberOfAuctions + 1 );
-        return "SELECT * FROM bid b WHERE b.auction=" + id + " ORDER BY b.amount desc LIMIT 1";
+    public Query getNewQuery() {
+        int auctionId = ThreadLocalRandom.current().nextInt( 1, numberOfAuctions + 1 );
+        return new SelectHighestBidOnRandomAuctionQuery( auctionId );
+    }
+
+
+    private static class SelectHighestBidOnRandomAuctionQuery extends Query {
+
+        private final int auctionId;
+
+
+        public SelectHighestBidOnRandomAuctionQuery( int auctionId ) {
+            super( EXPECT_RESULT );
+            this.auctionId = auctionId;
+        }
+
+
+        @Override
+        public String getSql() {
+            return "SELECT * FROM bid b WHERE b.auction=" + auctionId + " ORDER BY b.amount desc LIMIT 1";
+        }
+
+
+        @Override
+        public String getRest() {
+            return null;
+        }
     }
 }

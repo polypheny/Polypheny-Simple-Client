@@ -30,40 +30,81 @@ import com.devskiller.jfairy.Fairy;
 import com.devskiller.jfairy.producer.DateProducer;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.ThreadLocalRandom;
-import org.polypheny.simpleclient.main.QueryBuilder;
+import java.util.concurrent.atomic.AtomicInteger;
+import org.polypheny.simpleclient.query.Query;
+import org.polypheny.simpleclient.query.QueryBuilder;
 
 
 public class InsertRandomBid extends QueryBuilder {
 
+    private static final boolean EXPECT_RESULT = false;
+
     private final int numberOfAuctions;
     private final int numberOfUsers;
 
-    private static int nextId = 1;
+    private static final AtomicInteger nextBidId = new AtomicInteger( 1 );
 
 
     public InsertRandomBid( int numberOfAuctions, int numberOfUsers ) {
-        super( false );
         this.numberOfAuctions = numberOfAuctions;
         this.numberOfUsers = numberOfUsers;
     }
 
 
-    @Override
-    public String generateSql() {
-        DateProducer dateProducer = Fairy.create().dateProducer();
-        StringBuilder sb = new StringBuilder();
-        sb.append( "INSERT INTO bid(id, amount, \"timestamp\", \"user\", auction) VALUES (" );
-        sb.append( nextId++ ).append( "," );
-        sb.append( ThreadLocalRandom.current().nextInt( 1, 1000 ) ).append( "," );
-        sb.append( "timestamp '" ).append( dateProducer.randomDateInThePast( 5 ).format( DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss" ) ) ).append( "'," );
-        sb.append( ThreadLocalRandom.current().nextInt( 1, numberOfUsers + 1 ) ).append( "," );
-        sb.append( ThreadLocalRandom.current().nextInt( 1, numberOfAuctions + 1 ) );
-        sb.append( ")" );
-        return sb.toString();
+    public static void setNextId( int nextId ) {
+        InsertRandomBid.nextBidId.set( nextId );
     }
 
 
-    public static void setNextId( int nextId ) {
-        InsertRandomBid.nextId = nextId;
+    @Override
+    public Query getNewQuery() {
+        DateProducer dateProducer = Fairy.create().dateProducer();
+        return new InsertRandomBidQuery(
+                nextBidId.getAndIncrement(),
+                ThreadLocalRandom.current().nextInt( 1, 1000 ),
+                dateProducer.randomDateInThePast( 5 ).format( DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss" ) ),
+                ThreadLocalRandom.current().nextInt( 1, numberOfUsers + 1 ),
+                ThreadLocalRandom.current().nextInt( 1, numberOfAuctions + 1 )
+        );
+    }
+
+
+    private static class InsertRandomBidQuery extends Query {
+
+        private final int bidId;
+        private final int amount;
+        private final String timestamp;
+        private final int userId;
+        private final int auctionId;
+
+
+        public InsertRandomBidQuery( int bidId, int amount, String timestamp, int userId, int auctionId ) {
+            super( EXPECT_RESULT );
+            this.bidId = bidId;
+            this.amount = amount;
+            this.timestamp = timestamp;
+            this.userId = userId;
+            this.auctionId = auctionId;
+        }
+
+
+        @Override
+        public String getSql() {
+            StringBuilder sb = new StringBuilder();
+            sb.append( "INSERT INTO bid(id, amount, \"timestamp\", \"user\", auction) VALUES (" );
+            sb.append( bidId ).append( "," );
+            sb.append( amount ).append( "," );
+            sb.append( "timestamp '" ).append( timestamp ).append( "'," );
+            sb.append( userId ).append( "," );
+            sb.append( auctionId );
+            sb.append( ")" );
+            return sb.toString();
+        }
+
+
+        @Override
+        public String getRest() {
+            return null;
+        }
     }
 }

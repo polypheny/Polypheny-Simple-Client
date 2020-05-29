@@ -29,39 +29,85 @@ package org.polypheny.simpleclient.scenario.gavel.queryBuilder;
 import com.devskiller.jfairy.Fairy;
 import com.devskiller.jfairy.producer.person.Person;
 import java.time.format.DateTimeFormatter;
-import org.polypheny.simpleclient.main.QueryBuilder;
+import java.util.concurrent.atomic.AtomicInteger;
+import org.polypheny.simpleclient.query.Query;
+import org.polypheny.simpleclient.query.QueryBuilder;
 
 
 public class InsertUser extends QueryBuilder {
 
+    private static final boolean EXPECT_RESULT = false;
 
-    private static int nextId = 1;
-
-
-    public InsertUser() {
-        super( false );
-    }
+    private static final AtomicInteger nextUserId = new AtomicInteger( 1 );
 
 
     @Override
-    public String generateSql() {
+    public Query getNewQuery() {
         Fairy fairy = Fairy.create();
         Person person = fairy.person();
-        StringBuilder sb = new StringBuilder();
-        sb.append( "INSERT INTO \"user\"(id, email, password, last_name, first_name, gender, birthday, city, zip_code, country) VALUES (" );
-        sb.append( nextId++ ).append( "," );
-        sb.append( "'" ).append( person.getEmail() ).append( "'," );
-        sb.append( "'" ).append( person.getPassword() ).append( "'," );
-        sb.append( "'" ).append( person.getLastName() ).append( "'," );
-        sb.append( "'" ).append( person.getFirstName() ).append( "'," );
-        sb.append( "'" ).append( person.getSex().name().substring( 0, 1 ).toLowerCase() ).append( "'," );
-        sb.append( "date '" ).append( person.getDateOfBirth().format( DateTimeFormatter.ofPattern( "yyyy-MM-dd" ) ) ).append( "'," );
-        sb.append( "'" ).append( person.getAddress().getCity() ).append( "'," );
-        sb.append( "'" ).append( person.getAddress().getPostalCode() ).append( "'," );
-        sb.append( "'Switzerland'" );
-        sb.append( ")" );
-        return sb.toString();
+        return new InsertUserQuery(
+                nextUserId.getAndIncrement(),
+                person.getEmail(),
+                person.getPassword(),
+                person.getLastName(),
+                person.getFirstName(),
+                person.getSex().name().substring( 0, 1 ).toLowerCase(),
+                person.getDateOfBirth().format( DateTimeFormatter.ofPattern( "yyyy-MM-dd" ) ),
+                person.getAddress().getCity(),
+                person.getAddress().getPostalCode()
+        );
     }
 
 
+    private static class InsertUserQuery extends Query {
+
+        private final int userId;
+        private final String email;
+        private final String password;
+        private final String lastName;
+        private final String firstName;
+        private final String gender;
+        private final String birthday;
+        private final String city;
+        private final String zipCode;
+
+
+        public InsertUserQuery( int userId, String email, String password, String lastName, String firstName, String gender, String birthday, String city, String zipCode ) {
+            super( EXPECT_RESULT );
+            this.userId = userId;
+            this.email = email;
+            this.password = password;
+            this.lastName = lastName;
+            this.firstName = firstName;
+            this.gender = gender;
+            this.birthday = birthday;
+            this.city = city;
+            this.zipCode = zipCode;
+        }
+
+
+        @Override
+        public String getSql() {
+            StringBuilder sb = new StringBuilder();
+            sb.append( "INSERT INTO \"user\"(id, email, password, last_name, first_name, gender, birthday, city, zip_code, country) VALUES (" );
+            sb.append( userId ).append( "," );
+            sb.append( "'" ).append( email ).append( "'," );
+            sb.append( "'" ).append( password ).append( "'," );
+            sb.append( "'" ).append( lastName ).append( "'," );
+            sb.append( "'" ).append( firstName ).append( "'," );
+            sb.append( "'" ).append( gender ).append( "'," );
+            sb.append( "date '" ).append( birthday ).append( "'," );
+            sb.append( "'" ).append( city ).append( "'," );
+            sb.append( "'" ).append( zipCode ).append( "'," );
+            sb.append( "'Switzerland'" );
+            sb.append( ")" );
+            return sb.toString();
+        }
+
+
+        @Override
+        public String getRest() {
+            return null;
+        }
+    }
 }

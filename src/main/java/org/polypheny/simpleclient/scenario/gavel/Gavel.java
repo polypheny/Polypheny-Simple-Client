@@ -33,7 +33,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -52,12 +51,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.cli.ChronosCommand;
 import org.polypheny.simpleclient.cli.Main;
 import org.polypheny.simpleclient.executor.Executor;
+import org.polypheny.simpleclient.executor.ExecutorException;
+import org.polypheny.simpleclient.executor.JdbcExecutor;
 import org.polypheny.simpleclient.main.ChronosAgent;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.main.ProgressReporter;
-import org.polypheny.simpleclient.main.Query;
-import org.polypheny.simpleclient.main.QueryBuilder;
-import org.polypheny.simpleclient.main.QueryListEntry;
+import org.polypheny.simpleclient.query.QueryBuilder;
+import org.polypheny.simpleclient.query.QueryListEntry;
+import org.polypheny.simpleclient.query.RawQuery;
 import org.polypheny.simpleclient.scenario.Scenario;
 import org.polypheny.simpleclient.scenario.gavel.queryBuilder.ChangePasswordOfRandomUser;
 import org.polypheny.simpleclient.scenario.gavel.queryBuilder.ChangeRandomAuction;
@@ -88,7 +89,7 @@ public class Gavel extends Scenario {
     private final Map<Integer, List<Long>> measuredTimePerQueryType;
 
 
-    public Gavel( Executor.ExecutorFactory executorFactory, Config config ) {
+    public Gavel( JdbcExecutor.ExecutorFactory executorFactory, Config config ) {
         super( executorFactory );
         this.config = config;
         measuredTimes = Collections.synchronizedList( new LinkedList<>() );
@@ -125,13 +126,14 @@ public class Gavel extends Scenario {
         addNumberOfTimes( queryList, new SelectHighestBidOnRandomAuction( numbers.get( "auctions" ) ), config.numberOfGetCurrentlyHighestBidOnAuctionQueries );
         Collections.shuffle( queryList );
 
+        // TODO: Log the actually executed query
         if ( outputDirectory != null && Main.DUMP_QUERY_LIST ) {
             log.info( "Dump query list..." );
             try {
                 FileWriter fw = new FileWriter( outputDirectory.getPath() + File.separator + "queryList" );
                 queryList.forEach( query -> {
                     try {
-                        fw.append( query.query.sqlQuery ).append( "\n" );
+                        fw.append( query.query.getSql() ).append( "\n" );
                     } catch ( IOException e ) {
                         log.error( "Error while dumping query list", e );
                     }
@@ -200,19 +202,19 @@ public class Gavel extends Scenario {
             try {
                 executor = executorFactory.createInstance();
                 if ( config.numberOfAddUserQueries > 0 ) {
-                    executor.executeStatement( new InsertUser().getNewQuery() );
+                    executor.executeQuery( new InsertUser().getNewQuery() );
                 }
                 if ( config.numberOfChangePasswordQueries > 0 ) {
-                    executor.executeStatement( new ChangePasswordOfRandomUser( numbers.get( "users" ) ).getNewQuery() );
+                    executor.executeQuery( new ChangePasswordOfRandomUser( numbers.get( "users" ) ).getNewQuery() );
                 }
                 if ( config.numberOfAddAuctionQueries > 0 ) {
-                    executor.executeStatement( new InsertRandomAuction( numbers.get( "users" ), numbers.get( "categories" ), config ).getNewQuery() );
+                    executor.executeQuery( new InsertRandomAuction( numbers.get( "users" ), numbers.get( "categories" ), config ).getNewQuery() );
                 }
                 if ( config.numberOfAddBidQueries > 0 ) {
-                    executor.executeStatement( new InsertRandomBid( numbers.get( "auctions" ), numbers.get( "users" ) ).getNewQuery() );
+                    executor.executeQuery( new InsertRandomBid( numbers.get( "auctions" ), numbers.get( "users" ) ).getNewQuery() );
                 }
                 if ( config.numberOfChangeAuctionQueries > 0 ) {
-                    executor.executeStatement( new ChangeRandomAuction( numbers.get( "auctions" ), config ).getNewQuery() );
+                    executor.executeQuery( new ChangeRandomAuction( numbers.get( "auctions" ), config ).getNewQuery() );
                 }
                 if ( config.numberOfGetAuctionQueries > 0 ) {
                     executor.executeQuery( new SelectRandomAuction( numbers.get( "auctions" ) ).getNewQuery() );
@@ -244,7 +246,7 @@ public class Gavel extends Scenario {
                 if ( config.numberOfGetCurrentlyHighestBidOnAuctionQueries > 0 ) {
                     executor.executeQuery( new SelectHighestBidOnRandomAuction( numbers.get( "auctions" ) ).getNewQuery() );
                 }
-            } catch ( SQLException e ) {
+            } catch ( ExecutorException e ) {
                 throw new RuntimeException( "Error while executing warm-up queries", e );
             } finally {
                 commitAndCloseExecutor( executor );
@@ -286,36 +288,33 @@ public class Gavel extends Scenario {
                 measuredTimeStart = System.nanoTime();
                 queryListEntry = theQueryList.remove( 0 );
                 try {
-                    if ( queryListEntry.query.expectResultSet ) {
-                        executor.executeQuery( queryListEntry.query );
-                    } else {
-                        executor.executeStatement( queryListEntry.query );
-                    }
-                } catch ( SQLException e ) {
+                    executor.executeQuery( queryListEntry.query );
+                } catch ( ExecutorException e ) {
                     log.error( "Caught exception while executing queries", e );
                     threadMonitor.notifyAboutError( e );
                     try {
                         executor.executeRollback();
-                    } catch ( SQLException ex ) {
+                    } catch ( ExecutorException ex ) {
                         log.error( "Error while rollback", e );
                     }
                     throw new RuntimeException( e );
                 }
                 measuredTime = System.nanoTime() - measuredTimeStart;
                 if ( csvWriter != null ) {
-                    csvWriter.appendToCsv( queryListEntry.query.sqlQuery, measuredTime );
+                    // TODO move to executor.
+                    csvWriter.appendToCsv( queryListEntry.query.getSql(), measuredTime );
                 }
                 measuredTimes.add( measuredTime );
                 measuredTimePerQueryType.get( queryListEntry.templateId ).add( measuredTime );
                 if ( ChronosCommand.commit ) {
                     try {
                         executor.executeCommit();
-                    } catch ( SQLException e ) {
+                    } catch ( ExecutorException e ) {
                         log.error( "Caught exception while committing", e );
                         threadMonitor.notifyAboutError( e );
                         try {
                             executor.executeRollback();
-                        } catch ( SQLException ex ) {
+                        } catch ( ExecutorException ex ) {
                             log.error( "Error while rollback", e );
                         }
                         throw new RuntimeException( e );
@@ -325,12 +324,12 @@ public class Gavel extends Scenario {
 
             try {
                 executor.executeCommit();
-            } catch ( SQLException e ) {
+            } catch ( ExecutorException e ) {
                 log.error( "Caught exception while committing", e );
                 threadMonitor.notifyAboutError( e );
                 try {
                     executor.executeRollback();
-                } catch ( SQLException ex ) {
+                } catch ( ExecutorException ex ) {
                     log.error( "Error while rollback", e );
                 }
                 throw new RuntimeException( e );
@@ -388,7 +387,7 @@ public class Gavel extends Scenario {
     }
 
 
-    private long countNumberOfRecords( Executor executor, QueryBuilder queryBuilder ) throws SQLException {
+    private long countNumberOfRecords( Executor executor, QueryBuilder queryBuilder ) throws ExecutorException {
         return executor.executeQueryAndGetNumber( queryBuilder.getNewQuery() );
     }
 
@@ -411,10 +410,10 @@ public class Gavel extends Scenario {
             executor = executorFactory.createInstance();
             String line = bf.readLine();
             while ( line != null ) {
-                executor.executeStatement( new Query( line, false ) );
+                executor.executeQuery( new RawQuery( line, null, false ) );
                 line = bf.readLine();
             }
-        } catch ( IOException | SQLException e ) {
+        } catch ( IOException | ExecutorException e ) {
             throw new RuntimeException( "Exception while creating schema", e );
         } finally {
             commitAndCloseExecutor( executor );
@@ -433,7 +432,7 @@ public class Gavel extends Scenario {
         try {
             //dataGenerator.truncateTables();
             dataGenerator.generateCategories();
-        } catch ( SQLException e ) {
+        } catch ( ExecutorException e ) {
             throw new RuntimeException( "Exception while generating data", e );
         } finally {
             commitAndCloseExecutor( executor1 );
@@ -453,18 +452,18 @@ public class Gavel extends Scenario {
                 try {
                     DataGenerator dg = new DataGenerator( executor, config, progressReporter, threadMonitor );
                     dg.generateUsers( config.numberOfUsers / numberOfUserGenerationThreads );
-                } catch ( SQLException e ) {
+                } catch ( ExecutorException e ) {
                     threadMonitor.notifyAboutError( e );
                     try {
                         executor.executeRollback();
-                    } catch ( SQLException ex ) {
+                    } catch ( ExecutorException ex ) {
                         log.error( "Error while rollback", e );
                     }
                     log.error( "Exception while generating data", e );
                 } finally {
                     try {
                         executor.closeConnection();
-                    } catch ( SQLException e ) {
+                    } catch ( ExecutorException e ) {
                         log.error( "Error while closing connection", e );
                     }
                 }
@@ -498,18 +497,18 @@ public class Gavel extends Scenario {
                 try {
                     DataGenerator dg = new DataGenerator( executor, config, progressReporter, threadMonitor );
                     dg.generateAuctions( start, end );
-                } catch ( SQLException e ) {
+                } catch ( ExecutorException e ) {
                     threadMonitor.notifyAboutError( e );
                     try {
                         executor.executeRollback();
-                    } catch ( SQLException ex ) {
+                    } catch ( ExecutorException ex ) {
                         log.error( "Error while rollback", e );
                     }
                     log.error( "Exception while generating data", e );
                 } finally {
                     try {
                         executor.closeConnection();
-                    } catch ( SQLException e ) {
+                    } catch ( ExecutorException e ) {
                         log.error( "Error while closing connection", e );
                     }
                 }
@@ -600,7 +599,7 @@ public class Gavel extends Scenario {
 
     private void addNumberOfTimes( List<QueryListEntry> list, QueryBuilder queryBuilder, int numberOfTimes ) {
         int id = queryTypes.size() + 1;
-        queryTypes.put( id, queryBuilder.getNewQuery().sqlQuery );
+        queryTypes.put( id, queryBuilder.getNewQuery().getSql() );
         measuredTimePerQueryType.put( id, Collections.synchronizedList( new LinkedList<>() ) );
         for ( int i = 0; i < numberOfTimes; i++ ) {
             list.add( new QueryListEntry( queryBuilder.getNewQuery(), id ) );
@@ -617,7 +616,7 @@ public class Gavel extends Scenario {
             numbers.put( "users", (int) countNumberOfRecords( executor, new CountUser() ) );
             numbers.put( "categories", (int) countNumberOfRecords( executor, new CountCategory() ) );
             numbers.put( "bids", (int) countNumberOfRecords( executor, new CountBid() ) );
-        } catch ( SQLException e ) {
+        } catch ( ExecutorException e ) {
             throw new RuntimeException( "Exception while analyzing currently stored data" );
         } finally {
             commitAndCloseExecutor( executor );
@@ -631,16 +630,16 @@ public class Gavel extends Scenario {
         if ( executor != null ) {
             try {
                 executor.executeCommit();
-            } catch ( SQLException e ) {
+            } catch ( ExecutorException e ) {
                 try {
                     executor.executeRollback();
-                } catch ( SQLException ex ) {
+                } catch ( ExecutorException ex ) {
                     log.error( "Error while rollback connection", e );
                 }
             }
             try {
                 executor.closeConnection();
-            } catch ( SQLException e ) {
+            } catch ( ExecutorException e ) {
                 log.error( "Error while closing connection", e );
             }
         }

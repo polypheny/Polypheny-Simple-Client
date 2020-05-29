@@ -29,11 +29,14 @@ package org.polypheny.simpleclient.scenario.gavel.queryBuilder;
 import com.devskiller.jfairy.Fairy;
 import com.devskiller.jfairy.producer.text.TextProducer;
 import java.util.concurrent.ThreadLocalRandom;
-import org.polypheny.simpleclient.main.QueryBuilder;
+import org.polypheny.simpleclient.query.Query;
+import org.polypheny.simpleclient.query.QueryBuilder;
 import org.polypheny.simpleclient.scenario.gavel.Config;
 
 
 public class ChangeRandomAuction extends QueryBuilder {
+
+    private static final boolean EXPECT_RESULT = false;
 
     private final int numberOfAuctions;
     private final int auctionTitleMinLength;
@@ -45,7 +48,6 @@ public class ChangeRandomAuction extends QueryBuilder {
 
 
     public ChangeRandomAuction( int numberOfAuctions, Config config ) {
-        super( false );
         this.numberOfAuctions = numberOfAuctions;
         this.auctionTitleMinLength = config.auctionTitleMinLength;
         this.auctionTitleMaxLength = config.auctionTitleMaxLength;
@@ -56,15 +58,43 @@ public class ChangeRandomAuction extends QueryBuilder {
 
 
     @Override
-    public String generateSql() {
-        String title = text.latinWord( ThreadLocalRandom.current().nextInt( auctionTitleMinLength, auctionTitleMaxLength + 1 ) );
-        String description = text.paragraph( ThreadLocalRandom.current().nextInt( auctionDescriptionMinLength, auctionDescriptionMaxLength + 1 ) );
-
-        return "UPDATE auction SET "
-                + "title = '" + title + "', "
-                + "description = '" + description + "' "
-                + "WHERE id = "
-                + ThreadLocalRandom.current().nextInt( 1, numberOfAuctions + 1 );
+    public Query getNewQuery() {
+        return new ChangeRandomAuctionQuery(
+                ThreadLocalRandom.current().nextInt( 1, numberOfAuctions + 1 ),
+                text.latinWord( ThreadLocalRandom.current().nextInt( auctionTitleMinLength, auctionTitleMaxLength + 1 ) ),
+                text.paragraph( ThreadLocalRandom.current().nextInt( auctionDescriptionMinLength, auctionDescriptionMaxLength + 1 ) )
+        );
     }
 
+
+    private static class ChangeRandomAuctionQuery extends Query {
+
+        private final int auctionId;
+        private final String title;
+        private final String description;
+
+
+        public ChangeRandomAuctionQuery( int auctionId, String title, String description ) {
+            super( EXPECT_RESULT );
+            this.auctionId = auctionId;
+            this.title = title;
+            this.description = description;
+        }
+
+
+        @Override
+        public String getSql() {
+            return "UPDATE auction SET "
+                    + "title = '" + title + "', "
+                    + "description = '" + description + "' "
+                    + "WHERE id = "
+                    + auctionId;
+        }
+
+
+        @Override
+        public String getRest() {
+            return null;
+        }
+    }
 }

@@ -26,19 +26,37 @@
 package org.polypheny.simpleclient.scenario.gavel.queryBuilder;
 
 
-import org.polypheny.simpleclient.main.QueryBuilder;
+import org.polypheny.simpleclient.query.Query;
+import org.polypheny.simpleclient.query.QueryBuilder;
 
 
 public class TruncateCategory extends QueryBuilder {
 
-    public TruncateCategory() {
-        super( false );
-    }
+    private static final boolean EXPECT_RESULT = false;
 
 
     @Override
-    public String generateSql() {
-        return "TRUNCATE TABLE category";
+    public Query getNewQuery() {
+        return new TruncateCategoryQuery();
     }
 
+
+    private static class TruncateCategoryQuery extends Query {
+
+        public TruncateCategoryQuery() {
+            super( EXPECT_RESULT );
+        }
+
+
+        @Override
+        public String getSql() {
+            return "TRUNCATE TABLE category";
+        }
+
+
+        @Override
+        public String getRest() {
+            return null;
+        }
+    }
 }

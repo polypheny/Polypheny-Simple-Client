@@ -23,19 +23,51 @@
  *
  */
 
-package org.polypheny.simpleclient.main;
+package org.polypheny.simpleclient.scenario.gavel.queryBuilder.not_used;
 
 
-public class Query {
-
-    public final String sqlQuery;
-    public final boolean expectResultSet;
+import org.polypheny.simpleclient.query.Query;
+import org.polypheny.simpleclient.query.QueryBuilder;
 
 
-    public Query( String sql, boolean expectResultSet ) {
-        sqlQuery = sql;
-        this.expectResultSet = expectResultSet;
+public class DeleteAuctionsWithIdLargerThan extends QueryBuilder {
+
+    private static final boolean EXPECT_RESULT = false;
+
+    private final int larger;
+
+
+    public DeleteAuctionsWithIdLargerThan( int larger ) {
+        this.larger = larger;
     }
 
 
+    @Override
+    public Query getNewQuery() {
+        return new DeleteAuctionsWithIdLargerThanQuery( larger );
+    }
+
+
+    private static class DeleteAuctionsWithIdLargerThanQuery extends Query {
+
+        private final int larger;
+
+
+        public DeleteAuctionsWithIdLargerThanQuery( int larger ) {
+            super( EXPECT_RESULT );
+            this.larger = larger;
+        }
+
+
+        @Override
+        public String getSql() {
+            return "delete from auction where id > " + larger;
+        }
+
+
+        @Override
+        public String getRest() {
+            return null;
+        }
+    }
 }

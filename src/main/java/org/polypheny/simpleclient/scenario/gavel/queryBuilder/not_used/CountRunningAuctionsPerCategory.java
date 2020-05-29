@@ -30,31 +30,56 @@ import com.devskiller.jfairy.Fairy;
 import com.devskiller.jfairy.producer.DateProducer;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import org.polypheny.simpleclient.main.QueryBuilder;
+import org.polypheny.simpleclient.query.Query;
+import org.polypheny.simpleclient.query.QueryBuilder;
 import org.polypheny.simpleclient.scenario.gavel.Config;
 
 
 public class CountRunningAuctionsPerCategory extends QueryBuilder {
 
-    private final int auctionDateMaxYearsInPast;
+    private static final boolean EXPECT_RESULT = true;
 
+    private final int auctionDateMaxYearsInPast;
     private final DateProducer dateProducer;
 
 
     public CountRunningAuctionsPerCategory( Config config ) {
-        super( true );
         this.auctionDateMaxYearsInPast = config.auctionDateMaxYearsInPast;
         dateProducer = Fairy.create().dateProducer();
     }
 
 
     @Override
-    public String generateSql() {
+    public Query getNewQuery() {
         LocalDateTime date = dateProducer.randomDateInThePast( auctionDateMaxYearsInPast );
-        return "SELECT c.name, count(a.id) " +
-                " FROM auction a, category c " +
-                " WHERE a.category = c.id" +
-                " AND a.end_date > '" + date.format( DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss" ) ) + "'" +
-                " GROUP BY c.name";
+        return new CountRunningAuctionsPerCategoryQuery( date );
+    }
+
+
+    private static class CountRunningAuctionsPerCategoryQuery extends Query {
+
+        private final LocalDateTime date;
+
+
+        public CountRunningAuctionsPerCategoryQuery( LocalDateTime dateTime ) {
+            super( EXPECT_RESULT );
+            this.date = dateTime;
+        }
+
+
+        @Override
+        public String getSql() {
+            return "SELECT c.name, count(a.id) " +
+                    " FROM auction a, category c " +
+                    " WHERE a.category = c.id" +
+                    " AND a.end_date > '" + date.format( DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss" ) ) + "'" +
+                    " GROUP BY c.name";
+        }
+
+
+        @Override
+        public String getRest() {
+            return null;
+        }
     }
 }

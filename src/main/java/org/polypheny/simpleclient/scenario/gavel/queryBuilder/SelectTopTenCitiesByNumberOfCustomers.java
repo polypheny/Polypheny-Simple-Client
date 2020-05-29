@@ -26,18 +26,37 @@
 package org.polypheny.simpleclient.scenario.gavel.queryBuilder;
 
 
-import org.polypheny.simpleclient.main.QueryBuilder;
+import org.polypheny.simpleclient.query.Query;
+import org.polypheny.simpleclient.query.QueryBuilder;
 
 
 public class SelectTopTenCitiesByNumberOfCustomers extends QueryBuilder {
 
-    public SelectTopTenCitiesByNumberOfCustomers() {
-        super( true );
-    }
+    private static final boolean EXPECT_RESULT = true;
 
 
     @Override
-    public String generateSql() {
-        return "SELECT city, COUNT(city) as number FROM \"user\" GROUP BY city ORDER BY number desc LIMIT 10";
+    public Query getNewQuery() {
+        return new SelectTopTenCitiesByNumberOfCustomersQuery();
+    }
+
+
+    private static class SelectTopTenCitiesByNumberOfCustomersQuery extends Query {
+
+        public SelectTopTenCitiesByNumberOfCustomersQuery() {
+            super( EXPECT_RESULT );
+        }
+
+
+        @Override
+        public String getSql() {
+            return "SELECT city, COUNT(city) as number FROM \"user\" GROUP BY city ORDER BY number desc LIMIT 10";
+        }
+
+
+        @Override
+        public String getRest() {
+            return null;
+        }
     }
 }

@@ -23,26 +23,51 @@
  *
  */
 
-package org.polypheny.simpleclient.scenario.gavel.queryBuilder;
+package org.polypheny.simpleclient.scenario.gavel.queryBuilder.not_used;
 
 
-import org.polypheny.simpleclient.main.QueryBuilder;
+import org.polypheny.simpleclient.query.Query;
+import org.polypheny.simpleclient.query.QueryBuilder;
 
 
 public class DeleteCategoriesWithIdLargerThan extends QueryBuilder {
+
+    private static final boolean EXPECT_RESULT = false;
 
     private final int larger;
 
 
     public DeleteCategoriesWithIdLargerThan( int larger ) {
-        super( false );
         this.larger = larger;
     }
 
 
     @Override
-    public String generateSql() {
-        return "delete from category where id > " + larger;
+    public Query getNewQuery() {
+        return new DeleteCategoriesWithIdLargerThanQuery( larger );
     }
 
+
+    private static class DeleteCategoriesWithIdLargerThanQuery extends Query {
+
+        private final int larger;
+
+
+        public DeleteCategoriesWithIdLargerThanQuery( int larger ) {
+            super( EXPECT_RESULT );
+            this.larger = larger;
+        }
+
+
+        @Override
+        public String getSql() {
+            return "delete from category where id > " + larger;
+        }
+
+
+        @Override
+        public String getRest() {
+            return null;
+        }
+    }
 }

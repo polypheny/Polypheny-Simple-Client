@@ -29,28 +29,59 @@ package org.polypheny.simpleclient.scenario.gavel.queryBuilder;
 import com.devskiller.jfairy.Fairy;
 import com.devskiller.jfairy.producer.person.Person;
 import java.util.concurrent.ThreadLocalRandom;
-import org.polypheny.simpleclient.main.QueryBuilder;
+import org.polypheny.simpleclient.query.Query;
+import org.polypheny.simpleclient.query.QueryBuilder;
 
 
 public class ChangePasswordOfRandomUser extends QueryBuilder {
+
+    private static final boolean EXPECT_RESULT = false;
 
     private final int numberOfUsers;
 
 
     public ChangePasswordOfRandomUser( int numberOfUsers ) {
-        super( false );
         this.numberOfUsers = numberOfUsers;
     }
 
 
     @Override
-    public String generateSql() {
+    public Query getNewQuery() {
         Fairy fairy = Fairy.create();
         Person person = fairy.person();
-        return "UPDATE \"user\" SET \"password\" ="
-                + "'" + person.getPassword() + "' "
-                + "WHERE \"id\" = "
-                + ThreadLocalRandom.current().nextInt( 1, numberOfUsers + 1 );
+        return new ChangePasswordOfRandomUserQuery(
+                ThreadLocalRandom.current().nextInt( 1, numberOfUsers + 1 ),
+                person.getPassword()
+        );
+    }
+
+
+    private static class ChangePasswordOfRandomUserQuery extends Query {
+
+        private final int userId;
+        private final String password;
+
+
+        private ChangePasswordOfRandomUserQuery( int userId, String password ) {
+            super( EXPECT_RESULT );
+            this.userId = userId;
+            this.password = password;
+        }
+
+
+        @Override
+        public String getSql() {
+            return "UPDATE \"user\" SET \"password\" ="
+                    + "'" + password + "' "
+                    + "WHERE \"id\" = "
+                    + userId;
+        }
+
+
+        @Override
+        public String getRest() {
+            return null;
+        }
     }
 
 }

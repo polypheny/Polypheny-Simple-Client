@@ -28,10 +28,14 @@ package org.polypheny.simpleclient.scenario.gavel.queryBuilder;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import org.polypheny.simpleclient.main.QueryBuilder;
+import java.util.concurrent.atomic.AtomicInteger;
+import org.polypheny.simpleclient.query.Query;
+import org.polypheny.simpleclient.query.QueryBuilder;
 
 
 public class InsertAuction extends QueryBuilder {
+
+    private static final boolean EXPECT_RESULT = false;
 
     private final int userId;
     private final int categoryId;
@@ -39,11 +43,10 @@ public class InsertAuction extends QueryBuilder {
     private final LocalDateTime endDate;
     private final String title;
     private final String description;
-    private static int nextId = 1;
+    private static AtomicInteger nextAuctionId = new AtomicInteger( 1 );
 
 
     public InsertAuction( int userId, int categoryId, LocalDateTime startDate, LocalDateTime endDate, String title, String description ) {
-        super( false );
         this.userId = userId;
         this.categoryId = categoryId;
         this.startDate = startDate;
@@ -54,18 +57,61 @@ public class InsertAuction extends QueryBuilder {
 
 
     @Override
-    public String generateSql() {
-        StringBuilder sb = new StringBuilder();
-        sb.append( "INSERT INTO auction(id, title, description, start_date, end_date, category, \"user\") VALUES (" );
-        sb.append( nextId++ ).append( "," );
-        sb.append( "'" ).append( title ).append( "'," );
-        sb.append( "'" ).append( description ).append( "'," );
-        sb.append( "timestamp '" ).append( startDate.format( DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss" ) ) ).append( "'," );
-        sb.append( "timestamp '" ).append( endDate.format( DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss" ) ) ).append( "'," );
-        sb.append( categoryId ).append( "," );
-        sb.append( userId );
-        sb.append( ")" );
-        return sb.toString();
+    public Query getNewQuery() {
+        return new InsertAuctionQuery(
+                nextAuctionId.getAndIncrement(),
+                userId,
+                categoryId,
+                startDate,
+                endDate,
+                title,
+                description );
+    }
+
+
+    private static class InsertAuctionQuery extends Query {
+
+        private final int auctionId;
+        private final int userId;
+        private final int categoryId;
+        private final LocalDateTime startDate;
+        private final LocalDateTime endDate;
+        private final String title;
+        private final String description;
+
+
+        public InsertAuctionQuery( int auctionId, int userId, int categoryId, LocalDateTime startDate, LocalDateTime endDate, String title, String description ) {
+            super( EXPECT_RESULT );
+            this.auctionId = auctionId;
+            this.userId = userId;
+            this.categoryId = categoryId;
+            this.startDate = startDate;
+            this.endDate = endDate;
+            this.title = title;
+            this.description = description;
+        }
+
+
+        @Override
+        public String getSql() {
+            StringBuilder sb = new StringBuilder();
+            sb.append( "INSERT INTO auction(id, title, description, start_date, end_date, category, \"user\") VALUES (" );
+            sb.append( auctionId ).append( "," );
+            sb.append( "'" ).append( title ).append( "'," );
+            sb.append( "'" ).append( description ).append( "'," );
+            sb.append( "timestamp '" ).append( startDate.format( DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss" ) ) ).append( "'," );
+            sb.append( "timestamp '" ).append( endDate.format( DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss" ) ) ).append( "'," );
+            sb.append( categoryId ).append( "," );
+            sb.append( userId );
+            sb.append( ")" );
+            return sb.toString();
+        }
+
+
+        @Override
+        public String getRest() {
+            return null;
+        }
     }
 
 }

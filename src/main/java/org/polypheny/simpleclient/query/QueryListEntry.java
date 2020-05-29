@@ -23,26 +23,17 @@
  *
  */
 
-package org.polypheny.simpleclient.scenario.gavel.queryBuilder;
+package org.polypheny.simpleclient.query;
 
 
-import org.polypheny.simpleclient.main.QueryBuilder;
+public class QueryListEntry {
+
+    public final Query query;
+    public final int templateId;
 
 
-public class DeleteAuctionsWithIdLargerThan extends QueryBuilder {
-
-    private final int larger;
-
-
-    public DeleteAuctionsWithIdLargerThan( int larger ) {
-        super( false );
-        this.larger = larger;
+    public QueryListEntry( Query query, int templateId ) {
+        this.query = query;
+        this.templateId = templateId;
     }
-
-
-    @Override
-    public String generateSql() {
-        return "delete from auction where id > " + larger;
-    }
-
 }

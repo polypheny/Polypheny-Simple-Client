@@ -26,18 +26,37 @@
 package org.polypheny.simpleclient.scenario.gavel.queryBuilder;
 
 
-import org.polypheny.simpleclient.main.QueryBuilder;
+import org.polypheny.simpleclient.query.Query;
+import org.polypheny.simpleclient.query.QueryBuilder;
 
 
 public class CountUser extends QueryBuilder {
 
-    public CountUser() {
-        super( true );
-    }
+    private static final boolean EXPECT_RESULT = true;
 
 
     @Override
-    public String generateSql() {
-        return "SELECT count(*) as NUMBER FROM \"user\"";
+    public Query getNewQuery() {
+        return new CountUserQuery();
+    }
+
+
+    private static class CountUserQuery extends Query {
+
+        public CountUserQuery() {
+            super( EXPECT_RESULT );
+        }
+
+
+        @Override
+        public String getSql() {
+            return "SELECT count(*) as NUMBER FROM \"user\"";
+        }
+
+
+        @Override
+        public String getRest() {
+            return null;
+        }
     }
 }

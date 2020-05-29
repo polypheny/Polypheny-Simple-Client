@@ -23,24 +23,51 @@
  *
  */
 
-package org.polypheny.simpleclient.main;
+package org.polypheny.simpleclient.scenario.gavel.queryBuilder.not_used;
 
 
-public abstract class QueryBuilder {
+import org.polypheny.simpleclient.query.Query;
+import org.polypheny.simpleclient.query.QueryBuilder;
 
-    private final boolean expectResultSet;
+
+public class DeleteUsersWithIdLargerThan extends QueryBuilder {
+
+    private static final boolean EXPECT_RESULT = false;
+
+    private final int larger;
 
 
-    protected QueryBuilder( boolean expectResultSet ) {
-        this.expectResultSet = expectResultSet;
+    public DeleteUsersWithIdLargerThan( int larger ) {
+        this.larger = larger;
     }
 
 
-    protected abstract String generateSql();
-
-
+    @Override
     public Query getNewQuery() {
-        return new Query( generateSql(), expectResultSet );
+        return new DeleteUsersWithIdLargerThanQuery( larger );
     }
 
+
+    private static class DeleteUsersWithIdLargerThanQuery extends Query {
+
+        private final int larger;
+
+
+        public DeleteUsersWithIdLargerThanQuery( int larger ) {
+            super( EXPECT_RESULT );
+            this.larger = larger;
+        }
+
+
+        @Override
+        public String getSql() {
+            return "delete from \"user\" where id > " + larger;
+        }
+
+
+        @Override
+        public String getRest() {
+            return null;
+        }
+    }
 }

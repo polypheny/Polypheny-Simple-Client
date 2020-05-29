@@ -27,23 +27,49 @@ package org.polypheny.simpleclient.scenario.gavel.queryBuilder;
 
 
 import java.util.concurrent.ThreadLocalRandom;
-import org.polypheny.simpleclient.main.QueryBuilder;
+import org.polypheny.simpleclient.query.Query;
+import org.polypheny.simpleclient.query.QueryBuilder;
 
 
 public class SelectRandomAuction extends QueryBuilder {
+
+    private static final boolean EXPECT_RESULT = true;
 
     private final int numberOfAuctions;
 
 
     public SelectRandomAuction( int numberOfAuctions ) {
-        super( true );
         this.numberOfAuctions = numberOfAuctions;
     }
 
 
     @Override
-    public String generateSql() {
-        int id = ThreadLocalRandom.current().nextInt( 1, numberOfAuctions + 1 );
-        return "SELECT * FROM auction a WHERE a.id=" + id;
+    public Query getNewQuery() {
+        int auctionId = ThreadLocalRandom.current().nextInt( 1, numberOfAuctions + 1 );
+        return new SelectRandomAuctionQuery( auctionId );
+    }
+
+
+    private static class SelectRandomAuctionQuery extends Query {
+
+        private final int auctionId;
+
+
+        public SelectRandomAuctionQuery( int auctionId ) {
+            super( EXPECT_RESULT );
+            this.auctionId = auctionId;
+        }
+
+
+        @Override
+        public String getSql() {
+            return "SELECT * FROM auction a WHERE a.id=" + auctionId;
+        }
+
+
+        @Override
+        public String getRest() {
+            return null;
+        }
     }
 }

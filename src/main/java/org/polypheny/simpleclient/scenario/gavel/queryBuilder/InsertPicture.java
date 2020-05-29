@@ -28,31 +28,65 @@ package org.polypheny.simpleclient.scenario.gavel.queryBuilder;
 
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
-import org.polypheny.simpleclient.main.QueryBuilder;
+import org.polypheny.simpleclient.query.Query;
+import org.polypheny.simpleclient.query.QueryBuilder;
 
 
 public class InsertPicture extends QueryBuilder {
 
+    private static final boolean EXPECT_RESULT = false;
     private final static String[] IMAGE_TYPES = { ".tif", ".tiff", ".gif", ".jpeg", ".jpg", ".jif", ".jfif", ".jp2", ".jpx", ".j2k", ".j2c", ".png", ".bmp" };
 
     private final int auctionId;
 
 
     public InsertPicture( int auctionId ) {
-        super( false );
         this.auctionId = auctionId;
     }
 
 
     @Override
-    public String generateSql() {
-        String fileType = IMAGE_TYPES[ThreadLocalRandom.current().nextInt( 0, IMAGE_TYPES.length )];
-        return "INSERT INTO picture(filename, type, size, auction) VALUES ("
-                + "'" + UUID.randomUUID().toString() + "',"
-                + "'" + fileType + "',"
-                + ThreadLocalRandom.current().nextInt( 100, 2048 ) + ","
-                + auctionId
-                + ")";
+    public Query getNewQuery() {
+        return new InsertPictureQuery(
+                auctionId,
+                UUID.randomUUID().toString(),
+                ThreadLocalRandom.current().nextInt( 100, 2048 ),
+                IMAGE_TYPES[ThreadLocalRandom.current().nextInt( 0, IMAGE_TYPES.length )]
+        );
     }
 
+
+    private static class InsertPictureQuery extends Query {
+
+        private final int auctionId;
+        private final String fileName;
+        private final int size;
+        private final String fileType;
+
+
+        public InsertPictureQuery( int auctionId, String fileName, int size, String fileType ) {
+            super( EXPECT_RESULT );
+            this.auctionId = auctionId;
+            this.fileName = fileName;
+            this.size = size;
+            this.fileType = fileType;
+        }
+
+
+        @Override
+        public String getSql() {
+            return "INSERT INTO picture(filename, type, size, auction) VALUES ("
+                    + "'" + fileName + "',"
+                    + "'" + fileType + "',"
+                    + size + ","
+                    + auctionId
+                    + ")";
+        }
+
+
+        @Override
+        public String getRest() {
+            return null;
+        }
+    }
 }

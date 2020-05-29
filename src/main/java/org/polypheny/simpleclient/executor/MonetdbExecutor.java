@@ -30,10 +30,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
-import org.polypheny.simpleclient.main.Query;
+import org.polypheny.simpleclient.query.RawQuery;
 
 
-public class MonetdbExecutor extends Executor {
+public class MonetdbExecutor extends JdbcExecutor {
 
     public MonetdbExecutor( String host ) {
 
@@ -54,13 +54,18 @@ public class MonetdbExecutor extends Executor {
     }
 
 
-    public void reset() throws SQLException {
-        List<String> tables = getListOfTables();
-        for ( String table : tables ) {
-            executeStatement( new Query( "DROP TABLE IF EXISTS \"" + table + "\";", false ) );
-            executeStatement( new Query( "DROP TABLE IF EXISTS \"public\".\"" + table + "\";", false ) );
+    @Override
+    public void reset() throws ExecutorException {
+        try {
+            List<String> tables = getListOfTables();
+            for ( String table : tables ) {
+                executeQuery( new RawQuery( "DROP TABLE IF EXISTS \"" + table + "\";", null, false ) );
+                executeQuery( new RawQuery( "DROP TABLE IF EXISTS \"public\".\"" + table + "\";", null, false ) );
+            }
+            executeQuery( new RawQuery( "CREATE SCHEMA IF NOT EXISTS \"public\";", null, false ) );
+        } catch ( SQLException e ) {
+            throw new ExecutorException( e );
         }
-        executeStatement( new Query( "CREATE SCHEMA IF NOT EXISTS \"public\";", false ) );
     }
 
 
@@ -85,7 +90,7 @@ public class MonetdbExecutor extends Executor {
 
 
         @Override
-        public Executor createInstance() {
+        public JdbcExecutor createInstance() {
             return new MonetdbExecutor( host );
         }
 

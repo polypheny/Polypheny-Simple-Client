@@ -27,23 +27,49 @@ package org.polypheny.simpleclient.scenario.gavel.queryBuilder;
 
 
 import java.util.concurrent.ThreadLocalRandom;
-import org.polypheny.simpleclient.main.QueryBuilder;
+import org.polypheny.simpleclient.query.Query;
+import org.polypheny.simpleclient.query.QueryBuilder;
 
 
 public class SelectRandomBid extends QueryBuilder {
+
+    private static final boolean EXPECT_RESULT = true;
 
     private final int numberOfBids;
 
 
     public SelectRandomBid( int numberOfBids ) {
-        super( true );
         this.numberOfBids = numberOfBids;
     }
 
 
     @Override
-    public String generateSql() {
-        int id = ThreadLocalRandom.current().nextInt( 1, numberOfBids + 1 );
-        return "SELECT * FROM bid b WHERE b.id=" + id;
+    public Query getNewQuery() {
+        int bidId = ThreadLocalRandom.current().nextInt( 1, numberOfBids + 1 );
+        return new SelectRandomBidQuery( bidId );
+    }
+
+
+    private static class SelectRandomBidQuery extends Query {
+
+        private final int bidId;
+
+
+        public SelectRandomBidQuery( int bidId ) {
+            super( EXPECT_RESULT );
+            this.bidId = bidId;
+        }
+
+
+        @Override
+        public String getSql() {
+            return "SELECT * FROM bid b WHERE b.id=" + bidId;
+        }
+
+
+        @Override
+        public String getRest() {
+            return null;
+        }
     }
 }

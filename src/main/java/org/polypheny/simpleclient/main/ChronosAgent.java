@@ -35,7 +35,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URISyntaxException;
-import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -44,9 +43,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.cli.ChronosCommand;
 import org.polypheny.simpleclient.cli.Main;
 import org.polypheny.simpleclient.executor.Executor;
+import org.polypheny.simpleclient.executor.ExecutorException;
+import org.polypheny.simpleclient.executor.JdbcExecutor;
 import org.polypheny.simpleclient.executor.MonetdbExecutor;
 import org.polypheny.simpleclient.executor.MonetdbExecutor.MonetdbExecutorFactory;
-import org.polypheny.simpleclient.executor.PolyphenyDbExecutor.PolyphenyDBExecutorFactory;
+import org.polypheny.simpleclient.executor.PolyphenyDbExecutor;
+import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory;
+import org.polypheny.simpleclient.executor.PolyphenyDbRestExecutor.PolyphenyDBRestExecutorFactory;
 import org.polypheny.simpleclient.executor.PostgresExecutor;
 import org.polypheny.simpleclient.executor.PostgresExecutor.PostgresExecutorFactory;
 import org.polypheny.simpleclient.scenario.Scenario;
@@ -90,7 +93,9 @@ public class ChronosAgent extends AbstractChronosAgent {
         // Create Executor Factory
         Executor.ExecutorFactory executorFactory;
         if ( config.system.equals( "polypheny" ) ) {
-            executorFactory = new PolyphenyDBExecutorFactory( ChronosCommand.hostname );
+            executorFactory = new PolyphenyDbJdbcExecutorFactory( ChronosCommand.hostname );
+        } else if ( config.system.equals( "polypheny-rest" ) ) {
+            executorFactory = new PolyphenyDBRestExecutorFactory( ChronosCommand.hostname );
         } else if ( config.system.equals( "postgres" ) ) {
             executorFactory = new PostgresExecutorFactory( ChronosCommand.hostname );
         } else if ( config.system.equals( "monetdb" ) ) {
@@ -129,7 +134,7 @@ public class ChronosAgent extends AbstractChronosAgent {
             throw new RuntimeException( "Unexpected interrupt", e );
         }
 
-        if ( config.system.equals( "polypheny" ) ) {
+        if ( config.system.equals( "polypheny" ) || config.system.equals( "polypheny-rest" ) ) {
             // Update settings
             Map<String, String> conf = new HashMap<>();
             conf.put( "pcrtl.pdbms.branch", config.pdbBranch.trim() );
@@ -168,77 +173,77 @@ public class ChronosAgent extends AbstractChronosAgent {
             }
 
             // Configure data stores
-            Executor executor = executorFactory.createInstance();
+            PolyphenyDbExecutor executor = (PolyphenyDbExecutor) executorFactory.createInstance();
             try {
                 // Remove hsqldb store
-                executor.executeStatement( new Query( "ALTER STORES DROP hsqldb", false ) );
+                executor.dropStore( "hsqldb" );
                 // Deploy store
                 switch ( config.dataStore ) {
                     case "hsqldb":
-                        deployHsqldb( executor );
+                        executor.deployHsqldb();
                         break;
                     case "postgres":
                         resetPostgres();
-                        deployPostgres( executor );
+                        executor.deployPostgres();
                         break;
                     case "monetdb":
                         resetMonetDb();
-                        deployMonetDb( executor );
+                        executor.deployMonetDb();
                         break;
                     case "cassandra":
-                        deployCassandra( executor );
+                        executor.deployCassandra();
                         break;
                     case "monetdb+postgres":
                         resetPostgres();
                         resetMonetDb();
-                        deployPostgres( executor );
-                        deployMonetDb( executor );
+                        executor.deployPostgres();
+                        executor.deployMonetDb();
                         break;
                     case "all":
                         resetPostgres();
                         resetMonetDb();
-                        deployHsqldb( executor );
-                        deployPostgres( executor );
-                        deployMonetDb( executor );
-                        deployCassandra( executor );
+                        executor.deployHsqldb();
+                        executor.deployPostgres();
+                        executor.deployMonetDb();
+                        executor.deployCassandra();
                         break;
                     default:
                         throw new RuntimeException( "Unknown data store: " + config.dataStore );
                 }
                 executor.executeCommit();
-            } catch ( SQLException e ) {
+            } catch ( ExecutorException e ) {
                 throw new RuntimeException( "Exception while configuring stores", e );
             } finally {
                 try {
                     executor.closeConnection();
-                } catch ( SQLException e ) {
+                } catch ( ExecutorException e ) {
                     log.error( "Exception while closing connection", e );
                 }
             }
 
             // Update polypheny config
-            executor = executorFactory.createInstance();
+            executor = (PolyphenyDbExecutor) executorFactory.createInstance();
             try {
                 // disable active tracking (dynamic querying)
-                executor.executeStatement( new Query( "ALTER CONFIG 'statistics/activeTracking' SET false", false ) );
+                executor.setConfig( "statistics/activeTracking", "false" );
                 // Set router
                 switch ( config.router ) {
                     case "simpel":
-                        executor.executeStatement( new Query( "ALTER CONFIG 'routing/router' SET 'org.polypheny.db.router.SimpleRouter$SimpleRouterFactory'", false ) );
+                        executor.setConfig( "routing/router", "org.polypheny.db.router.SimpleRouter$SimpleRouterFactory" );
                         break;
                     case "icarus":
-                        executor.executeStatement( new Query( "ALTER CONFIG 'routing/router' SET 'org.polypheny.db.router.IcarusRouter$IcarusRouterFactory'", false ) );
+                        executor.setConfig( "routing/router", "org.polypheny.db.router.IcarusRouter$IcarusRouterFactory" );
                         break;
                     default:
                         throw new RuntimeException( "Unknown configuration value for router: " + config.router );
                 }
                 executor.executeCommit();
-            } catch ( SQLException e ) {
+            } catch ( ExecutorException e ) {
                 throw new RuntimeException( "Exception while updating polypheny config", e );
             } finally {
                 try {
                     executor.closeConnection();
-                } catch ( SQLException e ) {
+                } catch ( ExecutorException e ) {
                     log.error( "Exception while closing connection", e );
                 }
             }
@@ -340,16 +345,16 @@ public class ChronosAgent extends AbstractChronosAgent {
 
 
     private void resetPostgres() {
-        Executor postgresExecutor = new PostgresExecutor( ChronosCommand.hostname );
+        JdbcExecutor postgresExecutor = new PostgresExecutor( ChronosCommand.hostname );
         try {
             postgresExecutor.reset();
             postgresExecutor.executeCommit();
-        } catch ( SQLException e ) {
+        } catch ( ExecutorException e ) {
             throw new RuntimeException( "Exception while dropping tables on postgres", e );
         } finally {
             try {
                 postgresExecutor.closeConnection();
-            } catch ( SQLException e ) {
+            } catch ( ExecutorException e ) {
                 log.error( "Exception while closing connection", e );
             }
         }
@@ -357,40 +362,19 @@ public class ChronosAgent extends AbstractChronosAgent {
 
 
     private void resetMonetDb() {
-        Executor monetdbExecutor = new MonetdbExecutor( ChronosCommand.hostname );
+        JdbcExecutor monetdbExecutor = new MonetdbExecutor( ChronosCommand.hostname );
         try {
             monetdbExecutor.reset();
             monetdbExecutor.executeCommit();
-        } catch ( SQLException e ) {
+        } catch ( ExecutorException e ) {
             throw new RuntimeException( "Exception while dropping tables on monetdb", e );
         } finally {
             try {
                 monetdbExecutor.closeConnection();
-            } catch ( SQLException e ) {
+            } catch ( ExecutorException e ) {
                 log.error( "Exception while closing connection", e );
             }
         }
-    }
-
-
-    private void deployHsqldb( Executor executor ) throws SQLException {
-        executor.executeStatement( new Query( "alter stores add hsqldb using 'org.polypheny.db.adapter.jdbc.stores.HsqldbStore' with '{maxConnections:\"25\",path:., trxControlMode:locks,trxIsolationLevel:read_committed,type:Memory}'", false ) );
-    }
-
-
-    private void deployMonetDb( Executor executor ) throws SQLException {
-        executor.executeStatement( new Query( "alter stores add monetdb using 'org.polypheny.db.adapter.jdbc.stores.MonetdbStore' with '{\"database\":\"test\",\"host\":\"localhost\",\"maxConnections\":\"25\",\"password\":\"monetdb\",\"username\":\"monetdb\",\"port\":\"50000\"}'", false ) );
-
-    }
-
-
-    private void deployPostgres( Executor executor ) throws SQLException {
-        executor.executeStatement( new Query( "alter stores add postgres using 'org.polypheny.db.adapter.jdbc.stores.PostgresqlStore' with '{\"database\":\"test\",\"host\":\"localhost\",\"maxConnections\":\"25\",\"password\":\"postgres\",\"username\":\"postgres\",\"port\":\"5432\"}'", false ) );
-    }
-
-
-    private void deployCassandra( Executor executor ) throws SQLException {
-        executor.executeStatement( new Query( "alter stores add cassandra using 'org.polypheny.db.adapter.cassandra.CassandraStore' with '{\"type\":\"Embedded\",\"host\":\"localhost\",\"port\":\"9042\",\"keyspace\":\"cassandra\",\"username\":\"cassandra\",\"password\":\"cass\"}'\n", false ) );
     }
 
 

@@ -26,19 +26,42 @@
 package org.polypheny.simpleclient.scenario.gavel.queryBuilder;
 
 
-import org.polypheny.simpleclient.main.QueryBuilder;
+import org.polypheny.simpleclient.query.Query;
+import org.polypheny.simpleclient.query.QueryBuilder;
 
 
 public class CountAuction extends QueryBuilder {
 
+    private static final boolean EXPECT_RESULT = true;
+
 
     public CountAuction() {
-        super( true );
+
     }
 
 
     @Override
-    public String generateSql() {
-        return "SELECT count(*) as NUMBER FROM auction";
+    public Query getNewQuery() {
+        return new CountAuctionQuery();
+    }
+
+
+    private static class CountAuctionQuery extends Query {
+
+        public CountAuctionQuery() {
+            super( EXPECT_RESULT );
+        }
+
+
+        @Override
+        public String getSql() {
+            return "SELECT count(*) as NUMBER FROM auction";
+        }
+
+
+        @Override
+        public String getRest() {
+            return null;
+        }
     }
 }

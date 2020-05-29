@@ -1,87 +1,44 @@
-/*
- * The MIT License (MIT)
- *
- * Copyright (c) 2020 Databases and Information Systems Research Group, University of Basel, Switzerland
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- *
- */
-
 package org.polypheny.simpleclient.executor;
 
+public interface PolyphenyDbExecutor extends Executor {
 
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.util.Properties;
-import lombok.extern.slf4j.Slf4j;
+    void dropStore( String name ) throws ExecutorException;
 
 
-@Slf4j
-public class PolyphenyDbExecutor extends Executor {
+    void deployStore( String name, String clazz, String config ) throws ExecutorException;
 
 
-    private PolyphenyDbExecutor( String polyphenyHost ) {
-        try {
-            Class.forName( "org.polypheny.jdbc.Driver" );
-        } catch ( ClassNotFoundException e ) {
-            throw new RuntimeException( "Driver not found.", e );
-        }
-
-        try {
-            String url = "jdbc:polypheny://" + polyphenyHost + "/?serialization=PROTOBUF";
-
-            Properties props = new Properties();
-            props.setProperty( "user", "pa" );
-
-            connection = DriverManager.getConnection( url, props );
-            executeStatement = connection.createStatement();
-        } catch ( SQLException e ) {
-            throw new RuntimeException( "Connection failed.", e );
-        }
+    default void deployHsqldb() throws ExecutorException {
+        deployStore(
+                "hsqldb",
+                "org.polypheny.db.adapter.jdbc.stores.HsqldbStore",
+                "{maxConnections:\"25\",path:., trxControlMode:locks,trxIsolationLevel:read_committed,type:Memory}" );
     }
 
 
-    @Override
-    public void reset() throws SQLException {
-        throw new RuntimeException( "Unsupported operation" );
+    default void deployMonetDb() throws ExecutorException {
+        deployStore(
+                "monetdb",
+                "org.polypheny.db.adapter.jdbc.stores.MonetdbStore",
+                "{\"database\":\"test\",\"host\":\"localhost\",\"maxConnections\":\"25\",\"password\":\"monetdb\",\"username\":\"monetdb\",\"port\":\"50000\"}" );
     }
 
 
-    public static class PolyphenyDBExecutorFactory extends Executor.ExecutorFactory {
-
-        private final String host;
-
-
-        public PolyphenyDBExecutorFactory( String host ) {
-            this.host = host;
-        }
-
-
-        @Override
-        public Executor createInstance() {
-            return new PolyphenyDbExecutor( host );
-        }
-
-
-        @Override
-        public int getMaxNumberOfThreads() {
-            return 0;
-        }
+    default void deployPostgres() throws ExecutorException {
+        deployStore(
+                "postgres",
+                "org.polypheny.db.adapter.jdbc.stores.PostgresqlStore",
+                "{\"database\":\"test\",\"host\":\"localhost\",\"maxConnections\":\"25\",\"password\":\"postgres\",\"username\":\"postgres\",\"port\":\"5432\"}" );
     }
+
+
+    default void deployCassandra() throws ExecutorException {
+        deployStore(
+                "cassandra",
+                "org.polypheny.db.adapter.cassandra.CassandraStore",
+                "{\"type\":\"Embedded\",\"host\":\"localhost\",\"port\":\"9042\",\"keyspace\":\"cassandra\",\"username\":\"cassandra\",\"password\":\"cass\"}" );
+    }
+
+
+    void setConfig( String key, String value ) throws ExecutorException;
 }

@@ -26,22 +26,41 @@
 package org.polypheny.simpleclient.scenario.gavel.queryBuilder.not_used;
 
 
-import org.polypheny.simpleclient.main.QueryBuilder;
+import org.polypheny.simpleclient.query.Query;
+import org.polypheny.simpleclient.query.QueryBuilder;
 
 
 public class SelectTopHundredSellerByRevenue extends QueryBuilder {
 
-    public SelectTopHundredSellerByRevenue() {
-        super( true );
-    }
+    private static final boolean EXPECT_RESULT = true;
 
 
     @Override
-    public String generateSql() {
-        return "SELECT u.last_name, u.first_name, (sum(a.price) * 0.1) as revenue FROM user u, " +
-                "(SELECT a.user as user , MAX(amount) as price FROM auction a, bid b WHERE b.auction = a.id GROUP BY a.id, a.user) as a " +
-                "WHERE a.user = u.id " +
-                "GROUP BY u.id, u.last_name, u.first_name " +
-                "ORDER BY revenue desc LIMIT 100";
+    public Query getNewQuery() {
+        return new SelectTopHundredSellerByRevenueQuery();
+    }
+
+
+    private static class SelectTopHundredSellerByRevenueQuery extends Query {
+
+        public SelectTopHundredSellerByRevenueQuery() {
+            super( EXPECT_RESULT );
+        }
+
+
+        @Override
+        public String getSql() {
+            return "SELECT u.last_name, u.first_name, (sum(a.price) * 0.1) as revenue FROM user u, " +
+                    "(SELECT a.user as user , MAX(amount) as price FROM auction a, bid b WHERE b.auction = a.id GROUP BY a.id, a.user) as a " +
+                    "WHERE a.user = u.id " +
+                    "GROUP BY u.id, u.last_name, u.first_name " +
+                    "ORDER BY revenue desc LIMIT 100";
+        }
+
+
+        @Override
+        public String getRest() {
+            return null;
+        }
     }
 }

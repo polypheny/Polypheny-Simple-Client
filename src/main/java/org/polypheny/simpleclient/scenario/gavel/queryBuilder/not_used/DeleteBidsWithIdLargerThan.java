@@ -23,17 +23,51 @@
  *
  */
 
-package org.polypheny.simpleclient.main;
+package org.polypheny.simpleclient.scenario.gavel.queryBuilder.not_used;
 
 
-public class QueryListEntry {
-
-    public final Query query;
-    public final int templateId;
+import org.polypheny.simpleclient.query.Query;
+import org.polypheny.simpleclient.query.QueryBuilder;
 
 
-    public QueryListEntry( Query query, int templateId ) {
-        this.query = query;
-        this.templateId = templateId;
+public class DeleteBidsWithIdLargerThan extends QueryBuilder {
+
+    private static final boolean EXPECT_RESULT = false;
+
+    private final int larger;
+
+
+    public DeleteBidsWithIdLargerThan( int larger ) {
+        this.larger = larger;
+    }
+
+
+    @Override
+    public Query getNewQuery() {
+        return new DeleteBidsWithIdLargerThanQuery( larger );
+    }
+
+
+    private static class DeleteBidsWithIdLargerThanQuery extends Query {
+
+        private final int larger;
+
+
+        public DeleteBidsWithIdLargerThanQuery( int larger ) {
+            super( EXPECT_RESULT );
+            this.larger = larger;
+        }
+
+
+        @Override
+        public String getSql() {
+            return "delete from bid where id > " + larger;
+        }
+
+
+        @Override
+        public String getRest() {
+            return null;
+        }
     }
 }

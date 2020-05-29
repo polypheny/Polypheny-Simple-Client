@@ -31,11 +31,14 @@ import com.devskiller.jfairy.producer.DateProducer;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.ThreadLocalRandom;
-import org.polypheny.simpleclient.main.QueryBuilder;
+import org.polypheny.simpleclient.query.Query;
+import org.polypheny.simpleclient.query.QueryBuilder;
 import org.polypheny.simpleclient.scenario.gavel.Config;
 
 
 public class SelectTenMostPopularAuctionsOfCategoryByNumberOfBids extends QueryBuilder {
+
+    private static final boolean EXPECT_RESULT = true;
 
     private final int numberOfCategories;
     private final int auctionDateMaxYearsInPast;
@@ -44,7 +47,6 @@ public class SelectTenMostPopularAuctionsOfCategoryByNumberOfBids extends QueryB
 
 
     public SelectTenMostPopularAuctionsOfCategoryByNumberOfBids( int numberOfCategories, Config config ) {
-        super( true );
         this.numberOfCategories = numberOfCategories;
         this.auctionDateMaxYearsInPast = config.auctionDateMaxYearsInPast;
 
@@ -53,10 +55,36 @@ public class SelectTenMostPopularAuctionsOfCategoryByNumberOfBids extends QueryB
 
 
     @Override
-    public String generateSql() {
+    public Query getNewQuery() {
         LocalDateTime date = dateProducer.randomDateInThePast( auctionDateMaxYearsInPast );
-        int category = ThreadLocalRandom.current().nextInt( 1, numberOfCategories + 1 );
-        return "SELECT a.id, COUNT(b.auction) as number FROM auction a, bid b WHERE a.id = b.auction AND a.category = " + category +
-                " AND a.end_date > '" + date.format( DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss" ) ) + "' GROUP BY a.id ORDER BY number desc LIMIT 10";
+        int categoryId = ThreadLocalRandom.current().nextInt( 1, numberOfCategories + 1 );
+        return new SelectTenMostPopularAuctionsOfCategoryByNumberOfBidsQuery( date, categoryId );
+    }
+
+
+    private static class SelectTenMostPopularAuctionsOfCategoryByNumberOfBidsQuery extends Query {
+
+        private final LocalDateTime date;
+        private final int categoryId;
+
+
+        public SelectTenMostPopularAuctionsOfCategoryByNumberOfBidsQuery( LocalDateTime date, int categoryId ) {
+            super( EXPECT_RESULT );
+            this.date = date;
+            this.categoryId = categoryId;
+        }
+
+
+        @Override
+        public String getSql() {
+            return "SELECT a.id, COUNT(b.auction) as number FROM auction a, bid b WHERE a.id = b.auction AND a.category = " + categoryId +
+                    " AND a.end_date > '" + date.format( DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss" ) ) + "' GROUP BY a.id ORDER BY number desc LIMIT 10";
+        }
+
+
+        @Override
+        public String getRest() {
+            return null;
+        }
     }
 }

@@ -23,26 +23,26 @@
  *
  */
 
-package org.polypheny.simpleclient.scenario.gavel.queryBuilder;
+package org.polypheny.simpleclient.query;
 
 
-import org.polypheny.simpleclient.main.QueryBuilder;
+import lombok.Getter;
 
 
-public class DeleteBidsWithIdLargerThan extends QueryBuilder {
+public abstract class Query {
 
-    private final int larger;
+    @Getter
+    private final boolean expectResultSet;
 
 
-    public DeleteBidsWithIdLargerThan( int larger ) {
-        super( false );
-        this.larger = larger;
+    public Query( boolean expectResultSet ) {
+        this.expectResultSet = expectResultSet;
     }
 
 
-    @Override
-    public String generateSql() {
-        return "delete from bid where id > " + larger;
-    }
+    public abstract String getSql();
+
+
+    public abstract String getRest();
 
 }

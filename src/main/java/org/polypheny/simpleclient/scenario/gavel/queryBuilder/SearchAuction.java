@@ -28,27 +28,50 @@ package org.polypheny.simpleclient.scenario.gavel.queryBuilder;
 
 import com.devskiller.jfairy.Fairy;
 import com.devskiller.jfairy.producer.text.TextProducer;
-import org.polypheny.simpleclient.main.QueryBuilder;
+import org.polypheny.simpleclient.query.Query;
+import org.polypheny.simpleclient.query.QueryBuilder;
 
 
 public class SearchAuction extends QueryBuilder {
+
+    private static final boolean EXPECT_RESULT = true;
 
     private final TextProducer text;
 
 
     public SearchAuction() {
-        super( true );
         text = Fairy.create().textProducer();
     }
 
 
     @Override
-    public String generateSql() {
-        String searchString = text.latinWord( 2 );
-
-        return "SELECT a.title, a.start_date, a.end_date FROM Auction a "
-                + "WHERE a.title LIKE '" + searchString + "' "
-                + "ORDER BY end_date desc";
+    public Query getNewQuery() {
+        return new SearchAuctionQuery( text.latinWord( 2 ) );
     }
 
+
+    private static class SearchAuctionQuery extends Query {
+
+        private final String searchString;
+
+
+        public SearchAuctionQuery( String searchString ) {
+            super( EXPECT_RESULT );
+            this.searchString = searchString;
+        }
+
+
+        @Override
+        public String getSql() {
+            return "SELECT a.title, a.start_date, a.end_date FROM Auction a "
+                    + "WHERE a.title LIKE '" + searchString + "' "
+                    + "ORDER BY end_date desc";
+        }
+
+
+        @Override
+        public String getRest() {
+            return null;
+        }
+    }
 }

@@ -23,27 +23,11 @@
  *
  */
 
-package org.polypheny.simpleclient.scenario.gavel.queryBuilder;
+package org.polypheny.simpleclient.query;
 
 
-import org.polypheny.simpleclient.main.QueryBuilder;
+public abstract class QueryBuilder {
 
-
-public class DeleteUsersWithIdLargerThan extends QueryBuilder {
-
-
-    private final int larger;
-
-
-    public DeleteUsersWithIdLargerThan( int larger ) {
-        super( false );
-        this.larger = larger;
-    }
-
-
-    @Override
-    public String generateSql() {
-        return "delete from \"user\" where id > " + larger;
-    }
+    public abstract Query getNewQuery();
 
 }

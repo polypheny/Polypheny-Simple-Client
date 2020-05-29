@@ -26,20 +26,37 @@
 package org.polypheny.simpleclient.scenario.gavel.queryBuilder;
 
 
-import org.polypheny.simpleclient.main.QueryBuilder;
+import org.polypheny.simpleclient.query.Query;
+import org.polypheny.simpleclient.query.QueryBuilder;
 
 
 public class TruncatePicture extends QueryBuilder {
 
-
-    public TruncatePicture() {
-        super( false );
-    }
+    private static final boolean EXPECT_RESULT = false;
 
 
     @Override
-    public String generateSql() {
-        return "TRUNCATE TABLE picture";
+    public Query getNewQuery() {
+        return new TruncatePictureQuery();
     }
 
+
+    private static class TruncatePictureQuery extends Query {
+
+        public TruncatePictureQuery() {
+            super( EXPECT_RESULT );
+        }
+
+
+        @Override
+        public String getSql() {
+            return "TRUNCATE TABLE picture";
+        }
+
+
+        @Override
+        public String getRest() {
+            return null;
+        }
+    }
 }

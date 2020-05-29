@@ -27,40 +27,79 @@ package org.polypheny.simpleclient.scenario.gavel.queryBuilder;
 
 
 import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 import org.apache.commons.lang.StringEscapeUtils;
-import org.polypheny.simpleclient.main.QueryBuilder;
+import org.polypheny.simpleclient.query.Query;
+import org.polypheny.simpleclient.query.QueryBuilder;
 
 
 public class InsertCategory extends QueryBuilder {
 
+    private static final boolean EXPECT_RESULT = false;
+
     private final ArrayList<String> categories;
-    private static int nextId = 1;
+    private static AtomicInteger nextCategoryId = new AtomicInteger( 1 );
 
 
     public InsertCategory() {
-        super( false );
         categories = new ArrayList<>();
-        InputStreamReader in = new InputStreamReader( ClassLoader.getSystemResourceAsStream( "gavel/categories.txt" ) );
-        try ( Stream<String> stream = new BufferedReader( in ).lines() ) {
-            stream.forEach( categories::add );
+        try ( InputStream is = ClassLoader.getSystemResourceAsStream( "gavel/categories.txt" ) ) {
+            if ( is == null ) {
+                throw new RuntimeException( "Categories list file not found!" );
+            }
+            try ( InputStreamReader in = new InputStreamReader( is ) ) {
+                try ( Stream<String> stream = new BufferedReader( in ).lines() ) {
+                    stream.forEach( categories::add );
+                }
+            }
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
         }
     }
 
 
     @Override
-    public String generateSql() {
+    public Query getNewQuery() {
         if ( categories.size() == 0 ) {
             throw new RuntimeException( "List of categories is empty" );
         }
-        StringBuilder sb = new StringBuilder();
-        sb.append( "INSERT INTO category(id, name) VALUES (" );
-        sb.append( nextId++ ).append( "," );
-        sb.append( "'" ).append( StringEscapeUtils.escapeSql( categories.remove( 0 ) ) ).append( "'" );
-        sb.append( ")" );
-        return sb.toString();
+        return new InsertCategoryQuery(
+                nextCategoryId.getAndIncrement(),
+                categories.remove( 0 )
+        );
     }
 
+
+    private static class InsertCategoryQuery extends Query {
+
+        private final int categoryId;
+        private final String category;
+
+
+        public InsertCategoryQuery( int categoryId, String category ) {
+            super( EXPECT_RESULT );
+            this.categoryId = categoryId;
+            this.category = category;
+        }
+
+
+        @Override
+        public String getSql() {
+            return "INSERT INTO category(id, name) VALUES ("
+                    + categoryId + ","
+                    + "'" + StringEscapeUtils.escapeSql( category ) + "'"
+                    + ")";
+        }
+
+
+        @Override
+        public String getRest() {
+            return null;
+        }
+    }
 }

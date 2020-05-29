@@ -29,7 +29,6 @@ package org.polypheny.simpleclient.scenario.gavel;
 import com.devskiller.jfairy.Fairy;
 import com.devskiller.jfairy.producer.DateProducer;
 import com.devskiller.jfairy.producer.text.TextProducer;
-import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.LinkedList;
 import java.util.List;
@@ -37,9 +36,11 @@ import java.util.concurrent.ThreadLocalRandom;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.executor.Executor;
+import org.polypheny.simpleclient.executor.ExecutorException;
 import org.polypheny.simpleclient.main.ProgressReporter;
-import org.polypheny.simpleclient.main.Query;
-import org.polypheny.simpleclient.main.QueryBuilder;
+import org.polypheny.simpleclient.query.Query;
+import org.polypheny.simpleclient.query.QueryBuilder;
+import org.polypheny.simpleclient.query.RawQuery;
 import org.polypheny.simpleclient.scenario.gavel.Gavel.DataGenerationThreadMonitor;
 import org.polypheny.simpleclient.scenario.gavel.queryBuilder.InsertAuction;
 import org.polypheny.simpleclient.scenario.gavel.queryBuilder.InsertBid;
@@ -78,17 +79,17 @@ class DataGenerator {
     }
 
 
-    void truncateTables() throws SQLException {
+    void truncateTables() throws ExecutorException {
         log.info( "Truncate Tables" );
-        theExecutor.executeStatement( (new TruncateCategory()).getNewQuery() );
-        theExecutor.executeStatement( (new TruncateUser()).getNewQuery() );
-        theExecutor.executeStatement( (new TruncateAuction()).getNewQuery() );
-        theExecutor.executeStatement( (new TruncateBid()).getNewQuery() );
-        theExecutor.executeStatement( (new TruncatePicture()).getNewQuery() );
+        theExecutor.executeQuery( (new TruncateCategory()).getNewQuery() );
+        theExecutor.executeQuery( (new TruncateUser()).getNewQuery() );
+        theExecutor.executeQuery( (new TruncateAuction()).getNewQuery() );
+        theExecutor.executeQuery( (new TruncateBid()).getNewQuery() );
+        theExecutor.executeQuery( (new TruncatePicture()).getNewQuery() );
     }
 
 
-    void generateCategories() throws SQLException {
+    void generateCategories() throws ExecutorException {
         int numberOfCategories = config.numberOfCategories;
         QueryBuilder queryBuilder = new InsertCategory();
         for ( int i = 0; i < numberOfCategories; i++ ) {
@@ -101,7 +102,7 @@ class DataGenerator {
     }
 
 
-    void generateUsers( int numberOfUsers ) throws SQLException {
+    void generateUsers( int numberOfUsers ) throws ExecutorException {
         int mod = numberOfUsers / progressReporter.base;
         QueryBuilder queryBuilder = new InsertUser();
         for ( int i = 0; i < numberOfUsers; i++ ) {
@@ -117,7 +118,7 @@ class DataGenerator {
     }
 
 
-    void generateAuctions( int start, int end ) throws SQLException {
+    void generateAuctions( int start, int end ) throws ExecutorException {
         int mod = ((end - start) + 1) / progressReporter.base;
 
         int numberOfCategories = config.numberOfCategories;
@@ -133,8 +134,9 @@ class DataGenerator {
         int minNumberOfPicturesPerAuction = config.minNumberOfPicturesPerAuction;
         int maxNumberOfPicturesPerAuction = config.maxNumberOfPicturesPerAuction;
 
-        TextProducer text = Fairy.create().textProducer();
-        DateProducer dateProducer = Fairy.create().dateProducer();
+        Fairy fairy = Fairy.create();
+        TextProducer text = fairy.textProducer();
+        DateProducer dateProducer = fairy.dateProducer();
 
         LocalDateTime startDate;
         LocalDateTime endDate;
@@ -199,7 +201,7 @@ class DataGenerator {
     }
 
 
-    private void addToMultiInsert( Query query ) throws SQLException {
+    private void addToMultiInsert( Query query ) throws ExecutorException {
         batchList.add( query );
         if ( batchList.size() >= config.maxBatchSize ) {
             executeMultiInsert();
@@ -207,21 +209,21 @@ class DataGenerator {
     }
 
 
-    private void executeMultiInsert() throws SQLException {
+    private void executeMultiInsert() throws ExecutorException {
         if ( batchList.size() > 0 ) {
             StringBuilder stringBuilder = new StringBuilder();
             boolean first = true;
             for ( Query query : batchList ) {
                 if ( first ) {
-                    stringBuilder.append( query.sqlQuery );
+                    stringBuilder.append( query.getSql() );
                     first = false;
                 } else {
-                    String statement = query.sqlQuery;
+                    String statement = query.getSql();
                     String[] split = statement.split( "VALUES" );
                     stringBuilder.append( "," ).append( split[split.length - 1] );
                 }
             }
-            theExecutor.executeStatement( new Query( stringBuilder.toString(), false ) );
+            theExecutor.executeQuery( new RawQuery( stringBuilder.toString(), null, false ) );
             theExecutor.executeCommit();
             batchList.clear();
         }

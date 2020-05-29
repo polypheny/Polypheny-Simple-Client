@@ -27,23 +27,49 @@ package org.polypheny.simpleclient.scenario.gavel.queryBuilder;
 
 
 import java.util.concurrent.ThreadLocalRandom;
-import org.polypheny.simpleclient.main.QueryBuilder;
+import org.polypheny.simpleclient.query.Query;
+import org.polypheny.simpleclient.query.QueryBuilder;
 
 
 public class SelectRandomUser extends QueryBuilder {
+
+    private static final boolean EXPECT_RESULT = true;
 
     private final int numberOfUsers;
 
 
     public SelectRandomUser( int numberOfUsers ) {
-        super( true );
         this.numberOfUsers = numberOfUsers;
     }
 
 
     @Override
-    public String generateSql() {
-        int id = ThreadLocalRandom.current().nextInt( 1, numberOfUsers + 1 );
-        return "SELECT * FROM \"user\" WHERE id=" + id;
+    public Query getNewQuery() {
+        int userId = ThreadLocalRandom.current().nextInt( 1, numberOfUsers + 1 );
+        return new SelectRandomUserQuery( userId );
+    }
+
+
+    private static class SelectRandomUserQuery extends Query {
+
+        private final int userId;
+
+
+        public SelectRandomUserQuery( int userId ) {
+            super( EXPECT_RESULT );
+            this.userId = userId;
+        }
+
+
+        @Override
+        public String getSql() {
+            return "SELECT * FROM \"user\" WHERE id=" + userId;
+        }
+
+
+        @Override
+        public String getRest() {
+            return null;
+        }
     }
 }

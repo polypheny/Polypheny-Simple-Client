@@ -28,52 +28,73 @@ package org.polypheny.simpleclient.executor;
 
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Properties;
+import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.query.RawQuery;
 
 
-public class PostgresExecutor extends JdbcExecutor {
+@Slf4j
+public class PolyphenyDbJdbcExecutor extends JdbcExecutor implements PolyphenyDbExecutor {
 
-    public PostgresExecutor( String host ) {
 
+    private PolyphenyDbJdbcExecutor( String polyphenyHost ) {
         try {
-            Class.forName( "org.postgresql.Driver" );
+            Class.forName( "org.polypheny.jdbc.Driver" );
         } catch ( ClassNotFoundException e ) {
-            throw new RuntimeException( "Driver not found." );
+            throw new RuntimeException( "Driver not found.", e );
         }
 
         try {
-            connection = DriverManager.getConnection( "jdbc:postgresql://" + host + ":5432/test", "postgres", "postgres" );
-            connection.setAutoCommit( false );
+            String url = "jdbc:polypheny://" + polyphenyHost + "/?serialization=PROTOBUF";
+
+            Properties props = new Properties();
+            props.setProperty( "user", "pa" );
+
+            connection = DriverManager.getConnection( url, props );
             executeStatement = connection.createStatement();
         } catch ( SQLException e ) {
             throw new RuntimeException( "Connection failed.", e );
         }
-
     }
 
 
     @Override
     public void reset() throws ExecutorException {
-        executeQuery( new RawQuery( "DROP SCHEMA public CASCADE;", null, false ) );
-        executeQuery( new RawQuery( "CREATE SCHEMA public;", null, false ) );
-        executeQuery( new RawQuery( "GRANT ALL ON SCHEMA public TO postgres;", null, false ) );
-        executeQuery( new RawQuery( "GRANT ALL ON SCHEMA public TO public;", null, false ) );
+        throw new RuntimeException( "Unsupported operation" );
     }
 
 
-    public static class PostgresExecutorFactory extends ExecutorFactory {
+    @Override
+    public void dropStore( String name ) throws ExecutorException {
+        executeQuery( new RawQuery( "ALTER STORES DROP \"" + name + "\"", null, false ) );
+    }
+
+
+    @Override
+    public void deployStore( String name, String clazz, String config ) throws ExecutorException {
+        executeQuery( new RawQuery( "alter stores add \"" + name + "\" using '" + clazz + "' with '" + config + "'", null, false ) );
+    }
+
+
+    @Override
+    public void setConfig( String key, String value ) throws ExecutorException {
+        executeQuery( new RawQuery( "ALTER CONFIG '" + key + "' SET '" + value + "'", null, false ) );
+    }
+
+
+    public static class PolyphenyDbJdbcExecutorFactory extends ExecutorFactory {
 
         private final String host;
 
 
-        public PostgresExecutorFactory( String host ) {
+        public PolyphenyDbJdbcExecutorFactory( String host ) {
             this.host = host;
         }
 
 
         @Override
         public JdbcExecutor createInstance() {
-            return new PostgresExecutor( host );
+            return new PolyphenyDbJdbcExecutor( host );
         }
 
 

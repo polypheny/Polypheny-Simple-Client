@@ -26,18 +26,37 @@
 package org.polypheny.simpleclient.scenario.gavel.queryBuilder.not_used;
 
 
-import org.polypheny.simpleclient.main.QueryBuilder;
+import org.polypheny.simpleclient.query.Query;
+import org.polypheny.simpleclient.query.QueryBuilder;
 
 
 public class SelectTopHundredSellerByNumberOfAuctions extends QueryBuilder {
 
-    public SelectTopHundredSellerByNumberOfAuctions() {
-        super( true );
-    }
+    private static final boolean EXPECT_RESULT = true;
 
 
     @Override
-    public String generateSql() {
-        return "SELECT u.last_name, u.first_name, count(a.id) as number FROM auction a INNER JOIN user u ON a.user = u.id GROUP BY a.user, u.last_name, u.first_name ORDER BY number desc LIMIT 100";
+    public Query getNewQuery() {
+        return new SelectTopHundredSellerByNumberOfAuctionsQuery();
+    }
+
+
+    private static class SelectTopHundredSellerByNumberOfAuctionsQuery extends Query {
+
+        public SelectTopHundredSellerByNumberOfAuctionsQuery() {
+            super( EXPECT_RESULT );
+        }
+
+
+        @Override
+        public String getSql() {
+            return "SELECT u.last_name, u.first_name, count(a.id) as number FROM auction a INNER JOIN user u ON a.user = u.id GROUP BY a.user, u.last_name, u.first_name ORDER BY number desc LIMIT 100";
+        }
+
+
+        @Override
+        public String getRest() {
+            return null;
+        }
     }
 }

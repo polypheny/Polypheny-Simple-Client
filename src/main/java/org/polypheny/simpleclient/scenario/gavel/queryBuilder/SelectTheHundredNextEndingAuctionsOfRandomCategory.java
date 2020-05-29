@@ -31,11 +31,14 @@ import com.devskiller.jfairy.producer.DateProducer;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.ThreadLocalRandom;
-import org.polypheny.simpleclient.main.QueryBuilder;
+import org.polypheny.simpleclient.query.Query;
+import org.polypheny.simpleclient.query.QueryBuilder;
 import org.polypheny.simpleclient.scenario.gavel.Config;
 
 
 public class SelectTheHundredNextEndingAuctionsOfRandomCategory extends QueryBuilder {
+
+    private static final boolean EXPECT_RESULT = true;
 
     private final int numberOfCategories;
     private final int auctionDateMaxYearsInPast;
@@ -44,19 +47,43 @@ public class SelectTheHundredNextEndingAuctionsOfRandomCategory extends QueryBui
 
 
     public SelectTheHundredNextEndingAuctionsOfRandomCategory( int numberOfCategories, Config config ) {
-        super( true );
         this.numberOfCategories = numberOfCategories;
         this.auctionDateMaxYearsInPast = config.auctionDateMaxYearsInPast;
-
-        dateProducer = Fairy.create().dateProducer();
+        this.dateProducer = Fairy.create().dateProducer();
     }
 
 
     @Override
-    public String generateSql() {
+    public Query getNewQuery() {
         LocalDateTime date = dateProducer.randomDateInThePast( auctionDateMaxYearsInPast );
-        int category = ThreadLocalRandom.current().nextInt( 1, numberOfCategories + 1 );
-        return "SELECT a.id, a.title, a.end_date FROM auction a WHERE a.category =" + category + " AND " +
-                "a.end_date > '" + date.format( DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss" ) ) + "' ORDER BY end_date desc LIMIT 100";
+        int categoryId = ThreadLocalRandom.current().nextInt( 1, numberOfCategories + 1 );
+        return new SelectTheHundredNextEndingAuctionsOfRandomCategoryQuery( date, categoryId );
+    }
+
+
+    private static class SelectTheHundredNextEndingAuctionsOfRandomCategoryQuery extends Query {
+
+        private final LocalDateTime date;
+        private final int categoryId;
+
+
+        public SelectTheHundredNextEndingAuctionsOfRandomCategoryQuery( LocalDateTime date, int categoryId ) {
+            super( EXPECT_RESULT );
+            this.date = date;
+            this.categoryId = categoryId;
+        }
+
+
+        @Override
+        public String getSql() {
+            return "SELECT a.id, a.title, a.end_date FROM auction a WHERE a.category =" + categoryId + " AND " +
+                    "a.end_date > '" + date.format( DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss" ) ) + "' ORDER BY end_date desc LIMIT 100";
+        }
+
+
+        @Override
+        public String getRest() {
+            return null;
+        }
     }
 }
