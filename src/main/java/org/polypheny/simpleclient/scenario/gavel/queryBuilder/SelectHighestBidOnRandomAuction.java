@@ -27,6 +27,8 @@ package org.polypheny.simpleclient.scenario.gavel.queryBuilder;
 
 
 import java.util.concurrent.ThreadLocalRandom;
+import kong.unirest.HttpRequest;
+import kong.unirest.Unirest;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
@@ -68,8 +70,11 @@ public class SelectHighestBidOnRandomAuction extends QueryBuilder {
 
 
         @Override
-        public String getRest() {
-            return null;
+        public HttpRequest<?> getRest() {
+            return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.bid" )
+                    .queryString( "public.bid.auction", "=" + auctionId )
+                    .queryString( "_sort", "public.bid.amount@desc" )
+                    .queryString( "_limit", "1" );
         }
     }
 }

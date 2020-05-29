@@ -93,7 +93,7 @@ public class PolyphenyDbJdbcExecutor extends JdbcExecutor implements PolyphenyDb
 
 
         @Override
-        public JdbcExecutor createInstance() {
+        public PolyphenyDbJdbcExecutor createInstance() {
             return new PolyphenyDbJdbcExecutor( host );
         }
 

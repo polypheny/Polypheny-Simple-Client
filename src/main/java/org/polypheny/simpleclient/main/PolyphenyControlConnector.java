@@ -28,18 +28,14 @@ package org.polypheny.simpleclient.main;
 
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
-import com.mashape.unirest.http.HttpResponse;
-import com.mashape.unirest.http.Unirest;
-import com.mashape.unirest.http.exceptions.UnirestException;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import kong.unirest.HttpResponse;
+import kong.unirest.Unirest;
+import kong.unirest.UnirestException;
 import lombok.extern.slf4j.Slf4j;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
@@ -58,8 +54,9 @@ class PolyphenyControlConnector {
 
 
     PolyphenyControlConnector( String controlUrl ) throws URISyntaxException {
-        Unirest.setTimeouts( 0, 0 );
-        Unirest.setConcurrency( 200, 100 );
+        Unirest.config().connectTimeout( 0 );
+        Unirest.config().socketTimeout( 0 );
+        Unirest.config().concurrency( 200, 100 );
         this.controlUrl = "http://" + controlUrl;
         WebSocket webSocket = new WebSocket( new URI( "ws://" + controlUrl + "/socket/" ) );
         webSocket.connect();
@@ -148,20 +145,11 @@ class PolyphenyControlConnector {
 
 
     private String executeGet( String command ) {
-        HttpResponse<InputStream> httpResponse;
+        HttpResponse<String> httpResponse;
         try {
-            httpResponse = Unirest.get( controlUrl + command ).asBinary();
-
-            BufferedReader rd = new BufferedReader( new InputStreamReader( httpResponse.getRawBody() ) );
-            StringBuilder response = new StringBuilder();
-            String line;
-            while ( (line = rd.readLine()) != null ) {
-                response.append( line );
-                response.append( '\r' );
-            }
-            rd.close();
-            return response.toString();
-        } catch ( IOException | UnirestException e ) {
+            httpResponse = Unirest.get( controlUrl + command ).asString();
+            httpResponse.getBody();
+        } catch ( UnirestException e ) {
             log.error( "Exception while sending request", e );
         }
         return null;
@@ -169,19 +157,9 @@ class PolyphenyControlConnector {
 
 
     private void executePost( String command, String data ) {
-        HttpResponse<InputStream> httpResponse;
         try {
-            httpResponse = Unirest.post( controlUrl + command ).body( data ).asBinary();
-
-            BufferedReader rd = new BufferedReader( new InputStreamReader( httpResponse.getRawBody() ) );
-            StringBuilder response = new StringBuilder();
-            String line;
-            while ( (line = rd.readLine()) != null ) {
-                response.append( line );
-                response.append( '\r' );
-            }
-            rd.close();
-        } catch ( IOException | UnirestException e ) {
+            Unirest.post( controlUrl + command ).body( data ).asString();
+        } catch ( UnirestException e ) {
             log.error( "Exception while sending request", e );
         }
     }

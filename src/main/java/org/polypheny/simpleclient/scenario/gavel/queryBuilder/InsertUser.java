@@ -30,6 +30,7 @@ import com.devskiller.jfairy.Fairy;
 import com.devskiller.jfairy.producer.person.Person;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.atomic.AtomicInteger;
+import kong.unirest.HttpRequest;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
@@ -106,7 +107,7 @@ public class InsertUser extends QueryBuilder {
 
 
         @Override
-        public String getRest() {
+        public HttpRequest<?> getRest() {
             return null;
         }
     }

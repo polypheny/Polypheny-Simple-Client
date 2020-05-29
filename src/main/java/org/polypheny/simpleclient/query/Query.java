@@ -26,6 +26,7 @@
 package org.polypheny.simpleclient.query;
 
 
+import kong.unirest.HttpRequest;
 import lombok.Getter;
 
 
@@ -43,6 +44,6 @@ public abstract class Query {
     public abstract String getSql();
 
 
-    public abstract String getRest();
+    public abstract HttpRequest<?> getRest();
 
 }

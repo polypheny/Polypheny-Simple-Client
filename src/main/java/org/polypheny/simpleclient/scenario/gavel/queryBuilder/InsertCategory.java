@@ -33,6 +33,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
+import kong.unirest.HttpRequest;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
@@ -98,7 +99,7 @@ public class InsertCategory extends QueryBuilder {
 
 
         @Override
-        public String getRest() {
+        public HttpRequest<?> getRest() {
             return null;
         }
     }

@@ -1,5 +1,6 @@
 package org.polypheny.simpleclient.query;
 
+import kong.unirest.HttpRequest;
 import lombok.Getter;
 
 public class RawQuery extends Query {
@@ -8,10 +9,10 @@ public class RawQuery extends Query {
     private final String sql;
 
     @Getter
-    private final String rest;
+    private final HttpRequest<?> rest;
 
 
-    public RawQuery( String sql, String rest, boolean expectResultSet ) {
+    public RawQuery( String sql, HttpRequest<?> rest, boolean expectResultSet ) {
         super( expectResultSet );
         this.sql = sql;
         this.rest = rest;

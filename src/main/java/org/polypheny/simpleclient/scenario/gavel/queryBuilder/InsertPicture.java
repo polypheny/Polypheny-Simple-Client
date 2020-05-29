@@ -28,6 +28,7 @@ package org.polypheny.simpleclient.scenario.gavel.queryBuilder;
 
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
+import kong.unirest.HttpRequest;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
@@ -85,7 +86,7 @@ public class InsertPicture extends QueryBuilder {
 
 
         @Override
-        public String getRest() {
+        public HttpRequest<?> getRest() {
             return null;
         }
     }

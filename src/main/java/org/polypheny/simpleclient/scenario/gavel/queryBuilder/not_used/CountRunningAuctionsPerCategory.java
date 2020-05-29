@@ -30,6 +30,7 @@ import com.devskiller.jfairy.Fairy;
 import com.devskiller.jfairy.producer.DateProducer;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import kong.unirest.HttpRequest;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 import org.polypheny.simpleclient.scenario.gavel.Config;
@@ -78,7 +79,7 @@ public class CountRunningAuctionsPerCategory extends QueryBuilder {
 
 
         @Override
-        public String getRest() {
+        public HttpRequest<?> getRest() {
             return null;
         }
     }

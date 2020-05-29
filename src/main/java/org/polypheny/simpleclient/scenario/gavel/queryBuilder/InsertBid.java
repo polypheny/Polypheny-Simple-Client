@@ -29,6 +29,7 @@ package org.polypheny.simpleclient.scenario.gavel.queryBuilder;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.atomic.AtomicInteger;
+import kong.unirest.HttpRequest;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
@@ -97,7 +98,7 @@ public class InsertBid extends QueryBuilder {
 
 
         @Override
-        public String getRest() {
+        public HttpRequest<?> getRest() {
             return null;
         }
     }

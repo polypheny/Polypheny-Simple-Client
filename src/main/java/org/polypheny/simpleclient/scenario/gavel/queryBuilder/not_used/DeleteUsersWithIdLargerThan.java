@@ -26,6 +26,7 @@
 package org.polypheny.simpleclient.scenario.gavel.queryBuilder.not_used;
 
 
+import kong.unirest.HttpRequest;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
@@ -66,7 +67,7 @@ public class DeleteUsersWithIdLargerThan extends QueryBuilder {
 
 
         @Override
-        public String getRest() {
+        public HttpRequest<?> getRest() {
             return null;
         }
     }

@@ -29,6 +29,7 @@ package org.polypheny.simpleclient.scenario.gavel.queryBuilder;
 import com.devskiller.jfairy.Fairy;
 import com.devskiller.jfairy.producer.person.Person;
 import java.util.concurrent.ThreadLocalRandom;
+import kong.unirest.HttpRequest;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
@@ -79,7 +80,7 @@ public class ChangePasswordOfRandomUser extends QueryBuilder {
 
 
         @Override
-        public String getRest() {
+        public HttpRequest<?> getRest() {
             return null;
         }
     }

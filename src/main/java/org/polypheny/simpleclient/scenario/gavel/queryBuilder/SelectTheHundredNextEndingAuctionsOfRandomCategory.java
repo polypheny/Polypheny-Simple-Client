@@ -31,6 +31,7 @@ import com.devskiller.jfairy.producer.DateProducer;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.ThreadLocalRandom;
+import kong.unirest.HttpRequest;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 import org.polypheny.simpleclient.scenario.gavel.Config;
@@ -82,7 +83,7 @@ public class SelectTheHundredNextEndingAuctionsOfRandomCategory extends QueryBui
 
 
         @Override
-        public String getRest() {
+        public HttpRequest<?> getRest() {
             return null;
         }
     }

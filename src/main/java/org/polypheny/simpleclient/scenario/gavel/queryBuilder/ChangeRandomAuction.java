@@ -29,6 +29,7 @@ package org.polypheny.simpleclient.scenario.gavel.queryBuilder;
 import com.devskiller.jfairy.Fairy;
 import com.devskiller.jfairy.producer.text.TextProducer;
 import java.util.concurrent.ThreadLocalRandom;
+import kong.unirest.HttpRequest;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 import org.polypheny.simpleclient.scenario.gavel.Config;
@@ -93,7 +94,7 @@ public class ChangeRandomAuction extends QueryBuilder {
 
 
         @Override
-        public String getRest() {
+        public HttpRequest<?> getRest() {
             return null;
         }
     }

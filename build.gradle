@@ -68,7 +68,7 @@ dependencies {
     implementation group: 'ch.unibas.dmi.dbis.chronos', name: 'chronos-agent', version: '2.3.2' // License: MIT
 
     // REST
-    implementation group: 'com.mashape.unirest', name: 'unirest-java', version: '1.4.9' // License: MIT
+    implementation group: 'com.konghq', name: 'unirest-java', version: '3.7.02' // License: MIT
 
     // JDBC Drivers
     implementation group: 'org.polypheny', name: 'polypheny-jdbc-driver', version: '1.3' // License: Apache 2.0

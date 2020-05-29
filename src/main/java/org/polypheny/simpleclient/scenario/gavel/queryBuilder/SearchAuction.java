@@ -28,6 +28,8 @@ package org.polypheny.simpleclient.scenario.gavel.queryBuilder;
 
 import com.devskiller.jfairy.Fairy;
 import com.devskiller.jfairy.producer.text.TextProducer;
+import kong.unirest.HttpRequest;
+import kong.unirest.Unirest;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
@@ -64,14 +66,19 @@ public class SearchAuction extends QueryBuilder {
         @Override
         public String getSql() {
             return "SELECT a.title, a.start_date, a.end_date FROM Auction a "
-                    + "WHERE a.title LIKE '" + searchString + "' "
-                    + "ORDER BY end_date desc";
+                    + "WHERE a.title LIKE '%" + searchString + "%' "
+                    + "ORDER BY end_date desc"
+                    + "LIMIT 100";
         }
 
 
         @Override
-        public String getRest() {
-            return null;
+        public HttpRequest<?> getRest() {
+            return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.auction" )
+                    .queryString( "_project", "public.auction.title,public.auction.start_date,public.auction.end_date" )
+                    .queryString( "public.auction.title", "%%" + searchString + "%" )
+                    .queryString( "_sort", "public.auction.end_date@DESC" )
+                    .queryString( "_limit", 100 );
         }
     }
 }
