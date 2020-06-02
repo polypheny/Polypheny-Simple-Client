@@ -92,16 +92,21 @@ public class ChronosAgent extends AbstractChronosAgent {
 
         // Create Executor Factory
         Executor.ExecutorFactory executorFactory;
-        if ( config.system.equals( "polypheny" ) ) {
-            executorFactory = new PolyphenyDbJdbcExecutorFactory( ChronosCommand.hostname );
-        } else if ( config.system.equals( "polypheny-rest" ) ) {
-            executorFactory = new PolyphenyDbRestExecutorFactory( ChronosCommand.hostname );
-        } else if ( config.system.equals( "postgres" ) ) {
-            executorFactory = new PostgresExecutorFactory( ChronosCommand.hostname );
-        } else if ( config.system.equals( "monetdb" ) ) {
-            executorFactory = new MonetdbExecutorFactory( ChronosCommand.hostname );
-        } else {
-            throw new RuntimeException( "Unknown system: " + config.system );
+        switch ( config.system ) {
+            case "polypheny":
+                executorFactory = new PolyphenyDbJdbcExecutorFactory( ChronosCommand.hostname );
+                break;
+            case "polypheny-rest":
+                executorFactory = new PolyphenyDbRestExecutorFactory( ChronosCommand.hostname );
+                break;
+            case "postgres":
+                executorFactory = new PostgresExecutorFactory( ChronosCommand.hostname );
+                break;
+            case "monetdb":
+                executorFactory = new MonetdbExecutorFactory( ChronosCommand.hostname );
+                break;
+            default:
+                throw new RuntimeException( "Unknown system: " + config.system );
         }
 
         Scenario scenario = new Gavel( executorFactory, config );
@@ -228,7 +233,7 @@ public class ChronosAgent extends AbstractChronosAgent {
                 executor.setConfig( "statistics/activeTracking", "false" );
                 // Set router
                 switch ( config.router ) {
-                    case "simpel":
+                    case "simple":
                         executor.setConfig( "routing/router", "org.polypheny.db.router.SimpleRouter$SimpleRouterFactory" );
                         break;
                     case "icarus":

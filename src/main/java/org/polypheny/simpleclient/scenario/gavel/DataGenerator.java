@@ -40,7 +40,6 @@ import org.polypheny.simpleclient.executor.ExecutorException;
 import org.polypheny.simpleclient.main.ProgressReporter;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
-import org.polypheny.simpleclient.query.RawQuery;
 import org.polypheny.simpleclient.scenario.gavel.Gavel.DataGenerationThreadMonitor;
 import org.polypheny.simpleclient.scenario.gavel.queryBuilder.InsertAuction;
 import org.polypheny.simpleclient.scenario.gavel.queryBuilder.InsertBid;
@@ -205,28 +204,15 @@ class DataGenerator {
         batchList.add( query );
         if ( batchList.size() >= config.maxBatchSize ) {
             executeMultiInsert();
+
         }
     }
 
 
     private void executeMultiInsert() throws ExecutorException {
-        if ( batchList.size() > 0 ) {
-            StringBuilder stringBuilder = new StringBuilder();
-            boolean first = true;
-            for ( Query query : batchList ) {
-                if ( first ) {
-                    stringBuilder.append( query.getSql() );
-                    first = false;
-                } else {
-                    String statement = query.getSql();
-                    String[] split = statement.split( "VALUES" );
-                    stringBuilder.append( "," ).append( split[split.length - 1] );
-                }
-            }
-            theExecutor.executeQuery( new RawQuery( stringBuilder.toString(), null, false ) );
-            theExecutor.executeCommit();
-            batchList.clear();
-        }
+        theExecutor.executeInsertList( batchList );
+        theExecutor.executeCommit();
+        batchList.clear();
     }
 
 

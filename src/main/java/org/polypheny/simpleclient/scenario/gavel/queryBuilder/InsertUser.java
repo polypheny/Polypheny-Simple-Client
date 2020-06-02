@@ -89,20 +89,18 @@ public class InsertUser extends QueryBuilder {
 
         @Override
         public String getSql() {
-            StringBuilder sb = new StringBuilder();
-            sb.append( "INSERT INTO \"user\"(id, email, password, last_name, first_name, gender, birthday, city, zip_code, country) VALUES (" );
-            sb.append( userId ).append( "," );
-            sb.append( "'" ).append( email ).append( "'," );
-            sb.append( "'" ).append( password ).append( "'," );
-            sb.append( "'" ).append( lastName ).append( "'," );
-            sb.append( "'" ).append( firstName ).append( "'," );
-            sb.append( "'" ).append( gender ).append( "'," );
-            sb.append( "date '" ).append( birthday ).append( "'," );
-            sb.append( "'" ).append( city ).append( "'," );
-            sb.append( "'" ).append( zipCode ).append( "'," );
-            sb.append( "'Switzerland'" );
-            sb.append( ")" );
-            return sb.toString();
+            return "INSERT INTO \"user\"(id, email, password, last_name, first_name, gender, birthday, city, zip_code, country) VALUES ("
+                    + userId + ","
+                    + "'" + email + "',"
+                    + "'" + password + "',"
+                    + "'" + lastName + "',"
+                    + "'" + firstName + "',"
+                    + "'" + gender + "',"
+                    + "date '" + birthday + "',"
+                    + "'" + city + "',"
+                    + "'" + zipCode + "',"
+                    + "'Switzerland'"
+                    + ")";
         }
 
 

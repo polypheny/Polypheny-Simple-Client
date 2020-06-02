@@ -42,7 +42,7 @@ public class InsertBid extends QueryBuilder {
     private final int userId;
     private final int amount;
     private final LocalDateTime date;
-    private static AtomicInteger nextBidId = new AtomicInteger( 1 );
+    private static final AtomicInteger nextBidId = new AtomicInteger( 1 );
 
 
     public InsertBid( int auctionId, int userId, int amount, LocalDateTime date ) {
@@ -85,15 +85,13 @@ public class InsertBid extends QueryBuilder {
 
         @Override
         public String getSql() {
-            StringBuilder sb = new StringBuilder();
-            sb.append( "INSERT INTO bid(id, amount, \"timestamp\", \"user\", auction) VALUES (" );
-            sb.append( bidId ).append( "," );
-            sb.append( amount ).append( "," );
-            sb.append( "timestamp '" ).append( date.format( DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss" ) ) ).append( "'," );
-            sb.append( userId ).append( "," );
-            sb.append( auctionId ); // This could gets a bug if e.g. parallelized
-            sb.append( ")" );
-            return sb.toString();
+            return "INSERT INTO bid(id, amount, \"timestamp\", \"user\", auction) VALUES ("
+                    + bidId + ","
+                    + amount + ","
+                    + "timestamp '" + date.format( DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss" ) ) + "',"
+                    + userId + ","
+                    + auctionId // This could gets a bug if e.g. parallelized
+                    + ")";
         }
 
 

@@ -30,8 +30,10 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.query.Query;
+import org.polypheny.simpleclient.query.RawQuery;
 
 
 @Slf4j
@@ -90,6 +92,7 @@ public abstract class JdbcExecutor implements Executor {
     }
 
 
+    @Override
     public void executeCommit() throws ExecutorException {
         try {
             connection.commit();
@@ -99,6 +102,7 @@ public abstract class JdbcExecutor implements Executor {
     }
 
 
+    @Override
     public void executeRollback() throws ExecutorException {
         try {
             connection.rollback();
@@ -108,6 +112,7 @@ public abstract class JdbcExecutor implements Executor {
     }
 
 
+    @Override
     public void closeConnection() throws ExecutorException {
         try {
             if ( executeStatement != null ) {
@@ -118,6 +123,29 @@ public abstract class JdbcExecutor implements Executor {
             }
         } catch ( SQLException e ) {
             throw new ExecutorException( e );
+        }
+    }
+
+
+    @Override
+    public void executeInsertList( List<Query> queryList ) throws ExecutorException {
+        if ( queryList.size() > 0 ) {
+            StringBuilder stringBuilder = new StringBuilder();
+            boolean first = true;
+            for ( Query query : queryList ) {
+                if ( !query.getSql().startsWith( "INSERT" ) ) {
+                    throw new RuntimeException( "Not a insert statement: " + query.getSql() );
+                }
+                if ( first ) {
+                    stringBuilder.append( query.getSql() );
+                    first = false;
+                } else {
+                    String statement = query.getSql();
+                    String[] split = statement.split( "VALUES" );
+                    stringBuilder.append( "," ).append( split[split.length - 1] );
+                }
+            }
+            executeQuery( new RawQuery( stringBuilder.toString(), null, false ) );
         }
     }
 

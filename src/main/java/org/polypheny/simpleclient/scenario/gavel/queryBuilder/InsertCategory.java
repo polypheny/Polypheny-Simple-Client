@@ -44,7 +44,7 @@ public class InsertCategory extends QueryBuilder {
     private static final boolean EXPECT_RESULT = false;
 
     private final ArrayList<String> categories;
-    private static AtomicInteger nextCategoryId = new AtomicInteger( 1 );
+    private static final AtomicInteger nextCategoryId = new AtomicInteger( 1 );
 
 
     public InsertCategory() {

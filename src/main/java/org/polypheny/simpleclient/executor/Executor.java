@@ -1,5 +1,6 @@
 package org.polypheny.simpleclient.executor;
 
+import java.util.List;
 import org.polypheny.simpleclient.query.Query;
 
 public interface Executor {
@@ -16,6 +17,8 @@ public interface Executor {
     void executeRollback() throws ExecutorException;
 
     void closeConnection() throws ExecutorException;
+
+    void executeInsertList( List<Query> batchList ) throws ExecutorException;
 
 
     abstract class ExecutorFactory {

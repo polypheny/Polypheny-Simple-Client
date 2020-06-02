@@ -1,5 +1,6 @@
 package org.polypheny.simpleclient.executor;
 
+import java.util.List;
 import kong.unirest.HttpRequest;
 import kong.unirest.HttpResponse;
 import kong.unirest.JsonNode;
@@ -100,6 +101,12 @@ public class PolyphenyDbRestExecutor implements PolyphenyDbExecutor {
     @Override
     public void closeConnection() throws ExecutorException {
         // NoOp
+    }
+
+
+    @Override
+    public void executeInsertList( List<Query> batchList ) throws ExecutorException {
+        throw new RuntimeException( "Unsupported operation" );
     }
 
 

@@ -122,17 +122,15 @@ public class InsertRandomAuction extends QueryBuilder {
 
         @Override
         public String getSql() {
-            StringBuilder sb = new StringBuilder();
-            sb.append( "INSERT INTO auction(id, title, description, start_date, end_date, category, \"user\") VALUES (" );
-            sb.append( auctionId ).append( "," );
-            sb.append( "'" ).append( title ).append( "'," );
-            sb.append( "'" ).append( description ).append( "'," );
-            sb.append( "timestamp '" ).append( startDate.format( DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss" ) ) ).append( "'," );
-            sb.append( "timestamp '" ).append( endDate.format( DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss" ) ) ).append( "'," );
-            sb.append( categoryId ).append( "," );
-            sb.append( userId );
-            sb.append( ")" );
-            return sb.toString();
+            return "INSERT INTO auction(id, title, description, start_date, end_date, category, \"user\") VALUES ("
+                    + auctionId + ","
+                    + "'" + title + "',"
+                    + "'" + description + "',"
+                    + "timestamp '" + startDate.format( DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss" ) ) + "',"
+                    + "timestamp '" + endDate.format( DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss" ) ) + "',"
+                    + categoryId + ","
+                    + userId
+                    + ")";
         }
 
 

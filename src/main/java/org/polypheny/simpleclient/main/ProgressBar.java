@@ -27,6 +27,7 @@ public class ProgressBar extends ProgressReporter {
      * @param done an int representing the work done so far
      * @param total an int representing the total work
      */
+    @Override
     public void update( int done, int total ) {
         char[] workchars = { '|', '/', '-', '\\' };
         String format = "\r%3d%% %s %c";

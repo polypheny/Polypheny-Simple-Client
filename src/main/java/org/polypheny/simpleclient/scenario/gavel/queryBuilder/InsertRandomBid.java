@@ -91,15 +91,13 @@ public class InsertRandomBid extends QueryBuilder {
 
         @Override
         public String getSql() {
-            StringBuilder sb = new StringBuilder();
-            sb.append( "INSERT INTO bid(id, amount, \"timestamp\", \"user\", auction) VALUES (" );
-            sb.append( bidId ).append( "," );
-            sb.append( amount ).append( "," );
-            sb.append( "timestamp '" ).append( timestamp ).append( "'," );
-            sb.append( userId ).append( "," );
-            sb.append( auctionId );
-            sb.append( ")" );
-            return sb.toString();
+            return "INSERT INTO bid(id, amount, \"timestamp\", \"user\", auction) VALUES ("
+                    + bidId + ","
+                    + amount + ","
+                    + "timestamp '" + timestamp + "',"
+                    + userId + ","
+                    + auctionId
+                    + ")";
         }
 
 
