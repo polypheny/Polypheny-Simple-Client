@@ -49,7 +49,7 @@ public class InsertCategory extends QueryBuilder {
 
     public InsertCategory() {
         categories = new ArrayList<>();
-        try ( InputStream is = ClassLoader.getSystemResourceAsStream( "gavel/categories.txt" ) ) {
+        try ( InputStream is = ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/gavel/categories.txt" ) ) {
             if ( is == null ) {
                 throw new RuntimeException( "Categories list file not found!" );
             }

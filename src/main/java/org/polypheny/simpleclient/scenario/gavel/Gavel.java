@@ -398,9 +398,9 @@ public class Gavel extends Scenario {
         Executor executor = null;
         InputStream file;
         if ( includingKeys ) {
-            file = ClassLoader.getSystemResourceAsStream( "gavel/schema.sql" );
+            file = ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/gavel/schema.sql" );
         } else {
-            file = ClassLoader.getSystemResourceAsStream( "gavel/schema-without-keys-and-constraints.sql" );
+            file = ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/gavel/schema-without-keys-and-constraints.sql" );
         }
         // Check if file != null
         if ( file == null ) {

@@ -33,6 +33,9 @@ import com.github.rvesse.airline.annotations.Option;
 import java.util.List;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
+import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
+import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory;
+import org.polypheny.simpleclient.executor.PolyphenyDbRestExecutor.PolyphenyDbRestExecutorFactory;
 import org.polypheny.simpleclient.main.Easy;
 
 
@@ -46,6 +49,9 @@ public class EasyCommand implements CliRunnable {
 
     @Arguments(description = "Task { schema | data | workload } and multiplier.")
     private List<String> args;
+
+    @Option(name = { "--rest" }, arity = 0, description = "Use Polypheny-DB REST interface instead of JDBC")
+    public static boolean restInterface = false;
 
     @Option(name = { "-pdb", "--polyphenydb" }, title = "Polypheny-DB Host", arity = 1, description = "Polypheny-DB Host")
     public static String polyphenyDbHost = "127.0.0.1";
@@ -67,12 +73,19 @@ public class EasyCommand implements CliRunnable {
             }
         }
 
+        ExecutorFactory executorFactory;
+        if ( restInterface ) {
+            executorFactory = new PolyphenyDbRestExecutorFactory( polyphenyDbHost );
+        } else {
+            executorFactory = new PolyphenyDbJdbcExecutorFactory( polyphenyDbHost );
+        }
+
         if ( args.get( 0 ).equalsIgnoreCase( "data" ) ) {
-            Easy.data( polyphenyDbHost, multiplier );
+            Easy.data( executorFactory, multiplier );
         } else if ( args.get( 0 ).equalsIgnoreCase( "workload" ) ) {
-            Easy.workload( polyphenyDbHost, multiplier );
+            Easy.workload( executorFactory, multiplier );
         } else if ( args.get( 0 ).equalsIgnoreCase( "schema" ) ) {
-            Easy.schema( polyphenyDbHost );
+            Easy.schema( executorFactory );
         } else {
             System.err.println( "Unknown task: " + args.get( 0 ) );
         }

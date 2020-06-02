@@ -37,12 +37,12 @@ public class PolyphenyDbRestExecutor implements PolyphenyDbExecutor {
             request.routeParam( "protocol", "http" );
             request.routeParam( "host", host );
             request.routeParam( "port", "8089" );
-            System.out.println( request.getUrl() );
+            log.debug( request.getUrl() );
             try {
                 long start = System.nanoTime();
                 HttpResponse<JsonNode> result = request.asJson();
                 if ( !result.isSuccess() ) {
-                    System.out.println( "Err!" );
+                    log.error( "Err!" );
                 }
                 return System.nanoTime() - start;
             } catch ( UnirestException e ) {
