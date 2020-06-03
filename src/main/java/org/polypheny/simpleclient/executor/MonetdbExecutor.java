@@ -30,13 +30,15 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
+import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.query.RawQuery;
 
 
 public class MonetdbExecutor extends JdbcExecutor {
 
-    public MonetdbExecutor( String host ) {
 
+    public MonetdbExecutor( String host, CsvWriter csvWriter ) {
+        super( csvWriter );
         try {
             Class.forName( "nl.cwi.monetdb.jdbc.MonetDriver" );
         } catch ( ClassNotFoundException e ) {
@@ -90,8 +92,8 @@ public class MonetdbExecutor extends JdbcExecutor {
 
 
         @Override
-        public JdbcExecutor createInstance() {
-            return new MonetdbExecutor( host );
+        public JdbcExecutor createInstance( CsvWriter csvWriter ) {
+            return new MonetdbExecutor( host, csvWriter );
         }
 
 

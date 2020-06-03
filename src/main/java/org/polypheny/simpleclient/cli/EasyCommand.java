@@ -56,6 +56,12 @@ public class EasyCommand implements CliRunnable {
     @Option(name = { "-pdb", "--polyphenydb" }, title = "Polypheny-DB Host", arity = 1, description = "Polypheny-DB Host")
     public static String polyphenyDbHost = "127.0.0.1";
 
+    @Option(name = { "--writeCSV" }, arity = 0, description = "Write CSV")
+    public boolean writeCsv = false;
+
+    @Option(name = { "--queryList" }, arity = 0, description = "Dump SQL query list")
+    public boolean dumpQueryList = false;
+
 
     @Override
     public int run() {
@@ -83,7 +89,7 @@ public class EasyCommand implements CliRunnable {
         if ( args.get( 0 ).equalsIgnoreCase( "data" ) ) {
             Easy.data( executorFactory, multiplier );
         } else if ( args.get( 0 ).equalsIgnoreCase( "workload" ) ) {
-            Easy.workload( executorFactory, multiplier );
+            Easy.workload( executorFactory, multiplier, writeCsv, dumpQueryList );
         } else if ( args.get( 0 ).equalsIgnoreCase( "schema" ) ) {
             Easy.schema( executorFactory );
         } else {

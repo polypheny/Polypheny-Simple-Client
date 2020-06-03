@@ -34,9 +34,6 @@ import java.sql.SQLException;
 @SuppressWarnings("unchecked")
 public class Main {
 
-    public static final boolean WRITE_CSV = false;
-    public static final boolean DUMP_QUERY_LIST = false;
-
 
     public static void main( String[] args ) throws SQLException {
         CliBuilder<CliRunnable> builder = Cli.builder( "PSC" );

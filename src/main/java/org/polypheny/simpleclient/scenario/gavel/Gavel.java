@@ -49,7 +49,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.cli.ChronosCommand;
-import org.polypheny.simpleclient.cli.Main;
 import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.executor.ExecutorException;
 import org.polypheny.simpleclient.executor.JdbcExecutor;
@@ -89,8 +88,8 @@ public class Gavel extends Scenario {
     private final Map<Integer, List<Long>> measuredTimePerQueryType;
 
 
-    public Gavel( JdbcExecutor.ExecutorFactory executorFactory, Config config ) {
-        super( executorFactory );
+    public Gavel( JdbcExecutor.ExecutorFactory executorFactory, Config config, boolean dumpQueryList ) {
+        super( executorFactory, dumpQueryList );
         this.config = config;
         measuredTimes = Collections.synchronizedList( new LinkedList<>() );
 
@@ -126,8 +125,8 @@ public class Gavel extends Scenario {
         addNumberOfTimes( queryList, new SelectHighestBidOnRandomAuction( numbers.get( "auctions" ) ), config.numberOfGetCurrentlyHighestBidOnAuctionQueries );
         Collections.shuffle( queryList );
 
-        // TODO: Log the actually executed query
-        if ( outputDirectory != null && Main.DUMP_QUERY_LIST ) {
+        // This dumps the sql queries independent of the selected interface
+        if ( outputDirectory != null && dumpQueryList ) {
             log.info( "Dump query list..." );
             try {
                 FileWriter fw = new FileWriter( outputDirectory.getPath() + File.separator + "queryList" );
@@ -155,7 +154,7 @@ public class Gavel extends Scenario {
             log.warn( "Limiting number of executor threads to {} threads (instead of {} as specified by the job)", numberOfThreads, executorFactory.getMaxNumberOfThreads() );
         }
         for ( int i = 0; i < numberOfThreads; i++ ) {
-            threads.add( new EvaluationThread( queryList, csvWriter, executorFactory.createInstance() ) );
+            threads.add( new EvaluationThread( queryList, executorFactory.createInstance( csvWriter ) ) );
         }
 
         EvaluationThreadMonitor threadMonitor = new EvaluationThreadMonitor( threads );
@@ -264,15 +263,13 @@ public class Gavel extends Scenario {
 
         private final Executor executor;
         private final List<QueryListEntry> theQueryList;
-        private final CsvWriter csvWriter;
         private boolean abort = false;
         @Setter
         private EvaluationThreadMonitor threadMonitor;
 
 
-        EvaluationThread( List<QueryListEntry> queryList, CsvWriter csvWriter, Executor executor ) {
+        EvaluationThread( List<QueryListEntry> queryList, Executor executor ) {
             super( "EvaluationThread" );
-            this.csvWriter = csvWriter;
             this.executor = executor;
             theQueryList = queryList;
         }
@@ -286,7 +283,13 @@ public class Gavel extends Scenario {
 
             while ( !theQueryList.isEmpty() && !abort ) {
                 measuredTimeStart = System.nanoTime();
-                queryListEntry = theQueryList.remove( 0 );
+                try {
+                    queryListEntry = theQueryList.remove( 0 );
+                } catch ( IndexOutOfBoundsException e ) { // This is neither nice nor efficient...
+                    // This can happen due to concurrency if two threads enter the while-loop and there is only one thread left
+                    // Simply leaf the loop
+                    break;
+                }
                 try {
                     executor.executeQuery( queryListEntry.query );
                 } catch ( ExecutorException e ) {
@@ -300,10 +303,6 @@ public class Gavel extends Scenario {
                     throw new RuntimeException( e );
                 }
                 measuredTime = System.nanoTime() - measuredTimeStart;
-                if ( csvWriter != null ) {
-                    // TODO move to executor.
-                    csvWriter.appendToCsv( queryListEntry.query.getSql(), measuredTime );
-                }
                 measuredTimes.add( measuredTime );
                 measuredTimePerQueryType.get( queryListEntry.templateId ).add( measuredTime );
                 if ( ChronosCommand.commit ) {
@@ -335,14 +334,7 @@ public class Gavel extends Scenario {
                 throw new RuntimeException( e );
             }
 
-            if ( csvWriter != null ) {
-                try {
-                    csvWriter.flush();
-                } catch ( IOException e ) {
-                    threadMonitor.notifyAboutError( e );
-                    log.warn( "Exception while flushing csv writer", e );
-                }
-            }
+            executor.flushCsvWriter();
         }
 
 

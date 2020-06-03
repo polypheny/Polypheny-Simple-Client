@@ -41,7 +41,6 @@ import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.cli.ChronosCommand;
-import org.polypheny.simpleclient.cli.Main;
 import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.executor.ExecutorException;
 import org.polypheny.simpleclient.executor.JdbcExecutor;
@@ -65,11 +64,16 @@ public class ChronosAgent extends AbstractChronosAgent {
     public static final boolean STORE_INDIVIDUAL_QUERY_TIMES = false;
 
     public final String[] supports;
-    PolyphenyControlConnector polyphenyControlConnector = null;
+    private PolyphenyControlConnector polyphenyControlConnector = null;
+
+    private final boolean writeCsv;
+    private final boolean dumpQueryList;
 
 
-    public ChronosAgent( InetAddress address, int port, boolean secure, boolean useHostname, String environment, String supports ) {
+    public ChronosAgent( InetAddress address, int port, boolean secure, boolean useHostname, String environment, String supports, boolean writeCsv, boolean dumpQueryList ) {
         super( address, port, secure, useHostname, environment );
+        this.writeCsv = writeCsv;
+        this.dumpQueryList = dumpQueryList;
         this.supports = new String[]{ supports };
         try {
             polyphenyControlConnector = new PolyphenyControlConnector( ChronosCommand.hostname + ":8070" );
@@ -109,7 +113,7 @@ public class ChronosAgent extends AbstractChronosAgent {
                 throw new RuntimeException( "Unknown system: " + config.system );
         }
 
-        Scenario scenario = new Gavel( executorFactory, config );
+        Scenario scenario = new Gavel( executorFactory, config, dumpQueryList );
 
         // Store hostname of node
         try {
@@ -291,7 +295,7 @@ public class ChronosAgent extends AbstractChronosAgent {
         Scenario scenario = (Scenario) o;
 
         final CsvWriter csvWriter;
-        if ( Main.WRITE_CSV ) {
+        if ( writeCsv ) {
             csvWriter = new CsvWriter( outputDirectory.getPath() + File.separator + "results.csv" );
         } else {
             csvWriter = null;
@@ -350,7 +354,7 @@ public class ChronosAgent extends AbstractChronosAgent {
 
 
     private void resetPostgres() {
-        JdbcExecutor postgresExecutor = new PostgresExecutor( ChronosCommand.hostname );
+        JdbcExecutor postgresExecutor = new PostgresExecutor( ChronosCommand.hostname, null );
         try {
             postgresExecutor.reset();
             postgresExecutor.executeCommit();
@@ -367,7 +371,7 @@ public class ChronosAgent extends AbstractChronosAgent {
 
 
     private void resetMonetDb() {
-        JdbcExecutor monetdbExecutor = new MonetdbExecutor( ChronosCommand.hostname );
+        JdbcExecutor monetdbExecutor = new MonetdbExecutor( ChronosCommand.hostname, null );
         try {
             monetdbExecutor.reset();
             monetdbExecutor.executeCommit();

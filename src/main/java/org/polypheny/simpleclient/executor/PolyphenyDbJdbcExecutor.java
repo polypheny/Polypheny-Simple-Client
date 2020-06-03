@@ -30,6 +30,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
+import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.query.RawQuery;
 
 
@@ -37,7 +38,9 @@ import org.polypheny.simpleclient.query.RawQuery;
 public class PolyphenyDbJdbcExecutor extends JdbcExecutor implements PolyphenyDbExecutor {
 
 
-    private PolyphenyDbJdbcExecutor( String polyphenyHost ) {
+    private PolyphenyDbJdbcExecutor( String polyphenyHost, CsvWriter csvWriter ) {
+        super( csvWriter );
+
         try {
             Class.forName( "org.polypheny.jdbc.Driver" );
         } catch ( ClassNotFoundException e ) {
@@ -93,8 +96,8 @@ public class PolyphenyDbJdbcExecutor extends JdbcExecutor implements PolyphenyDb
 
 
         @Override
-        public PolyphenyDbJdbcExecutor createInstance() {
-            return new PolyphenyDbJdbcExecutor( host );
+        public PolyphenyDbJdbcExecutor createInstance( CsvWriter csvWriter ) {
+            return new PolyphenyDbJdbcExecutor( host, csvWriter );
         }
 
 

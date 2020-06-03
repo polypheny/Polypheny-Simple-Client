@@ -67,7 +67,7 @@ public class SearchAuction extends QueryBuilder {
         public String getSql() {
             return "SELECT a.title, a.start_date, a.end_date FROM Auction a "
                     + "WHERE a.title LIKE '%" + searchString + "%' "
-                    + "ORDER BY end_date desc"
+                    + "ORDER BY end_date desc "
                     + "LIMIT 100";
         }
 

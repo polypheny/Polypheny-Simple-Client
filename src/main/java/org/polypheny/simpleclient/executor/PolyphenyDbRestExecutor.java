@@ -1,5 +1,6 @@
 package org.polypheny.simpleclient.executor;
 
+import java.io.IOException;
 import java.util.List;
 import kong.unirest.HttpRequest;
 import kong.unirest.HttpResponse;
@@ -7,6 +8,7 @@ import kong.unirest.JsonNode;
 import kong.unirest.UnirestException;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory;
+import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.query.Query;
 
 
@@ -16,10 +18,13 @@ public class PolyphenyDbRestExecutor implements PolyphenyDbExecutor {
     private final PolyphenyDbJdbcExecutorFactory jdbcExecutorFactory;
     private final String host;
 
+    private final CsvWriter csvWriter;
 
-    public PolyphenyDbRestExecutor( String host ) {
+
+    public PolyphenyDbRestExecutor( String host, CsvWriter csvWriter ) {
         super();
         this.host = host;
+        this.csvWriter = csvWriter;
         jdbcExecutorFactory = new PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory( host );
     }
 
@@ -32,6 +37,7 @@ public class PolyphenyDbRestExecutor implements PolyphenyDbExecutor {
 
     @Override
     public long executeQuery( Query query ) throws ExecutorException {
+        long time;
         if ( query.getRest() != null ) {
             HttpRequest<?> request = query.getRest();
             request.basicAuth( "pa", "" );
@@ -45,7 +51,10 @@ public class PolyphenyDbRestExecutor implements PolyphenyDbExecutor {
                 if ( !result.isSuccess() ) {
                     log.error( "Err!" );
                 }
-                return System.nanoTime() - start;
+                time = System.nanoTime() - start;
+                if ( csvWriter != null ) {
+                    csvWriter.appendToCsv( request.getUrl(), time );
+                }
             } catch ( UnirestException e ) {
                 throw new ExecutorException( e );
             }
@@ -54,14 +63,19 @@ public class PolyphenyDbRestExecutor implements PolyphenyDbExecutor {
             log.warn( query.getSql() );
             JdbcExecutor executor = null;
             try {
-                executor = jdbcExecutorFactory.createInstance();
-                return executor.executeQuery( query );
+                executor = jdbcExecutorFactory.createInstance( csvWriter );
+                time = executor.executeQuery( query );
+                if ( csvWriter != null ) {
+                    csvWriter.appendToCsv( query.getSql(), time );
+                }
             } catch ( ExecutorException e ) {
                 throw new ExecutorException( "Error while executing query via JDBC", e );
             } finally {
                 commitAndCloseJdbcExecutor( executor );
             }
         }
+
+        return time;
     }
 
 
@@ -75,7 +89,7 @@ public class PolyphenyDbRestExecutor implements PolyphenyDbExecutor {
             log.warn( query.getSql() );
             JdbcExecutor executor = null;
             try {
-                executor = jdbcExecutorFactory.createInstance();
+                executor = jdbcExecutorFactory.createInstance( csvWriter );
                 return executor.executeQueryAndGetNumber( query );
             } catch ( ExecutorException e ) {
                 throw new ExecutorException( "Error while executing query via JDBC", e );
@@ -114,7 +128,7 @@ public class PolyphenyDbRestExecutor implements PolyphenyDbExecutor {
     public void dropStore( String name ) throws ExecutorException {
         PolyphenyDbJdbcExecutor executor = null;
         try {
-            executor = jdbcExecutorFactory.createInstance();
+            executor = jdbcExecutorFactory.createInstance( csvWriter );
             executor.dropStore( name );
             executor.executeCommit();
         } catch ( ExecutorException e ) {
@@ -129,7 +143,7 @@ public class PolyphenyDbRestExecutor implements PolyphenyDbExecutor {
     public void deployStore( String name, String clazz, String config ) throws ExecutorException {
         PolyphenyDbJdbcExecutor executor = null;
         try {
-            executor = jdbcExecutorFactory.createInstance();
+            executor = jdbcExecutorFactory.createInstance( csvWriter );
             executor.deployStore( name, clazz, config );
             executor.executeCommit();
         } catch ( ExecutorException e ) {
@@ -144,7 +158,7 @@ public class PolyphenyDbRestExecutor implements PolyphenyDbExecutor {
     public void setConfig( String key, String value ) throws ExecutorException {
         PolyphenyDbJdbcExecutor executor = null;
         try {
-            executor = jdbcExecutorFactory.createInstance();
+            executor = jdbcExecutorFactory.createInstance( csvWriter );
             executor.setConfig( key, value );
             executor.executeCommit();
         } catch ( ExecutorException e ) {
@@ -176,6 +190,18 @@ public class PolyphenyDbRestExecutor implements PolyphenyDbExecutor {
     }
 
 
+    @Override
+    public void flushCsvWriter() {
+        if ( csvWriter != null ) {
+            try {
+                csvWriter.flush();
+            } catch ( IOException e ) {
+                log.warn( "Exception while flushing csv writer", e );
+            }
+        }
+    }
+
+
     public static class PolyphenyDbRestExecutorFactory extends ExecutorFactory {
 
         private final String host;
@@ -187,8 +213,8 @@ public class PolyphenyDbRestExecutor implements PolyphenyDbExecutor {
 
 
         @Override
-        public PolyphenyDbRestExecutor createInstance() {
-            return new PolyphenyDbRestExecutor( host );
+        public PolyphenyDbRestExecutor createInstance( CsvWriter csvWriter ) {
+            return new PolyphenyDbRestExecutor( host, csvWriter );
         }
 
 

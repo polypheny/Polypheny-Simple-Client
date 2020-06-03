@@ -28,13 +28,14 @@ package org.polypheny.simpleclient.executor;
 
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.query.RawQuery;
 
 
 public class PostgresExecutor extends JdbcExecutor {
 
-    public PostgresExecutor( String host ) {
-
+    public PostgresExecutor( String host, CsvWriter csvWriter ) {
+        super( csvWriter );
         try {
             Class.forName( "org.postgresql.Driver" );
         } catch ( ClassNotFoundException e ) {
@@ -72,8 +73,8 @@ public class PostgresExecutor extends JdbcExecutor {
 
 
         @Override
-        public JdbcExecutor createInstance() {
-            return new PostgresExecutor( host );
+        public PostgresExecutor createInstance( CsvWriter csvWriter ) {
+            return new PostgresExecutor( host, csvWriter );
         }
 
 

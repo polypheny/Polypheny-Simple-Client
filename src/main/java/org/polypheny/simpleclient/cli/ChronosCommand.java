@@ -63,6 +63,13 @@ public class ChronosCommand implements CliRunnable {
     @Option(name = { "-c", "--commit" }, title = "Commit after every statement", arity = 1, description = "Commit")
     private String c = "false";
 
+    @Option(name = { "--writeCSV" }, arity = 0, description = "Write CSV")
+    public boolean writeCsv = false;
+
+    @Option(name = { "--queryList" }, arity = 0, description = "Dump SQL query list")
+    public boolean dumpQueryList = false;
+
+
     public static boolean commit = true;
 
 
@@ -80,7 +87,7 @@ public class ChronosCommand implements CliRunnable {
             commit = true;
         }
 
-        AbstractChronosAgent aca = new ChronosAgent( address, port, true, true, environment, supports );
+        AbstractChronosAgent aca = new ChronosAgent( address, port, true, true, environment, supports, writeCsv, dumpQueryList );
         aca.setDaemon( false );
         aca.start();
 

@@ -26,12 +26,14 @@
 package org.polypheny.simpleclient.executor;
 
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.RawQuery;
 
@@ -41,6 +43,13 @@ public abstract class JdbcExecutor implements Executor {
 
     protected Connection connection;
     protected Statement executeStatement;
+
+    protected final CsvWriter csvWriter;
+
+
+    public JdbcExecutor( CsvWriter csvWriter ) {
+        this.csvWriter = csvWriter;
+    }
 
 
     @Override
@@ -63,7 +72,11 @@ public abstract class JdbcExecutor implements Executor {
                 executeStatement.execute( query.getSql() );
             }
 
-            return System.nanoTime() - start;
+            long time = System.nanoTime() - start;
+            if ( csvWriter != null ) {
+                csvWriter.appendToCsv( query.getSql(), time );
+            }
+            return time;
         } catch ( SQLException e ) {
             throw new ExecutorException( e );
         }
@@ -149,5 +162,16 @@ public abstract class JdbcExecutor implements Executor {
         }
     }
 
+
+    @Override
+    public void flushCsvWriter() {
+        if ( csvWriter != null ) {
+            try {
+                csvWriter.flush();
+            } catch ( IOException e ) {
+                log.warn( "Exception while flushing csv writer", e );
+            }
+        }
+    }
 
 }
