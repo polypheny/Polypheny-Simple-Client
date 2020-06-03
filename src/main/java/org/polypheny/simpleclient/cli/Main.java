@@ -36,7 +36,7 @@ public class Main {
 
 
     public static void main( String[] args ) throws SQLException {
-        CliBuilder<CliRunnable> builder = Cli.builder( "PSC" );
+        CliBuilder<CliRunnable> builder = Cli.builder( "polypheny-simple-client.jar" );
         builder.withDescription( "Polypheny Simple Client" );
 
         // define top level commands

@@ -48,7 +48,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.polypheny.simpleclient.cli.ChronosCommand;
 import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.executor.ExecutorException;
 import org.polypheny.simpleclient.executor.JdbcExecutor;
@@ -88,8 +87,8 @@ public class Gavel extends Scenario {
     private final Map<Integer, List<Long>> measuredTimePerQueryType;
 
 
-    public Gavel( JdbcExecutor.ExecutorFactory executorFactory, Config config, boolean dumpQueryList ) {
-        super( executorFactory, dumpQueryList );
+    public Gavel( JdbcExecutor.ExecutorFactory executorFactory, Config config, boolean commit, boolean dumpQueryList ) {
+        super( executorFactory, commit, dumpQueryList );
         this.config = config;
         measuredTimes = Collections.synchronizedList( new LinkedList<>() );
 
@@ -305,7 +304,7 @@ public class Gavel extends Scenario {
                 measuredTime = System.nanoTime() - measuredTimeStart;
                 measuredTimes.add( measuredTime );
                 measuredTimePerQueryType.get( queryListEntry.templateId ).add( measuredTime );
-                if ( ChronosCommand.commit ) {
+                if ( commit ) {
                     try {
                         executor.executeCommit();
                     } catch ( ExecutorException e ) {

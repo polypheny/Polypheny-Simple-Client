@@ -14,25 +14,25 @@ import org.polypheny.simpleclient.scenario.gavel.Gavel;
 @Slf4j
 public class Easy {
 
-    public static void schema( ExecutorFactory executorFactory ) {
+    public static void schema( ExecutorFactory executorFactory, boolean commitAfterEveryQuery ) {
         Config config = new Config( getProperties(), 1 );
-        Gavel gavel = new Gavel( executorFactory, config, false );
+        Gavel gavel = new Gavel( executorFactory, config, commitAfterEveryQuery, false );
         gavel.createSchema( true );
     }
 
 
-    public static void data( ExecutorFactory executorFactory, int multiplier ) {
+    public static void data( ExecutorFactory executorFactory, int multiplier, boolean commitAfterEveryQuery ) {
         Config config = new Config( getProperties(), multiplier );
-        Gavel gavel = new Gavel( executorFactory, config, false );
+        Gavel gavel = new Gavel( executorFactory, config, commitAfterEveryQuery, false );
 
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
         gavel.generateData( progressReporter );
     }
 
 
-    public static void workload( ExecutorFactory executorFactory, int multiplier, boolean writeCsv, boolean dumpQueryList ) {
+    public static void workload( ExecutorFactory executorFactory, int multiplier, boolean commitAfterEveryQuery, boolean writeCsv, boolean dumpQueryList ) {
         Config config = new Config( getProperties(), multiplier );
-        Gavel gavel = new Gavel( executorFactory, config, dumpQueryList );
+        Gavel gavel = new Gavel( executorFactory, config, commitAfterEveryQuery, dumpQueryList );
 
         final CsvWriter csvWriter;
         if ( writeCsv ) {

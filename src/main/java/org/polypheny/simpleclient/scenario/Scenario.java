@@ -36,11 +36,13 @@ import org.polypheny.simpleclient.main.ProgressReporter;
 public abstract class Scenario {
 
     protected final ExecutorFactory executorFactory;
+    protected final boolean commit;
     protected final boolean dumpQueryList;
 
 
-    protected Scenario( ExecutorFactory executorFactory, boolean dumpQueryList ) {
+    protected Scenario( ExecutorFactory executorFactory, boolean commit, boolean dumpQueryList ) {
         this.executorFactory = executorFactory;
+        this.commit = commit;
         this.dumpQueryList = dumpQueryList;
     }
 

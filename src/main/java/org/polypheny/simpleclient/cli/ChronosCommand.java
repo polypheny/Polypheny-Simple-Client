@@ -44,33 +44,30 @@ public class ChronosCommand implements CliRunnable {
     @Inject
     private HelpOption<ChronosCommand> help;
 
-    @Option(name = { "-cc", "--chronos" }, description = "Hostname or IP-Address of the Chronos Control.")
+    @Option(name = { "-cc", "--chronos" }, description = "Hostname or IP-Address of the Chronos Control (default: chronos.dmi.unibas.ch).")
     private String chronos = "chronos.dmi.unibas.ch";
 
-    @Option(name = { "-p", "--port" }, description = "Port of the REST API of the Chronos server.")
+    @Option(name = { "-p", "--port" }, description = "Port of the REST API of the Chronos Control server (default: 443).")
     private int port = 443;
 
-    @Option(name = { "-e", "--environment" }, description = "Identifier of the evaluation environment this client runs in.")
+    @Option(name = { "-e", "--environment" }, description = "Identifier of the Chronos evaluation environment this client belongs to (default: \"default\").")
     private String environment = "default";
 
     @Required
     @Option(name = { "-s", "--supports" }, description = "Identifier of the supported system(s) in Chronos.")
     private String supports = "";
 
-    @Option(name = { "--host" }, title = "Hostname", arity = 1, description = "Hostname or IP of the system to benchmark.")
+    @Option(name = { "--host" }, title = "IP or Port", description = "Hostname or IP of the system to benchmark (default: 127.0.0.1).")
     public static String hostname = "127.0.0.1";
 
-    @Option(name = { "-c", "--commit" }, title = "Commit after every statement", arity = 1, description = "Commit")
-    private String c = "false";
+    @Option(name = { "--commit" }, arity = 0, description = "Commit after every statement (default: false).")
+    private boolean commitAfterEveryQuery = false;
 
-    @Option(name = { "--writeCSV" }, arity = 0, description = "Write CSV")
+    @Option(name = { "--writeCSV" }, arity = 0, description = "Write a CSV file containing execution times for all executed queries (default: false).")
     public boolean writeCsv = false;
 
-    @Option(name = { "--queryList" }, arity = 0, description = "Dump SQL query list")
+    @Option(name = { "--queryList" }, arity = 0, description = "Dump all Gavel queries as SQL into a file (default: false).")
     public boolean dumpQueryList = false;
-
-
-    public static boolean commit = true;
 
 
     @Override
@@ -83,11 +80,7 @@ public class ChronosCommand implements CliRunnable {
             System.exit( 1 );
         }
 
-        if ( c.equals( "true" ) ) {
-            commit = true;
-        }
-
-        AbstractChronosAgent aca = new ChronosAgent( address, port, true, true, environment, supports, writeCsv, dumpQueryList );
+        AbstractChronosAgent aca = new ChronosAgent( address, port, true, true, environment, supports, commitAfterEveryQuery, writeCsv, dumpQueryList );
         aca.setDaemon( false );
         aca.start();
 
