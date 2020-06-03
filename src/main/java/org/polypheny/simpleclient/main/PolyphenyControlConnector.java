@@ -148,7 +148,7 @@ class PolyphenyControlConnector {
         HttpResponse<String> httpResponse;
         try {
             httpResponse = Unirest.get( controlUrl + command ).asString();
-            httpResponse.getBody();
+            return httpResponse.getBody();
         } catch ( UnirestException e ) {
             log.error( "Exception while sending request", e );
         }
@@ -183,6 +183,9 @@ class PolyphenyControlConnector {
 
         @Override
         public void onMessage( String message ) {
+            if ( message.startsWith( "{\"version\":{" ) ) {
+                return;
+            }
             Type type = new TypeToken<Map<String, String>>() {
             }.getType();
             Map<String, String> data = gson.fromJson( message, type );
