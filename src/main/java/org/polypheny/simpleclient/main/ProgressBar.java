@@ -39,13 +39,15 @@ public class ProgressBar extends ProgressReporter {
             progress.append( '#' );
         }
 
-        System.out.printf( format, percent, progress, workchars[done % workchars.length] );
+        if ( !finished ) {
+            System.out.printf( format, percent, progress, workchars[done % workchars.length] );
 
-        if ( done == total && !finished ) {
-            finished = true;
-            System.out.flush();
-            System.out.println();
-            init();
+            if ( done == total ) {
+                finished = true;
+                System.out.flush();
+                System.out.println();
+                init();
+            }
         }
     }
 
