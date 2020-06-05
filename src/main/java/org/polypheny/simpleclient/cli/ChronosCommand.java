@@ -60,9 +60,6 @@ public class ChronosCommand implements CliRunnable {
     @Option(name = { "--host" }, title = "IP or Port", description = "Hostname or IP of the system to benchmark (default: 127.0.0.1).")
     public static String hostname = "127.0.0.1";
 
-    @Option(name = { "--commit" }, arity = 0, description = "Commit after every statement (default: false).")
-    private boolean commitAfterEveryQuery = false;
-
     @Option(name = { "--writeCSV" }, arity = 0, description = "Write a CSV file containing execution times for all executed queries (default: false).")
     public boolean writeCsv = false;
 
@@ -80,7 +77,7 @@ public class ChronosCommand implements CliRunnable {
             System.exit( 1 );
         }
 
-        AbstractChronosAgent aca = new ChronosAgent( address, port, true, true, environment, supports, commitAfterEveryQuery, writeCsv, dumpQueryList );
+        AbstractChronosAgent aca = new ChronosAgent( address, port, true, true, environment, supports, writeCsv, dumpQueryList );
         aca.setDaemon( false );
         aca.start();
 

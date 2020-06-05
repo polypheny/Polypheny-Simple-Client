@@ -66,14 +66,12 @@ public class ChronosAgent extends AbstractChronosAgent {
     public final String[] supports;
     private PolyphenyControlConnector polyphenyControlConnector = null;
 
-    private final boolean commitAfterEveryQuery;
     private final boolean writeCsv;
     private final boolean dumpQueryList;
 
 
-    public ChronosAgent( InetAddress address, int port, boolean secure, boolean useHostname, String environment, String supports, boolean commitAfterEveryQuery, boolean writeCsv, boolean dumpQueryList ) {
+    public ChronosAgent( InetAddress address, int port, boolean secure, boolean useHostname, String environment, String supports, boolean writeCsv, boolean dumpQueryList ) {
         super( address, port, secure, useHostname, environment );
-        this.commitAfterEveryQuery = commitAfterEveryQuery;
         this.writeCsv = writeCsv;
         this.dumpQueryList = dumpQueryList;
         this.supports = new String[]{ supports };
@@ -115,7 +113,7 @@ public class ChronosAgent extends AbstractChronosAgent {
                 throw new RuntimeException( "Unknown system: " + config.system );
         }
 
-        Scenario scenario = new Gavel( executorFactory, config, commitAfterEveryQuery, dumpQueryList );
+        Scenario scenario = new Gavel( executorFactory, config, true, dumpQueryList );
 
         // Store hostname of node
         try {

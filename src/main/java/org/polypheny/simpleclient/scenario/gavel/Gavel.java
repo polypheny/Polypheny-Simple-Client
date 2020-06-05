@@ -87,8 +87,8 @@ public class Gavel extends Scenario {
     private final Map<Integer, List<Long>> measuredTimePerQueryType;
 
 
-    public Gavel( JdbcExecutor.ExecutorFactory executorFactory, Config config, boolean commit, boolean dumpQueryList ) {
-        super( executorFactory, commit, dumpQueryList );
+    public Gavel( JdbcExecutor.ExecutorFactory executorFactory, Config config, boolean commitAfterEveryQuery, boolean dumpQueryList ) {
+        super( executorFactory, commitAfterEveryQuery, dumpQueryList );
         this.config = config;
         measuredTimes = Collections.synchronizedList( new LinkedList<>() );
 
@@ -304,7 +304,7 @@ public class Gavel extends Scenario {
                 measuredTime = System.nanoTime() - measuredTimeStart;
                 measuredTimes.add( measuredTime );
                 measuredTimePerQueryType.get( queryListEntry.templateId ).add( measuredTime );
-                if ( commit ) {
+                if ( commitAfterEveryQuery ) {
                     try {
                         executor.executeCommit();
                     } catch ( ExecutorException e ) {

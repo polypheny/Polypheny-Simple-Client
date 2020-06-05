@@ -62,9 +62,6 @@ public class EasyCommand implements CliRunnable {
     @Option(name = { "--queryList" }, arity = 0, description = "Dump all Gavel queries as SQL into a file (default: false).")
     public boolean dumpQueryList = false;
 
-    @Option(name = { "--commit" }, arity = 0, description = "Commit after every statement (default: false).")
-    private boolean commitAfterEveryQuery = false;
-
 
     @Override
     public int run() {
@@ -90,11 +87,11 @@ public class EasyCommand implements CliRunnable {
         }
 
         if ( args.get( 0 ).equalsIgnoreCase( "data" ) ) {
-            Easy.data( executorFactory, multiplier, commitAfterEveryQuery );
+            Easy.data( executorFactory, multiplier, true );
         } else if ( args.get( 0 ).equalsIgnoreCase( "workload" ) ) {
-            Easy.workload( executorFactory, multiplier, commitAfterEveryQuery, writeCsv, dumpQueryList );
+            Easy.workload( executorFactory, multiplier, true, writeCsv, dumpQueryList );
         } else if ( args.get( 0 ).equalsIgnoreCase( "schema" ) ) {
-            Easy.schema( executorFactory, commitAfterEveryQuery );
+            Easy.schema( executorFactory, true );
         } else {
             System.err.println( "Unknown task: " + args.get( 0 ) );
         }
