@@ -28,9 +28,18 @@ package org.polypheny.simpleclient.scenario.gavel.queryBuilder;
 
 import com.devskiller.jfairy.Fairy;
 import com.devskiller.jfairy.producer.person.Person;
+import java.nio.CharBuffer;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.CharsetEncoder;
+import java.nio.charset.CodingErrorAction;
 import java.time.format.DateTimeFormatter;
+import java.util.Locale;
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 import kong.unirest.HttpRequest;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
@@ -41,10 +50,32 @@ public class InsertUser extends QueryBuilder {
 
     private static final AtomicInteger nextUserId = new AtomicInteger( 1 );
 
+    private static final Random RANDOM = new Random();
+    private static final CharsetDecoder DECODER = Charset.forName( "ISO-8859-1" ).newDecoder();
+    private static final CharsetEncoder ENCODER = Charset.forName( "ISO-8859-1" ).newEncoder();
+
+    private static final Locale[] locales = {
+            new Locale( "de" ),
+            new Locale( "en" ),
+            new Locale( "es" ),
+            new Locale( "fr" ),
+            new Locale( "it" ),
+            //new Locale( "ka" ),
+            //new Locale( "pl" ),
+            //new Locale( "sv" ),
+            //new Locale( "zh" ),
+    };
+
+
+    static {
+        ENCODER.onUnmappableCharacter( CodingErrorAction.IGNORE );
+        DECODER.onUnmappableCharacter( CodingErrorAction.IGNORE );
+    }
+
 
     @Override
     public Query getNewQuery() {
-        Fairy fairy = Fairy.create();
+        Fairy fairy = Fairy.create( locales[RANDOM.nextInt( locales.length )] );
         Person person = fairy.person();
         return new InsertUserQuery(
                 nextUserId.getAndIncrement(),
@@ -55,7 +86,8 @@ public class InsertUser extends QueryBuilder {
                 person.getSex().name().substring( 0, 1 ).toLowerCase(),
                 person.getDateOfBirth().format( DateTimeFormatter.ofPattern( "yyyy-MM-dd" ) ),
                 person.getAddress().getCity(),
-                person.getAddress().getPostalCode()
+                person.getAddress().getPostalCode(),
+                person.getNationality().name()
         );
     }
 
@@ -71,9 +103,10 @@ public class InsertUser extends QueryBuilder {
         private final String birthday;
         private final String city;
         private final String zipCode;
+        private final String country;
 
 
-        public InsertUserQuery( int userId, String email, String password, String lastName, String firstName, String gender, String birthday, String city, String zipCode ) {
+        public InsertUserQuery( int userId, String email, String password, String lastName, String firstName, String gender, String birthday, String city, String zipCode, String country ) {
             super( EXPECT_RESULT );
             this.userId = userId;
             this.email = email;
@@ -84,6 +117,7 @@ public class InsertUser extends QueryBuilder {
             this.birthday = birthday;
             this.city = city;
             this.zipCode = zipCode;
+            this.country = country;
         }
 
 
@@ -91,15 +125,15 @@ public class InsertUser extends QueryBuilder {
         public String getSql() {
             return "INSERT INTO \"user\"(id, email, password, last_name, first_name, gender, birthday, city, zip_code, country) VALUES ("
                     + userId + ","
-                    + "'" + email + "',"
-                    + "'" + password + "',"
-                    + "'" + lastName + "',"
-                    + "'" + firstName + "',"
+                    + "'" + escapeAndConvert( email ) + "',"
+                    + "'" + escapeAndConvert( password ) + "',"
+                    + "'" + escapeAndConvert( lastName ) + "',"
+                    + "'" + escapeAndConvert( firstName ) + "',"
                     + "'" + gender + "',"
                     + "date '" + birthday + "',"
-                    + "'" + city + "',"
+                    + "'" + escapeAndConvert( city ) + "',"
                     + "'" + zipCode + "',"
-                    + "'Switzerland'"
+                    + "'" + country + "'"
                     + ")";
         }
 
@@ -107,6 +141,15 @@ public class InsertUser extends QueryBuilder {
         @Override
         public HttpRequest<?> getRest() {
             return null;
+        }
+
+
+        private String escapeAndConvert( String s ) {
+            try {
+                return DECODER.decode( ENCODER.encode( CharBuffer.wrap( StringEscapeUtils.escapeSql( s ) ) ) ).toString();
+            } catch ( CharacterCodingException e ) {
+                throw new RuntimeException( e );
+            }
         }
     }
 }
