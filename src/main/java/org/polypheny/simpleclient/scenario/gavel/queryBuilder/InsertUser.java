@@ -146,7 +146,9 @@ public class InsertUser extends QueryBuilder {
 
         private String escapeAndConvert( String s ) {
             try {
-                return DECODER.decode( ENCODER.encode( CharBuffer.wrap( StringEscapeUtils.escapeSql( s ) ) ) ).toString();
+                synchronized ( DECODER ) {
+                    return DECODER.decode( ENCODER.encode( CharBuffer.wrap( StringEscapeUtils.escapeSql( s ) ) ) ).toString();
+                }
             } catch ( CharacterCodingException e ) {
                 throw new RuntimeException( e );
             }
