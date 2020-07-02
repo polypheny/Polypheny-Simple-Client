@@ -5,10 +5,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import kong.unirest.HttpRequest;
 import kong.unirest.HttpResponse;
 import kong.unirest.JsonNode;
 import kong.unirest.UnirestException;
+import kong.unirest.json.JSONArray;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory;
 import org.polypheny.simpleclient.main.CsvWriter;
@@ -87,8 +89,34 @@ public class PolyphenyDbRestExecutor implements PolyphenyDbExecutor {
     @Override
     public long executeQueryAndGetNumber( Query query ) throws ExecutorException {
         if ( query.getRest() != null ) {
-            // TODO: get result of a count query
-            throw new RuntimeException();
+            HttpRequest<?> request = query.getRest();
+            request.basicAuth( "pa", "" );
+            request.routeParam( "protocol", "http" );
+            request.routeParam( "host", host );
+            request.routeParam( "port", "8089" );
+            log.debug( request.getUrl() );
+            try {
+                long start = System.nanoTime();
+                HttpResponse<JsonNode> result = request.asJson();
+                if ( !result.isSuccess() ) {
+                    throw new ExecutorException( "Error while executing REST query. Message: " + result.getStatusText() + "  |  URL: " + request.getUrl() );
+                }
+                if ( csvWriter != null ) {
+                    csvWriter.appendToCsv( request.getUrl(), System.nanoTime() - start );
+                }
+                // Get result of a count query
+                JSONArray res = result.getBody().getObject().getJSONArray( "result" );
+                if ( res.length() != 1 ) {
+                    throw new ExecutorException( "Invalid result: " + res.toString() );
+                }
+                Set<String> names = res.getJSONObject( 0 ).keySet();
+                if ( names.size() != 1 ) {
+                    throw new ExecutorException( "Invalid result: " + res.toString() );
+                }
+                return res.getJSONObject( 0 ).getLong( names.iterator().next() );
+            } catch ( UnirestException e ) {
+                throw new ExecutorException( e );
+            }
         } else {
             // There is no REST expression available for this query. Executing SQL expression via JDBC.
             log.warn( query.getSql() );

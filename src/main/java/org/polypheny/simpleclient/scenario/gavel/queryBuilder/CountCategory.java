@@ -27,6 +27,7 @@ package org.polypheny.simpleclient.scenario.gavel.queryBuilder;
 
 
 import kong.unirest.HttpRequest;
+import kong.unirest.Unirest;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
@@ -57,7 +58,8 @@ public class CountCategory extends QueryBuilder {
 
         @Override
         public HttpRequest<?> getRest() {
-            return null;
+            return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.category" )
+                    .queryString( "_project", "public.category.id@num(COUNT)" );
         }
     }
 }

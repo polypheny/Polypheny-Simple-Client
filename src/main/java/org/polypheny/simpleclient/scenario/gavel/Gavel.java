@@ -607,6 +607,11 @@ public class Gavel extends Scenario {
             numbers.put( "users", (int) countNumberOfRecords( executor, new CountUser() ) );
             numbers.put( "categories", (int) countNumberOfRecords( executor, new CountCategory() ) );
             numbers.put( "bids", (int) countNumberOfRecords( executor, new CountBid() ) );
+
+            log.debug( "Number of auctions: " + numbers.get( "auctions" ) );
+            log.debug( "Number of users: " + numbers.get( "users" ) );
+            log.debug( "Number of categories: " + numbers.get( "categories" ) );
+            log.debug( "Number of bids: " + numbers.get( "bids" ) );
         } catch ( ExecutorException e ) {
             throw new RuntimeException( "Exception while analyzing currently stored data" );
         } finally {
