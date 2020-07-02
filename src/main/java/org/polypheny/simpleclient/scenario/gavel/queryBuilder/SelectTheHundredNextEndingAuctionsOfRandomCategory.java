@@ -32,6 +32,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.ThreadLocalRandom;
 import kong.unirest.HttpRequest;
+import kong.unirest.Unirest;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 import org.polypheny.simpleclient.scenario.gavel.Config;
@@ -57,6 +58,7 @@ public class SelectTheHundredNextEndingAuctionsOfRandomCategory extends QueryBui
     @Override
     public Query getNewQuery() {
         LocalDateTime date = dateProducer.randomDateInThePast( auctionDateMaxYearsInPast );
+        date = date.withNano( 0 );
         int categoryId = ThreadLocalRandom.current().nextInt( 1, numberOfCategories + 1 );
         return new SelectTheHundredNextEndingAuctionsOfRandomCategoryQuery( date, categoryId );
     }
@@ -84,7 +86,12 @@ public class SelectTheHundredNextEndingAuctionsOfRandomCategory extends QueryBui
 
         @Override
         public HttpRequest<?> getRest() {
-            return null;
+            return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.auction" )
+                    .queryString( "_project", "public.auction.id,public.auction.title,public.auction.end_date" )
+                    .queryString( "public.auction.category", "=" + categoryId )
+                    .queryString( "public.auction.end_date", ">" + date.format( DateTimeFormatter.ISO_LOCAL_DATE_TIME ) )
+                    .queryString( "_sort", "public.auction.end_date@DESC" )
+                    .queryString( "_limit", 100 );
         }
     }
 }

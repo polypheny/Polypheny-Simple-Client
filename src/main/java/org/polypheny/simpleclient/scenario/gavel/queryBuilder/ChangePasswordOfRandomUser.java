@@ -28,6 +28,10 @@ package org.polypheny.simpleclient.scenario.gavel.queryBuilder;
 
 import com.devskiller.jfairy.Fairy;
 import com.devskiller.jfairy.producer.person.Person;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import kong.unirest.HttpRequest;
 import org.polypheny.simpleclient.query.Query;
@@ -81,7 +85,13 @@ public class ChangePasswordOfRandomUser extends QueryBuilder {
 
         @Override
         public HttpRequest<?> getRest() {
-            return null;
+            JsonObject set = new JsonObject();
+            set.add( "public.user.password", new JsonPrimitive( password ) );
+
+            Map<String, String> where = new LinkedHashMap<>();
+            where.put( "public.user.id", "=" + userId );
+
+            return buildRestUpdate( "public.user", set, where );
         }
     }
 
