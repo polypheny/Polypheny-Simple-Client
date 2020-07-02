@@ -26,7 +26,11 @@
 package org.polypheny.simpleclient.query;
 
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import java.util.List;
 import kong.unirest.HttpRequest;
+import kong.unirest.Unirest;
 import lombok.Getter;
 
 
@@ -45,5 +49,17 @@ public abstract class Query {
 
 
     public abstract HttpRequest<?> getRest();
+
+
+    public static HttpRequest<?> buildRestInsert( String table, List<JsonObject> rows ) {
+        JsonArray array = new JsonArray();
+        rows.forEach( array::add );
+        JsonObject data = new JsonObject();
+        data.add( "data", array );
+
+        return Unirest.post( "{protocol}://{host}:{port}/restapi/v1/res/" + table )
+                .header( "Content-Type", "application/json" )
+                .body( data );
+    }
 
 }

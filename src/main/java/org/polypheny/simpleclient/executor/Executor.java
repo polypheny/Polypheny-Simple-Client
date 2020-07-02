@@ -2,6 +2,7 @@ package org.polypheny.simpleclient.executor;
 
 import java.util.List;
 import org.polypheny.simpleclient.main.CsvWriter;
+import org.polypheny.simpleclient.query.BatchableInsert;
 import org.polypheny.simpleclient.query.Query;
 
 public interface Executor {
@@ -19,7 +20,7 @@ public interface Executor {
 
     void closeConnection() throws ExecutorException;
 
-    void executeInsertList( List<Query> batchList ) throws ExecutorException;
+    void executeInsertList( List<BatchableInsert> batchList ) throws ExecutorException;
 
     void flushCsvWriter();
 

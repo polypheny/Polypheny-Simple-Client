@@ -38,8 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.executor.ExecutorException;
 import org.polypheny.simpleclient.main.ProgressReporter;
-import org.polypheny.simpleclient.query.Query;
-import org.polypheny.simpleclient.query.QueryBuilder;
+import org.polypheny.simpleclient.query.BatchableInsert;
 import org.polypheny.simpleclient.scenario.gavel.Gavel.DataGenerationThreadMonitor;
 import org.polypheny.simpleclient.scenario.gavel.queryBuilder.InsertAuction;
 import org.polypheny.simpleclient.scenario.gavel.queryBuilder.InsertBid;
@@ -60,7 +59,7 @@ class DataGenerator {
     private final Config config;
     private final ProgressReporter progressReporter;
 
-    private final List<Query> batchList;
+    private final List<BatchableInsert> batchList;
 
     @Getter
     private DataGenerationThreadMonitor threadMonitor;
@@ -90,7 +89,7 @@ class DataGenerator {
 
     void generateCategories() throws ExecutorException {
         int numberOfCategories = config.numberOfCategories;
-        QueryBuilder queryBuilder = new InsertCategory();
+        InsertCategory queryBuilder = new InsertCategory();
         for ( int i = 0; i < numberOfCategories; i++ ) {
             if ( aborted ) {
                 break;
@@ -103,7 +102,7 @@ class DataGenerator {
 
     void generateUsers( int numberOfUsers ) throws ExecutorException {
         int mod = numberOfUsers / progressReporter.base;
-        QueryBuilder queryBuilder = new InsertUser();
+        InsertUser queryBuilder = new InsertUser();
         for ( int i = 0; i < numberOfUsers; i++ ) {
             if ( aborted ) {
                 break;
@@ -153,7 +152,7 @@ class DataGenerator {
                 progressReporter.updateProgress();
             }
             // create an auction
-            startDate = dateProducer.randomDateInThePast( auctionDateMaxYearsInPast );
+            startDate = dateProducer.randomDateInThePast( auctionDateMaxYearsInPast ).withNano( 0 );
             endDate = startDate.plusDays( auctionNumberOfDays );
             user = ThreadLocalRandom.current().nextInt( 1, numberOfUsers + 1 );
             category = ThreadLocalRandom.current().nextInt( 1, numberOfCategories + 1 );
@@ -189,7 +188,7 @@ class DataGenerator {
             executeMultiInsert();
 
             // create pictures
-            QueryBuilder pictureBuilder = new InsertPicture( i );
+            InsertPicture pictureBuilder = new InsertPicture( i );
             numberOfPictures = ThreadLocalRandom.current().nextInt( minNumberOfPicturesPerAuction, maxNumberOfPicturesPerAuction );
             for ( int j = 0; j < numberOfPictures; j++ ) {
                 addToMultiInsert( pictureBuilder.getNewQuery() );
@@ -200,11 +199,10 @@ class DataGenerator {
     }
 
 
-    private void addToMultiInsert( Query query ) throws ExecutorException {
+    private void addToMultiInsert( BatchableInsert query ) throws ExecutorException {
         batchList.add( query );
         if ( batchList.size() >= config.maxBatchSize ) {
             executeMultiInsert();
-
         }
     }
 

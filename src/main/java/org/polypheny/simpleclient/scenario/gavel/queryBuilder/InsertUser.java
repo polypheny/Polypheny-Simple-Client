@@ -28,19 +28,23 @@ package org.polypheny.simpleclient.scenario.gavel.queryBuilder;
 
 import com.devskiller.jfairy.Fairy;
 import com.devskiller.jfairy.producer.person.Person;
+import com.google.common.collect.ImmutableList;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import java.nio.CharBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CharsetEncoder;
 import java.nio.charset.CodingErrorAction;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 import kong.unirest.HttpRequest;
 import org.apache.commons.lang.StringEscapeUtils;
-import org.polypheny.simpleclient.query.Query;
+import org.polypheny.simpleclient.query.BatchableInsert;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
 
@@ -74,7 +78,7 @@ public class InsertUser extends QueryBuilder {
 
 
     @Override
-    public Query getNewQuery() {
+    public BatchableInsert getNewQuery() {
         Fairy fairy = Fairy.create( locales[RANDOM.nextInt( locales.length )] );
         Person person = fairy.person();
         return new InsertUserQuery(
@@ -84,7 +88,7 @@ public class InsertUser extends QueryBuilder {
                 person.getLastName(),
                 person.getFirstName(),
                 person.getSex().name().substring( 0, 1 ).toLowerCase(),
-                person.getDateOfBirth().format( DateTimeFormatter.ofPattern( "yyyy-MM-dd" ) ),
+                person.getDateOfBirth(),
                 person.getAddress().getCity(),
                 person.getAddress().getPostalCode(),
                 person.getNationality().name()
@@ -92,7 +96,7 @@ public class InsertUser extends QueryBuilder {
     }
 
 
-    private static class InsertUserQuery extends Query {
+    private static class InsertUserQuery extends BatchableInsert {
 
         private final int userId;
         private final String email;
@@ -100,13 +104,13 @@ public class InsertUser extends QueryBuilder {
         private final String lastName;
         private final String firstName;
         private final String gender;
-        private final String birthday;
+        private final LocalDate birthday;
         private final String city;
         private final String zipCode;
         private final String country;
 
 
-        public InsertUserQuery( int userId, String email, String password, String lastName, String firstName, String gender, String birthday, String city, String zipCode, String country ) {
+        public InsertUserQuery( int userId, String email, String password, String lastName, String firstName, String gender, LocalDate birthday, String city, String zipCode, String country ) {
             super( EXPECT_RESULT );
             this.userId = userId;
             this.email = email;
@@ -123,14 +127,20 @@ public class InsertUser extends QueryBuilder {
 
         @Override
         public String getSql() {
-            return "INSERT INTO \"user\"(id, email, password, last_name, first_name, gender, birthday, city, zip_code, country) VALUES ("
+            return "INSERT INTO \"user\"(id, email, password, last_name, first_name, gender, birthday, city, zip_code, country) VALUES " + getSqlRowExpression();
+        }
+
+
+        @Override
+        public String getSqlRowExpression() {
+            return "("
                     + userId + ","
                     + "'" + escapeAndConvert( email ) + "',"
                     + "'" + escapeAndConvert( password ) + "',"
                     + "'" + escapeAndConvert( lastName ) + "',"
                     + "'" + escapeAndConvert( firstName ) + "',"
                     + "'" + gender + "',"
-                    + "date '" + birthday + "',"
+                    + "date '" + birthday.format( DateTimeFormatter.ofPattern( "yyyy-MM-dd" ) ) + "',"
                     + "'" + escapeAndConvert( city ) + "',"
                     + "'" + zipCode + "',"
                     + "'" + country + "'"
@@ -140,7 +150,30 @@ public class InsertUser extends QueryBuilder {
 
         @Override
         public HttpRequest<?> getRest() {
-            return null;
+            return buildRestInsert( "public.user", ImmutableList.of( getRestRowExpression() ) );
+        }
+
+
+        @Override
+        public JsonObject getRestRowExpression() {
+            JsonObject row = new JsonObject();
+            row.add( "public.user.id", new JsonPrimitive( userId ) );
+            row.add( "public.user.email", new JsonPrimitive( escapeAndConvert( email ) ) );
+            row.add( "public.user.password", new JsonPrimitive( escapeAndConvert( password ) ) );
+            row.add( "public.user.last_name", new JsonPrimitive( escapeAndConvert( lastName ) ) );
+            row.add( "public.user.first_name", new JsonPrimitive( escapeAndConvert( firstName ) ) );
+            row.add( "public.user.gender", new JsonPrimitive( gender ) );
+            row.add( "public.user.birthday", new JsonPrimitive( birthday.format( DateTimeFormatter.ISO_LOCAL_DATE ) ) );
+            row.add( "public.user.city", new JsonPrimitive( escapeAndConvert( city ) ) );
+            row.add( "public.user.zip_code", new JsonPrimitive( zipCode ) );
+            row.add( "public.user.country", new JsonPrimitive( country ) );
+            return row;
+        }
+
+
+        @Override
+        public String getTable() {
+            return "public.user";
         }
 
 

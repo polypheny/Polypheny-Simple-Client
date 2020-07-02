@@ -28,12 +28,12 @@ package org.polypheny.simpleclient.scenario.gavel.queryBuilder;
 
 import com.devskiller.jfairy.Fairy;
 import com.devskiller.jfairy.producer.DateProducer;
-import java.time.format.DateTimeFormatter;
+import java.time.LocalDateTime;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
-import kong.unirest.HttpRequest;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
+import org.polypheny.simpleclient.scenario.gavel.queryBuilder.InsertBid.InsertBidQuery;
 
 
 public class InsertRandomBid extends QueryBuilder {
@@ -63,47 +63,19 @@ public class InsertRandomBid extends QueryBuilder {
         return new InsertRandomBidQuery(
                 nextBidId.getAndIncrement(),
                 ThreadLocalRandom.current().nextInt( 1, 1000 ),
-                dateProducer.randomDateInThePast( 5 ).format( DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss" ) ),
+                dateProducer.randomDateInThePast( 5 ),
                 ThreadLocalRandom.current().nextInt( 1, numberOfUsers + 1 ),
                 ThreadLocalRandom.current().nextInt( 1, numberOfAuctions + 1 )
         );
     }
 
 
-    private static class InsertRandomBidQuery extends Query {
-
-        private final int bidId;
-        private final int amount;
-        private final String timestamp;
-        private final int userId;
-        private final int auctionId;
+    private static class InsertRandomBidQuery extends InsertBidQuery {
 
 
-        public InsertRandomBidQuery( int bidId, int amount, String timestamp, int userId, int auctionId ) {
-            super( EXPECT_RESULT );
-            this.bidId = bidId;
-            this.amount = amount;
-            this.timestamp = timestamp;
-            this.userId = userId;
-            this.auctionId = auctionId;
+        public InsertRandomBidQuery( int bidId, int amount, LocalDateTime timestamp, int userId, int auctionId ) {
+            super( bidId, auctionId, userId, amount, timestamp );
         }
 
-
-        @Override
-        public String getSql() {
-            return "INSERT INTO bid(id, amount, \"timestamp\", \"user\", auction) VALUES ("
-                    + bidId + ","
-                    + amount + ","
-                    + "timestamp '" + timestamp + "',"
-                    + userId + ","
-                    + auctionId
-                    + ")";
-        }
-
-
-        @Override
-        public HttpRequest<?> getRest() {
-            return null;
-        }
     }
 }

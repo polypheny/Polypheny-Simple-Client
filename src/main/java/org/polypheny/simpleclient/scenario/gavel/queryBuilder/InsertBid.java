@@ -26,11 +26,14 @@
 package org.polypheny.simpleclient.scenario.gavel.queryBuilder;
 
 
+import com.google.common.collect.ImmutableList;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.atomic.AtomicInteger;
 import kong.unirest.HttpRequest;
-import org.polypheny.simpleclient.query.Query;
+import org.polypheny.simpleclient.query.BatchableInsert;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
 
@@ -54,7 +57,7 @@ public class InsertBid extends QueryBuilder {
 
 
     @Override
-    public Query getNewQuery() {
+    public BatchableInsert getNewQuery() {
         return new InsertBidQuery(
                 nextBidId.getAndIncrement(),
                 auctionId,
@@ -64,7 +67,7 @@ public class InsertBid extends QueryBuilder {
     }
 
 
-    private static class InsertBidQuery extends Query {
+    static class InsertBidQuery extends BatchableInsert {
 
         private final int bidId;
         private final int auctionId;
@@ -85,7 +88,13 @@ public class InsertBid extends QueryBuilder {
 
         @Override
         public String getSql() {
-            return "INSERT INTO bid(id, amount, \"timestamp\", \"user\", auction) VALUES ("
+            return "INSERT INTO bid(id, amount, \"timestamp\", \"user\", auction) VALUES " + getSqlRowExpression();
+        }
+
+
+        @Override
+        public String getSqlRowExpression() {
+            return "("
                     + bidId + ","
                     + amount + ","
                     + "timestamp '" + date.format( DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss" ) ) + "',"
@@ -97,7 +106,25 @@ public class InsertBid extends QueryBuilder {
 
         @Override
         public HttpRequest<?> getRest() {
-            return null;
+            return buildRestInsert( "public.bid", ImmutableList.of( getRestRowExpression() ) );
+        }
+
+
+        @Override
+        public JsonObject getRestRowExpression() {
+            JsonObject row = new JsonObject();
+            row.add( "public.bid.id", new JsonPrimitive( bidId ) );
+            row.add( "public.bid.amount", new JsonPrimitive( amount ) );
+            row.add( "public.bid.timestamp", new JsonPrimitive( date.format( DateTimeFormatter.ISO_LOCAL_DATE_TIME ) ) );
+            row.add( "public.bid.user", new JsonPrimitive( userId ) );
+            row.add( "public.bid.auction", new JsonPrimitive( auctionId ) );
+            return row;
+        }
+
+
+        @Override
+        public String getTable() {
+            return "public.bid";
         }
     }
 }

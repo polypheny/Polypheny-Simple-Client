@@ -32,8 +32,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
+import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.main.CsvWriter;
+import org.polypheny.simpleclient.query.BatchableInsert;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.RawQuery;
 
@@ -141,21 +143,17 @@ public abstract class JdbcExecutor implements Executor {
 
 
     @Override
-    public void executeInsertList( List<Query> queryList ) throws ExecutorException {
+    public void executeInsertList( List<BatchableInsert> queryList ) throws ExecutorException {
         if ( queryList.size() > 0 ) {
             StringBuilder stringBuilder = new StringBuilder();
             boolean first = true;
-            for ( Query query : queryList ) {
-                if ( !query.getSql().startsWith( "INSERT" ) ) {
-                    throw new RuntimeException( "Not a insert statement: " + query.getSql() );
-                }
+            for ( BatchableInsert query : queryList ) {
                 if ( first ) {
                     stringBuilder.append( query.getSql() );
                     first = false;
                 } else {
-                    String statement = query.getSql();
-                    String[] split = statement.split( "VALUES" );
-                    stringBuilder.append( "," ).append( split[split.length - 1] );
+                    String rowExpression = Objects.requireNonNull( query.getSqlRowExpression() );
+                    stringBuilder.append( "," ).append( rowExpression );
                 }
             }
             executeQuery( new RawQuery( stringBuilder.toString(), null, false ) );

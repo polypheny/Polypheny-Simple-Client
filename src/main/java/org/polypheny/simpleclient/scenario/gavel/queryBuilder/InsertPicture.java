@@ -26,10 +26,13 @@
 package org.polypheny.simpleclient.scenario.gavel.queryBuilder;
 
 
+import com.google.common.collect.ImmutableList;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import kong.unirest.HttpRequest;
-import org.polypheny.simpleclient.query.Query;
+import org.polypheny.simpleclient.query.BatchableInsert;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
 
@@ -47,7 +50,7 @@ public class InsertPicture extends QueryBuilder {
 
 
     @Override
-    public Query getNewQuery() {
+    public BatchableInsert getNewQuery() {
         return new InsertPictureQuery(
                 auctionId,
                 UUID.randomUUID().toString(),
@@ -57,7 +60,7 @@ public class InsertPicture extends QueryBuilder {
     }
 
 
-    private static class InsertPictureQuery extends Query {
+    private static class InsertPictureQuery extends BatchableInsert {
 
         private final int auctionId;
         private final String fileName;
@@ -76,7 +79,13 @@ public class InsertPicture extends QueryBuilder {
 
         @Override
         public String getSql() {
-            return "INSERT INTO picture(filename, type, size, auction) VALUES ("
+            return "INSERT INTO picture(filename, type, size, auction) VALUES " + getSqlRowExpression();
+        }
+
+
+        @Override
+        public String getSqlRowExpression() {
+            return "("
                     + "'" + fileName + "',"
                     + "'" + fileType + "',"
                     + size + ","
@@ -87,7 +96,24 @@ public class InsertPicture extends QueryBuilder {
 
         @Override
         public HttpRequest<?> getRest() {
-            return null;
+            return buildRestInsert( "public.picture", ImmutableList.of( getRestRowExpression() ) );
+        }
+
+
+        @Override
+        public JsonObject getRestRowExpression() {
+            JsonObject row = new JsonObject();
+            row.add( "public.picture.filename", new JsonPrimitive( fileName ) );
+            row.add( "public.picture.type", new JsonPrimitive( fileType ) );
+            row.add( "public.picture.size", new JsonPrimitive( size ) );
+            row.add( "public.picture.auction", new JsonPrimitive( auctionId ) );
+            return row;
+        }
+
+
+        @Override
+        public String getTable() {
+            return "public.picture";
         }
     }
 }

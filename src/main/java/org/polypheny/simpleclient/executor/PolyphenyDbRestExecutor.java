@@ -1,7 +1,10 @@
 package org.polypheny.simpleclient.executor;
 
+import com.google.gson.JsonObject;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import kong.unirest.HttpRequest;
 import kong.unirest.HttpResponse;
 import kong.unirest.JsonNode;
@@ -9,7 +12,9 @@ import kong.unirest.UnirestException;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory;
 import org.polypheny.simpleclient.main.CsvWriter;
+import org.polypheny.simpleclient.query.BatchableInsert;
 import org.polypheny.simpleclient.query.Query;
+import org.polypheny.simpleclient.query.RawQuery;
 
 
 @Slf4j
@@ -49,7 +54,7 @@ public class PolyphenyDbRestExecutor implements PolyphenyDbExecutor {
                 long start = System.nanoTime();
                 HttpResponse<JsonNode> result = request.asJson();
                 if ( !result.isSuccess() ) {
-                    log.error( "Err!" );
+                    throw new ExecutorException( "Error while executing REST query. Message: " + result.getStatusText() + "  |  URL: " + request.getUrl() );
                 }
                 time = System.nanoTime() - start;
                 if ( csvWriter != null ) {
@@ -119,8 +124,21 @@ public class PolyphenyDbRestExecutor implements PolyphenyDbExecutor {
 
 
     @Override
-    public void executeInsertList( List<Query> batchList ) throws ExecutorException {
-        throw new RuntimeException( "Unsupported operation" );
+    public void executeInsertList( List<BatchableInsert> batchList ) throws ExecutorException {
+        String currentTable = null;
+        List<JsonObject> rows = new ArrayList<>();
+        for ( BatchableInsert query : batchList ) {
+            if ( currentTable == null ) {
+                currentTable = query.getTable();
+            } else if ( currentTable.equals( query.getTable() ) ) {
+                rows.add( Objects.requireNonNull( query.getRestRowExpression() ) );
+            } else {
+                throw new RuntimeException( "Different tables in multi-inserts. This should not happen!" );
+            }
+        }
+        if ( rows.size() > 0 ) {
+            executeQuery( new RawQuery( null, Query.buildRestInsert( currentTable, rows ), false ) );
+        }
     }
 
 

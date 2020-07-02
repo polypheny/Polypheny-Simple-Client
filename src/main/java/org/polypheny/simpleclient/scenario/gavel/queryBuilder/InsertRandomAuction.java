@@ -30,13 +30,12 @@ import com.devskiller.jfairy.Fairy;
 import com.devskiller.jfairy.producer.DateProducer;
 import com.devskiller.jfairy.producer.text.TextProducer;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
-import kong.unirest.HttpRequest;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 import org.polypheny.simpleclient.scenario.gavel.Config;
+import org.polypheny.simpleclient.scenario.gavel.queryBuilder.InsertAuction.InsertAuctionQuery;
 
 
 public class InsertRandomAuction extends QueryBuilder {
@@ -97,46 +96,12 @@ public class InsertRandomAuction extends QueryBuilder {
     }
 
 
-    private static class InsertRandomAuctionQuery extends Query {
-
-        private final int auctionId;
-        private final String title;
-        private final String description;
-        private final LocalDateTime startDate;
-        private final LocalDateTime endDate;
-        private final int userId;
-        private final int categoryId;
+    private static class InsertRandomAuctionQuery extends InsertAuctionQuery {
 
 
         public InsertRandomAuctionQuery( int auctionId, String title, String description, LocalDateTime startDate, LocalDateTime endDate, int userId, int categoryId ) {
-            super( EXPECT_RESULT );
-            this.auctionId = auctionId;
-            this.title = title;
-            this.description = description;
-            this.startDate = startDate;
-            this.endDate = endDate;
-            this.userId = userId;
-            this.categoryId = categoryId;
+            super( auctionId, userId, categoryId, startDate, endDate, title, description );
         }
 
-
-        @Override
-        public String getSql() {
-            return "INSERT INTO auction(id, title, description, start_date, end_date, category, \"user\") VALUES ("
-                    + auctionId + ","
-                    + "'" + title + "',"
-                    + "'" + description + "',"
-                    + "timestamp '" + startDate.format( DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss" ) ) + "',"
-                    + "timestamp '" + endDate.format( DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss" ) ) + "',"
-                    + categoryId + ","
-                    + userId
-                    + ")";
-        }
-
-
-        @Override
-        public HttpRequest<?> getRest() {
-            return null;
-        }
     }
 }

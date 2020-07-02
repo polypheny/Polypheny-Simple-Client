@@ -26,6 +26,9 @@
 package org.polypheny.simpleclient.scenario.gavel.queryBuilder;
 
 
+import com.google.common.collect.ImmutableList;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,7 +38,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 import kong.unirest.HttpRequest;
 import org.apache.commons.lang.StringEscapeUtils;
-import org.polypheny.simpleclient.query.Query;
+import org.polypheny.simpleclient.query.BatchableInsert;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
 
@@ -65,7 +68,7 @@ public class InsertCategory extends QueryBuilder {
 
 
     @Override
-    public Query getNewQuery() {
+    public BatchableInsert getNewQuery() {
         if ( categories.size() == 0 ) {
             throw new RuntimeException( "List of categories is empty" );
         }
@@ -76,7 +79,7 @@ public class InsertCategory extends QueryBuilder {
     }
 
 
-    private static class InsertCategoryQuery extends Query {
+    private static class InsertCategoryQuery extends BatchableInsert {
 
         private final int categoryId;
         private final String category;
@@ -91,7 +94,13 @@ public class InsertCategory extends QueryBuilder {
 
         @Override
         public String getSql() {
-            return "INSERT INTO category(id, name) VALUES ("
+            return "INSERT INTO category(id, name) VALUES " + getSqlRowExpression();
+        }
+
+
+        @Override
+        public String getSqlRowExpression() {
+            return "("
                     + categoryId + ","
                     + "'" + StringEscapeUtils.escapeSql( category ) + "'"
                     + ")";
@@ -100,7 +109,22 @@ public class InsertCategory extends QueryBuilder {
 
         @Override
         public HttpRequest<?> getRest() {
-            return null;
+            return buildRestInsert( "public.category", ImmutableList.of( getRestRowExpression() ) );
+        }
+
+
+        @Override
+        public JsonObject getRestRowExpression() {
+            JsonObject row = new JsonObject();
+            row.add( "public.category.id", new JsonPrimitive( categoryId ) );
+            row.add( "public.category.name", new JsonPrimitive( category ) );
+            return row;
+        }
+
+
+        @Override
+        public String getTable() {
+            return "public.category";
         }
     }
 }

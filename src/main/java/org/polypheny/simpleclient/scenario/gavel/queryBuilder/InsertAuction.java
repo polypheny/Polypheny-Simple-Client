@@ -26,11 +26,14 @@
 package org.polypheny.simpleclient.scenario.gavel.queryBuilder;
 
 
+import com.google.common.collect.ImmutableList;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.atomic.AtomicInteger;
 import kong.unirest.HttpRequest;
-import org.polypheny.simpleclient.query.Query;
+import org.polypheny.simpleclient.query.BatchableInsert;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
 
@@ -58,7 +61,7 @@ public class InsertAuction extends QueryBuilder {
 
 
     @Override
-    public Query getNewQuery() {
+    public BatchableInsert getNewQuery() {
         return new InsertAuctionQuery(
                 nextAuctionId.getAndIncrement(),
                 userId,
@@ -70,7 +73,7 @@ public class InsertAuction extends QueryBuilder {
     }
 
 
-    private static class InsertAuctionQuery extends Query {
+    static class InsertAuctionQuery extends BatchableInsert {
 
         private final int auctionId;
         private final int userId;
@@ -95,7 +98,13 @@ public class InsertAuction extends QueryBuilder {
 
         @Override
         public String getSql() {
-            return "INSERT INTO auction(id, title, description, start_date, end_date, category, \"user\") VALUES ("
+            return "INSERT INTO auction(id, title, description, start_date, end_date, category, \"user\") VALUES " + getSqlRowExpression();
+        }
+
+
+        @Override
+        public String getSqlRowExpression() {
+            return "("
                     + auctionId + ","
                     + "'" + title + "',"
                     + "'" + description + "',"
@@ -109,7 +118,27 @@ public class InsertAuction extends QueryBuilder {
 
         @Override
         public HttpRequest<?> getRest() {
-            return null;
+            return buildRestInsert( "public.auction", ImmutableList.of( getRestRowExpression() ) );
+        }
+
+
+        @Override
+        public JsonObject getRestRowExpression() {
+            JsonObject row = new JsonObject();
+            row.add( "public.auction.id", new JsonPrimitive( auctionId ) );
+            row.add( "public.auction.title", new JsonPrimitive( title ) );
+            row.add( "public.auction.description", new JsonPrimitive( description ) );
+            row.add( "public.auction.start_date", new JsonPrimitive( startDate.format( DateTimeFormatter.ISO_LOCAL_DATE_TIME ) ) );
+            row.add( "public.auction.end_date", new JsonPrimitive( endDate.format( DateTimeFormatter.ISO_LOCAL_DATE_TIME ) ) );
+            row.add( "public.auction.category", new JsonPrimitive( categoryId ) );
+            row.add( "public.auction.user", new JsonPrimitive( userId ) );
+            return row;
+        }
+
+
+        @Override
+        public String getTable() {
+            return "public.auction";
         }
     }
 
