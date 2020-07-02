@@ -158,7 +158,9 @@ public class PolyphenyDbRestExecutor implements PolyphenyDbExecutor {
         for ( BatchableInsert query : batchList ) {
             if ( currentTable == null ) {
                 currentTable = query.getTable();
-            } else if ( currentTable.equals( query.getTable() ) ) {
+            }
+
+            if ( currentTable.equals( query.getTable() ) ) {
                 rows.add( Objects.requireNonNull( query.getRestRowExpression() ) );
             } else {
                 throw new RuntimeException( "Different tables in multi-inserts. This should not happen!" );
