@@ -73,7 +73,7 @@ public class SelectHighestBidOnRandomAuction extends QueryBuilder {
         public HttpRequest<?> getRest() {
             return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.bid" )
                     .queryString( "public.bid.auction", "=" + auctionId )
-                    .queryString( "_sort", "public.bid.amount@desc" )
+                    .queryString( "_sort", "public.bid.amount@DESC" )
                     .queryString( "_limit", "1" );
         }
     }
