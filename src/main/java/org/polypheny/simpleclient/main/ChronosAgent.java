@@ -257,6 +257,9 @@ public class ChronosAgent extends AbstractChronosAgent {
                 }
             }
 
+            // disable icarus training
+            setIcarusRouting( false );
+
             // Create schema
             scenario.createSchema( true );
         } else if ( config.system.equals( "postgres" ) ) {
@@ -282,8 +285,16 @@ public class ChronosAgent extends AbstractChronosAgent {
         Config config = parseConfig( chronosJob );
         Scenario scenario = (Scenario) o;
 
+        if ( config.system.equals( "polypheny" ) ) {
+            setIcarusRouting( true );
+        }
+
         ProgressReporter progressReporter = new ChronosProgressReporter( chronosJob, this, config.numberOfThreads, config.progressReportBase );
         scenario.warmUp( progressReporter );
+
+        if ( config.system.equals( "polypheny" ) ) {
+            setIcarusRouting( false );
+        }
 
         return scenario;
     }
@@ -345,6 +356,24 @@ public class ChronosAgent extends AbstractChronosAgent {
     @Override
     protected void removeChronosLogHandler( ChronosLogHandler chronosLogHandler ) {
         ChronosLog4JAppender.setChronosLogHandler( null );
+    }
+
+
+    void setIcarusRouting( boolean b ) {
+        PolyphenyDbExecutor executor = (PolyphenyDbExecutor) new PolyphenyDbJdbcExecutorFactory( ChronosCommand.hostname ).createInstance();
+        try {
+            // disable icarus training
+            executor.setConfig( "icarusRouting/training", b ? "true" : "false" );
+            executor.executeCommit();
+        } catch ( ExecutorException e ) {
+            throw new RuntimeException( "Exception while updating polypheny config", e );
+        } finally {
+            try {
+                executor.closeConnection();
+            } catch ( ExecutorException e ) {
+                log.error( "Exception while closing connection", e );
+            }
+        }
     }
 
 

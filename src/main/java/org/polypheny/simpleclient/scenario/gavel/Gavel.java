@@ -196,7 +196,7 @@ public class Gavel extends Scenario {
 
         log.info( "Warm-up..." );
         Executor executor = null;
-        for ( int i = 0; i < 2; i++ ) {
+        for ( int i = 0; i < 4; i++ ) {
             try {
                 executor = executorFactory.createInstance();
                 if ( config.numberOfAddUserQueries > 0 ) {
