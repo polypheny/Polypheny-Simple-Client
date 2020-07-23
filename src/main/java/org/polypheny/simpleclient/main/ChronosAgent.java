@@ -258,6 +258,13 @@ public class ChronosAgent extends AbstractChronosAgent {
                 }
             }
 
+            // Wait 5 seconds to let the the config changes take effect
+            try {
+                TimeUnit.SECONDS.sleep( 5 );
+            } catch ( InterruptedException e ) {
+                throw new RuntimeException( "Unexpected interrupt", e );
+            }
+
             // Create schema
             scenario.createSchema( true );
         } else if ( config.system.equals( "postgres" ) ) {
