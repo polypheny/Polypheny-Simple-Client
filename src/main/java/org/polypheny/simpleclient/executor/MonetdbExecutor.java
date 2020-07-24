@@ -49,6 +49,7 @@ public class MonetdbExecutor extends JdbcExecutor {
             connection = DriverManager.getConnection( "jdbc:monetdb://" + host + ":50000/test", "monetdb", "monetdb" );
             connection.setAutoCommit( false );
             executeStatement = connection.createStatement();
+            executeStatement.setFetchSize( 100 );
         } catch ( SQLException e ) {
             throw new RuntimeException( "Connection failed.", e );
         }

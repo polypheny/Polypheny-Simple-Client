@@ -55,6 +55,7 @@ public class PolyphenyDbJdbcExecutor extends JdbcExecutor implements PolyphenyDb
 
             connection = DriverManager.getConnection( url, props );
             executeStatement = connection.createStatement();
+            executeStatement.setFetchSize( 100 );
         } catch ( SQLException e ) {
             throw new RuntimeException( "Connection failed.", e );
         }
