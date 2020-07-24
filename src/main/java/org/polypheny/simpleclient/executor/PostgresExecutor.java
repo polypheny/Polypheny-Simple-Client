@@ -26,6 +26,7 @@
 package org.polypheny.simpleclient.executor;
 
 
+import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import org.polypheny.simpleclient.main.CsvWriter;
@@ -45,6 +46,7 @@ public class PostgresExecutor extends JdbcExecutor {
         try {
             connection = DriverManager.getConnection( "jdbc:postgresql://" + host + ":5432/test", "postgres", "postgres" );
             connection.setAutoCommit( false );
+            connection.setTransactionIsolation( Connection.TRANSACTION_SERIALIZABLE );
             executeStatement = connection.createStatement();
         } catch ( SQLException e ) {
             throw new RuntimeException( "Connection failed.", e );
