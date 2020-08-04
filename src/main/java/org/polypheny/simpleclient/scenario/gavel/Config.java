@@ -44,6 +44,8 @@ public class Config {
     public final String router;
 
     public final int numberOfThreads;
+    public final int numberOfWarmUpIterations;
+
     public final int numberOfAddUserQueries;
     public final int numberOfChangePasswordQueries;
     public final int numberOfAddAuctionQueries;
@@ -95,6 +97,7 @@ public class Config {
 
         progressReportBase = getIntProperty( properties, "progressReportBase" );
         numberOfThreads = getIntProperty( properties, "numberOfThreads" );
+        numberOfWarmUpIterations = getIntProperty( properties, "numberOfWarmUpIterations" );
 
         numberOfAddUserQueries = getIntProperty( properties, "numberOfAddUserQueries" ) * multiplier;
         numberOfChangePasswordQueries = getIntProperty( properties, "numberOfChangePasswordQueries" ) * multiplier;
@@ -143,6 +146,7 @@ public class Config {
         memoryCatalog = Boolean.parseBoolean( cdl.get( "memoryCatalog" ) );
 
         numberOfThreads = Integer.parseInt( cdl.get( "numberOfThreads" ) );
+        numberOfWarmUpIterations = Integer.parseInt( cdl.getOrDefault( "numberOfWarmUpIterations", "4" ) );
 
         dataStore = cdl.get( "dataStore" );
         router = cdl.get( "router" );

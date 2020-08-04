@@ -196,7 +196,7 @@ public class Gavel extends Scenario {
 
         log.info( "Warm-up..." );
         Executor executor = null;
-        for ( int i = 0; i < 4; i++ ) {
+        for ( int i = 0; i < config.numberOfWarmUpIterations; i++ ) {
             try {
                 executor = executorFactory.createInstance();
                 if ( config.numberOfAddUserQueries > 0 ) {
@@ -244,15 +244,15 @@ public class Gavel extends Scenario {
                 if ( config.numberOfGetCurrentlyHighestBidOnAuctionQueries > 0 ) {
                     executor.executeQuery( new SelectHighestBidOnRandomAuction( numbers.get( "auctions" ) ).getNewQuery() );
                 }
+                try {
+                    Thread.sleep( 10000 );
+                } catch ( InterruptedException e ) {
+                    throw new RuntimeException( "Unexpected interrupt", e );
+                }
             } catch ( ExecutorException e ) {
                 throw new RuntimeException( "Error while executing warm-up queries", e );
             } finally {
                 commitAndCloseExecutor( executor );
-            }
-            try {
-                Thread.sleep( 10000 );
-            } catch ( InterruptedException e ) {
-                throw new RuntimeException( "Unexpected interrupt", e );
             }
         }
     }
