@@ -242,10 +242,31 @@ public class ChronosAgent extends AbstractChronosAgent {
                         break;
                     case "icarus":
                         executor.setConfig( "routing/router", "org.polypheny.db.router.IcarusRouter$IcarusRouterFactory" );
-                        setIcarusRouting( false );
+                        setIcarusRoutingTraining( false );
                         break;
                     default:
                         throw new RuntimeException( "Unknown configuration value for router: " + config.router );
+                }
+                // Set Plan & Implementation Caching
+                switch ( config.planAndImplementationCaching ) {
+                    case "None":
+                        executor.setConfig( "runtime/implementationCaching", "false" );
+                        executor.setConfig( "runtime/queryPlanCaching", "false" );
+                        break;
+                    case "Plan":
+                        executor.setConfig( "runtime/implementationCaching", "false" );
+                        executor.setConfig( "runtime/queryPlanCaching", "true" );
+                        break;
+                    case "Implementation":
+                        executor.setConfig( "runtime/implementationCaching", "true" );
+                        executor.setConfig( "runtime/queryPlanCaching", "false" );
+                        break;
+                    case "Both":
+                        executor.setConfig( "runtime/implementationCaching", "true" );
+                        executor.setConfig( "runtime/queryPlanCaching", "true" );
+                        break;
+                    default:
+                        throw new RuntimeException( "Unknown configuration value for planAndImplementationCaching: " + config.planAndImplementationCaching );
                 }
                 executor.executeCommit();
             } catch ( ExecutorException e ) {
@@ -292,15 +313,15 @@ public class ChronosAgent extends AbstractChronosAgent {
 
         // enable icarus training
         if ( config.system.equals( "polypheny" ) && config.router.equals( "icarus" ) ) {
-            setIcarusRouting( true );
+            setIcarusRoutingTraining( true );
         }
 
-        ProgressReporter progressReporter = new ChronosProgressReporter( chronosJob, this, config.numberOfThreads, config.progressReportBase );
+        ProgressReporter progressReporter = new ChronosProgressReporter( chronosJob, this, 1, config.progressReportBase );
         scenario.warmUp( progressReporter );
 
         // disable icarus training
         if ( config.system.equals( "polypheny" ) && config.router.equals( "icarus" ) ) {
-            setIcarusRouting( false );
+            setIcarusRoutingTraining( false );
         }
 
         return scenario;
@@ -366,7 +387,7 @@ public class ChronosAgent extends AbstractChronosAgent {
     }
 
 
-    void setIcarusRouting( boolean b ) {
+    void setIcarusRoutingTraining( boolean b ) {
         PolyphenyDbExecutor executor = (PolyphenyDbExecutor) new PolyphenyDbJdbcExecutorFactory( ChronosCommand.hostname ).createInstance();
         try {
             // disable icarus training

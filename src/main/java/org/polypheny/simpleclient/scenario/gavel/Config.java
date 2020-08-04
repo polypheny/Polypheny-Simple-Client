@@ -40,8 +40,10 @@ public class Config {
     public final String puiBranch;
     public final boolean memoryCatalog;
     public final boolean resetCatalog;
+
     public final String dataStore;
     public final String router;
+    public final String planAndImplementationCaching;
 
     public final int numberOfThreads;
     public final int numberOfWarmUpIterations;
@@ -91,9 +93,10 @@ public class Config {
         puiBranch = null;
         resetCatalog = false;
         memoryCatalog = false;
-        dataStore = "hsqldb";
 
+        dataStore = "hsqldb";
         router = "icarus";
+        planAndImplementationCaching = "Both";
 
         progressReportBase = getIntProperty( properties, "progressReportBase" );
         numberOfThreads = getIntProperty( properties, "numberOfThreads" );
@@ -150,6 +153,7 @@ public class Config {
 
         dataStore = cdl.get( "dataStore" );
         router = cdl.get( "router" );
+        planAndImplementationCaching = cdl.getOrDefault( "planAndImplementationCaching", "Both" );
 
         // Benchmark
         numberOfGetAuctionQueries = Integer.parseInt( cdl.get( "numberOfGetAuctionQueries" ) );
