@@ -41,7 +41,7 @@ public class Easy {
             csvWriter = null;
         }
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
-        gavel.execute( progressReporter, csvWriter, new File( "." ) );
+        gavel.execute( progressReporter, csvWriter, new File( "." ), config.numberOfThreads );
     }
 
 

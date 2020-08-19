@@ -339,8 +339,15 @@ public class ChronosAgent extends AbstractChronosAgent {
         } else {
             csvWriter = null;
         }
-        ProgressReporter progressReporter = new ChronosProgressReporter( chronosJob, this, config.numberOfThreads, config.progressReportBase );
-        long runtime = scenario.execute( progressReporter, csvWriter, outputDirectory );
+
+        int numberOfThreads = config.numberOfThreads;
+        int maxNumberOfThreads = scenario.getExecutorFactory().getMaxNumberOfThreads();
+        if ( maxNumberOfThreads > 0 && config.numberOfThreads > maxNumberOfThreads ) {
+            numberOfThreads = maxNumberOfThreads;
+            log.warn( "Limiting number of executor threads to {} threads (instead of {} as specified by the job)", numberOfThreads, config.numberOfThreads );
+        }
+        ProgressReporter progressReporter = new ChronosProgressReporter( chronosJob, this, numberOfThreads, config.progressReportBase );
+        long runtime = scenario.execute( progressReporter, csvWriter, outputDirectory, numberOfThreads );
         properties.put( "runtime", runtime );
 
         return scenario;

@@ -98,7 +98,7 @@ public class Gavel extends Scenario {
 
 
     @Override
-    public long execute( ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory ) {
+    public long execute( ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory, int numberOfThreads ) {
         log.info( "Analyzing currently stored data..." );
         Map<String, Integer> numbers = getNumbers();
 
@@ -147,11 +147,6 @@ public class Gavel extends Scenario {
         long startTime = System.nanoTime();
 
         ArrayList<EvaluationThread> threads = new ArrayList<>();
-        int numberOfThreads = config.numberOfThreads;
-        if ( executorFactory.getMaxNumberOfThreads() > 0 && config.numberOfThreads > executorFactory.getMaxNumberOfThreads() ) {
-            numberOfThreads = executorFactory.getMaxNumberOfThreads();
-            log.warn( "Limiting number of executor threads to {} threads (instead of {} as specified by the job)", numberOfThreads, executorFactory.getMaxNumberOfThreads() );
-        }
         for ( int i = 0; i < numberOfThreads; i++ ) {
             threads.add( new EvaluationThread( queryList, executorFactory.createInstance( csvWriter ) ) );
         }
@@ -244,15 +239,15 @@ public class Gavel extends Scenario {
                 if ( config.numberOfGetCurrentlyHighestBidOnAuctionQueries > 0 ) {
                     executor.executeQuery( new SelectHighestBidOnRandomAuction( numbers.get( "auctions" ) ).getNewQuery() );
                 }
-                try {
-                    Thread.sleep( 10000 );
-                } catch ( InterruptedException e ) {
-                    throw new RuntimeException( "Unexpected interrupt", e );
-                }
             } catch ( ExecutorException e ) {
                 throw new RuntimeException( "Error while executing warm-up queries", e );
             } finally {
                 commitAndCloseExecutor( executor );
+            }
+            try {
+                Thread.sleep( 10000 );
+            } catch ( InterruptedException e ) {
+                throw new RuntimeException( "Unexpected interrupt", e );
             }
         }
     }

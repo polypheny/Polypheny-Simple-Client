@@ -28,6 +28,7 @@ package org.polypheny.simpleclient.scenario;
 
 import java.io.File;
 import java.util.Properties;
+import lombok.Getter;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.main.ProgressReporter;
@@ -35,6 +36,7 @@ import org.polypheny.simpleclient.main.ProgressReporter;
 
 public abstract class Scenario {
 
+    @Getter
     protected final ExecutorFactory executorFactory;
     protected final boolean commitAfterEveryQuery;
     protected final boolean dumpQueryList;
@@ -51,7 +53,7 @@ public abstract class Scenario {
 
     public abstract void generateData( ProgressReporter progressReporter );
 
-    public abstract long execute( ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory );
+    public abstract long execute( ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory, int numberOfThreads );
 
     public abstract void warmUp( ProgressReporter progressReporter );
 
