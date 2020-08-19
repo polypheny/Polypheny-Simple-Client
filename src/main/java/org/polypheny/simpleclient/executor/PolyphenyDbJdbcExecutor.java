@@ -81,8 +81,12 @@ public class PolyphenyDbJdbcExecutor extends JdbcExecutor implements PolyphenyDb
 
 
     @Override
-    public void setConfig( String key, String value ) throws ExecutorException {
-        executeQuery( new RawQuery( "ALTER CONFIG '" + key + "' SET '" + value + "'", null, false ) );
+    public void setConfig( String key, String value ) {
+        try {
+            executeQuery( new RawQuery( "ALTER CONFIG '" + key + "' SET '" + value + "'", null, false ) );
+        } catch ( ExecutorException e ) {
+            log.error( "Exception while setting config \"" + key + "\"!", e );
+        }
     }
 
 

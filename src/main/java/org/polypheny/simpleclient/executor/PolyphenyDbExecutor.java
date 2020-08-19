@@ -40,5 +40,5 @@ public interface PolyphenyDbExecutor extends Executor {
     }
 
 
-    void setConfig( String key, String value ) throws ExecutorException;
+    void setConfig( String key, String value );
 }

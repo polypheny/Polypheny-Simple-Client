@@ -203,16 +203,20 @@ public class PolyphenyDbRestExecutor implements PolyphenyDbExecutor {
 
 
     @Override
-    public void setConfig( String key, String value ) throws ExecutorException {
+    public void setConfig( String key, String value ) {
         PolyphenyDbJdbcExecutor executor = null;
         try {
             executor = jdbcExecutorFactory.createInstance( csvWriter );
             executor.setConfig( key, value );
             executor.executeCommit();
         } catch ( ExecutorException e ) {
-            throw new ExecutorException( "Error while executing query via JDBC", e );
+            log.error( "Exception while setting config \"" + key + "\"!", e );
         } finally {
-            commitAndCloseJdbcExecutor( executor );
+            try {
+                commitAndCloseJdbcExecutor( executor );
+            } catch ( ExecutorException e ) {
+                log.error( "Exception while closing JDBC executor", e );
+            }
         }
     }
 
