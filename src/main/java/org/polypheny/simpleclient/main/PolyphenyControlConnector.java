@@ -32,6 +32,8 @@ import java.lang.reflect.Type;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import kong.unirest.HttpResponse;
 import kong.unirest.Unirest;
@@ -60,6 +62,18 @@ class PolyphenyControlConnector {
         this.controlUrl = "http://" + controlUrl;
         WebSocket webSocket = new WebSocket( new URI( "ws://" + controlUrl + "/socket/" ) );
         webSocket.connect();
+
+        // Check status of connection and reconnect if necessary
+        ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+        scheduler.scheduleWithFixedDelay( () -> {
+            if ( webSocket.isClosed() ) {
+                try {
+                    webSocket.reconnectBlocking();
+                } catch ( InterruptedException e ) {
+                    log.error( "Interrupt while reconnecting", e );
+                }
+            }
+        }, 1, 3L, TimeUnit.SECONDS );
     }
 
 
@@ -224,7 +238,6 @@ class PolyphenyControlConnector {
 
         @Override
         public void onError( Exception ex ) {
-
         }
     }
 
