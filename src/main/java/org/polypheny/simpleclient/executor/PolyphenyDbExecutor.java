@@ -12,7 +12,7 @@ public interface PolyphenyDbExecutor extends Executor {
         deployStore(
                 "hsqldb",
                 "org.polypheny.db.adapter.jdbc.stores.HsqldbStore",
-                "{maxConnections:\"25\",path:., trxControlMode:locks,trxIsolationLevel:read_committed,type:Memory}" );
+                "{maxConnections:\"25\",path:.,trxControlMode:locks,trxIsolationLevel:read_committed,type:Memory,tableType:Memory}" );
     }
 
 
