@@ -28,16 +28,23 @@ package org.polypheny.simpleclient.executor;
 
 import java.io.IOException;
 import java.sql.Connection;
+import java.sql.Date;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.query.BatchableInsert;
+import org.polypheny.simpleclient.query.BatchableInsert.DataTypes;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.RawQuery;
+import org.polypheny.simpleclient.scenario.gavel.Config;
 
 
 @Slf4j
@@ -143,21 +150,61 @@ public abstract class JdbcExecutor implements Executor {
 
 
     @Override
-    public void executeInsertList( List<BatchableInsert> queryList ) throws ExecutorException {
+    public void executeInsertList( List<BatchableInsert> queryList, Config config ) throws ExecutorException {
         if ( queryList.size() > 0 ) {
-            StringBuilder stringBuilder = new StringBuilder();
-            boolean first = true;
-            for ( BatchableInsert query : queryList ) {
-                if ( first ) {
-                    stringBuilder.append( query.getSql() );
-                    first = false;
-                } else {
-                    String rowExpression = Objects.requireNonNull( query.getSqlRowExpression() );
-                    stringBuilder.append( "," ).append( rowExpression );
-                }
+            if ( config.usePreparedBatchForDataInsertion ) {
+                executeInsertListAsPreparedBatch( queryList );
+            } else {
+                executeInsertListAsMultiInsert( queryList );
             }
-            executeQuery( new RawQuery( stringBuilder.toString(), null, false ) );
         }
+    }
+
+
+    protected void executeInsertListAsPreparedBatch( List<BatchableInsert> queryList ) throws ExecutorException {
+        try {
+            PreparedStatement preparedStatement = connection.prepareStatement( queryList.get( 0 ).getParameterizedSqlQuery() );
+            for ( BatchableInsert insert : queryList ) {
+                Map<Integer, ImmutablePair<DataTypes, Object>> data = insert.getParameterValues();
+                for ( Map.Entry<Integer, ImmutablePair<DataTypes, Object>> entry : data.entrySet() ) {
+                    switch ( entry.getValue().left ) {
+                        case INTEGER:
+                            preparedStatement.setInt( entry.getKey(), (Integer) entry.getValue().right );
+                            break;
+                        case VARCHAR:
+                            preparedStatement.setString( entry.getKey(), (String) entry.getValue().right );
+                            break;
+                        case TIMESTAMP:
+                            preparedStatement.setTimestamp( entry.getKey(), (Timestamp) entry.getValue().right );
+                            break;
+                        case DATE:
+                            preparedStatement.setDate( entry.getKey(), (Date) entry.getValue().right );
+                            break;
+                    }
+                }
+                preparedStatement.addBatch();
+            }
+            preparedStatement.executeBatch();
+            preparedStatement.close();
+        } catch ( SQLException e ) {
+            throw new ExecutorException( e );
+        }
+    }
+
+
+    protected void executeInsertListAsMultiInsert( List<BatchableInsert> queryList ) throws ExecutorException {
+        StringBuilder stringBuilder = new StringBuilder();
+        boolean first = true;
+        for ( BatchableInsert query : queryList ) {
+            if ( first ) {
+                stringBuilder.append( query.getSql() );
+                first = false;
+            } else {
+                String rowExpression = Objects.requireNonNull( query.getSqlRowExpression() );
+                stringBuilder.append( "," ).append( rowExpression );
+            }
+        }
+        executeQuery( new RawQuery( stringBuilder.toString(), null, false ) );
     }
 
 

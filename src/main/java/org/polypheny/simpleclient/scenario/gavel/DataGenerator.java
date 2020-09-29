@@ -94,9 +94,9 @@ class DataGenerator {
             if ( aborted ) {
                 break;
             }
-            addToMultiInsert( queryBuilder.getNewQuery() );
+            addToInsertList( queryBuilder.getNewQuery() );
         }
-        executeMultiInsert();
+        executeInsertList();
     }
 
 
@@ -107,12 +107,12 @@ class DataGenerator {
             if ( aborted ) {
                 break;
             }
-            addToMultiInsert( queryBuilder.getNewQuery() );
+            addToInsertList( queryBuilder.getNewQuery() );
             if ( (i % mod) == 0 ) {
                 progressReporter.updateProgress();
             }
         }
-        executeMultiInsert();
+        executeInsertList();
     }
 
 
@@ -158,8 +158,8 @@ class DataGenerator {
             category = ThreadLocalRandom.current().nextInt( 1, numberOfCategories + 1 );
             title = text.latinWord( ThreadLocalRandom.current().nextInt( auctionTitleMinLength, auctionTitleMaxLength + 1 ) );
             description = text.paragraph( ThreadLocalRandom.current().nextInt( auctionDescriptionMinLength, auctionDescriptionMaxLength + 1 ) );
-            addToMultiInsert( (new InsertAuction( user, category, startDate, endDate, title, description )).getNewQuery() );
-            executeMultiInsert();
+            addToInsertList( (new InsertAuction( user, category, startDate, endDate, title, description )).getNewQuery() );
+            executeInsertList();
 
             // create bids for that auction
             numberOfBids = ThreadLocalRandom.current().nextInt( minNumberOfBidsPerAuction, maxNumberOfBidsPerAuction );
@@ -182,33 +182,33 @@ class DataGenerator {
                 dt = dateProducer.randomDateBetweenTwoDates( dtLast, endDate.minusHours( numberOfBids - j ) );
                 lastBid = amount;
                 amount = amount * 100;
-                addToMultiInsert( new InsertBid( i, u, amount, dt ).getNewQuery() );
+                addToInsertList( new InsertBid( i, u, amount, dt ).getNewQuery() );
                 dtLast = dt;
             }
-            executeMultiInsert();
+            executeInsertList();
 
             // create pictures
             InsertPicture pictureBuilder = new InsertPicture( i );
             numberOfPictures = ThreadLocalRandom.current().nextInt( minNumberOfPicturesPerAuction, maxNumberOfPicturesPerAuction );
             for ( int j = 0; j < numberOfPictures; j++ ) {
-                addToMultiInsert( pictureBuilder.getNewQuery() );
+                addToInsertList( pictureBuilder.getNewQuery() );
             }
-            executeMultiInsert();
+            executeInsertList();
         }
 
     }
 
 
-    private void addToMultiInsert( BatchableInsert query ) throws ExecutorException {
+    private void addToInsertList( BatchableInsert query ) throws ExecutorException {
         batchList.add( query );
         if ( batchList.size() >= config.maxBatchSize ) {
-            executeMultiInsert();
+            executeInsertList();
         }
     }
 
 
-    private void executeMultiInsert() throws ExecutorException {
-        theExecutor.executeInsertList( batchList );
+    private void executeInsertList() throws ExecutorException {
+        theExecutor.executeInsertList( batchList, config );
         theExecutor.executeCommit();
         batchList.clear();
     }

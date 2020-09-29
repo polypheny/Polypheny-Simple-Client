@@ -29,9 +29,12 @@ package org.polypheny.simpleclient.scenario.gavel.queryBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import kong.unirest.HttpRequest;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.BatchableInsert;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
@@ -62,6 +65,8 @@ public class InsertPicture extends QueryBuilder {
 
     private static class InsertPictureQuery extends BatchableInsert {
 
+        private static final String SQL = "INSERT INTO picture(filename, type, size, auction) VALUES ";
+
         private final int auctionId;
         private final String fileName;
         private final int size;
@@ -79,7 +84,7 @@ public class InsertPicture extends QueryBuilder {
 
         @Override
         public String getSql() {
-            return "INSERT INTO picture(filename, type, size, auction) VALUES " + getSqlRowExpression();
+            return SQL + getSqlRowExpression();
         }
 
 
@@ -91,6 +96,23 @@ public class InsertPicture extends QueryBuilder {
                     + size + ","
                     + auctionId
                     + ")";
+        }
+
+
+        @Override
+        public String getParameterizedSqlQuery() {
+            return SQL + "(?, ?, ?, ?)";
+        }
+
+
+        @Override
+        public Map<Integer, ImmutablePair<DataTypes, Object>> getParameterValues() {
+            Map<Integer, ImmutablePair<DataTypes, Object>> map = new HashMap<>();
+            map.put( 1, new ImmutablePair<>( DataTypes.VARCHAR, fileName ) );
+            map.put( 2, new ImmutablePair<>( DataTypes.VARCHAR, fileType ) );
+            map.put( 3, new ImmutablePair<>( DataTypes.INTEGER, size ) );
+            map.put( 4, new ImmutablePair<>( DataTypes.INTEGER, auctionId ) );
+            return map;
         }
 
 

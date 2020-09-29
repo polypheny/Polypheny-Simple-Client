@@ -29,10 +29,14 @@ package org.polypheny.simpleclient.scenario.gavel.queryBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import kong.unirest.HttpRequest;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.BatchableInsert;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
@@ -69,6 +73,8 @@ public class InsertBid extends QueryBuilder {
 
     static class InsertBidQuery extends BatchableInsert {
 
+        private static final String SQL = "INSERT INTO bid(id, amount, \"timestamp\", \"user\", auction) VALUES ";
+
         private final int bidId;
         private final int auctionId;
         private final int userId;
@@ -88,7 +94,7 @@ public class InsertBid extends QueryBuilder {
 
         @Override
         public String getSql() {
-            return "INSERT INTO bid(id, amount, \"timestamp\", \"user\", auction) VALUES " + getSqlRowExpression();
+            return SQL + getSqlRowExpression();
         }
 
 
@@ -101,6 +107,24 @@ public class InsertBid extends QueryBuilder {
                     + userId + ","
                     + auctionId // This could gets a bug if e.g. parallelized
                     + ")";
+        }
+
+
+        @Override
+        public String getParameterizedSqlQuery() {
+            return SQL + "(?, ?, ?, ?, ?)";
+        }
+
+
+        @Override
+        public Map<Integer, ImmutablePair<DataTypes, Object>> getParameterValues() {
+            Map<Integer, ImmutablePair<DataTypes, Object>> map = new HashMap<>();
+            map.put( 1, new ImmutablePair<>( DataTypes.INTEGER, bidId ) );
+            map.put( 2, new ImmutablePair<>( DataTypes.INTEGER, amount ) );
+            map.put( 3, new ImmutablePair<>( DataTypes.TIMESTAMP, Timestamp.valueOf( date ) ) );
+            map.put( 4, new ImmutablePair<>( DataTypes.INTEGER, userId ) );
+            map.put( 5, new ImmutablePair<>( DataTypes.INTEGER, auctionId ) );
+            return map;
         }
 
 

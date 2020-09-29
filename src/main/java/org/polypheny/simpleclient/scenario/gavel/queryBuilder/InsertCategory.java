@@ -34,10 +34,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 import kong.unirest.HttpRequest;
 import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.BatchableInsert;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
@@ -81,6 +84,8 @@ public class InsertCategory extends QueryBuilder {
 
     private static class InsertCategoryQuery extends BatchableInsert {
 
+        private static final String SQL = "INSERT INTO category(id, name) VALUES ";
+
         private final int categoryId;
         private final String category;
 
@@ -94,7 +99,7 @@ public class InsertCategory extends QueryBuilder {
 
         @Override
         public String getSql() {
-            return "INSERT INTO category(id, name) VALUES " + getSqlRowExpression();
+            return SQL + getSqlRowExpression();
         }
 
 
@@ -104,6 +109,21 @@ public class InsertCategory extends QueryBuilder {
                     + categoryId + ","
                     + "'" + StringEscapeUtils.escapeSql( category ) + "'"
                     + ")";
+        }
+
+
+        @Override
+        public String getParameterizedSqlQuery() {
+            return SQL + "(?, ?)";
+        }
+
+
+        @Override
+        public Map<Integer, ImmutablePair<DataTypes, Object>> getParameterValues() {
+            Map<Integer, ImmutablePair<DataTypes, Object>> map = new HashMap<>();
+            map.put( 1, new ImmutablePair<>( DataTypes.INTEGER, categoryId ) );
+            map.put( 2, new ImmutablePair<>( DataTypes.VARCHAR, category ) );
+            return map;
         }
 
 

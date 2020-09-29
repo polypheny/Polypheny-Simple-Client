@@ -77,7 +77,9 @@ public class Config {
     public final int maxNumberOfBidsPerAuction;
     public final int minNumberOfPicturesPerAuction;
     public final int maxNumberOfPicturesPerAuction;
+
     public final int maxBatchSize;
+    public final boolean usePreparedBatchForDataInsertion;
 
     public final int numberOfUserGenerationThreads;
     public final int numberOfAuctionGenerationThreads;
@@ -133,6 +135,9 @@ public class Config {
         maxNumberOfPicturesPerAuction = getIntProperty( properties, "maxNumberOfPicturesPerAuction" ) * multiplier;
 
         maxBatchSize = getIntProperty( properties, "maxBatchSize" );
+        usePreparedBatchForDataInsertion = getBooleanProperty( properties, "usePreparedBatchForDataInsertion" );
+        ;
+
         numberOfUserGenerationThreads = getIntProperty( properties, "numberOfUserGenerationThreads" );
         numberOfAuctionGenerationThreads = getIntProperty( properties, "numberOfAuctionGenerationThreads" );
         parallelizeUserGenerationAndAuctionGeneration = getBooleanProperty( properties, "parallelizeUserGenerationAndAuctionGeneration" );
@@ -190,7 +195,10 @@ public class Config {
         maxNumberOfBidsPerAuction = Integer.parseInt( cdl.get( "maxNumberOfBidsPerAuction" ) );
         minNumberOfPicturesPerAuction = Integer.parseInt( cdl.get( "minNumberOfPicturesPerAuction" ) );
         maxNumberOfPicturesPerAuction = Integer.parseInt( cdl.get( "maxNumberOfPicturesPerAuction" ) );
+
         maxBatchSize = Integer.parseInt( cdl.get( "maxBatchSize" ) );
+        usePreparedBatchForDataInsertion = true;
+
         numberOfUserGenerationThreads = Integer.parseInt( cdl.get( "numberOfUserGenerationThreads" ) );
         numberOfAuctionGenerationThreads = Integer.parseInt( cdl.get( "numberOfAuctionGenerationThreads" ) );
 

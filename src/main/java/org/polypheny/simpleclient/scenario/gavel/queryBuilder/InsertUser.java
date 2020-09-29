@@ -37,13 +37,17 @@ import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CharsetEncoder;
 import java.nio.charset.CodingErrorAction;
+import java.sql.Date;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 import kong.unirest.HttpRequest;
 import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.BatchableInsert;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
@@ -98,6 +102,8 @@ public class InsertUser extends QueryBuilder {
 
     private static class InsertUserQuery extends BatchableInsert {
 
+        private static final String SQL = "INSERT INTO \"user\"(id, email, password, last_name, first_name, gender, birthday, city, zip_code, country) VALUES ";
+
         private final int userId;
         private final String email;
         private final String password;
@@ -127,7 +133,7 @@ public class InsertUser extends QueryBuilder {
 
         @Override
         public String getSql() {
-            return "INSERT INTO \"user\"(id, email, password, last_name, first_name, gender, birthday, city, zip_code, country) VALUES " + getSqlRowExpression();
+            return SQL + getSqlRowExpression();
         }
 
 
@@ -145,6 +151,29 @@ public class InsertUser extends QueryBuilder {
                     + "'" + zipCode + "',"
                     + "'" + country + "'"
                     + ")";
+        }
+
+
+        @Override
+        public String getParameterizedSqlQuery() {
+            return SQL + "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        }
+
+
+        @Override
+        public Map<Integer, ImmutablePair<DataTypes, Object>> getParameterValues() {
+            Map<Integer, ImmutablePair<DataTypes, Object>> map = new HashMap<>();
+            map.put( 1, new ImmutablePair<>( DataTypes.INTEGER, userId ) );
+            map.put( 2, new ImmutablePair<>( DataTypes.VARCHAR, email ) );
+            map.put( 3, new ImmutablePair<>( DataTypes.VARCHAR, password ) );
+            map.put( 4, new ImmutablePair<>( DataTypes.VARCHAR, lastName ) );
+            map.put( 5, new ImmutablePair<>( DataTypes.VARCHAR, firstName ) );
+            map.put( 6, new ImmutablePair<>( DataTypes.VARCHAR, gender ) );
+            map.put( 7, new ImmutablePair<>( DataTypes.DATE, Date.valueOf( birthday ) ) );
+            map.put( 8, new ImmutablePair<>( DataTypes.VARCHAR, city ) );
+            map.put( 9, new ImmutablePair<>( DataTypes.VARCHAR, zipCode ) );
+            map.put( 10, new ImmutablePair<>( DataTypes.VARCHAR, country ) );
+            return map;
         }
 
 
