@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import java.util.Map;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
+
 public abstract class BatchableInsert extends Query {
 
     public BatchableInsert( boolean expectResult ) {
@@ -23,4 +24,5 @@ public abstract class BatchableInsert extends Query {
 
 
     public enum DataTypes {INTEGER, VARCHAR, TIMESTAMP, DATE}
+
 }

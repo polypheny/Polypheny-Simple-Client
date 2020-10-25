@@ -104,4 +104,5 @@ public class InsertRandomAuction extends QueryBuilder {
         }
 
     }
+
 }

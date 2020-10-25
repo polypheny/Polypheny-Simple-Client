@@ -50,5 +50,4 @@ public class ChronosProgressReporter extends ProgressReporter {
         agent.updateProgress( job, progress );
     }
 
-
 }

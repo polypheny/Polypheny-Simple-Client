@@ -61,5 +61,7 @@ public class CountCategory extends QueryBuilder {
             return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.category" )
                     .queryString( "_project", "public.category.id@num(COUNT)" );
         }
+
     }
+
 }

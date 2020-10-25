@@ -82,5 +82,7 @@ public class CountRunningAuctionsPerCategory extends QueryBuilder {
         public HttpRequest<?> getRest() {
             return null;
         }
+
     }
+
 }

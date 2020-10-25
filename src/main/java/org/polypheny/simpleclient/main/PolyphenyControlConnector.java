@@ -222,8 +222,9 @@ class PolyphenyControlConnector {
             }
             if ( data.containsKey( "updateOutput" ) ) {
                 String logStr = data.get( "updateOutput" );
+                //noinspection StatementWithEmptyBody
                 if ( logStr.startsWith( "Task :" ) && (logStr.endsWith( "started" ) || logStr.endsWith( "skipped" ) || logStr.endsWith( "UP-TO-DATE" ) || logStr.endsWith( "SUCCESS" )) ) {
-                    // Ignore this to avoid cluttering the log. These are gradle log massage where everything is fine
+                    // Ignore this to avoid cluttering the log. These are gradle log massage where everything is fine.
                 } else {
                     CONTROL_MESSAGES_LOGGER.info( logStr );
                 }
@@ -239,6 +240,7 @@ class PolyphenyControlConnector {
         @Override
         public void onError( Exception ex ) {
         }
+
     }
 
 }

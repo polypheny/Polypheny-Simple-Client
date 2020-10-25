@@ -81,5 +81,4 @@ public class ChronosLog4JAppender extends AbstractAppender {
         }
     }
 
-
 }

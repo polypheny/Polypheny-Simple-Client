@@ -61,5 +61,7 @@ public class CountBid extends QueryBuilder {
             return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.bid" )
                     .queryString( "_project", "public.bid.id@num(COUNT)" );
         }
+
     }
+
 }

@@ -76,5 +76,7 @@ public class SelectHighestBidOnRandomAuction extends QueryBuilder {
                     .queryString( "_sort", "public.bid.amount@DESC" )
                     .queryString( "_limit", "1" );
         }
+
     }
+
 }

@@ -72,10 +72,10 @@ public class InsertRandomBid extends QueryBuilder {
 
     private static class InsertRandomBidQuery extends InsertBidQuery {
 
-
         public InsertRandomBidQuery( int bidId, int amount, LocalDateTime timestamp, int userId, int auctionId ) {
             super( bidId, auctionId, userId, amount, timestamp );
         }
 
     }
+
 }

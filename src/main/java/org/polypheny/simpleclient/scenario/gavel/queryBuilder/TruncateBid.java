@@ -59,5 +59,7 @@ public class TruncateBid extends QueryBuilder {
         public HttpRequest<?> getRest() {
             return null;
         }
+
     }
+
 }

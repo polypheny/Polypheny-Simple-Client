@@ -137,5 +137,7 @@ public class InsertPicture extends QueryBuilder {
         public String getTable() {
             return "public.picture";
         }
+
     }
+
 }

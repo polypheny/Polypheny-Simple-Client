@@ -70,5 +70,7 @@ public class DeleteAuctionsWithIdLargerThan extends QueryBuilder {
         public HttpRequest<?> getRest() {
             return null;
         }
+
     }
+
 }

@@ -59,5 +59,7 @@ public class TruncateUser extends QueryBuilder {
         public HttpRequest<?> getRest() {
             return null;
         }
+
     }
+
 }

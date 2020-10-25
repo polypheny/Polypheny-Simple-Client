@@ -70,5 +70,7 @@ public class DeleteCategoriesWithIdLargerThan extends QueryBuilder {
         public HttpRequest<?> getRest() {
             return null;
         }
+
     }
+
 }

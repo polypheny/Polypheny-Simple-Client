@@ -87,5 +87,7 @@ public class SelectTenMostPopularAuctionsOfCategoryByNumberOfBids extends QueryB
         public HttpRequest<?> getRest() {
             return null;
         }
+
     }
+
 }

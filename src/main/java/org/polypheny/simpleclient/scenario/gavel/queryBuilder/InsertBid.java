@@ -150,5 +150,7 @@ public class InsertBid extends QueryBuilder {
         public String getTable() {
             return "public.bid";
         }
+
     }
+
 }

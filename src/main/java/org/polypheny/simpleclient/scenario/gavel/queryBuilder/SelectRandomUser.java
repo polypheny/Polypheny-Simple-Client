@@ -74,5 +74,7 @@ public class SelectRandomUser extends QueryBuilder {
             return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.user" )
                     .queryString( "public.user.id", "=" + userId );
         }
+
     }
+
 }

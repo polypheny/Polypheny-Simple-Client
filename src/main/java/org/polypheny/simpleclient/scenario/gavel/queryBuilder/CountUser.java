@@ -61,5 +61,7 @@ public class CountUser extends QueryBuilder {
             return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.user" )
                     .queryString( "_project", "public.user.id@num(COUNT)" );
         }
+
     }
+
 }

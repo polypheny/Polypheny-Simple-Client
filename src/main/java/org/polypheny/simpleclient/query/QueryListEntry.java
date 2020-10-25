@@ -36,4 +36,5 @@ public class QueryListEntry {
         this.query = query;
         this.templateId = templateId;
     }
+
 }

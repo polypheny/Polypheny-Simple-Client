@@ -108,5 +108,7 @@ public class ChangeRandomAuction extends QueryBuilder {
 
             return buildRestUpdate( "public.auction", set, where );
         }
+
     }
+
 }

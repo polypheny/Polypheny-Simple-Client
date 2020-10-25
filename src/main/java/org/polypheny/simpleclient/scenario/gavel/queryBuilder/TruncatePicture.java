@@ -59,5 +59,7 @@ public class TruncatePicture extends QueryBuilder {
         public HttpRequest<?> getRest() {
             return null;
         }
+
     }
+
 }

@@ -62,7 +62,7 @@ class DataGenerator {
     private final List<BatchableInsert> batchList;
 
     @Getter
-    private DataGenerationThreadMonitor threadMonitor;
+    private final DataGenerationThreadMonitor threadMonitor;
     private boolean aborted;
 
 

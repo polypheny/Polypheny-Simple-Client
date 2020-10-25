@@ -37,4 +37,5 @@ public interface CliRunnable {
      * @return Exit code
      */
     int run() throws SQLException;
+
 }

@@ -64,5 +64,7 @@ public class SelectTopTenCitiesByNumberOfCustomers extends QueryBuilder {
                     .queryString( "_sort", "number@DESC" )
                     .queryString( "_limit", 10 );
         }
+
     }
+
 }

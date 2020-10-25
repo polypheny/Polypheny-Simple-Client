@@ -93,5 +93,7 @@ public class SelectTheHundredNextEndingAuctionsOfRandomCategory extends QueryBui
                     .queryString( "_sort", "public.auction.end_date@DESC" )
                     .queryString( "_limit", 100 );
         }
+
     }
+
 }

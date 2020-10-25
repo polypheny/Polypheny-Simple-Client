@@ -63,5 +63,7 @@ public class SelectTopHundredSellerByRevenue extends QueryBuilder {
         public HttpRequest<?> getRest() {
             return null;
         }
+
     }
+
 }

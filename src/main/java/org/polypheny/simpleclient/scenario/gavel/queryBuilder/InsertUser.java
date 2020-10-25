@@ -33,10 +33,10 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import java.nio.CharBuffer;
 import java.nio.charset.CharacterCodingException;
-import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CharsetEncoder;
 import java.nio.charset.CodingErrorAction;
+import java.nio.charset.StandardCharsets;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -59,8 +59,8 @@ public class InsertUser extends QueryBuilder {
     private static final AtomicInteger nextUserId = new AtomicInteger( 1 );
 
     private static final Random RANDOM = new Random();
-    private static final CharsetDecoder DECODER = Charset.forName( "ISO-8859-1" ).newDecoder();
-    private static final CharsetEncoder ENCODER = Charset.forName( "ISO-8859-1" ).newEncoder();
+    private static final CharsetDecoder DECODER = StandardCharsets.ISO_8859_1.newDecoder();
+    private static final CharsetEncoder ENCODER = StandardCharsets.ISO_8859_1.newEncoder();
 
     private static final Locale[] locales = {
             new Locale( "de" ),
@@ -215,5 +215,7 @@ public class InsertUser extends QueryBuilder {
                 throw new RuntimeException( e );
             }
         }
+
     }
+
 }

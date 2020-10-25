@@ -166,6 +166,7 @@ public class InsertAuction extends QueryBuilder {
         public String getTable() {
             return "public.auction";
         }
+
     }
 
 }

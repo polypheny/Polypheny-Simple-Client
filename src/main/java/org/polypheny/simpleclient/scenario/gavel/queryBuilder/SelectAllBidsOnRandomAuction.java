@@ -75,5 +75,7 @@ public class SelectAllBidsOnRandomAuction extends QueryBuilder {
             return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.bid" )
                     .queryString( "public.bid.auction", "=" + auctionId );
         }
+
     }
+
 }

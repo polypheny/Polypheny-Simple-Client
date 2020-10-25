@@ -59,5 +59,7 @@ public class TruncateCategory extends QueryBuilder {
         public HttpRequest<?> getRest() {
             return null;
         }
+
     }
+
 }

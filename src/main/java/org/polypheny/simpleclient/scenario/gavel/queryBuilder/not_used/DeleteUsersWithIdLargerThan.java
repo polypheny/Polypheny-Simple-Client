@@ -70,5 +70,7 @@ public class DeleteUsersWithIdLargerThan extends QueryBuilder {
         public HttpRequest<?> getRest() {
             return null;
         }
+
     }
+
 }

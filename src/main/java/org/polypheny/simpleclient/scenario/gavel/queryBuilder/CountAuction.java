@@ -66,5 +66,7 @@ public class CountAuction extends QueryBuilder {
             return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.auction" )
                     .queryString( "_project", "public.auction.id@num(COUNT)" );
         }
+
     }
+
 }

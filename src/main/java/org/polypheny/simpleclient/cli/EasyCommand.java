@@ -105,5 +105,4 @@ public class EasyCommand implements CliRunnable {
         return 0;
     }
 
-
 }

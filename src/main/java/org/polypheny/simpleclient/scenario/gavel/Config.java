@@ -136,7 +136,6 @@ public class Config {
 
         maxBatchSize = getIntProperty( properties, "maxBatchSize" );
         usePreparedBatchForDataInsertion = getBooleanProperty( properties, "usePreparedBatchForDataInsertion" );
-        ;
 
         numberOfUserGenerationThreads = getIntProperty( properties, "numberOfUserGenerationThreads" );
         numberOfAuctionGenerationThreads = getIntProperty( properties, "numberOfAuctionGenerationThreads" );

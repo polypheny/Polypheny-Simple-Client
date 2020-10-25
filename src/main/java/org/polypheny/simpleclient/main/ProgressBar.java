@@ -64,4 +64,5 @@ public class ProgressBar extends ProgressReporter {
     protected void update( int progress ) {
         update( progress, base );
     }
+
 }

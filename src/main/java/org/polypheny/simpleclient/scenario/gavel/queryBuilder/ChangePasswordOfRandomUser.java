@@ -93,6 +93,7 @@ public class ChangePasswordOfRandomUser extends QueryBuilder {
 
             return buildRestUpdate( "public.user", set, where );
         }
+
     }
 
 }

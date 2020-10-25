@@ -146,5 +146,7 @@ public class InsertCategory extends QueryBuilder {
         public String getTable() {
             return "public.category";
         }
+
     }
+
 }

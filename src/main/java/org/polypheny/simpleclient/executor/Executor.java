@@ -10,7 +10,6 @@ public interface Executor {
 
     void reset() throws ExecutorException;
 
-
     long executeQuery( Query query ) throws ExecutorException;
 
     long executeQueryAndGetNumber( Query query ) throws ExecutorException;
