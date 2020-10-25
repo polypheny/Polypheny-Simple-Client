@@ -40,5 +40,13 @@ public interface PolyphenyDbExecutor extends Executor {
     }
 
 
+    default void deployFileStore() throws ExecutorException {
+        deployStore(
+                "file",
+                "org.polypheny.db.adapter.file.FileStore",
+                "{}" );
+    }
+
+
     void setConfig( String key, String value );
 }
