@@ -45,6 +45,15 @@ public class Easy {
     }
 
 
+    public static void warmup( ExecutorFactory executorFactory, int multiplier, boolean commitAfterEveryQuery, boolean dumpQueryList ) {
+        Config config = new Config( getProperties(), 1 );
+        Gavel gavel = new Gavel( executorFactory, config, commitAfterEveryQuery, dumpQueryList );
+
+        ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
+        gavel.warmUp( progressReporter, multiplier );
+    }
+
+
     private static Properties getProperties() {
         Properties props = new Properties();
         try {

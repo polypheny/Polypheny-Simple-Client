@@ -182,7 +182,7 @@ public class Gavel extends Scenario {
 
 
     @Override
-    public void warmUp( ProgressReporter progressReporter ) {
+    public void warmUp( ProgressReporter progressReporter, int iterations ) {
         log.info( "Analyzing currently stored data..." );
         Map<String, Integer> numbers = getNumbers();
 
@@ -191,7 +191,7 @@ public class Gavel extends Scenario {
 
         log.info( "Warm-up..." );
         Executor executor = null;
-        for ( int i = 0; i < config.numberOfWarmUpIterations; i++ ) {
+        for ( int i = 0; i < iterations; i++ ) {
             try {
                 executor = executorFactory.createInstance();
                 if ( config.numberOfAddUserQueries > 0 ) {

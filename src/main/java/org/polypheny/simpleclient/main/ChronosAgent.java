@@ -321,7 +321,7 @@ public class ChronosAgent extends AbstractChronosAgent {
         }
 
         ProgressReporter progressReporter = new ChronosProgressReporter( chronosJob, this, 1, config.progressReportBase );
-        scenario.warmUp( progressReporter );
+        scenario.warmUp( progressReporter, config.numberOfWarmUpIterations );
 
         // disable icarus training
         if ( config.system.equals( "polypheny" ) && config.router.equals( "icarus" ) ) {
