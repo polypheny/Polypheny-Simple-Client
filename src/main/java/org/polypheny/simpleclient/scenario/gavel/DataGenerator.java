@@ -30,6 +30,7 @@ import com.devskiller.jfairy.Fairy;
 import com.devskiller.jfairy.producer.DateProducer;
 import com.devskiller.jfairy.producer.text.TextProducer;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
@@ -168,6 +169,13 @@ class DataGenerator {
             int u;
             LocalDateTime dt;
             LocalDateTime dtLast = startDate;
+
+            // Bids should be in a temporal order. In order to avoid the case where it randomly pics the end date we calculate
+            // an offset of seconds we need to add to the end data in every iteration. This leeds to a somehow even distribution of the
+            // bits over time.
+            long difference = ChronoUnit.SECONDS.between( startDate, endDate );
+            long offset = difference / numberOfBids;
+
             for ( int j = 0; j < numberOfBids; j++ ) {
                 amount = ThreadLocalRandom.current().nextInt( lastBid + 1, lastBid + 1000 );
                 u = ThreadLocalRandom.current().nextInt( 1, numberOfUsers + 1 );
@@ -179,7 +187,7 @@ class DataGenerator {
                         u--;
                     }
                 }
-                dt = dateProducer.randomDateBetweenTwoDates( dtLast, endDate.minusHours( numberOfBids - j ) );
+                dt = dateProducer.randomDateBetweenTwoDates( dtLast, endDate.minusSeconds( offset * (numberOfBids - (j + 1)) ) );
                 lastBid = amount;
                 amount = amount * 100;
                 addToInsertList( new InsertBid( i, u, amount, dt ).getNewQuery() );
