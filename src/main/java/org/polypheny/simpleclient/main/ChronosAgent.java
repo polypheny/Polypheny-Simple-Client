@@ -205,6 +205,9 @@ public class ChronosAgent extends AbstractChronosAgent {
                     case "file":
                         executor.deployFileStore();
                         break;
+                    case "cottontail":
+                        executor.deployCottontail();
+                        break;
                     case "monetdb+postgres":
                         resetPostgres();
                         resetMonetDb();
@@ -219,6 +222,7 @@ public class ChronosAgent extends AbstractChronosAgent {
                         executor.deployMonetDb();
                         executor.deployCassandra();
                         executor.deployFileStore();
+                        executor.deployCottontail();
                         break;
                     default:
                         throw new RuntimeException( "Unknown data store: " + config.dataStore );

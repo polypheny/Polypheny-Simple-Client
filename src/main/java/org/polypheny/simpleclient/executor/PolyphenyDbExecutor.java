@@ -48,6 +48,14 @@ public interface PolyphenyDbExecutor extends Executor {
     }
 
 
+    default void deployCottontail() throws ExecutorException {
+        deployStore(
+                "cottontail",
+                "org.polypheny.db.adapter.cottontail.CottontailStore",
+                "{\"type\":\"Embedded\",\"host\":\"localhost\",\"port\":\"1865\",\"database\":\"cottontail\"}" );
+    }
+
+
     void setConfig( String key, String value );
 
 }
