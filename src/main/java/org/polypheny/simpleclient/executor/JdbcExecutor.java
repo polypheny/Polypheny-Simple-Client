@@ -27,6 +27,7 @@ package org.polypheny.simpleclient.executor;
 
 
 import java.io.IOException;
+import java.sql.Array;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -44,6 +45,7 @@ import org.polypheny.simpleclient.query.BatchableInsert;
 import org.polypheny.simpleclient.query.BatchableInsert.DataTypes;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.RawQuery;
+import org.polypheny.simpleclient.scenario.IConfig;
 import org.polypheny.simpleclient.scenario.gavel.Config;
 
 
@@ -150,9 +152,9 @@ public abstract class JdbcExecutor implements Executor {
 
 
     @Override
-    public void executeInsertList( List<BatchableInsert> queryList, Config config ) throws ExecutorException {
+    public void executeInsertList( List<BatchableInsert> queryList, IConfig config ) throws ExecutorException {
         if ( queryList.size() > 0 ) {
-            if ( config.usePreparedBatchForDataInsertion ) {
+            if ( config.usePreparedBatchForDataInsertion() ) {
                 executeInsertListAsPreparedBatch( queryList );
             } else {
                 executeInsertListAsMultiInsert( queryList );
@@ -179,6 +181,12 @@ public abstract class JdbcExecutor implements Executor {
                             break;
                         case DATE:
                             preparedStatement.setDate( entry.getKey(), (Date) entry.getValue().right );
+                            break;
+                        case ARRAY_INT:
+                            preparedStatement.setArray( entry.getKey(), connection.createArrayOf( "INTEGER", (Object[]) entry.getValue().right ) );
+                            break;
+                        case ARRAY_REAL:
+                            preparedStatement.setArray( entry.getKey(), connection.createArrayOf( "REAL", (Object[]) entry.getValue().right ) );
                             break;
                     }
                 }

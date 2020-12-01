@@ -4,7 +4,8 @@ import java.util.List;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.query.BatchableInsert;
 import org.polypheny.simpleclient.query.Query;
-import org.polypheny.simpleclient.scenario.gavel.Config;
+import org.polypheny.simpleclient.scenario.IConfig;
+
 
 public interface Executor {
 
@@ -20,7 +21,7 @@ public interface Executor {
 
     void closeConnection() throws ExecutorException;
 
-    void executeInsertList( List<BatchableInsert> batchList, Config config ) throws ExecutorException;
+    void executeInsertList( List<BatchableInsert> batchList, IConfig config ) throws ExecutorException;
 
     void flushCsvWriter();
 

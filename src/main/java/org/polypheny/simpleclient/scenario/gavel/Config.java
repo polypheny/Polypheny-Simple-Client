@@ -29,10 +29,11 @@ package org.polypheny.simpleclient.scenario.gavel;
 import java.util.Map;
 import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
+import org.polypheny.simpleclient.scenario.IConfig;
 
 
 @Slf4j
-public class Config {
+public class Config implements IConfig {
 
     public final String system;
 
@@ -243,5 +244,11 @@ public class Config {
 
     private String getProperty( Properties properties, String name ) {
         return properties.getProperty( name );
+    }
+
+
+    @Override
+    public boolean usePreparedBatchForDataInsertion() {
+        return this.usePreparedBatchForDataInsertion;
     }
 }

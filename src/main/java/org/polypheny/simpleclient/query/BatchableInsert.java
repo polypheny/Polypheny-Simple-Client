@@ -23,6 +23,6 @@ public abstract class BatchableInsert extends Query {
     public abstract String getTable();
 
 
-    public enum DataTypes {INTEGER, VARCHAR, TIMESTAMP, DATE}
+    public enum DataTypes {INTEGER, VARCHAR, TIMESTAMP, DATE, ARRAY_INT, ARRAY_REAL}
 
 }
