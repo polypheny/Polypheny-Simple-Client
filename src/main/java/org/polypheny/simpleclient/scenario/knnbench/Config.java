@@ -2,6 +2,7 @@ package org.polypheny.simpleclient.scenario.knnbench;
 
 
 import java.util.Properties;
+import java.util.Random;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.scenario.IConfig;
 
@@ -61,8 +62,14 @@ public class Config implements IConfig {
         progressReportBase = getIntProperty( properties, "progressReportBase" );
         numberOfThreads = getIntProperty( properties, "numberOfThreads" );
 
-        randomSeedInsert = getLongProperty( properties, "randomSeedInsert" );
-        randomSeedQuery = getLongProperty( properties, "randomSeedQuery" );
+        if ( getBooleanProperty( properties, "useRandomSeeds" ) ) {
+            Random tempRand = new Random();
+            randomSeedInsert = tempRand.nextLong();
+            randomSeedQuery = tempRand.nextLong();
+        } else {
+            randomSeedInsert = getLongProperty( properties, "randomSeedInsert" );
+            randomSeedQuery = getLongProperty( properties, "randomSeedQuery" );
+        }
 
         dimensionFeatureVectors = getIntProperty( properties, "dimensionFeatureVectors" );
         batchSizeInserts = getIntProperty( properties, "batchSizeInserts" );

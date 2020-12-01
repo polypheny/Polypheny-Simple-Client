@@ -64,6 +64,8 @@ public class KnnCommand implements CliRunnable {
             Knn.workload( executorFactory, multiplier, true, writeCsv, dumpQueryList );
         } else if ( args.get( 0 ).equalsIgnoreCase( "schema" ) ) {
             Knn.schema( executorFactory, true );
+        } else if ( args.get( 0 ).equalsIgnoreCase( "warmup" ) ) {
+            Knn.warmup( executorFactory, multiplier, true, dumpQueryList );
         } else {
             System.err.println( "Unknown task: " + args.get( 0 ) );
         }
