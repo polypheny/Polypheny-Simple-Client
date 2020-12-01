@@ -46,6 +46,13 @@ public class Knn {
     }
 
 
+    public static void warmup( ExecutorFactory executorFactory, int multiplier, boolean commitAfterEveryQuery, boolean dumpQueryList ) {
+        Config config = new Config( getProperties(), multiplier );
+        KnnBench knnBench = new KnnBench( executorFactory, config, commitAfterEveryQuery, dumpQueryList );
+
+        ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
+        knnBench.warmUp( progressReporter, multiplier );
+    }
 
 
     private static Properties getProperties() {

@@ -12,6 +12,8 @@ import org.polypheny.simpleclient.scenario.Scenario;
 import org.polypheny.simpleclient.scenario.knnbench.queryBuilder.CreateIntFeature;
 import org.polypheny.simpleclient.scenario.knnbench.queryBuilder.CreateMetadata;
 import org.polypheny.simpleclient.scenario.knnbench.queryBuilder.CreateRealFeature;
+import org.polypheny.simpleclient.scenario.knnbench.queryBuilder.MetadataKnnIntFeature;
+import org.polypheny.simpleclient.scenario.knnbench.queryBuilder.MetadataKnnRealFeature;
 import org.polypheny.simpleclient.scenario.knnbench.queryBuilder.SimpleKnnIntFeature;
 import org.polypheny.simpleclient.scenario.knnbench.queryBuilder.SimpleKnnRealFeature;
 
@@ -72,12 +74,20 @@ public class KnnBench extends Scenario {
 
         SimpleKnnIntFeature simpleKnnIntFeatureBuilder = new SimpleKnnIntFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
         SimpleKnnRealFeature simpleKnnRealFeatureBuilder = new SimpleKnnRealFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
+        MetadataKnnIntFeature metadataKnnIntFeature = new MetadataKnnIntFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
+        MetadataKnnRealFeature metadataKnnRealFeature = new MetadataKnnRealFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
         try {
             for ( int i = 0; i < config.numberOfPureKnnQueries; i++ ) {
                 executor.executeQuery( simpleKnnIntFeatureBuilder.getNewQuery() );
             }
             for ( int i = 0; i < config.numberOfPureKnnQueries; i++ ) {
                 executor.executeQuery( simpleKnnRealFeatureBuilder.getNewQuery() );
+            }
+            for ( int i = 0; i < config.numberOfPureKnnQueries; i++ ) {
+                executor.executeQuery( metadataKnnIntFeature.getNewQuery() );
+            }
+            for ( int i = 0; i < config.numberOfPureKnnQueries; i++ ) {
+                executor.executeQuery( metadataKnnRealFeature.getNewQuery() );
             }
             executor.flushCsvWriter();
         } catch ( ExecutorException e ) {
@@ -95,7 +105,32 @@ public class KnnBench extends Scenario {
 
     @Override
     public void warmUp( ProgressReporter progressReporter, int iterations ) {
+        log.info( "Warm-up..." );
 
+        Executor executor = null;
+        SimpleKnnIntFeature simpleKnnIntFeatureBuilder = new SimpleKnnIntFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
+        SimpleKnnRealFeature simpleKnnRealFeatureBuilder = new SimpleKnnRealFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
+        MetadataKnnIntFeature metadataKnnIntFeature = new MetadataKnnIntFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
+        MetadataKnnRealFeature metadataKnnRealFeature = new MetadataKnnRealFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
+
+        for ( int i = 0; i < iterations; i++ ) {
+            try {
+                executor = executorFactory.createInstance();
+                executor.executeQuery( simpleKnnIntFeatureBuilder.getNewQuery() );
+                executor.executeQuery( simpleKnnRealFeatureBuilder.getNewQuery() );
+                executor.executeQuery( metadataKnnIntFeature.getNewQuery() );
+                executor.executeQuery( metadataKnnRealFeature.getNewQuery() );
+            } catch ( ExecutorException e ) {
+                throw new RuntimeException( "Error while executing warm-up queries", e );
+            } finally {
+                commitAndCloseExecutor( executor );
+            }
+            try {
+                Thread.sleep( 10000 );
+            } catch ( InterruptedException e ) {
+                throw new RuntimeException( "Unexpected interrupt", e );
+            }
+        }
     }
 
 
