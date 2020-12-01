@@ -31,8 +31,11 @@ public class Config implements IConfig {
 
 
     public final int numberOfEntries;
-    public final int numberOfPureKnnQueries;
-    public final int numberOfCombinedQueries;
+    public final int numberOfSimpleKnnIntFeatureQueries;
+    public final int numberOfSimpleKnnRealFeatureQueries;
+    public final int numberOfMetadataKnnIntFeatureQueries;
+    public final int numberOfMetadataKnnRealFeatureQueries;
+//    public final int numberOfCombinedQueries;
 
     public final int limitKnnQueries;
     public final String distanceNorm;
@@ -66,8 +69,11 @@ public class Config implements IConfig {
         batchSizeQueries = getIntProperty( properties, "batchSizeQueries" );
 
         numberOfEntries = getIntProperty( properties, "numberOfEntries" ) * multiplier;
-        numberOfPureKnnQueries = getIntProperty( properties, "numberOfPureKnnQueries" ) * multiplier;
-        numberOfCombinedQueries = getIntProperty( properties, "numberOfCombinedQueries" ) * multiplier;
+        numberOfSimpleKnnIntFeatureQueries = getIntProperty( properties, "numberOfSimpleKnnIntFeatureQueries" ) * multiplier;
+        numberOfSimpleKnnRealFeatureQueries = getIntProperty( properties, "numberOfSimpleKnnRealFeatureQueries" ) * multiplier;
+        numberOfMetadataKnnIntFeatureQueries = getIntProperty( properties, "numberOfMetadataKnnIntFeatureQueries" ) * multiplier;
+        numberOfMetadataKnnRealFeatureQueries = getIntProperty( properties, "numberOfMetadataKnnRealFeatureQueries" ) * multiplier;
+//        numberOfCombinedQueries = getIntProperty( properties, "numberOfCombinedQueries" ) * multiplier;
         limitKnnQueries = getIntProperty( properties, "limitKnnQueries" );
         distanceNorm = getStringProperty( properties, "distanceNorm" );
     }

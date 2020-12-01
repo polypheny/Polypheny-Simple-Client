@@ -2,12 +2,26 @@ package org.polypheny.simpleclient.scenario.knnbench;
 
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+import java.util.Vector;
+import java.util.concurrent.ConcurrentHashMap;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.executor.ExecutorException;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.main.ProgressReporter;
+import org.polypheny.simpleclient.query.QueryBuilder;
+import org.polypheny.simpleclient.query.QueryListEntry;
 import org.polypheny.simpleclient.scenario.Scenario;
 import org.polypheny.simpleclient.scenario.knnbench.queryBuilder.CreateIntFeature;
 import org.polypheny.simpleclient.scenario.knnbench.queryBuilder.CreateMetadata;
@@ -23,10 +37,18 @@ public class KnnBench extends Scenario {
 
     private final Config config;
 
+    private final List<Long> measuredTimes;
+    private final Map<Integer, String> queryTypes;
+    private final Map<Integer, List<Long>> measuredTimePerQueryType;
+
 
     public KnnBench( Executor.ExecutorFactory executorFactory, Config config, boolean commitAfterEveryQuery, boolean dumpQueryList ) {
         super( executorFactory, commitAfterEveryQuery, dumpQueryList );
         this.config = config;
+
+        measuredTimes = Collections.synchronizedList( new LinkedList<>() );
+        queryTypes = new HashMap<>();
+        measuredTimePerQueryType = new ConcurrentHashMap<>();
     }
 
     @Override
@@ -67,10 +89,65 @@ public class KnnBench extends Scenario {
 
     @Override
     public long execute( ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory, int numberOfThreads ) {
+
+        log.info( "Preparing query list for the benchmark..." );
+        List<QueryListEntry> queryList = new Vector<>();
+        addNumberOfTimes( queryList, new SimpleKnnIntFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm ), config.numberOfSimpleKnnIntFeatureQueries );
+        addNumberOfTimes( queryList, new SimpleKnnRealFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm ), config.numberOfSimpleKnnRealFeatureQueries );
+        addNumberOfTimes( queryList, new MetadataKnnIntFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm ), config.numberOfMetadataKnnIntFeatureQueries );
+        addNumberOfTimes( queryList, new MetadataKnnRealFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm ), config.numberOfMetadataKnnRealFeatureQueries );
+
+        Collections.shuffle( queryList );
+
+
+        // This dumps the sql queries independent of the selected interface
+        if ( outputDirectory != null && dumpQueryList ) {
+            log.info( "Dump query list..." );
+            try {
+                FileWriter fw = new FileWriter( outputDirectory.getPath() + File.separator + "queryList" );
+                queryList.forEach( query -> {
+                    try {
+                        fw.append( query.query.getSql() ).append( "\n" );
+                    } catch ( IOException e ) {
+                        log.error( "Error while dumping query list", e );
+                    }
+                } );
+                fw.close();
+            } catch ( IOException e ) {
+                log.error( "Error while dumping query list", e );
+            }
+        }
+
+
         log.info( "Executing benchmark..." );
+        (new Thread( new ProgressReporter.ReportQueryListProgress( queryList, progressReporter ) )).start();
         long startTime = System.nanoTime();
 
-        Executor executor = executorFactory.createInstance( csvWriter );
+        ArrayList<EvaluationThread> threads = new ArrayList<>();
+        for ( int i = 0; i < numberOfThreads; i++ ) {
+            threads.add( new EvaluationThread( queryList, executorFactory.createInstance( csvWriter ) ) );
+        }
+
+        EvaluationThreadMonitor threadMonitor = new EvaluationThreadMonitor( threads );
+        threads.forEach( t -> t.setThreadMonitor( threadMonitor ) );
+
+        for ( EvaluationThread thread : threads ) {
+            thread.start();
+        }
+
+        for ( Thread thread : threads ) {
+            try {
+                thread.join();
+            } catch ( InterruptedException e ) {
+                throw new RuntimeException( "Unexpected interrupt", e );
+            }
+        }
+
+        if ( threadMonitor.aborted ) {
+            throw new RuntimeException( "Exception while executing benchmark", threadMonitor.exception );
+        }
+
+        /*Executor executor = executorFactory.createInstance( csvWriter );
 
         SimpleKnnIntFeature simpleKnnIntFeatureBuilder = new SimpleKnnIntFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
         SimpleKnnRealFeature simpleKnnRealFeatureBuilder = new SimpleKnnRealFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
@@ -94,10 +171,14 @@ public class KnnBench extends Scenario {
             throw new RuntimeException( "Error occured during workload.", e );
         } finally {
             commitAndCloseExecutor( executor );
-        }
+        }*/
 
         long runTime = System.nanoTime() - startTime;
         log.info( "run time: {} s", runTime / 1000000000 );
+
+        for ( EvaluationThread thread : threads ) {
+            thread.closeExecutor();
+        }
 
         return runTime;
     }
@@ -116,10 +197,18 @@ public class KnnBench extends Scenario {
         for ( int i = 0; i < iterations; i++ ) {
             try {
                 executor = executorFactory.createInstance();
-                executor.executeQuery( simpleKnnIntFeatureBuilder.getNewQuery() );
-                executor.executeQuery( simpleKnnRealFeatureBuilder.getNewQuery() );
-                executor.executeQuery( metadataKnnIntFeature.getNewQuery() );
-                executor.executeQuery( metadataKnnRealFeature.getNewQuery() );
+                if ( config.numberOfSimpleKnnIntFeatureQueries > 0 ) {
+                    executor.executeQuery( simpleKnnIntFeatureBuilder.getNewQuery() );
+                }
+                if ( config.numberOfSimpleKnnRealFeatureQueries > 0 ) {
+                    executor.executeQuery( simpleKnnRealFeatureBuilder.getNewQuery() );
+                }
+                if ( config.numberOfMetadataKnnIntFeatureQueries > 0 ) {
+                    executor.executeQuery( metadataKnnIntFeature.getNewQuery() );
+                }
+                if ( config.numberOfMetadataKnnRealFeatureQueries > 0 ) {
+                    executor.executeQuery( metadataKnnRealFeature.getNewQuery() );
+                }
             } catch ( ExecutorException e ) {
                 throw new RuntimeException( "Error while executing warm-up queries", e );
             } finally {
@@ -134,9 +223,139 @@ public class KnnBench extends Scenario {
     }
 
 
+    private class EvaluationThread extends Thread {
+
+        private final Executor executor;
+        private final List<QueryListEntry> theQueryList;
+        private boolean abort = false;
+        @Setter
+        private EvaluationThreadMonitor threadMonitor;
+
+
+        EvaluationThread( List<QueryListEntry> queryList, Executor executor ) {
+            super( "EvaluationThread" );
+            this.executor = executor;
+            theQueryList = queryList;
+        }
+
+
+        @Override
+        public void run() {
+            long measuredTimeStart;
+            long measuredTime;
+            QueryListEntry queryListEntry;
+
+            while ( !theQueryList.isEmpty() && !abort ) {
+                measuredTimeStart = System.nanoTime();
+                try {
+                    queryListEntry = theQueryList.remove( 0 );
+                } catch ( IndexOutOfBoundsException e ) { // This is neither nice nor efficient...
+                    // This can happen due to concurrency if two threads enter the while-loop and there is only one thread left
+                    // Simply leaf the loop
+                    break;
+                }
+                try {
+                    executor.executeQuery( queryListEntry.query );
+                } catch ( ExecutorException e ) {
+                    log.error( "Caught exception while executing queries", e );
+                    threadMonitor.notifyAboutError( e );
+                    try {
+                        executor.executeRollback();
+                    } catch ( ExecutorException ex ) {
+                        log.error( "Error while rollback", e );
+                    }
+                    throw new RuntimeException( e );
+                }
+                measuredTime = System.nanoTime() - measuredTimeStart;
+                measuredTimes.add( measuredTime );
+                measuredTimePerQueryType.get( queryListEntry.templateId ).add( measuredTime );
+                if ( commitAfterEveryQuery ) {
+                    try {
+                        executor.executeCommit();
+                    } catch ( ExecutorException e ) {
+                        log.error( "Caught exception while committing", e );
+                        threadMonitor.notifyAboutError( e );
+                        try {
+                            executor.executeRollback();
+                        } catch ( ExecutorException ex ) {
+                            log.error( "Error while rollback", e );
+                        }
+                        throw new RuntimeException( e );
+                    }
+                }
+            }
+
+            try {
+                executor.executeCommit();
+            } catch ( ExecutorException e ) {
+                log.error( "Caught exception while committing", e );
+                threadMonitor.notifyAboutError( e );
+                try {
+                    executor.executeRollback();
+                } catch ( ExecutorException ex ) {
+                    log.error( "Error while rollback", e );
+                }
+                throw new RuntimeException( e );
+            }
+
+            executor.flushCsvWriter();
+        }
+
+
+        public void abort() {
+            this.abort = true;
+        }
+
+
+        public void closeExecutor() {
+            commitAndCloseExecutor( executor );
+        }
+
+    }
+
+
+    private class EvaluationThreadMonitor {
+
+        private final List<EvaluationThread> threads;
+        @Getter
+        private Exception exception;
+        @Getter
+        private boolean aborted;
+
+
+        public EvaluationThreadMonitor( List<EvaluationThread> threads ) {
+            this.threads = threads;
+            this.aborted = false;
+        }
+
+
+        public void abortAll() {
+            this.aborted = true;
+            threads.forEach( EvaluationThread::abort );
+        }
+
+
+        public void notifyAboutError( Exception e ) {
+            exception = e;
+            abortAll();
+        }
+
+    }
+
+
     @Override
     public void analyze( Properties properties ) {
 
+    }
+
+
+    private void addNumberOfTimes( List<QueryListEntry> list, QueryBuilder queryBuilder, int numberOfTimes ) {
+        int id = queryTypes.size() + 1;
+        queryTypes.put( id, queryBuilder.getNewQuery().getSql() );
+        measuredTimePerQueryType.put( id, Collections.synchronizedList( new LinkedList<>() ) );
+        for ( int i = 0; i < numberOfTimes; i++ ) {
+            list.add( new QueryListEntry( queryBuilder.getNewQuery(), id ) );
+        }
     }
 
 
