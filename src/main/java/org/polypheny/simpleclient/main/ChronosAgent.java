@@ -190,7 +190,11 @@ public class ChronosAgent extends AbstractChronosAgent {
         // Insert data
         log.info( "Inserting data..." );
         ProgressReporter progressReporter = new ChronosProgressReporter( chronosJob, this, scenario.getNumberOfInsertThreads(), config.progressReportBase );
-        scenario.generateData( progressReporter );
+        try {
+            scenario.generateData( progressReporter );
+        } finally {
+            databaseInstance.tearDown();
+        }
 
         return new ImmutableTriple<>( scenario, config, databaseInstance );
     }
@@ -201,20 +205,22 @@ public class ChronosAgent extends AbstractChronosAgent {
         @SuppressWarnings("unchecked") Scenario scenario = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getLeft();
         @SuppressWarnings("unchecked") AbstractConfig config = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getMiddle();
         @SuppressWarnings("unchecked") DatabaseInstance databaseInstance = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getRight();
+        try {
+            // enable icarus training
+            if ( config.system.equals( "polypheny" ) && config.router.equals( "icarus" ) ) {
+                ((PolyphenyDbInstance) databaseInstance).setIcarusRoutingTraining( true );
+            }
 
-        // enable icarus training
-        if ( config.system.equals( "polypheny" ) && config.router.equals( "icarus" ) ) {
-            ((PolyphenyDbInstance) databaseInstance).setIcarusRoutingTraining( true );
+            ProgressReporter progressReporter = new ChronosProgressReporter( chronosJob, this, 1, config.progressReportBase );
+            scenario.warmUp( progressReporter, config.numberOfWarmUpIterations );
+
+            // disable icarus training
+            if ( config.system.equals( "polypheny" ) && config.router.equals( "icarus" ) ) {
+                ((PolyphenyDbInstance) databaseInstance).setIcarusRoutingTraining( false );
+            }
+        } finally {
+            databaseInstance.tearDown();
         }
-
-        ProgressReporter progressReporter = new ChronosProgressReporter( chronosJob, this, 1, config.progressReportBase );
-        scenario.warmUp( progressReporter, config.numberOfWarmUpIterations );
-
-        // disable icarus training
-        if ( config.system.equals( "polypheny" ) && config.router.equals( "icarus" ) ) {
-            ((PolyphenyDbInstance) databaseInstance).setIcarusRoutingTraining( false );
-        }
-
         return new ImmutableTriple<>( scenario, config, databaseInstance );
     }
 
@@ -238,10 +244,13 @@ public class ChronosAgent extends AbstractChronosAgent {
             numberOfThreads = maxNumberOfThreads;
             log.warn( "Limiting number of executor threads to {} threads (instead of {} as specified by the job)", numberOfThreads, config.numberOfThreads );
         }
-        ProgressReporter progressReporter = new ChronosProgressReporter( chronosJob, this, numberOfThreads, config.progressReportBase );
-        long runtime = scenario.execute( progressReporter, csvWriter, outputDirectory, numberOfThreads );
-        properties.put( "runtime", runtime );
-
+        try {
+            ProgressReporter progressReporter = new ChronosProgressReporter( chronosJob, this, numberOfThreads, config.progressReportBase );
+            long runtime = scenario.execute( progressReporter, csvWriter, outputDirectory, numberOfThreads );
+            properties.put( "runtime", runtime );
+        } finally {
+            databaseInstance.tearDown();
+        }
         return new ImmutableTriple<>( scenario, config, databaseInstance );
     }
 
@@ -252,7 +261,11 @@ public class ChronosAgent extends AbstractChronosAgent {
         @SuppressWarnings("unchecked") AbstractConfig config = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getMiddle();
         @SuppressWarnings("unchecked") DatabaseInstance databaseInstance = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getRight();
 
-        scenario.analyze( properties );
+        try {
+            scenario.analyze( properties );
+        } finally {
+            databaseInstance.tearDown();
+        }
 
         return new ImmutableTriple<>( scenario, config, databaseInstance );
     }

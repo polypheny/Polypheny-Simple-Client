@@ -379,6 +379,8 @@ public class CottontaildbExecutor implements Executor {
             File clientFolder = new File( new File( System.getProperty( "user.home" ), ".polypheny" ), "client" );
             folder = new File( clientFolder, "cottontail" );
 
+            recursiveDeleteFolder( folder );
+
             if ( !folder.exists() ) {
                 if ( !folder.mkdirs() ) {
                     throw new RuntimeException( "Could not create data directory" );
