@@ -95,6 +95,7 @@ public abstract class ProgressReporter {
                 }
             }
         }
+
     }
 
 }

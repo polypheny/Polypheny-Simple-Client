@@ -6,6 +6,7 @@ public class CottontailQuery {
     public final QueryType type;
     public final Object query;
 
+
     public CottontailQuery( QueryType type, Object query ) {
         this.type = type;
         this.query = query;
@@ -32,4 +33,5 @@ public class CottontailQuery {
 
         TRUNCATE // Entity
     }
+
 }

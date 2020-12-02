@@ -275,6 +275,7 @@ public class PolyphenyDbRestExecutor implements PolyphenyDbExecutor {
         public int getMaxNumberOfThreads() {
             return 0;
         }
+
     }
 
 }

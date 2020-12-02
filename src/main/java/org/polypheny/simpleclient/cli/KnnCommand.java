@@ -37,6 +37,7 @@ public class KnnCommand implements CliRunnable {
     @Option(name = { "--queryList" }, arity = 0, description = "Dump all Gavel queries as SQL into a file (default: false).")
     public boolean dumpQueryList = false;
 
+
     @Override
     public int run() throws SQLException {
 
@@ -56,7 +57,6 @@ public class KnnCommand implements CliRunnable {
 
         ExecutorFactory executorFactory;
         executorFactory = new PolyphenyDbJdbcExecutorFactory( polyphenyDbHost, false );
-
 
         if ( args.get( 0 ).equalsIgnoreCase( "data" ) ) {
             Knn.data( executorFactory, multiplier, true );
@@ -78,4 +78,5 @@ public class KnnCommand implements CliRunnable {
 
         return 0;
     }
+
 }

@@ -2,7 +2,6 @@ package org.polypheny.simpleclient.scenario.knnbench.queryBuilder;
 
 
 import com.google.gson.JsonObject;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -14,12 +13,10 @@ import org.polypheny.simpleclient.query.CottontailQuery.QueryType;
 import org.polypheny.simpleclient.query.QueryBuilder;
 import org.vitrivr.cottontail.grpc.CottontailGrpc.Data;
 import org.vitrivr.cottontail.grpc.CottontailGrpc.Entity;
-import org.vitrivr.cottontail.grpc.CottontailGrpc.FloatVector;
 import org.vitrivr.cottontail.grpc.CottontailGrpc.From;
 import org.vitrivr.cottontail.grpc.CottontailGrpc.InsertMessage;
 import org.vitrivr.cottontail.grpc.CottontailGrpc.Schema;
 import org.vitrivr.cottontail.grpc.CottontailGrpc.Tuple;
-import org.vitrivr.cottontail.grpc.CottontailGrpc.Vector;
 
 
 public class InsertMetadata extends QueryBuilder {
@@ -99,13 +96,14 @@ public class InsertMetadata extends QueryBuilder {
         public CottontailQuery getCottontail() {
             Map<String, Data> dataMap = new HashMap<>();
             dataMap.put( "id", Data.newBuilder().setIntData( (int) id ).build() );
-            dataMap.put( "textdata",  Data.newBuilder().setStringData( textdata ).build() );
+            dataMap.put( "textdata", Data.newBuilder().setStringData( textdata ).build() );
             InsertMessage insertMessage = InsertMessage.newBuilder()
                     .setFrom( From.newBuilder().setEntity( Entity.newBuilder().setSchema( Schema.newBuilder().setName( "public" ).build() ).setName( "knn_metadata" ).build() ).build() )
                     .setTuple( Tuple.newBuilder().putAllData( dataMap ).build() )
                     .build();
             return new CottontailQuery( QueryType.INSERT, insertMessage );
         }
+
     }
 
 }

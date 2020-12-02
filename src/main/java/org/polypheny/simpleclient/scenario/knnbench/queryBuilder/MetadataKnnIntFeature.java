@@ -104,6 +104,7 @@ public class MetadataKnnIntFeature extends QueryBuilder {
         public CottontailQuery getCottontail() {
             throw new RuntimeException( "This query is unsupported by cottontail." );
         }
+
     }
 
 }

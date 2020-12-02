@@ -86,6 +86,7 @@ public class CreateIntFeature extends QueryBuilder {
                     entityDefinition
             );
         }
+
     }
 
 }

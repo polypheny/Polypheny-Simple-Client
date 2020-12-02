@@ -112,6 +112,7 @@ public class PolyphenyDbJdbcExecutor extends JdbcExecutor implements PolyphenyDb
         public int getMaxNumberOfThreads() {
             return 0;
         }
+
     }
 
 }
