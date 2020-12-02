@@ -7,6 +7,7 @@ import org.polypheny.simpleclient.query.QueryBuilder;
 
 
 public class CreateRealFeature extends QueryBuilder {
+
     private final String store;
     private final int dimension;
 
@@ -24,6 +25,7 @@ public class CreateRealFeature extends QueryBuilder {
 
 
     private static class CreateRealFeatureQuery extends Query {
+
         private final String store;
         private final int dimension;
 
@@ -45,5 +47,7 @@ public class CreateRealFeature extends QueryBuilder {
         public HttpRequest<?> getRest() {
             return null;
         }
+
     }
+
 }

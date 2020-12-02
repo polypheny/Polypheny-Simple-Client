@@ -10,6 +10,7 @@ public class CreateMetadata extends QueryBuilder {
 
     private final String store;
 
+
     public CreateMetadata( String store ) {
         this.store = store;
     }
@@ -42,5 +43,7 @@ public class CreateMetadata extends QueryBuilder {
         public HttpRequest<?> getRest() {
             return null;
         }
+
     }
+
 }

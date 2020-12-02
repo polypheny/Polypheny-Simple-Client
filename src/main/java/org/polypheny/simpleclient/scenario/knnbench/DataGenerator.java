@@ -15,6 +15,7 @@ import org.polypheny.simpleclient.scenario.knnbench.queryBuilder.InsertRealFeatu
 
 @Slf4j
 public class DataGenerator {
+
     private final Executor theExecutor;
     private final Config config;
     private final ProgressReporter progressReporter;
@@ -22,6 +23,7 @@ public class DataGenerator {
     private final List<BatchableInsert> batchList;
 
     private boolean aborted;
+
 
     DataGenerator( Executor executor, Config config, ProgressReporter progressReporter ) {
         theExecutor = executor;
@@ -31,6 +33,7 @@ public class DataGenerator {
 
         aborted = false;
     }
+
 
     void generateMetadata() throws ExecutorException {
         InsertMetadata queryBuilder = new InsertMetadata();
@@ -56,6 +59,7 @@ public class DataGenerator {
         }
         executeInsertList();
     }
+
 
     void generateRealFeatures() throws ExecutorException {
         InsertRealFeature queryBuilder = new InsertRealFeature( config.randomSeedInsert, config.dimensionFeatureVectors );
@@ -88,4 +92,5 @@ public class DataGenerator {
     public void abort() {
         aborted = true;
     }
+
 }

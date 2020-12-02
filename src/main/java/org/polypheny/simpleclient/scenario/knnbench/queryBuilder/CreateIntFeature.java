@@ -2,12 +2,12 @@ package org.polypheny.simpleclient.scenario.knnbench.queryBuilder;
 
 
 import kong.unirest.HttpRequest;
-import org.polypheny.simpleclient.query.BatchableInsert;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
 
 public class CreateIntFeature extends QueryBuilder {
+
     private final String store;
     private final int dimension;
 
@@ -25,6 +25,7 @@ public class CreateIntFeature extends QueryBuilder {
 
 
     private static class CreateIntFeatureQuery extends Query {
+
         private final String store;
         private final int dimension;
 
@@ -46,5 +47,7 @@ public class CreateIntFeature extends QueryBuilder {
         public HttpRequest<?> getRest() {
             return null;
         }
+
     }
+
 }

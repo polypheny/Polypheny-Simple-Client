@@ -101,7 +101,7 @@ public class PolyphenyDbJdbcExecutor extends JdbcExecutor implements PolyphenyDb
 
 
         @Override
-        public PolyphenyDbJdbcExecutor createInstance( CsvWriter csvWriter ) {
+        public PolyphenyDbJdbcExecutor createExecutorInstance( CsvWriter csvWriter ) {
             return new PolyphenyDbJdbcExecutor( host, csvWriter );
         }
 

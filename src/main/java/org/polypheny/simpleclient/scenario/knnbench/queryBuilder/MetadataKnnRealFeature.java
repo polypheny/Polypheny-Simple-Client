@@ -9,6 +9,7 @@ import org.polypheny.simpleclient.query.QueryBuilder;
 
 
 public class MetadataKnnRealFeature extends QueryBuilder {
+
     private static final boolean EXPECT_RESULT = true;
 
     private final long randomSeed;
@@ -50,6 +51,7 @@ public class MetadataKnnRealFeature extends QueryBuilder {
 
 
     private static class MetadataKnnRealFeatureQuery extends Query {
+
         private static final String SQL_1 = "SELECT knn_metadata.id, knn_metadata.textdata FROM knn_metadata WHERE knn_metadata.id in ( SELECT id FROM knn_realfeature ORDER BY distance(feature, ARRAY";
         private static final String SQL_2 = ", '";
         private static final String SQL_3 = "') ASC LIMIT ";
@@ -78,5 +80,7 @@ public class MetadataKnnRealFeature extends QueryBuilder {
         public HttpRequest<?> getRest() {
             return null;
         }
+
     }
+
 }

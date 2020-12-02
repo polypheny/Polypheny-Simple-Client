@@ -9,6 +9,7 @@ import org.polypheny.simpleclient.scenario.IConfig;
 
 @Slf4j
 public class Config implements IConfig {
+
     public final String system;
 
     public final String pdbBranch;
@@ -40,7 +41,6 @@ public class Config implements IConfig {
 
     public final int limitKnnQueries;
     public final String distanceNorm;
-
 
 
     public final int progressReportBase;
@@ -139,4 +139,5 @@ public class Config implements IConfig {
     public boolean usePreparedBatchForDataInsertion() {
         return true;
     }
+
 }

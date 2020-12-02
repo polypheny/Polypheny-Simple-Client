@@ -28,6 +28,8 @@ package org.polypheny.simpleclient.executor;
 
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import lombok.extern.slf4j.Slf4j;
+import org.polypheny.simpleclient.cli.ChronosCommand;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.query.RawQuery;
 
@@ -51,7 +53,6 @@ public class PostgresExecutor extends JdbcExecutor {
         } catch ( SQLException e ) {
             throw new RuntimeException( "Connection failed.", e );
         }
-
     }
 
 
@@ -75,7 +76,7 @@ public class PostgresExecutor extends JdbcExecutor {
 
 
         @Override
-        public PostgresExecutor createInstance( CsvWriter csvWriter ) {
+        public PostgresExecutor createExecutorInstance( CsvWriter csvWriter ) {
             return new PostgresExecutor( host, csvWriter );
         }
 
@@ -84,6 +85,40 @@ public class PostgresExecutor extends JdbcExecutor {
         public int getMaxNumberOfThreads() {
             return 0;
         }
+
+    }
+
+
+    @Slf4j
+    public static class PostgresInstance extends DatabaseInstance {
+
+        public PostgresInstance() {
+            reset();
+        }
+
+
+        @Override
+        public void tearDown() {
+            reset();
+        }
+
+
+        public static void reset() {
+            JdbcExecutor postgresExecutor = new PostgresExecutor( ChronosCommand.hostname, null );
+            try {
+                postgresExecutor.reset();
+                postgresExecutor.executeCommit();
+            } catch ( ExecutorException e ) {
+                throw new RuntimeException( "Exception while dropping tables on postgres", e );
+            } finally {
+                try {
+                    postgresExecutor.closeConnection();
+                } catch ( ExecutorException e ) {
+                    log.error( "Exception while closing connection", e );
+                }
+            }
+        }
+
     }
 
 }

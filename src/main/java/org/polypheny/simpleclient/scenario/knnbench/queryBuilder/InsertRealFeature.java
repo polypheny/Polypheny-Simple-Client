@@ -10,11 +10,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 import kong.unirest.HttpRequest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.BatchableInsert;
-import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
 
 public class InsertRealFeature extends QueryBuilder {
+
     private static final boolean EXPECT_RESULT = false;
 
     private static final AtomicInteger nextId = new AtomicInteger( 1 );
@@ -30,6 +30,7 @@ public class InsertRealFeature extends QueryBuilder {
 
         this.random = new Random( randomSeed );
     }
+
 
     private Float[] getRandomVector() {
         Float[] floats = new Float[this.dimension];
@@ -51,6 +52,7 @@ public class InsertRealFeature extends QueryBuilder {
 
 
     private static class InsertRealFeatureQuery extends BatchableInsert {
+
         private static final String SQL = "INSERT INTO knn_realfeature (id, feature) VALUES ";
         private final int id;
         private final Float[] feature;
@@ -106,5 +108,7 @@ public class InsertRealFeature extends QueryBuilder {
         public HttpRequest<?> getRest() {
             return null;
         }
+
     }
+
 }

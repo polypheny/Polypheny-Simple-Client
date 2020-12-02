@@ -1,5 +1,20 @@
 package org.polypheny.simpleclient.executor;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
+import org.polypheny.simpleclient.cli.ChronosCommand;
+import org.polypheny.simpleclient.executor.MonetdbExecutor.MonetdbInstance;
+import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory;
+import org.polypheny.simpleclient.executor.PostgresExecutor.PostgresInstance;
+import org.polypheny.simpleclient.main.PolyphenyControlConnector;
+import org.polypheny.simpleclient.scenario.gavel.Config;
+
+
 public interface PolyphenyDbExecutor extends Executor {
 
     void dropStore( String name ) throws ExecutorException;
@@ -57,5 +72,225 @@ public interface PolyphenyDbExecutor extends Executor {
 
 
     void setConfig( String key, String value );
+
+
+    @Slf4j
+    class PolyphenyDbInstance extends DatabaseInstance {
+
+        private final PolyphenyControlConnector polyphenyControlConnector;
+        private final Config config;
+
+
+        public PolyphenyDbInstance( PolyphenyControlConnector polyphenyControlConnector, ExecutorFactory executorFactory, File outputDirectory, Config config ) {
+            this.polyphenyControlConnector = polyphenyControlConnector;
+            this.config = config;
+
+            // Update settings
+            Map<String, String> conf = new HashMap<>();
+            conf.put( "pcrtl.pdbms.branch", config.pdbBranch.trim() );
+            conf.put( "pcrtl.ui.branch", config.puiBranch.trim() );
+            conf.put( "pcrtl.java.heap", "10" );
+            conf.put( "pcrtl.buildmode", "both" );
+            conf.put( "pcrtl.clean.mode", "branchChange" );
+            String args = "";
+            if ( config.resetCatalog ) {
+                args += "-resetCatalog ";
+            }
+            if ( config.memoryCatalog ) {
+                args += "-memoryCatalog ";
+            }
+            conf.put( "pcrtl.pdbms.args", args.trim() );
+            polyphenyControlConnector.setConfig( conf );
+
+            // Pull branch and update polypheny
+            polyphenyControlConnector.updatePolypheny();
+
+            // Start Polypheny
+            polyphenyControlConnector.startPolypheny();
+            try {
+                TimeUnit.SECONDS.sleep( 10 );
+            } catch ( InterruptedException e ) {
+                throw new RuntimeException( "Unexpected interrupt", e );
+            }
+
+            // Store Polypheny version for documentation
+            try {
+                FileWriter fw = new FileWriter( outputDirectory.getPath() + File.separator + "polypheny.version" );
+                fw.append( polyphenyControlConnector.getVersion() );
+                fw.close();
+            } catch ( IOException e ) {
+                log.error( "Error while logging polypheny version", e );
+            }
+
+            // Configure data stores
+            PolyphenyDbExecutor executor = (PolyphenyDbExecutor) executorFactory.createExecutorInstance();
+            try {
+                // Remove hsqldb store
+                executor.dropStore( "hsqldb" );
+                // Deploy store
+                switch ( config.dataStore ) {
+                    case "hsqldb":
+                        executor.deployHsqldb();
+                        break;
+                    case "postgres":
+                        PostgresInstance.reset();
+                        executor.deployPostgres();
+                        break;
+                    case "monetdb":
+                        MonetdbInstance.reset();
+                        executor.deployMonetDb();
+                        break;
+                    case "cassandra":
+                        executor.deployCassandra();
+                        break;
+                    case "file":
+                        executor.deployFileStore();
+                        break;
+                    case "cottontail":
+                        executor.deployCottontail();
+                        break;
+                    case "monetdb+postgres":
+                        PostgresInstance.reset();
+                        MonetdbInstance.reset();
+                        executor.deployPostgres();
+                        executor.deployMonetDb();
+                        break;
+                    case "all":
+                        PostgresInstance.reset();
+                        MonetdbInstance.reset();
+                        executor.deployHsqldb();
+                        executor.deployPostgres();
+                        executor.deployMonetDb();
+                        executor.deployCassandra();
+                        executor.deployFileStore();
+                        executor.deployCottontail();
+                        break;
+                    default:
+                        throw new RuntimeException( "Unknown data store: " + config.dataStore );
+                }
+                executor.executeCommit();
+            } catch ( ExecutorException e ) {
+                throw new RuntimeException( "Exception while configuring stores", e );
+            } finally {
+                try {
+                    executor.closeConnection();
+                } catch ( ExecutorException e ) {
+                    log.error( "Exception while closing connection", e );
+                }
+            }
+
+            // Update polypheny config
+            executor = (PolyphenyDbExecutor) executorFactory.createExecutorInstance();
+            try {
+                // disable active tracking (dynamic querying)
+                executor.setConfig( "statistics/activeTracking", "false" );
+                // Set router
+                switch ( config.router ) {
+                    case "simple":
+                        executor.setConfig( "routing/router", "org.polypheny.db.router.SimpleRouter$SimpleRouterFactory" );
+                        break;
+                    case "icarus":
+                        executor.setConfig( "routing/router", "org.polypheny.db.router.IcarusRouter$IcarusRouterFactory" );
+                        setIcarusRoutingTraining( false );
+                        break;
+                    default:
+                        throw new RuntimeException( "Unknown configuration value for router: " + config.router );
+                }
+                // Set Plan & Implementation Caching
+                switch ( config.planAndImplementationCaching ) {
+                    case "None":
+                        executor.setConfig( "runtime/implementationCaching", "false" );
+                        executor.setConfig( "runtime/queryPlanCaching", "false" );
+                        break;
+                    case "Plan":
+                        executor.setConfig( "runtime/implementationCaching", "false" );
+                        executor.setConfig( "runtime/queryPlanCaching", "true" );
+                        break;
+                    case "Implementation":
+                        executor.setConfig( "runtime/implementationCaching", "true" );
+                        executor.setConfig( "runtime/queryPlanCaching", "false" );
+                        break;
+                    case "Both":
+                        executor.setConfig( "runtime/implementationCaching", "true" );
+                        executor.setConfig( "runtime/queryPlanCaching", "true" );
+                        break;
+                    default:
+                        throw new RuntimeException( "Unknown configuration value for planAndImplementationCaching: " + config.planAndImplementationCaching );
+                }
+                executor.executeCommit();
+            } catch ( ExecutorException e ) {
+                throw new RuntimeException( "Exception while updating polypheny config", e );
+            } finally {
+                try {
+                    executor.closeConnection();
+                } catch ( ExecutorException e ) {
+                    log.error( "Exception while closing connection", e );
+                }
+            }
+
+            // Wait 5 seconds to let the the config changes take effect
+            try {
+                TimeUnit.SECONDS.sleep( 5 );
+            } catch ( InterruptedException e ) {
+                throw new RuntimeException( "Unexpected interrupt", e );
+            }
+        }
+
+
+        @Override
+        public void tearDown() {
+            polyphenyControlConnector.stopPolypheny();
+            try {
+                TimeUnit.SECONDS.sleep( 3 );
+            } catch ( InterruptedException e ) {
+                throw new RuntimeException( "Unexpected interrupt", e );
+            }
+            switch ( config.dataStore ) {
+                case "hsqldb":
+                    break;
+                case "postgres":
+                    PostgresInstance.reset();
+                    break;
+                case "monetdb":
+                    MonetdbInstance.reset();
+                    break;
+                case "cassandra":
+                    break;
+                case "file":
+                    break;
+                case "cottontail":
+                    break;
+                case "monetdb+postgres":
+                    PostgresInstance.reset();
+                    MonetdbInstance.reset();
+                    break;
+                case "all":
+                    PostgresInstance.reset();
+                    MonetdbInstance.reset();
+                    break;
+                default:
+                    throw new RuntimeException( "Unknown data store: " + config.dataStore );
+            }
+        }
+
+
+        public void setIcarusRoutingTraining( boolean b ) {
+            PolyphenyDbExecutor executor = (PolyphenyDbExecutor) new PolyphenyDbJdbcExecutorFactory( ChronosCommand.hostname ).createExecutorInstance();
+            try {
+                // disable icarus training
+                executor.setConfig( "icarusRouting/training", b ? "true" : "false" );
+                executor.executeCommit();
+            } catch ( ExecutorException e ) {
+                throw new RuntimeException( "Exception while updating polypheny config", e );
+            } finally {
+                try {
+                    executor.closeConnection();
+                } catch ( ExecutorException e ) {
+                    log.error( "Exception while closing connection", e );
+                }
+            }
+        }
+
+    }
 
 }

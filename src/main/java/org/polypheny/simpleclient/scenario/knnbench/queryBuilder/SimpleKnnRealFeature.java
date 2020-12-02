@@ -9,6 +9,7 @@ import org.polypheny.simpleclient.query.QueryBuilder;
 
 
 public class SimpleKnnRealFeature extends QueryBuilder {
+
     private static final boolean EXPECT_RESULT = true;
 
     private final long randomSeed;
@@ -50,6 +51,7 @@ public class SimpleKnnRealFeature extends QueryBuilder {
 
 
     private static class SimpleKnnRealFeatureQuery extends Query {
+
         private static final String SQL_1 = "SELECT id, distance(feature, ARRAY";
         private static final String SQL_2 = ", '";
         private static final String SQL_3 = "') as dist FROM knn_realfeature ORDER BY dist ASC LIMIT ";
@@ -57,7 +59,8 @@ public class SimpleKnnRealFeature extends QueryBuilder {
         private final Float[] target;
         private final int limit;
         private final String norm;
-        
+
+
         public SimpleKnnRealFeatureQuery( Float[] target, int limit, String norm ) {
             super( EXPECT_RESULT );
             this.target = target;
@@ -76,5 +79,7 @@ public class SimpleKnnRealFeature extends QueryBuilder {
         public HttpRequest<?> getRest() {
             return null;
         }
+
     }
+
 }

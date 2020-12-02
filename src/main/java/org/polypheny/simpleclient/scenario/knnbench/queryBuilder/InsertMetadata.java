@@ -12,9 +12,11 @@ import org.polypheny.simpleclient.query.QueryBuilder;
 
 
 public class InsertMetadata extends QueryBuilder {
+
     private static final boolean EXPECT_RESULT = false;
 
     private static final AtomicInteger nextId = new AtomicInteger( 1 );
+
 
     @Override
     public BatchableInsert getNewQuery() {
@@ -23,6 +25,7 @@ public class InsertMetadata extends QueryBuilder {
 
 
     private static class InsertMetadataQuery extends BatchableInsert {
+
         private static final String SQL = "INSERT INTO knn_metadata (id, textdata) VALUES ";
 
         private final int id;
@@ -79,5 +82,7 @@ public class InsertMetadata extends QueryBuilder {
         public HttpRequest<?> getRest() {
             return null;
         }
+
     }
+
 }

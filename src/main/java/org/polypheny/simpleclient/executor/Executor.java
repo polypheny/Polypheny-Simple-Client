@@ -28,15 +28,23 @@ public interface Executor {
 
     abstract class ExecutorFactory {
 
-        public Executor createInstance() {
-            return createInstance( null );
+        public Executor createExecutorInstance() {
+            return createExecutorInstance( null );
         }
 
 
-        public abstract Executor createInstance( CsvWriter csvWriter );
+        public abstract Executor createExecutorInstance( CsvWriter csvWriter );
 
         // Allows to limit number of concurrent executor threads, 0 means no limit
         public abstract int getMaxNumberOfThreads();
+
+    }
+
+
+    abstract class DatabaseInstance {
+
+        public abstract void tearDown();
+
     }
 
 }

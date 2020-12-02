@@ -1,6 +1,7 @@
 package org.polypheny.simpleclient.scenario.knnbench;
 
 
+import com.google.common.base.Joiner;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -18,6 +19,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.executor.ExecutorException;
+import org.polypheny.simpleclient.main.ChronosAgent;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.main.ProgressReporter;
 import org.polypheny.simpleclient.query.QueryBuilder;
@@ -51,13 +53,14 @@ public class KnnBench extends Scenario {
         measuredTimePerQueryType = new ConcurrentHashMap<>();
     }
 
+
     @Override
     public void createSchema( boolean includingKeys ) {
         log.info( "Creating schema..." );
         Executor executor = null;
 
         try {
-            executor = executorFactory.createInstance();
+            executor = executorFactory.createExecutorInstance();
             executor.executeQuery( (new CreateMetadata( config.dataStoreMetadata )).getNewQuery() );
             executor.executeQuery( (new CreateIntFeature( config.dataStoreFeature, config.dimensionFeatureVectors )).getNewQuery() );
             executor.executeQuery( (new CreateRealFeature( config.dataStoreFeature, config.dimensionFeatureVectors )).getNewQuery() );
@@ -72,7 +75,7 @@ public class KnnBench extends Scenario {
     @Override
     public void generateData( ProgressReporter progressReporter ) {
         log.info( "Generating data..." );
-        Executor executor1 = executorFactory.createInstance();
+        Executor executor1 = executorFactory.createExecutorInstance();
         DataGenerator dataGenerator = new DataGenerator( executor1, config, progressReporter );
 
         try {
@@ -99,7 +102,6 @@ public class KnnBench extends Scenario {
 
         Collections.shuffle( queryList );
 
-
         // This dumps the sql queries independent of the selected interface
         if ( outputDirectory != null && dumpQueryList ) {
             log.info( "Dump query list..." );
@@ -118,14 +120,13 @@ public class KnnBench extends Scenario {
             }
         }
 
-
         log.info( "Executing benchmark..." );
         (new Thread( new ProgressReporter.ReportQueryListProgress( queryList, progressReporter ) )).start();
         long startTime = System.nanoTime();
 
         ArrayList<EvaluationThread> threads = new ArrayList<>();
         for ( int i = 0; i < numberOfThreads; i++ ) {
-            threads.add( new EvaluationThread( queryList, executorFactory.createInstance( csvWriter ) ) );
+            threads.add( new EvaluationThread( queryList, executorFactory.createExecutorInstance( csvWriter ) ) );
         }
 
         EvaluationThreadMonitor threadMonitor = new EvaluationThreadMonitor( threads );
@@ -196,7 +197,7 @@ public class KnnBench extends Scenario {
 
         for ( int i = 0; i < iterations; i++ ) {
             try {
-                executor = executorFactory.createInstance();
+                executor = executorFactory.createExecutorInstance();
                 if ( config.numberOfSimpleKnnIntFeatureQueries > 0 ) {
                     executor.executeQuery( simpleKnnIntFeatureBuilder.getNewQuery() );
                 }
@@ -345,7 +346,16 @@ public class KnnBench extends Scenario {
 
     @Override
     public void analyze( Properties properties ) {
+        properties.put( "measuredTime", calculateMean( measuredTimes ) );
 
+        measuredTimePerQueryType.forEach( ( templateId, time ) -> {
+            properties.put( "queryTypes_" + templateId + "_mean", calculateMean( time ) );
+            if ( ChronosAgent.STORE_INDIVIDUAL_QUERY_TIMES ) {
+                properties.put( "queryTypes_" + templateId + "_all", Joiner.on( ',' ).join( time ) );
+            }
+            properties.put( "queryTypes_" + templateId + "_example", queryTypes.get( templateId ) );
+        } );
+        properties.put( "queryTypes_maxId", queryTypes.size() );
     }
 
 
@@ -377,4 +387,5 @@ public class KnnBench extends Scenario {
             }
         }
     }
+
 }
