@@ -38,8 +38,8 @@ import org.polypheny.simpleclient.query.RawQuery;
 public class PolyphenyDbJdbcExecutor extends JdbcExecutor implements PolyphenyDbExecutor {
 
 
-    private PolyphenyDbJdbcExecutor( String polyphenyHost, CsvWriter csvWriter ) {
-        super( csvWriter );
+    private PolyphenyDbJdbcExecutor( String polyphenyHost, CsvWriter csvWriter, boolean prepareStatements ) {
+        super( csvWriter, prepareStatements );
 
         try {
             Class.forName( "org.polypheny.jdbc.Driver" );
@@ -93,16 +93,18 @@ public class PolyphenyDbJdbcExecutor extends JdbcExecutor implements PolyphenyDb
     public static class PolyphenyDbJdbcExecutorFactory extends ExecutorFactory {
 
         private final String host;
+        private final boolean prepareStatements;
 
 
-        public PolyphenyDbJdbcExecutorFactory( String host ) {
+        public PolyphenyDbJdbcExecutorFactory( String host, boolean prepareStatements ) {
             this.host = host;
+            this.prepareStatements = prepareStatements;
         }
 
 
         @Override
         public PolyphenyDbJdbcExecutor createExecutorInstance( CsvWriter csvWriter ) {
-            return new PolyphenyDbJdbcExecutor( host, csvWriter );
+            return new PolyphenyDbJdbcExecutor( host, csvWriter, prepareStatements );
         }
 
 

@@ -34,6 +34,7 @@ import kong.unirest.HttpRequest;
 import kong.unirest.RequestBodyEntity;
 import kong.unirest.Unirest;
 import lombok.Getter;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 
 
 public abstract class Query {
@@ -47,8 +48,14 @@ public abstract class Query {
     }
 
 
+    public enum DataTypes {INTEGER, VARCHAR, TIMESTAMP, DATE, ARRAY_INT, ARRAY_REAL}
+
+
     public abstract String getSql();
 
+    public abstract String getParameterizedSqlQuery();
+
+    public abstract Map<Integer, ImmutablePair<DataTypes, Object>> getParameterValues();
 
     public abstract HttpRequest<?> getRest();
 

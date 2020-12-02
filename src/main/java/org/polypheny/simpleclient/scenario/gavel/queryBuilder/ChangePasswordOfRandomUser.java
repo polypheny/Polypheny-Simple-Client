@@ -30,10 +30,12 @@ import com.devskiller.jfairy.Fairy;
 import com.devskiller.jfairy.producer.person.Person;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import kong.unirest.HttpRequest;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
@@ -80,6 +82,21 @@ public class ChangePasswordOfRandomUser extends QueryBuilder {
                     + "'" + password + "' "
                     + "WHERE \"id\" = "
                     + userId;
+        }
+
+
+        @Override
+        public String getParameterizedSqlQuery() {
+            return "UPDATE \"user\" SET \"password\" = ? WHERE \"id\" = ?";
+        }
+
+
+        @Override
+        public Map<Integer, ImmutablePair<DataTypes, Object>> getParameterValues() {
+            Map<Integer, ImmutablePair<DataTypes, Object>> map = new HashMap<>();
+            map.put( 1, new ImmutablePair<>( DataTypes.VARCHAR, password ) );
+            map.put( 2, new ImmutablePair<>( DataTypes.INTEGER, userId ) );
+            return map;
         }
 
 

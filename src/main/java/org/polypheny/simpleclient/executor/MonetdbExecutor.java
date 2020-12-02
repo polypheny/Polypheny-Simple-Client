@@ -40,8 +40,8 @@ import org.polypheny.simpleclient.query.RawQuery;
 public class MonetdbExecutor extends JdbcExecutor {
 
 
-    public MonetdbExecutor( String host, CsvWriter csvWriter ) {
-        super( csvWriter );
+    public MonetdbExecutor( String host, CsvWriter csvWriter, boolean prepareStatements ) {
+        super( csvWriter, prepareStatements );
         try {
             Class.forName( "nl.cwi.monetdb.jdbc.MonetDriver" );
         } catch ( ClassNotFoundException e ) {
@@ -88,16 +88,18 @@ public class MonetdbExecutor extends JdbcExecutor {
     public static class MonetdbExecutorFactory extends ExecutorFactory {
 
         private final String host;
+        private final boolean prepareStatements;
 
 
-        public MonetdbExecutorFactory( String host ) {
+        public MonetdbExecutorFactory( String host, boolean prepareStatements ) {
             this.host = host;
+            this.prepareStatements = prepareStatements;
         }
 
 
         @Override
         public JdbcExecutor createExecutorInstance( CsvWriter csvWriter ) {
-            return new MonetdbExecutor( host, csvWriter );
+            return new MonetdbExecutor( host, csvWriter, prepareStatements );
         }
 
 
@@ -123,7 +125,7 @@ public class MonetdbExecutor extends JdbcExecutor {
 
 
         public static void reset() {
-            JdbcExecutor monetdbExecutor = new MonetdbExecutor( ChronosCommand.hostname, null );
+            JdbcExecutor monetdbExecutor = new MonetdbExecutor( ChronosCommand.hostname, null, false );
             try {
                 monetdbExecutor.reset();
                 monetdbExecutor.executeCommit();

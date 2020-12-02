@@ -26,7 +26,9 @@
 package org.polypheny.simpleclient.scenario.gavel.queryBuilder;
 
 
+import java.util.Map;
 import kong.unirest.HttpRequest;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
@@ -52,6 +54,18 @@ public class TruncateBid extends QueryBuilder {
         @Override
         public String getSql() {
             return "TRUNCATE TABLE bid";
+        }
+
+
+        @Override
+        public String getParameterizedSqlQuery() {
+            return null;
+        }
+
+
+        @Override
+        public Map<Integer, ImmutablePair<DataTypes, Object>> getParameterValues() {
+            return null;
         }
 
 

@@ -28,8 +28,11 @@ package org.polypheny.simpleclient.scenario.gavel.queryBuilder;
 
 import com.devskiller.jfairy.Fairy;
 import com.devskiller.jfairy.producer.text.TextProducer;
+import java.util.HashMap;
+import java.util.Map;
 import kong.unirest.HttpRequest;
 import kong.unirest.Unirest;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
@@ -69,6 +72,23 @@ public class SearchAuction extends QueryBuilder {
                     + "WHERE a.title LIKE '%" + searchString + "%' "
                     + "ORDER BY end_date desc "
                     + "LIMIT 100";
+        }
+
+
+        @Override
+        public String getParameterizedSqlQuery() {
+            return "SELECT a.title, a.start_date, a.end_date FROM Auction a "
+                    + "WHERE a.title LIKE ? "
+                    + "ORDER BY end_date desc "
+                    + "LIMIT 100";
+        }
+
+
+        @Override
+        public Map<Integer, ImmutablePair<DataTypes, Object>> getParameterValues() {
+            Map<Integer, ImmutablePair<DataTypes, Object>> map = new HashMap<>();
+            map.put( 1, new ImmutablePair<>( DataTypes.VARCHAR, "%" + searchString + "%" ) );
+            return map;
         }
 
 

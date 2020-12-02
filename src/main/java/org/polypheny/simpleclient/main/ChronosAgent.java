@@ -103,16 +103,16 @@ public class ChronosAgent extends AbstractChronosAgent {
         Executor.ExecutorFactory executorFactory;
         switch ( parsedConfig.get( "store" ) ) {
             case "polypheny":
-                executorFactory = new PolyphenyDbJdbcExecutorFactory( ChronosCommand.hostname );
+                executorFactory = new PolyphenyDbJdbcExecutorFactory( ChronosCommand.hostname, Boolean.parseBoolean( parsedConfig.get( "prepareStatements" ) ) );
                 break;
             case "polypheny-rest":
                 executorFactory = new PolyphenyDbRestExecutorFactory( ChronosCommand.hostname );
                 break;
             case "postgres":
-                executorFactory = new PostgresExecutorFactory( ChronosCommand.hostname );
+                executorFactory = new PostgresExecutorFactory( ChronosCommand.hostname, Boolean.parseBoolean( parsedConfig.get( "prepareStatements" ) ) );
                 break;
             case "monetdb":
-                executorFactory = new MonetdbExecutorFactory( ChronosCommand.hostname );
+                executorFactory = new MonetdbExecutorFactory( ChronosCommand.hostname, Boolean.parseBoolean( parsedConfig.get( "prepareStatements" ) ) );
                 break;
             case "cottontail":
                 executorFactory = new CottontailExecutorFactory();
