@@ -75,11 +75,11 @@ public class ChronosAgent extends AbstractChronosAgent {
     private final boolean dumpQueryList;
 
 
-    public ChronosAgent( InetAddress address, int port, boolean secure, boolean useHostname, String environment, String supports, boolean writeCsv, boolean dumpQueryList ) {
+    public ChronosAgent( InetAddress address, int port, boolean secure, boolean useHostname, String environment, String[] supports, boolean writeCsv, boolean dumpQueryList ) {
         super( address, port, secure, useHostname, environment );
         this.writeCsv = writeCsv;
         this.dumpQueryList = dumpQueryList;
-        this.supports = new String[]{ supports };
+        this.supports = supports;
         try {
             polyphenyControlConnector = new PolyphenyControlConnector( ChronosCommand.hostname + ":8070" );
         } catch ( URISyntaxException e ) {
@@ -192,8 +192,9 @@ public class ChronosAgent extends AbstractChronosAgent {
         ProgressReporter progressReporter = new ChronosProgressReporter( chronosJob, this, scenario.getNumberOfInsertThreads(), config.progressReportBase );
         try {
             scenario.generateData( progressReporter );
-        } finally {
+        } catch ( Exception e ) {
             databaseInstance.tearDown();
+            throw e;
         }
 
         return new ImmutableTriple<>( scenario, config, databaseInstance );
@@ -218,8 +219,9 @@ public class ChronosAgent extends AbstractChronosAgent {
             if ( config.system.equals( "polypheny" ) && config.router.equals( "icarus" ) ) {
                 ((PolyphenyDbInstance) databaseInstance).setIcarusRoutingTraining( false );
             }
-        } finally {
+        } catch ( Exception e ) {
             databaseInstance.tearDown();
+            throw e;
         }
         return new ImmutableTriple<>( scenario, config, databaseInstance );
     }
@@ -248,8 +250,9 @@ public class ChronosAgent extends AbstractChronosAgent {
             ProgressReporter progressReporter = new ChronosProgressReporter( chronosJob, this, numberOfThreads, config.progressReportBase );
             long runtime = scenario.execute( progressReporter, csvWriter, outputDirectory, numberOfThreads );
             properties.put( "runtime", runtime );
-        } finally {
+        } catch ( Exception e ) {
             databaseInstance.tearDown();
+            throw e;
         }
         return new ImmutableTriple<>( scenario, config, databaseInstance );
     }
@@ -263,8 +266,9 @@ public class ChronosAgent extends AbstractChronosAgent {
 
         try {
             scenario.analyze( properties );
-        } finally {
+        } catch ( Exception e ) {
             databaseInstance.tearDown();
+            throw e;
         }
 
         return new ImmutableTriple<>( scenario, config, databaseInstance );
