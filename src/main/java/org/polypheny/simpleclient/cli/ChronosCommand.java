@@ -77,7 +77,7 @@ public class ChronosCommand implements CliRunnable {
             System.exit( 1 );
         }
 
-        AbstractChronosAgent aca = new ChronosAgent( address, port, true, true, environment, supports, writeCsv, dumpQueryList );
+        AbstractChronosAgent aca = new ChronosAgent( address, port, true, true, environment, supports.split( "," ), writeCsv, dumpQueryList );
         aca.setDaemon( false );
         aca.start();
 

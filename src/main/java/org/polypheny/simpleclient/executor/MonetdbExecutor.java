@@ -30,15 +30,18 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.polypheny.simpleclient.cli.ChronosCommand;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.query.RawQuery;
 
 
+@Slf4j
 public class MonetdbExecutor extends JdbcExecutor {
 
 
-    public MonetdbExecutor( String host, CsvWriter csvWriter ) {
-        super( csvWriter );
+    public MonetdbExecutor( String host, CsvWriter csvWriter, boolean prepareStatements ) {
+        super( csvWriter, prepareStatements );
         try {
             Class.forName( "nl.cwi.monetdb.jdbc.MonetDriver" );
         } catch ( ClassNotFoundException e ) {
@@ -85,16 +88,18 @@ public class MonetdbExecutor extends JdbcExecutor {
     public static class MonetdbExecutorFactory extends ExecutorFactory {
 
         private final String host;
+        private final boolean prepareStatements;
 
 
-        public MonetdbExecutorFactory( String host ) {
+        public MonetdbExecutorFactory( String host, boolean prepareStatements ) {
             this.host = host;
+            this.prepareStatements = prepareStatements;
         }
 
 
         @Override
-        public JdbcExecutor createInstance( CsvWriter csvWriter ) {
-            return new MonetdbExecutor( host, csvWriter );
+        public JdbcExecutor createExecutorInstance( CsvWriter csvWriter ) {
+            return new MonetdbExecutor( host, csvWriter, prepareStatements );
         }
 
 
@@ -102,6 +107,39 @@ public class MonetdbExecutor extends JdbcExecutor {
         public int getMaxNumberOfThreads() {
             return 1;
         }
+
+    }
+
+
+    public static class MonetdbInstance extends DatabaseInstance {
+
+        public MonetdbInstance() {
+            reset();
+        }
+
+
+        @Override
+        public void tearDown() {
+            reset();
+        }
+
+
+        public static void reset() {
+            JdbcExecutor monetdbExecutor = new MonetdbExecutor( ChronosCommand.hostname, null, false );
+            try {
+                monetdbExecutor.reset();
+                monetdbExecutor.executeCommit();
+            } catch ( ExecutorException e ) {
+                throw new RuntimeException( "Exception while dropping tables on monetdb", e );
+            } finally {
+                try {
+                    monetdbExecutor.closeConnection();
+                } catch ( ExecutorException e ) {
+                    log.error( "Exception while closing connection", e );
+                }
+            }
+        }
+
     }
 
 }

@@ -27,13 +27,19 @@ package org.polypheny.simpleclient.scenario;
 
 
 import java.io.File;
+import java.text.DecimalFormat;
+import java.text.ParseException;
+import java.util.List;
+import java.util.OptionalDouble;
 import java.util.Properties;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.main.ProgressReporter;
 
 
+@Slf4j
 public abstract class Scenario {
 
     @Getter
@@ -58,5 +64,25 @@ public abstract class Scenario {
     public abstract void warmUp( ProgressReporter progressReporter, int iterations );
 
     public abstract void analyze( Properties properties );
+
+
+    protected double calculateMean( List<Long> times ) {
+        DecimalFormat df = new DecimalFormat( "0.000" );
+        OptionalDouble meanOptional = times.stream().mapToLong( Long::longValue ).average();
+        if ( meanOptional.isPresent() ) {
+            // scale
+            double mean = meanOptional.getAsDouble() / 1000000;
+            String roundFormat = df.format( mean );
+            try {
+                return df.parse( roundFormat ).doubleValue();
+            } catch ( ParseException e ) {
+                log.error( "Exception", e );
+            }
+        }
+        return -1;
+    }
+
+
+    public abstract int getNumberOfInsertThreads();
 
 }

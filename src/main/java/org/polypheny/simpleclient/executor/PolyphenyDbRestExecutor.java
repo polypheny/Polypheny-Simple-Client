@@ -17,7 +17,7 @@ import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.query.BatchableInsert;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.RawQuery;
-import org.polypheny.simpleclient.scenario.gavel.Config;
+import org.polypheny.simpleclient.scenario.AbstractConfig;
 
 
 @Slf4j
@@ -33,7 +33,7 @@ public class PolyphenyDbRestExecutor implements PolyphenyDbExecutor {
         super();
         this.host = host;
         this.csvWriter = csvWriter;
-        jdbcExecutorFactory = new PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory( host );
+        jdbcExecutorFactory = new PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory( host, false );
     }
 
 
@@ -71,7 +71,7 @@ public class PolyphenyDbRestExecutor implements PolyphenyDbExecutor {
             log.warn( query.getSql() );
             JdbcExecutor executor = null;
             try {
-                executor = jdbcExecutorFactory.createInstance( csvWriter );
+                executor = jdbcExecutorFactory.createExecutorInstance( csvWriter );
                 time = executor.executeQuery( query );
                 if ( csvWriter != null ) {
                     csvWriter.appendToCsv( query.getSql(), time );
@@ -123,7 +123,7 @@ public class PolyphenyDbRestExecutor implements PolyphenyDbExecutor {
             log.warn( query.getSql() );
             JdbcExecutor executor = null;
             try {
-                executor = jdbcExecutorFactory.createInstance( csvWriter );
+                executor = jdbcExecutorFactory.createExecutorInstance( csvWriter );
                 return executor.executeQueryAndGetNumber( query );
             } catch ( ExecutorException e ) {
                 throw new ExecutorException( "Error while executing query via JDBC", e );
@@ -153,7 +153,7 @@ public class PolyphenyDbRestExecutor implements PolyphenyDbExecutor {
 
 
     @Override
-    public void executeInsertList( List<BatchableInsert> batchList, Config config ) throws ExecutorException {
+    public void executeInsertList( List<BatchableInsert> batchList, AbstractConfig config ) throws ExecutorException {
         String currentTable = null;
         List<JsonObject> rows = new ArrayList<>();
         for ( BatchableInsert query : batchList ) {
@@ -177,7 +177,7 @@ public class PolyphenyDbRestExecutor implements PolyphenyDbExecutor {
     public void dropStore( String name ) throws ExecutorException {
         PolyphenyDbJdbcExecutor executor = null;
         try {
-            executor = jdbcExecutorFactory.createInstance( csvWriter );
+            executor = jdbcExecutorFactory.createExecutorInstance( csvWriter );
             executor.dropStore( name );
             executor.executeCommit();
         } catch ( ExecutorException e ) {
@@ -192,7 +192,7 @@ public class PolyphenyDbRestExecutor implements PolyphenyDbExecutor {
     public void deployStore( String name, String clazz, String config ) throws ExecutorException {
         PolyphenyDbJdbcExecutor executor = null;
         try {
-            executor = jdbcExecutorFactory.createInstance( csvWriter );
+            executor = jdbcExecutorFactory.createExecutorInstance( csvWriter );
             executor.deployStore( name, clazz, config );
             executor.executeCommit();
         } catch ( ExecutorException e ) {
@@ -207,7 +207,7 @@ public class PolyphenyDbRestExecutor implements PolyphenyDbExecutor {
     public void setConfig( String key, String value ) {
         PolyphenyDbJdbcExecutor executor = null;
         try {
-            executor = jdbcExecutorFactory.createInstance( csvWriter );
+            executor = jdbcExecutorFactory.createExecutorInstance( csvWriter );
             executor.setConfig( key, value );
             executor.executeCommit();
         } catch ( ExecutorException e ) {
@@ -266,7 +266,7 @@ public class PolyphenyDbRestExecutor implements PolyphenyDbExecutor {
 
 
         @Override
-        public PolyphenyDbRestExecutor createInstance( CsvWriter csvWriter ) {
+        public PolyphenyDbRestExecutor createExecutorInstance( CsvWriter csvWriter ) {
             return new PolyphenyDbRestExecutor( host, csvWriter );
         }
 

@@ -26,7 +26,10 @@
 package org.polypheny.simpleclient.scenario.gavel.queryBuilder.not_used;
 
 
+import java.util.HashMap;
+import java.util.Map;
 import kong.unirest.HttpRequest;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
@@ -63,6 +66,20 @@ public class DeleteCategoriesWithIdLargerThan extends QueryBuilder {
         @Override
         public String getSql() {
             return "delete from category where id > " + larger;
+        }
+
+
+        @Override
+        public String getParameterizedSqlQuery() {
+            return "delete from category where id > ?";
+        }
+
+
+        @Override
+        public Map<Integer, ImmutablePair<DataTypes, Object>> getParameterValues() {
+            Map<Integer, ImmutablePair<DataTypes, Object>> map = new HashMap<>();
+            map.put( 1, new ImmutablePair<>( DataTypes.INTEGER, larger ) );
+            return map;
         }
 
 

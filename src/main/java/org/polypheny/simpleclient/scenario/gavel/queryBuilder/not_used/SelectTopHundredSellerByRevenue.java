@@ -26,7 +26,10 @@
 package org.polypheny.simpleclient.scenario.gavel.queryBuilder.not_used;
 
 
+import java.util.HashMap;
+import java.util.Map;
 import kong.unirest.HttpRequest;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
@@ -56,6 +59,18 @@ public class SelectTopHundredSellerByRevenue extends QueryBuilder {
                     "WHERE a.user = u.id " +
                     "GROUP BY u.id, u.last_name, u.first_name " +
                     "ORDER BY revenue desc LIMIT 100";
+        }
+
+
+        @Override
+        public String getParameterizedSqlQuery() {
+            return getSql();
+        }
+
+
+        @Override
+        public Map<Integer, ImmutablePair<DataTypes, Object>> getParameterValues() {
+            return new HashMap<>();
         }
 
 

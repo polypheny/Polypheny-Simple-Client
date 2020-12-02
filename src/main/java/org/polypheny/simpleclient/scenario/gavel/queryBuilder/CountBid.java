@@ -26,8 +26,11 @@
 package org.polypheny.simpleclient.scenario.gavel.queryBuilder;
 
 
+import java.util.HashMap;
+import java.util.Map;
 import kong.unirest.HttpRequest;
 import kong.unirest.Unirest;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
@@ -53,6 +56,18 @@ public class CountBid extends QueryBuilder {
         @Override
         public String getSql() {
             return "SELECT count(*) as NUMBER FROM bid";
+        }
+
+
+        @Override
+        public String getParameterizedSqlQuery() {
+            return getSql();
+        }
+
+
+        @Override
+        public Map<Integer, ImmutablePair<DataTypes, Object>> getParameterValues() {
+            return new HashMap<>();
         }
 
 

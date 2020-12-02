@@ -34,17 +34,19 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.query.BatchableInsert;
-import org.polypheny.simpleclient.query.BatchableInsert.DataTypes;
 import org.polypheny.simpleclient.query.Query;
+import org.polypheny.simpleclient.query.Query.DataTypes;
 import org.polypheny.simpleclient.query.RawQuery;
-import org.polypheny.simpleclient.scenario.gavel.Config;
+import org.polypheny.simpleclient.scenario.AbstractConfig;
 
 
 @Slf4j
@@ -55,9 +57,13 @@ public abstract class JdbcExecutor implements Executor {
 
     protected final CsvWriter csvWriter;
 
+    protected final boolean prepareStatements;
+    protected final Map<String, PreparedStatement> preparedStatements = new HashMap<>();
 
-    public JdbcExecutor( CsvWriter csvWriter ) {
+
+    public JdbcExecutor( CsvWriter csvWriter, boolean prepareStatements ) {
         this.csvWriter = csvWriter;
+        this.prepareStatements = prepareStatements;
     }
 
 
@@ -72,13 +78,53 @@ public abstract class JdbcExecutor implements Executor {
 
             long start = System.nanoTime();
 
-            if ( query.isExpectResultSet() ) {
-                ResultSet resultSet = executeStatement.executeQuery( query.getSql() );
-                while ( resultSet.next() ) {
-                    // walk through the whole result set
+            if ( prepareStatements && query.getParameterizedSqlQuery() != null ) {
+                if ( !preparedStatements.containsKey( query.getClass().getCanonicalName() ) ) {
+                    PreparedStatement statement = connection.prepareStatement( query.getParameterizedSqlQuery() );
+                    preparedStatements.put( query.getClass().getCanonicalName(), statement );
+                }
+
+                PreparedStatement preparedStatement = preparedStatements.get( query.getClass().getCanonicalName() );
+                Map<Integer, ImmutablePair<DataTypes, Object>> values = query.getParameterValues();
+                for ( Entry<Integer, ImmutablePair<DataTypes, Object>> entry : values.entrySet() ) {
+                    switch ( entry.getValue().left ) {
+                        case INTEGER:
+                            preparedStatement.setInt( entry.getKey(), (Integer) entry.getValue().right );
+                            break;
+                        case VARCHAR:
+                            preparedStatement.setString( entry.getKey(), (String) entry.getValue().right );
+                            break;
+                        case TIMESTAMP:
+                            preparedStatement.setTimestamp( entry.getKey(), (Timestamp) entry.getValue().right );
+                            break;
+                        case DATE:
+                            preparedStatement.setDate( entry.getKey(), (Date) entry.getValue().right );
+                            break;
+                        case ARRAY_INT:
+                            preparedStatement.setArray( entry.getKey(), connection.createArrayOf( "INTEGER", (Object[]) entry.getValue().right ) );
+                            break;
+                        case ARRAY_REAL:
+                            preparedStatement.setArray( entry.getKey(), connection.createArrayOf( "REAL", (Object[]) entry.getValue().right ) );
+                            break;
+                    }
+                }
+                if ( query.isExpectResultSet() ) {
+                    ResultSet resultSet = preparedStatement.executeQuery();
+                    while ( resultSet.next() ) {
+                        // walk through the whole result set
+                    }
+                } else {
+                    preparedStatement.execute();
                 }
             } else {
-                executeStatement.execute( query.getSql() );
+                if ( query.isExpectResultSet() ) {
+                    ResultSet resultSet = executeStatement.executeQuery( query.getSql() );
+                    while ( resultSet.next() ) {
+                        // walk through the whole result set
+                    }
+                } else {
+                    executeStatement.execute( query.getSql() );
+                }
             }
 
             long time = System.nanoTime() - start;
@@ -140,6 +186,9 @@ public abstract class JdbcExecutor implements Executor {
             if ( executeStatement != null ) {
                 executeStatement.close();
             }
+            for ( PreparedStatement preparedStatement : preparedStatements.values() ) {
+                preparedStatement.close();
+            }
             if ( connection != null ) {
                 connection.close();
             }
@@ -150,9 +199,9 @@ public abstract class JdbcExecutor implements Executor {
 
 
     @Override
-    public void executeInsertList( List<BatchableInsert> queryList, Config config ) throws ExecutorException {
+    public void executeInsertList( List<BatchableInsert> queryList, AbstractConfig config ) throws ExecutorException {
         if ( queryList.size() > 0 ) {
-            if ( config.usePreparedBatchForDataInsertion ) {
+            if ( config.usePreparedBatchForDataInsertion() ) {
                 executeInsertListAsPreparedBatch( queryList );
             } else {
                 executeInsertListAsMultiInsert( queryList );
@@ -179,6 +228,12 @@ public abstract class JdbcExecutor implements Executor {
                             break;
                         case DATE:
                             preparedStatement.setDate( entry.getKey(), (Date) entry.getValue().right );
+                            break;
+                        case ARRAY_INT:
+                            preparedStatement.setArray( entry.getKey(), connection.createArrayOf( "INTEGER", (Object[]) entry.getValue().right ) );
+                            break;
+                        case ARRAY_REAL:
+                            preparedStatement.setArray( entry.getKey(), connection.createArrayOf( "REAL", (Object[]) entry.getValue().right ) );
                             break;
                     }
                 }

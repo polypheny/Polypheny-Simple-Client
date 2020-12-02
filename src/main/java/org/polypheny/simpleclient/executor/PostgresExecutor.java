@@ -28,14 +28,16 @@ package org.polypheny.simpleclient.executor;
 
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import lombok.extern.slf4j.Slf4j;
+import org.polypheny.simpleclient.cli.ChronosCommand;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.query.RawQuery;
 
 
 public class PostgresExecutor extends JdbcExecutor {
 
-    public PostgresExecutor( String host, CsvWriter csvWriter ) {
-        super( csvWriter );
+    public PostgresExecutor( String host, CsvWriter csvWriter, boolean prepareStatements ) {
+        super( csvWriter, prepareStatements );
         try {
             Class.forName( "org.postgresql.Driver" );
         } catch ( ClassNotFoundException e ) {
@@ -51,7 +53,6 @@ public class PostgresExecutor extends JdbcExecutor {
         } catch ( SQLException e ) {
             throw new RuntimeException( "Connection failed.", e );
         }
-
     }
 
 
@@ -67,16 +68,18 @@ public class PostgresExecutor extends JdbcExecutor {
     public static class PostgresExecutorFactory extends ExecutorFactory {
 
         private final String host;
+        private final boolean prepareStatements;
 
 
-        public PostgresExecutorFactory( String host ) {
+        public PostgresExecutorFactory( String host, boolean prepareStatements ) {
             this.host = host;
+            this.prepareStatements = prepareStatements;
         }
 
 
         @Override
-        public PostgresExecutor createInstance( CsvWriter csvWriter ) {
-            return new PostgresExecutor( host, csvWriter );
+        public PostgresExecutor createExecutorInstance( CsvWriter csvWriter ) {
+            return new PostgresExecutor( host, csvWriter, prepareStatements );
         }
 
 
@@ -84,6 +87,40 @@ public class PostgresExecutor extends JdbcExecutor {
         public int getMaxNumberOfThreads() {
             return 0;
         }
+
+    }
+
+
+    @Slf4j
+    public static class PostgresInstance extends DatabaseInstance {
+
+        public PostgresInstance() {
+            reset();
+        }
+
+
+        @Override
+        public void tearDown() {
+            reset();
+        }
+
+
+        public static void reset() {
+            JdbcExecutor postgresExecutor = new PostgresExecutor( ChronosCommand.hostname, null, false );
+            try {
+                postgresExecutor.reset();
+                postgresExecutor.executeCommit();
+            } catch ( ExecutorException e ) {
+                throw new RuntimeException( "Exception while dropping tables on postgres", e );
+            } finally {
+                try {
+                    postgresExecutor.closeConnection();
+                } catch ( ExecutorException e ) {
+                    log.error( "Exception while closing connection", e );
+                }
+            }
+        }
+
     }
 
 }

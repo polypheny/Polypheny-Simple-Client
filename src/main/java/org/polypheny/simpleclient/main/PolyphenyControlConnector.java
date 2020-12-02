@@ -47,7 +47,7 @@ import org.slf4j.LoggerFactory;
 
 
 @Slf4j
-class PolyphenyControlConnector {
+public class PolyphenyControlConnector {
 
     private final String controlUrl;
     private static int clientId = -1;
@@ -77,7 +77,7 @@ class PolyphenyControlConnector {
     }
 
 
-    void stopPolypheny() {
+    public void stopPolypheny() {
         setClientType(); // Set the client type (again) - does not hurt and makes sure its set
         try {
             Unirest.post( controlUrl + "/control/stop" ).field( "clientId", clientId ).asString();
@@ -87,7 +87,7 @@ class PolyphenyControlConnector {
     }
 
 
-    void startPolypheny() {
+    public void startPolypheny() {
         setClientType(); // Set the client type (again) - does not hurt and makes sure its set
         try {
             Unirest.post( controlUrl + "/control/start" ).field( "clientId", clientId ).asString();
@@ -121,7 +121,7 @@ class PolyphenyControlConnector {
     }
 
 
-    void setConfig( Map<String, String> map ) {
+    public void setConfig( Map<String, String> map ) {
         JSONObject obj = new JSONObject();
         for ( Map.Entry<String, String> entry : map.entrySet() ) {
             obj.put( entry.getKey(), entry.getValue() );
@@ -148,7 +148,7 @@ class PolyphenyControlConnector {
     }
 
 
-    String getVersion() {
+    public String getVersion() {
         return executeGet( "/control/version" );
     }
 

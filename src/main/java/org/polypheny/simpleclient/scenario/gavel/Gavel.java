@@ -33,15 +33,12 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.text.DecimalFormat;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.OptionalDouble;
 import java.util.Properties;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
@@ -80,14 +77,14 @@ import org.polypheny.simpleclient.scenario.gavel.queryBuilder.SelectTopTenCities
 @Slf4j
 public class Gavel extends Scenario {
 
-    private final Config config;
+    private final GavelConfig config;
 
     private final List<Long> measuredTimes;
     private final Map<Integer, String> queryTypes;
     private final Map<Integer, List<Long>> measuredTimePerQueryType;
 
 
-    public Gavel( JdbcExecutor.ExecutorFactory executorFactory, Config config, boolean commitAfterEveryQuery, boolean dumpQueryList ) {
+    public Gavel( JdbcExecutor.ExecutorFactory executorFactory, GavelConfig config, boolean commitAfterEveryQuery, boolean dumpQueryList ) {
         super( executorFactory, commitAfterEveryQuery, dumpQueryList );
         this.config = config;
         measuredTimes = Collections.synchronizedList( new LinkedList<>() );
@@ -148,7 +145,7 @@ public class Gavel extends Scenario {
 
         ArrayList<EvaluationThread> threads = new ArrayList<>();
         for ( int i = 0; i < numberOfThreads; i++ ) {
-            threads.add( new EvaluationThread( queryList, executorFactory.createInstance( csvWriter ) ) );
+            threads.add( new EvaluationThread( queryList, executorFactory.createExecutorInstance( csvWriter ) ) );
         }
 
         EvaluationThreadMonitor threadMonitor = new EvaluationThreadMonitor( threads );
@@ -193,7 +190,7 @@ public class Gavel extends Scenario {
         Executor executor = null;
         for ( int i = 0; i < iterations; i++ ) {
             try {
-                executor = executorFactory.createInstance();
+                executor = executorFactory.createExecutorInstance();
                 if ( config.numberOfAddUserQueries > 0 ) {
                     executor.executeQuery( new InsertUser().getNewQuery() );
                 }
@@ -393,7 +390,7 @@ public class Gavel extends Scenario {
             throw new RuntimeException( "Unable to load schema definition file" );
         }
         try ( BufferedReader bf = new BufferedReader( new InputStreamReader( file ) ) ) {
-            executor = executorFactory.createInstance();
+            executor = executorFactory.createExecutorInstance();
             String line = bf.readLine();
             while ( line != null ) {
                 executor.executeQuery( new RawQuery( line, null, false ) );
@@ -413,7 +410,7 @@ public class Gavel extends Scenario {
 
         DataGenerationThreadMonitor threadMonitor = new DataGenerationThreadMonitor();
 
-        Executor executor1 = executorFactory.createInstance();
+        Executor executor1 = executorFactory.createExecutorInstance();
         DataGenerator dataGenerator = new DataGenerator( executor1, config, progressReporter, threadMonitor );
         try {
             //dataGenerator.truncateTables();
@@ -434,7 +431,7 @@ public class Gavel extends Scenario {
         }
         for ( int i = 0; i < numberOfUserGenerationThreads; i++ ) {
             Runnable task = () -> {
-                Executor executor = executorFactory.createInstance();
+                Executor executor = executorFactory.createExecutorInstance();
                 try {
                     DataGenerator dg = new DataGenerator( executor, config, progressReporter, threadMonitor );
                     dg.generateUsers( config.numberOfUsers / numberOfUserGenerationThreads );
@@ -479,7 +476,7 @@ public class Gavel extends Scenario {
             final int start = ((i - 1) * rangeSize) + 1;
             final int end = rangeSize * i;
             Runnable task = () -> {
-                Executor executor = executorFactory.createInstance();
+                Executor executor = executorFactory.createExecutorInstance();
                 try {
                     DataGenerator dg = new DataGenerator( executor, config, progressReporter, threadMonitor );
                     dg.generateAuctions( start, end );
@@ -567,20 +564,9 @@ public class Gavel extends Scenario {
     }
 
 
-    private double calculateMean( List<Long> times ) {
-        DecimalFormat df = new DecimalFormat( "0.000" );
-        OptionalDouble meanOptional = times.stream().mapToLong( Long::longValue ).average();
-        if ( meanOptional.isPresent() ) {
-            // scale
-            double mean = meanOptional.getAsDouble() / 1000000;
-            String roundFormat = df.format( mean );
-            try {
-                return df.parse( roundFormat ).doubleValue();
-            } catch ( ParseException e ) {
-                log.error( "Exception", e );
-            }
-        }
-        return -1;
+    @Override
+    public int getNumberOfInsertThreads() {
+        return config.numberOfUserGenerationThreads + config.numberOfAuctionGenerationThreads;
     }
 
 
@@ -598,7 +584,7 @@ public class Gavel extends Scenario {
         Map<String, Integer> numbers = new HashMap<>();
         Executor executor = null;
         try {
-            executor = executorFactory.createInstance();
+            executor = executorFactory.createExecutorInstance();
             numbers.put( "auctions", (int) countNumberOfRecords( executor, new CountAuction() ) );
             numbers.put( "users", (int) countNumberOfRecords( executor, new CountUser() ) );
             numbers.put( "categories", (int) countNumberOfRecords( executor, new CountCategory() ) );

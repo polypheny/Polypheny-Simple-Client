@@ -35,25 +35,30 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URISyntaxException;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.ImmutableTriple;
+import org.apache.commons.lang3.tuple.Triple;
 import org.polypheny.simpleclient.cli.ChronosCommand;
+import org.polypheny.simpleclient.executor.CottontaildbExecutor.CottontailExecutorFactory;
+import org.polypheny.simpleclient.executor.CottontaildbExecutor.CottontailInstance;
 import org.polypheny.simpleclient.executor.Executor;
-import org.polypheny.simpleclient.executor.ExecutorException;
-import org.polypheny.simpleclient.executor.JdbcExecutor;
-import org.polypheny.simpleclient.executor.MonetdbExecutor;
+import org.polypheny.simpleclient.executor.Executor.DatabaseInstance;
 import org.polypheny.simpleclient.executor.MonetdbExecutor.MonetdbExecutorFactory;
-import org.polypheny.simpleclient.executor.PolyphenyDbExecutor;
+import org.polypheny.simpleclient.executor.MonetdbExecutor.MonetdbInstance;
+import org.polypheny.simpleclient.executor.PolyphenyDbExecutor.PolyphenyDbInstance;
 import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory;
 import org.polypheny.simpleclient.executor.PolyphenyDbRestExecutor.PolyphenyDbRestExecutorFactory;
-import org.polypheny.simpleclient.executor.PostgresExecutor;
 import org.polypheny.simpleclient.executor.PostgresExecutor.PostgresExecutorFactory;
+import org.polypheny.simpleclient.executor.PostgresExecutor.PostgresInstance;
+import org.polypheny.simpleclient.scenario.AbstractConfig;
 import org.polypheny.simpleclient.scenario.Scenario;
-import org.polypheny.simpleclient.scenario.gavel.Config;
 import org.polypheny.simpleclient.scenario.gavel.Gavel;
+import org.polypheny.simpleclient.scenario.gavel.GavelConfig;
+import org.polypheny.simpleclient.scenario.knnbench.KnnBench;
+import org.polypheny.simpleclient.scenario.knnbench.KnnBenchConfig;
 
 
 @Slf4j
@@ -70,11 +75,11 @@ public class ChronosAgent extends AbstractChronosAgent {
     private final boolean dumpQueryList;
 
 
-    public ChronosAgent( InetAddress address, int port, boolean secure, boolean useHostname, String environment, String supports, boolean writeCsv, boolean dumpQueryList ) {
+    public ChronosAgent( InetAddress address, int port, boolean secure, boolean useHostname, String environment, String[] supports, boolean writeCsv, boolean dumpQueryList ) {
         super( address, port, secure, useHostname, environment );
         this.writeCsv = writeCsv;
         this.dumpQueryList = dumpQueryList;
-        this.supports = new String[]{ supports };
+        this.supports = supports;
         try {
             polyphenyControlConnector = new PolyphenyControlConnector( ChronosCommand.hostname + ":8070" );
         } catch ( URISyntaxException e ) {
@@ -92,28 +97,44 @@ public class ChronosAgent extends AbstractChronosAgent {
     @Override
     protected Object prepare( ChronosJob chronosJob, final File inputDirectory, final File outputDirectory, Properties properties, Object o ) {
         // Parse CDL
-        Config config = parseConfig( chronosJob );
+        Map<String, String> parsedConfig = parseConfig( chronosJob );
 
         // Create Executor Factory
         Executor.ExecutorFactory executorFactory;
-        switch ( config.system ) {
+        switch ( parsedConfig.get( "store" ) ) {
             case "polypheny":
-                executorFactory = new PolyphenyDbJdbcExecutorFactory( ChronosCommand.hostname );
+                executorFactory = new PolyphenyDbJdbcExecutorFactory( ChronosCommand.hostname, Boolean.parseBoolean( parsedConfig.get( "prepareStatements" ) ) );
                 break;
             case "polypheny-rest":
                 executorFactory = new PolyphenyDbRestExecutorFactory( ChronosCommand.hostname );
                 break;
             case "postgres":
-                executorFactory = new PostgresExecutorFactory( ChronosCommand.hostname );
+                executorFactory = new PostgresExecutorFactory( ChronosCommand.hostname, Boolean.parseBoolean( parsedConfig.get( "prepareStatements" ) ) );
                 break;
             case "monetdb":
-                executorFactory = new MonetdbExecutorFactory( ChronosCommand.hostname );
+                executorFactory = new MonetdbExecutorFactory( ChronosCommand.hostname, Boolean.parseBoolean( parsedConfig.get( "prepareStatements" ) ) );
+                break;
+            case "cottontail":
+                executorFactory = new CottontailExecutorFactory();
                 break;
             default:
-                throw new RuntimeException( "Unknown system: " + config.system );
+                throw new RuntimeException( "Unknown system: " + parsedConfig.get( "store" ) );
         }
 
-        Scenario scenario = new Gavel( executorFactory, config, true, dumpQueryList );
+        Scenario scenario;
+        AbstractConfig config;
+        switch ( parsedConfig.get( "scenario" ) ) {
+            case "gavel":
+                config = new GavelConfig( parsedConfig );
+                scenario = new Gavel( executorFactory, (GavelConfig) config, true, dumpQueryList );
+                break;
+            case "knnBench":
+                config = new KnnBenchConfig( parsedConfig );
+                scenario = new KnnBench( executorFactory, (KnnBenchConfig) config, true, dumpQueryList );
+                break;
+            default:
+                throw new RuntimeException( "Unknown scenario: " + parsedConfig.get( "scenario" ) );
+        }
 
         // Store hostname of node
         try {
@@ -143,203 +164,74 @@ public class ChronosAgent extends AbstractChronosAgent {
             throw new RuntimeException( "Unexpected interrupt", e );
         }
 
-        if ( config.system.equals( "polypheny" ) || config.system.equals( "polypheny-rest" ) ) {
-            // Update settings
-            Map<String, String> conf = new HashMap<>();
-            conf.put( "pcrtl.pdbms.branch", config.pdbBranch.trim() );
-            conf.put( "pcrtl.ui.branch", config.puiBranch.trim() );
-            conf.put( "pcrtl.java.heap", "10" );
-            conf.put( "pcrtl.buildmode", "both" );
-            conf.put( "pcrtl.clean.mode", "branchChange" );
-            String args = "";
-            if ( config.resetCatalog ) {
-                args += "-resetCatalog ";
-            }
-            if ( config.memoryCatalog ) {
-                args += "-memoryCatalog ";
-            }
-            conf.put( "pcrtl.pdbms.args", args.trim() );
-            polyphenyControlConnector.setConfig( conf );
-
-            // Pull branch and update polypheny
-            polyphenyControlConnector.updatePolypheny();
-
-            // Start Polypheny
-            polyphenyControlConnector.startPolypheny();
-            try {
-                TimeUnit.SECONDS.sleep( 10 );
-            } catch ( InterruptedException e ) {
-                throw new RuntimeException( "Unexpected interrupt", e );
-            }
-
-            // Store Polypheny version for documentation
-            try {
-                FileWriter fw = new FileWriter( outputDirectory.getPath() + File.separator + "polypheny.version" );
-                fw.append( polyphenyControlConnector.getVersion() );
-                fw.close();
-            } catch ( IOException e ) {
-                log.error( "Error while logging polypheny version", e );
-            }
-
-            // Configure data stores
-            PolyphenyDbExecutor executor = (PolyphenyDbExecutor) executorFactory.createInstance();
-            try {
-                // Remove hsqldb store
-                executor.dropStore( "hsqldb" );
-                // Deploy store
-                switch ( config.dataStore ) {
-                    case "hsqldb":
-                        executor.deployHsqldb();
-                        break;
-                    case "postgres":
-                        resetPostgres();
-                        executor.deployPostgres();
-                        break;
-                    case "monetdb":
-                        resetMonetDb();
-                        executor.deployMonetDb();
-                        break;
-                    case "cassandra":
-                        executor.deployCassandra();
-                        break;
-                    case "file":
-                        executor.deployFileStore();
-                        break;
-                    case "cottontail":
-                        executor.deployCottontail();
-                        break;
-                    case "monetdb+postgres":
-                        resetPostgres();
-                        resetMonetDb();
-                        executor.deployPostgres();
-                        executor.deployMonetDb();
-                        break;
-                    case "all":
-                        resetPostgres();
-                        resetMonetDb();
-                        executor.deployHsqldb();
-                        executor.deployPostgres();
-                        executor.deployMonetDb();
-                        executor.deployCassandra();
-                        executor.deployFileStore();
-                        executor.deployCottontail();
-                        break;
-                    default:
-                        throw new RuntimeException( "Unknown data store: " + config.dataStore );
-                }
-                executor.executeCommit();
-            } catch ( ExecutorException e ) {
-                throw new RuntimeException( "Exception while configuring stores", e );
-            } finally {
-                try {
-                    executor.closeConnection();
-                } catch ( ExecutorException e ) {
-                    log.error( "Exception while closing connection", e );
-                }
-            }
-
-            // Update polypheny config
-            executor = (PolyphenyDbExecutor) executorFactory.createInstance();
-            try {
-                // disable active tracking (dynamic querying)
-                executor.setConfig( "statistics/activeTracking", "false" );
-                // Set router
-                switch ( config.router ) {
-                    case "simple":
-                        executor.setConfig( "routing/router", "org.polypheny.db.router.SimpleRouter$SimpleRouterFactory" );
-                        break;
-                    case "icarus":
-                        executor.setConfig( "routing/router", "org.polypheny.db.router.IcarusRouter$IcarusRouterFactory" );
-                        setIcarusRoutingTraining( false );
-                        break;
-                    default:
-                        throw new RuntimeException( "Unknown configuration value for router: " + config.router );
-                }
-                // Set Plan & Implementation Caching
-                switch ( config.planAndImplementationCaching ) {
-                    case "None":
-                        executor.setConfig( "runtime/implementationCaching", "false" );
-                        executor.setConfig( "runtime/queryPlanCaching", "false" );
-                        break;
-                    case "Plan":
-                        executor.setConfig( "runtime/implementationCaching", "false" );
-                        executor.setConfig( "runtime/queryPlanCaching", "true" );
-                        break;
-                    case "Implementation":
-                        executor.setConfig( "runtime/implementationCaching", "true" );
-                        executor.setConfig( "runtime/queryPlanCaching", "false" );
-                        break;
-                    case "Both":
-                        executor.setConfig( "runtime/implementationCaching", "true" );
-                        executor.setConfig( "runtime/queryPlanCaching", "true" );
-                        break;
-                    default:
-                        throw new RuntimeException( "Unknown configuration value for planAndImplementationCaching: " + config.planAndImplementationCaching );
-                }
-                executor.executeCommit();
-            } catch ( ExecutorException e ) {
-                throw new RuntimeException( "Exception while updating polypheny config", e );
-            } finally {
-                try {
-                    executor.closeConnection();
-                } catch ( ExecutorException e ) {
-                    log.error( "Exception while closing connection", e );
-                }
-            }
-
-            // Wait 5 seconds to let the the config changes take effect
-            try {
-                TimeUnit.SECONDS.sleep( 5 );
-            } catch ( InterruptedException e ) {
-                throw new RuntimeException( "Unexpected interrupt", e );
-            }
-
-            // Create schema
-            scenario.createSchema( true );
-        } else if ( config.system.equals( "postgres" ) ) {
-            resetPostgres();
-            scenario.createSchema( false );
-        } else if ( config.system.equals( "monetdb" ) ) {
-            resetMonetDb();
-            scenario.createSchema( false );
+        DatabaseInstance databaseInstance;
+        switch ( config.system ) {
+            case "polypheny":
+            case "polypheny-rest":
+                databaseInstance = new PolyphenyDbInstance( polyphenyControlConnector, executorFactory, outputDirectory, config );
+                scenario.createSchema( true );
+                break;
+            case "postgres":
+                databaseInstance = new PostgresInstance();
+                scenario.createSchema( false );
+                break;
+            case "monetdb":
+                databaseInstance = new MonetdbInstance();
+                scenario.createSchema( false );
+                break;
+            case "cottontail":
+                databaseInstance = new CottontailInstance();
+                scenario.createSchema( false );
+                break;
+            default:
+                throw new RuntimeException( "Unknown system: " + config.system );
         }
 
         // Insert data
         log.info( "Inserting data..." );
-        int numberOfThreads = config.numberOfUserGenerationThreads + config.numberOfAuctionGenerationThreads;
-        ProgressReporter progressReporter = new ChronosProgressReporter( chronosJob, this, numberOfThreads, config.progressReportBase );
-        scenario.generateData( progressReporter );
+        ProgressReporter progressReporter = new ChronosProgressReporter( chronosJob, this, scenario.getNumberOfInsertThreads(), config.progressReportBase );
+        try {
+            scenario.generateData( progressReporter );
+        } catch ( Exception e ) {
+            databaseInstance.tearDown();
+            throw e;
+        }
 
-        return scenario;
+        return new ImmutableTriple<>( scenario, config, databaseInstance );
     }
 
 
     @Override
     protected Object warmUp( ChronosJob chronosJob, final File inputDirectory, final File outputDirectory, Properties properties, Object o ) {
-        Config config = parseConfig( chronosJob );
-        Scenario scenario = (Scenario) o;
+        @SuppressWarnings("unchecked") Scenario scenario = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getLeft();
+        @SuppressWarnings("unchecked") AbstractConfig config = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getMiddle();
+        @SuppressWarnings("unchecked") DatabaseInstance databaseInstance = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getRight();
+        try {
+            // enable icarus training
+            if ( config.system.equals( "polypheny" ) && config.router.equals( "icarus" ) ) {
+                ((PolyphenyDbInstance) databaseInstance).setIcarusRoutingTraining( true );
+            }
 
-        // enable icarus training
-        if ( config.system.equals( "polypheny" ) && config.router.equals( "icarus" ) ) {
-            setIcarusRoutingTraining( true );
+            ProgressReporter progressReporter = new ChronosProgressReporter( chronosJob, this, 1, config.progressReportBase );
+            scenario.warmUp( progressReporter, config.numberOfWarmUpIterations );
+
+            // disable icarus training
+            if ( config.system.equals( "polypheny" ) && config.router.equals( "icarus" ) ) {
+                ((PolyphenyDbInstance) databaseInstance).setIcarusRoutingTraining( false );
+            }
+        } catch ( Exception e ) {
+            databaseInstance.tearDown();
+            throw e;
         }
-
-        ProgressReporter progressReporter = new ChronosProgressReporter( chronosJob, this, 1, config.progressReportBase );
-        scenario.warmUp( progressReporter, config.numberOfWarmUpIterations );
-
-        // disable icarus training
-        if ( config.system.equals( "polypheny" ) && config.router.equals( "icarus" ) ) {
-            setIcarusRoutingTraining( false );
-        }
-
-        return scenario;
+        return new ImmutableTriple<>( scenario, config, databaseInstance );
     }
 
 
     @Override
     protected Object execute( ChronosJob chronosJob, final File inputDirectory, final File outputDirectory, Properties properties, Object o ) {
-        Config config = parseConfig( chronosJob );
-        Scenario scenario = (Scenario) o;
+        @SuppressWarnings("unchecked") Scenario scenario = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getLeft();
+        @SuppressWarnings("unchecked") AbstractConfig config = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getMiddle();
+        @SuppressWarnings("unchecked") DatabaseInstance databaseInstance = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getRight();
 
         final CsvWriter csvWriter;
         if ( writeCsv ) {
@@ -354,26 +246,41 @@ public class ChronosAgent extends AbstractChronosAgent {
             numberOfThreads = maxNumberOfThreads;
             log.warn( "Limiting number of executor threads to {} threads (instead of {} as specified by the job)", numberOfThreads, config.numberOfThreads );
         }
-        ProgressReporter progressReporter = new ChronosProgressReporter( chronosJob, this, numberOfThreads, config.progressReportBase );
-        long runtime = scenario.execute( progressReporter, csvWriter, outputDirectory, numberOfThreads );
-        properties.put( "runtime", runtime );
-
-        return scenario;
+        try {
+            ProgressReporter progressReporter = new ChronosProgressReporter( chronosJob, this, numberOfThreads, config.progressReportBase );
+            long runtime = scenario.execute( progressReporter, csvWriter, outputDirectory, numberOfThreads );
+            properties.put( "runtime", runtime );
+        } catch ( Exception e ) {
+            databaseInstance.tearDown();
+            throw e;
+        }
+        return new ImmutableTriple<>( scenario, config, databaseInstance );
     }
 
 
     @Override
     protected Object analyze( ChronosJob chronosJob, final File inputDirectory, final File outputDirectory, Properties properties, Object o ) {
-        Scenario scenario = (Scenario) o;
+        @SuppressWarnings("unchecked") Scenario scenario = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getLeft();
+        @SuppressWarnings("unchecked") AbstractConfig config = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getMiddle();
+        @SuppressWarnings("unchecked") DatabaseInstance databaseInstance = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getRight();
 
-        scenario.analyze( properties );
+        try {
+            scenario.analyze( properties );
+        } catch ( Exception e ) {
+            databaseInstance.tearDown();
+            throw e;
+        }
 
-        return scenario;
+        return new ImmutableTriple<>( scenario, config, databaseInstance );
     }
 
 
     @Override
     protected Object clean( ChronosJob chronosJob, final File inputDirectory, final File outputDirectory, Properties properties, Object o ) {
+        @SuppressWarnings("unchecked") Scenario scenario = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getLeft();
+        @SuppressWarnings("unchecked") AbstractConfig config = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getMiddle();
+        @SuppressWarnings("unchecked") DatabaseInstance databaseInstance = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getRight();
+        databaseInstance.tearDown();
         return null;
     }
 
@@ -390,6 +297,17 @@ public class ChronosAgent extends AbstractChronosAgent {
     }
 
 
+    public Map<String, String> parseConfig( ChronosJob chronosJob ) {
+        Map<String, String> settings;
+        try {
+            settings = chronosJob.getParsedCdl();
+        } catch ( ExecutionException e ) {
+            throw new RuntimeException( "Exception while parsing cdl", e );
+        }
+        return settings;
+    }
+
+
     @Override
     protected void addChronosLogHandler( ChronosLogHandler chronosLogHandler ) {
         ChronosLog4JAppender.setChronosLogHandler( chronosLogHandler );
@@ -402,71 +320,8 @@ public class ChronosAgent extends AbstractChronosAgent {
     }
 
 
-    void setIcarusRoutingTraining( boolean b ) {
-        PolyphenyDbExecutor executor = (PolyphenyDbExecutor) new PolyphenyDbJdbcExecutorFactory( ChronosCommand.hostname ).createInstance();
-        try {
-            // disable icarus training
-            executor.setConfig( "icarusRouting/training", b ? "true" : "false" );
-            executor.executeCommit();
-        } catch ( ExecutorException e ) {
-            throw new RuntimeException( "Exception while updating polypheny config", e );
-        } finally {
-            try {
-                executor.closeConnection();
-            } catch ( ExecutorException e ) {
-                log.error( "Exception while closing connection", e );
-            }
-        }
-    }
-
-
     void updateProgress( ChronosJob job, int progress ) {
         setProgress( job, (byte) progress );
-    }
-
-
-    private void resetPostgres() {
-        JdbcExecutor postgresExecutor = new PostgresExecutor( ChronosCommand.hostname, null );
-        try {
-            postgresExecutor.reset();
-            postgresExecutor.executeCommit();
-        } catch ( ExecutorException e ) {
-            throw new RuntimeException( "Exception while dropping tables on postgres", e );
-        } finally {
-            try {
-                postgresExecutor.closeConnection();
-            } catch ( ExecutorException e ) {
-                log.error( "Exception while closing connection", e );
-            }
-        }
-    }
-
-
-    private void resetMonetDb() {
-        JdbcExecutor monetdbExecutor = new MonetdbExecutor( ChronosCommand.hostname, null );
-        try {
-            monetdbExecutor.reset();
-            monetdbExecutor.executeCommit();
-        } catch ( ExecutorException e ) {
-            throw new RuntimeException( "Exception while dropping tables on monetdb", e );
-        } finally {
-            try {
-                monetdbExecutor.closeConnection();
-            } catch ( ExecutorException e ) {
-                log.error( "Exception while closing connection", e );
-            }
-        }
-    }
-
-
-    private Config parseConfig( ChronosJob chronosJob ) {
-        Map<String, String> settings;
-        try {
-            settings = chronosJob.getParsedCdl();
-        } catch ( ExecutionException e ) {
-            throw new RuntimeException( "Exception while parsing cdl", e );
-        }
-        return new Config( settings );
     }
 
 

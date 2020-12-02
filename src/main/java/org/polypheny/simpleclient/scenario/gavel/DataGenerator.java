@@ -57,7 +57,7 @@ import org.polypheny.simpleclient.scenario.gavel.queryBuilder.TruncateUser;
 class DataGenerator {
 
     private final Executor theExecutor;
-    private final Config config;
+    private final GavelConfig config;
     private final ProgressReporter progressReporter;
 
     private final List<BatchableInsert> batchList;
@@ -67,7 +67,7 @@ class DataGenerator {
     private boolean aborted;
 
 
-    DataGenerator( Executor executor, Config config, ProgressReporter progressReporter, DataGenerationThreadMonitor threadMonitor ) {
+    DataGenerator( Executor executor, GavelConfig config, ProgressReporter progressReporter, DataGenerationThreadMonitor threadMonitor ) {
         theExecutor = executor;
         this.config = config;
         this.progressReporter = progressReporter;

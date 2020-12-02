@@ -34,7 +34,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
-import org.polypheny.simpleclient.scenario.gavel.Config;
+import org.polypheny.simpleclient.scenario.gavel.GavelConfig;
 import org.polypheny.simpleclient.scenario.gavel.queryBuilder.InsertAuction.InsertAuctionQuery;
 
 
@@ -57,7 +57,7 @@ public class InsertRandomAuction extends QueryBuilder {
     private static final AtomicInteger nextAuctionId = new AtomicInteger( 1 );
 
 
-    public InsertRandomAuction( int numberOfUsers, int numberOfCategories, Config config ) {
+    public InsertRandomAuction( int numberOfUsers, int numberOfCategories, GavelConfig config ) {
         this.numberOfUsers = numberOfUsers;
         this.numberOfCategories = numberOfCategories;
         this.auctionTitleMinLength = config.auctionTitleMinLength;

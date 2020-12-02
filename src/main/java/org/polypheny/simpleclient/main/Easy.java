@@ -7,22 +7,22 @@ import java.util.Objects;
 import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
-import org.polypheny.simpleclient.scenario.gavel.Config;
 import org.polypheny.simpleclient.scenario.gavel.Gavel;
+import org.polypheny.simpleclient.scenario.gavel.GavelConfig;
 
 
 @Slf4j
 public class Easy {
 
     public static void schema( ExecutorFactory executorFactory, boolean commitAfterEveryQuery ) {
-        Config config = new Config( getProperties(), 1 );
+        GavelConfig config = new GavelConfig( getProperties(), 1 );
         Gavel gavel = new Gavel( executorFactory, config, commitAfterEveryQuery, false );
         gavel.createSchema( true );
     }
 
 
     public static void data( ExecutorFactory executorFactory, int multiplier, boolean commitAfterEveryQuery ) {
-        Config config = new Config( getProperties(), multiplier );
+        GavelConfig config = new GavelConfig( getProperties(), multiplier );
         Gavel gavel = new Gavel( executorFactory, config, commitAfterEveryQuery, false );
 
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
@@ -31,7 +31,7 @@ public class Easy {
 
 
     public static void workload( ExecutorFactory executorFactory, int multiplier, boolean commitAfterEveryQuery, boolean writeCsv, boolean dumpQueryList ) {
-        Config config = new Config( getProperties(), multiplier );
+        GavelConfig config = new GavelConfig( getProperties(), multiplier );
         Gavel gavel = new Gavel( executorFactory, config, commitAfterEveryQuery, dumpQueryList );
 
         final CsvWriter csvWriter;
@@ -46,7 +46,7 @@ public class Easy {
 
 
     public static void warmup( ExecutorFactory executorFactory, int multiplier, boolean commitAfterEveryQuery, boolean dumpQueryList ) {
-        Config config = new Config( getProperties(), 1 );
+        GavelConfig config = new GavelConfig( getProperties(), 1 );
         Gavel gavel = new Gavel( executorFactory, config, commitAfterEveryQuery, dumpQueryList );
 
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );

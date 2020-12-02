@@ -30,11 +30,14 @@ import com.devskiller.jfairy.Fairy;
 import com.devskiller.jfairy.producer.DateProducer;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import kong.unirest.HttpRequest;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
-import org.polypheny.simpleclient.scenario.gavel.Config;
+import org.polypheny.simpleclient.scenario.gavel.GavelConfig;
 
 
 public class SelectTenMostPopularAuctionsOfCategoryByNumberOfBids extends QueryBuilder {
@@ -47,7 +50,7 @@ public class SelectTenMostPopularAuctionsOfCategoryByNumberOfBids extends QueryB
     private final DateProducer dateProducer;
 
 
-    public SelectTenMostPopularAuctionsOfCategoryByNumberOfBids( int numberOfCategories, Config config ) {
+    public SelectTenMostPopularAuctionsOfCategoryByNumberOfBids( int numberOfCategories, GavelConfig config ) {
         this.numberOfCategories = numberOfCategories;
         this.auctionDateMaxYearsInPast = config.auctionDateMaxYearsInPast;
 
@@ -80,6 +83,22 @@ public class SelectTenMostPopularAuctionsOfCategoryByNumberOfBids extends QueryB
         public String getSql() {
             return "SELECT a.id, COUNT(b.auction) as number FROM auction a, bid b WHERE a.id = b.auction AND a.category = " + categoryId +
                     " AND a.end_date > '" + date.format( DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss" ) ) + "' GROUP BY a.id ORDER BY number desc LIMIT 10";
+        }
+
+
+        @Override
+        public String getParameterizedSqlQuery() {
+            return "SELECT a.id, COUNT(b.auction) as number FROM auction a, bid b WHERE a.id = b.auction AND a.category = ?" +
+                    " AND a.end_date > ? GROUP BY a.id ORDER BY number desc LIMIT 10";
+        }
+
+
+        @Override
+        public Map<Integer, ImmutablePair<DataTypes, Object>> getParameterValues() {
+            Map<Integer, ImmutablePair<DataTypes, Object>> map = new HashMap<>();
+            map.put( 1, new ImmutablePair<>( DataTypes.INTEGER, categoryId ) );
+            map.put( 2, new ImmutablePair<>( DataTypes.TIMESTAMP, date ) );
+            return map;
         }
 
 

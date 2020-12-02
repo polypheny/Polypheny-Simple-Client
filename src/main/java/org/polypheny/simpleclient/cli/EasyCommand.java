@@ -83,7 +83,7 @@ public class EasyCommand implements CliRunnable {
         if ( restInterface ) {
             executorFactory = new PolyphenyDbRestExecutorFactory( polyphenyDbHost );
         } else {
-            executorFactory = new PolyphenyDbJdbcExecutorFactory( polyphenyDbHost );
+            executorFactory = new PolyphenyDbJdbcExecutorFactory( polyphenyDbHost, true );
         }
 
         if ( args.get( 0 ).equalsIgnoreCase( "data" ) ) {
