@@ -55,7 +55,7 @@ public class KnnCommand implements CliRunnable {
         }
 
         ExecutorFactory executorFactory;
-        executorFactory = new PolyphenyDbJdbcExecutorFactory( polyphenyDbHost, true );
+        executorFactory = new PolyphenyDbJdbcExecutorFactory( polyphenyDbHost, false );
 
 
         if ( args.get( 0 ).equalsIgnoreCase( "data" ) ) {

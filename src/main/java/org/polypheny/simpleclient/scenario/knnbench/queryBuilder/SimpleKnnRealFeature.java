@@ -90,16 +90,14 @@ public class SimpleKnnRealFeature extends QueryBuilder {
 
         @Override
         public String getParameterizedSqlQuery() {
-            return SQL_1 + " ? " + SQL_2 + " ? " + SQL_3 + " ?";
+            return SQL_1 + "?" + SQL_2 + "'" + norm + "'" + SQL_3 + limit;
         }
 
 
         @Override
         public Map<Integer, ImmutablePair<DataTypes, Object>> getParameterValues() {
             Map<Integer, ImmutablePair<DataTypes, Object>> map = new HashMap<>();
-            map.put( 1, new ImmutablePair<>( DataTypes.ARRAY_INT, target ) );
-            map.put( 2, new ImmutablePair<>( DataTypes.VARCHAR, norm ) );
-            map.put( 3, new ImmutablePair<>( DataTypes.INTEGER, limit ) );
+            map.put( 1, new ImmutablePair<>( DataTypes.ARRAY_REAL, target ) );
             return map;
         }
 
