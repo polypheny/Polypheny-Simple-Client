@@ -62,9 +62,9 @@ public class KnnBenchConfig extends AbstractConfig {
 
         dimensionFeatureVectors = getIntProperty( properties, "dimensionFeatureVectors" );
         batchSizeInserts = getIntProperty( properties, "batchSizeInserts" );
-        batchSizeQueries = getIntProperty( properties, "batchSizeQueries" );
-
         numberOfEntries = getIntProperty( properties, "numberOfEntries" ) * multiplier;
+
+        batchSizeQueries = getIntProperty( properties, "batchSizeQueries" );
         numberOfSimpleKnnIntFeatureQueries = getIntProperty( properties, "numberOfSimpleKnnIntFeatureQueries" ) * multiplier;
         numberOfSimpleKnnRealFeatureQueries = getIntProperty( properties, "numberOfSimpleKnnRealFeatureQueries" ) * multiplier;
         numberOfMetadataKnnIntFeatureQueries = getIntProperty( properties, "numberOfMetadataKnnIntFeatureQueries" ) * multiplier;
@@ -95,7 +95,7 @@ public class KnnBenchConfig extends AbstractConfig {
         router = cdl.get( "router" );
         planAndImplementationCaching = cdl.getOrDefault( "planAndImplementationCaching", "Both" );
 
-        progressReportBase = Integer.parseInt( cdl.get( "progressReportBase" ) );
+        progressReportBase = 100;
         numberOfThreads = Integer.parseInt( cdl.get( "numberOfThreads" ) );
         numberOfWarmUpIterations = Integer.parseInt( cdl.get( "numberOfWarmUpIterations" ) );
 
@@ -110,9 +110,9 @@ public class KnnBenchConfig extends AbstractConfig {
 
         dimensionFeatureVectors = Integer.parseInt( cdl.get( "dimensionFeatureVectors" ) );
         batchSizeInserts = Integer.parseInt( cdl.get( "batchSizeInserts" ) );
-        batchSizeQueries = Integer.parseInt( cdl.get( "batchSizeQueries" ) );
-
         numberOfEntries = Integer.parseInt( cdl.get( "numberOfEntries" ) );
+
+        batchSizeQueries = Integer.parseInt( cdl.get( "batchSizeQueries" ) );
         numberOfSimpleKnnIntFeatureQueries = Integer.parseInt( cdl.get( "numberOfSimpleKnnIntFeatureQueries" ) );
         numberOfSimpleKnnRealFeatureQueries = Integer.parseInt( cdl.get( "numberOfSimpleKnnRealFeatureQueries" ) );
         numberOfMetadataKnnIntFeatureQueries = Integer.parseInt( cdl.get( "numberOfMetadataKnnIntFeatureQueries" ) );
