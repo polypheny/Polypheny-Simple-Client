@@ -57,6 +57,20 @@ public class CottontaildbExecutor implements Executor {
         this.csvWriter = csvWriter;
 
         channel = NettyChannelBuilder.forAddress( "localhost", 1865 ).usePlaintext().maxInboundMetadataSize( 150_000_000 ).maxInboundMessageSize( 150_000_000 ).build();
+        ensurePublicSchemaExists();
+    }
+
+
+    private void ensurePublicSchemaExists() {
+        CottonDDLBlockingStub stub = CottonDDLGrpc.newBlockingStub( channel );
+        Iterator<Schema> schemas = stub.listSchemas( Empty.newBuilder().build() );
+        while ( schemas.hasNext() ) {
+            Schema existingSchema = schemas.next();
+            if ( "public".equals( existingSchema.getName() ) ) {
+                return;
+            }
+        }
+
         executeWrappedQuery( new CottontailQuery( QueryType.SCHEMA_CREATE, Schema.newBuilder().setName( "public" ).build() ), false );
     }
 
