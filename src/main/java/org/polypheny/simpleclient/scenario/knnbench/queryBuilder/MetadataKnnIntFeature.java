@@ -4,6 +4,7 @@ package org.polypheny.simpleclient.scenario.knnbench.queryBuilder;
 import java.util.Arrays;
 import java.util.Random;
 import kong.unirest.HttpRequest;
+import org.polypheny.simpleclient.query.CottontailQuery;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
@@ -81,8 +82,11 @@ public class MetadataKnnIntFeature extends QueryBuilder {
             return null;
         }
 
-        // TODO JS: Implement getCottontail()
 
+        @Override
+        public CottontailQuery getCottontail() {
+            throw new RuntimeException( "This query is unsupported by cottontail." );
+        }
     }
 
 }

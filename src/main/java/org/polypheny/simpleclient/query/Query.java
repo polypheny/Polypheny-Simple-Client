@@ -53,8 +53,7 @@ public abstract class Query {
     public abstract HttpRequest<?> getRest();
 
 
-    // TODO JS: Correct return type and implement in all knnBench query builders
-    public Object getCottontail() {
+    public CottontailQuery getCottontail() {
         return null;
     }
 

@@ -4,8 +4,19 @@ package org.polypheny.simpleclient.scenario.knnbench.queryBuilder;
 import java.util.Arrays;
 import java.util.Random;
 import kong.unirest.HttpRequest;
+import org.polypheny.simpleclient.query.CottontailQuery;
+import org.polypheny.simpleclient.query.CottontailQuery.QueryType;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
+import org.vitrivr.cottontail.grpc.CottontailGrpc;
+import org.vitrivr.cottontail.grpc.CottontailGrpc.Entity;
+import org.vitrivr.cottontail.grpc.CottontailGrpc.FloatVector;
+import org.vitrivr.cottontail.grpc.CottontailGrpc.From;
+import org.vitrivr.cottontail.grpc.CottontailGrpc.IntVector;
+import org.vitrivr.cottontail.grpc.CottontailGrpc.Knn;
+import org.vitrivr.cottontail.grpc.CottontailGrpc.Knn.Distance;
+import org.vitrivr.cottontail.grpc.CottontailGrpc.Schema;
+import org.vitrivr.cottontail.grpc.CottontailGrpc.Vector;
 
 
 public class SimpleKnnRealFeature extends QueryBuilder {
@@ -80,8 +91,45 @@ public class SimpleKnnRealFeature extends QueryBuilder {
             return null;
         }
 
-        // TODO JS: Implement getCottontail()
 
+        @Override
+        public CottontailQuery getCottontail() {
+            CottontailGrpc.Query query = CottontailGrpc.Query.newBuilder()
+                    .setFrom( From.newBuilder().setEntity( Entity.newBuilder().setSchema( Schema.newBuilder().setName( "public" ).build() ).setName( "knn_realfeature" ).build() ) )
+                    .setLimit( limit )
+                    .setKnn( Knn.newBuilder()
+                            .setAttribute( "feature" )
+                            .setK( limit )
+                            .addQuery( Vector.newBuilder().setFloatVector( FloatVector.newBuilder().addAllVector( Arrays.asList( target ) ).build() ).build() )
+                            .setDistance( getDistance( norm ) )
+                            .build() )
+                    .build();
+            return new CottontailQuery(
+                    QueryType.QUERY,
+                    query
+            );
+        }
+
+
+        private static CottontailGrpc.Knn.Distance getDistance( String norm ) {
+            if ( "L2".equalsIgnoreCase( norm ) ) {
+                return Distance.L2;
+            }
+            if ( "L1".equalsIgnoreCase( norm ) ) {
+                return Distance.L1;
+            }
+            if ( "L2SQUARED".equalsIgnoreCase( norm ) ) {
+                return Distance.L2SQUARED;
+            }
+            if ( "CHISQUARED".equalsIgnoreCase( norm ) ) {
+                return Distance.CHISQUARED;
+            }
+            if ( "COSINE".equalsIgnoreCase( norm ) ) {
+                return Distance.COSINE;
+            }
+
+            throw new RuntimeException( "Unsupported norm: " + norm );
+        }
     }
 
 }

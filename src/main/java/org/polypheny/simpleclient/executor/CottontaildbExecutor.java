@@ -1,20 +1,48 @@
 package org.polypheny.simpleclient.executor;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.gson.JsonObject;
+import io.grpc.ManagedChannel;
+import io.grpc.StatusRuntimeException;
+import io.grpc.netty.NettyChannelBuilder;
+import io.grpc.stub.StreamObserver;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import kong.unirest.UnirestException;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.query.BatchableInsert;
+import org.polypheny.simpleclient.query.CottontailQuery;
+import org.polypheny.simpleclient.query.CottontailQuery.QueryType;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.RawQuery;
 import org.polypheny.simpleclient.scenario.AbstractConfig;
 import org.vitrivr.cottontail.CottontailKt;
+import org.vitrivr.cottontail.grpc.CottonDDLGrpc;
+import org.vitrivr.cottontail.grpc.CottonDDLGrpc.CottonDDLBlockingStub;
+import org.vitrivr.cottontail.grpc.CottonDDLGrpc.CottonDDLFutureStub;
+import org.vitrivr.cottontail.grpc.CottonDMLGrpc;
+import org.vitrivr.cottontail.grpc.CottonDMLGrpc.CottonDMLBlockingStub;
+import org.vitrivr.cottontail.grpc.CottonDMLGrpc.CottonDMLStub;
+import org.vitrivr.cottontail.grpc.CottonDQLGrpc;
+import org.vitrivr.cottontail.grpc.CottonDQLGrpc.CottonDQLBlockingStub;
+import org.vitrivr.cottontail.grpc.CottontailGrpc;
+import org.vitrivr.cottontail.grpc.CottontailGrpc.BatchedQueryMessage;
+import org.vitrivr.cottontail.grpc.CottontailGrpc.Empty;
+import org.vitrivr.cottontail.grpc.CottontailGrpc.InsertMessage;
+import org.vitrivr.cottontail.grpc.CottontailGrpc.QueryMessage;
+import org.vitrivr.cottontail.grpc.CottontailGrpc.QueryResponseMessage;
+import org.vitrivr.cottontail.grpc.CottontailGrpc.Schema;
+import org.vitrivr.cottontail.grpc.CottontailGrpc.Status;
+import org.vitrivr.cottontail.grpc.CottontailGrpc.UpdateMessage;
 import org.vitrivr.cottontail.server.grpc.CottontailGrpcServer;
 
 
@@ -22,13 +50,203 @@ import org.vitrivr.cottontail.server.grpc.CottontailGrpcServer;
 public class CottontaildbExecutor implements Executor {
 
     private final CsvWriter csvWriter;
-
+    private final ManagedChannel channel;
 
     public CottontaildbExecutor( CsvWriter csvWriter ) {
         super();
         this.csvWriter = csvWriter;
 
-        // TODO JS: Connect to cottontaildb (is already running in embedded mode when this constructor is called)
+        channel = NettyChannelBuilder.forAddress( "localhost", 1865 ).usePlaintext().maxInboundMetadataSize( 150_000_000 ).maxInboundMessageSize( 150_000_000 ).build();
+        executeWrappedQuery( new CottontailQuery( QueryType.SCHEMA_CREATE, Schema.newBuilder().setName( "public" ).build() ), false );
+    }
+
+
+    private Object executeWrappedQuery( CottontailQuery cottontailQuery, boolean expectResult ) {
+        switch ( cottontailQuery.type ) {
+            case QUERY: {
+                final CottonDQLBlockingStub stub = CottonDQLGrpc.newBlockingStub(this.channel).withDeadlineAfter(300_000, TimeUnit.MILLISECONDS);
+                try {
+                    if ( expectResult ) {
+                        final ArrayList<QueryResponseMessage> results = new ArrayList<>();
+                        stub.query( QueryMessage.newBuilder().setQuery( (CottontailGrpc.Query) cottontailQuery.query ).build() ).forEachRemaining( results::add );
+                        return results;
+                    } else {
+                        stub.query( QueryMessage.newBuilder().setQuery( (CottontailGrpc.Query) cottontailQuery.query ).build() );
+                    }
+                } catch (StatusRuntimeException e) {
+                    log.error( "Unable to query cottontail. Query: {}", (CottontailGrpc.Query) cottontailQuery.query, e );
+                    throw new RuntimeException( "Unable to query cottontail.", e );
+                }
+                break;
+            }
+            case QUERY_BATCH: {
+                final CottonDQLBlockingStub stub = CottonDQLGrpc.newBlockingStub(this.channel).withDeadlineAfter(300_000, TimeUnit.MILLISECONDS);
+                try {
+                    if ( expectResult ) {
+                        final ArrayList<QueryResponseMessage> results = new ArrayList<>();
+                        stub.batchedQuery( BatchedQueryMessage.newBuilder().addAllQueries( (List<CottontailGrpc.Query>) cottontailQuery.query ).build() ).forEachRemaining( results::add );
+                        return results;
+                    } else {
+                        stub.batchedQuery( BatchedQueryMessage.newBuilder().addAllQueries( (List<CottontailGrpc.Query>) cottontailQuery.query ).build() );
+                    }
+                } catch (StatusRuntimeException e) {
+                    log.error( "Unable to batch query cottontail.", e );
+                    throw new RuntimeException( "Unable to batch query cottontail.", e );
+                }
+                break;
+            }
+            case INSERT: {
+                this.insert( ImmutableList.of( (CottontailGrpc.InsertMessage) cottontailQuery.query) );
+                break;
+            }
+            case INSERT_BATCH: {
+                this.insert( (List<InsertMessage>) cottontailQuery.query );
+                break;
+            }
+            case UPDATE: {
+                CottonDMLBlockingStub managementStub = CottonDMLGrpc.newBlockingStub(this.channel);
+
+                try {
+                    if ( expectResult ) {
+                        final ArrayList<QueryResponseMessage> results = new ArrayList<>();
+                        managementStub.update( (CottontailGrpc.UpdateMessage) cottontailQuery.query ).forEachRemaining( results::add );
+                        return results;
+                    } else {
+                        managementStub.update( (CottontailGrpc.UpdateMessage) cottontailQuery.query );
+                    }
+                } catch ( StatusRuntimeException e ) {
+                    log.error( "Unable to execute cottontail update: {}", (CottontailGrpc.UpdateMessage) cottontailQuery.query, e );
+                    throw new RuntimeException( "Unable to execute cottontail update.", e );
+                }
+                break;
+            }
+            case DELETE: {
+                CottonDMLBlockingStub managementStub = CottonDMLGrpc.newBlockingStub(this.channel);
+
+                try {
+                    if ( expectResult ) {
+                        final ArrayList<QueryResponseMessage> results = new ArrayList<>();
+                        managementStub.delete( (CottontailGrpc.DeleteMessage) cottontailQuery.query ).forEachRemaining( results::add );
+                        return results;
+                    } else {
+                        managementStub.delete( (CottontailGrpc.DeleteMessage) cottontailQuery.query );
+                    }
+                } catch ( StatusRuntimeException e ) {
+                    log.error( "Unable to execute cottontail delete: {}", (CottontailGrpc.DeleteMessage) cottontailQuery.query, e );
+                    throw new RuntimeException( "Unable to execute cottontail delete.", e );
+                }
+                break;
+            }
+            case SCHEMA_CREATE: {
+                final CottonDDLFutureStub stub = CottonDDLGrpc.newFutureStub(channel);
+                ListenableFuture<Status> future = stub.createSchema( (CottontailGrpc.Schema) cottontailQuery.query );
+                try {
+                    future.get();
+                } catch (InterruptedException | ExecutionException e) {
+                    log.error( "Unable to create cottontail schema: {}.", (CottontailGrpc.Schema) cottontailQuery.query, e );
+                    throw new RuntimeException( "Unable to create cottontail schema.", e );
+                }
+                break;
+            }
+            case SCHEMA_DROP: {
+                final CottonDDLFutureStub stub = CottonDDLGrpc.newFutureStub(channel);
+                ListenableFuture<Status> future = stub.dropSchema( (CottontailGrpc.Schema) cottontailQuery.query );
+                try {
+                    future.get();
+                } catch (InterruptedException | ExecutionException e) {
+                    log.error( "Unable to drop cottontail schema: {}.", (CottontailGrpc.Schema) cottontailQuery.query, e );
+                    throw new RuntimeException( "Unable to drop cottontail schema.", e );
+                }
+                break;
+            }
+            case ENTITY_CREATE: {
+                final CottonDDLBlockingStub stub = CottonDDLGrpc.newBlockingStub(this.channel);
+                try {
+                    stub.createEntity( (CottontailGrpc.EntityDefinition) cottontailQuery.query );
+                } catch ( StatusRuntimeException e) {
+                    log.error( "Unable to create cottontail entity: {}", (CottontailGrpc.EntityDefinition) cottontailQuery.query, e );
+                    throw new RuntimeException( "Unable to create cottontail entity.", e );
+                }
+                break;
+            }
+            case ENTITY_DROP: {
+                final CottonDDLBlockingStub stub = CottonDDLGrpc.newBlockingStub(this.channel);
+                try {
+                    stub.dropEntity( (CottontailGrpc.Entity) cottontailQuery.query );
+                } catch ( StatusRuntimeException e) {
+                    log.error( "Unable to drop cottontail entity: {}", (CottontailGrpc.Entity) cottontailQuery.query, e );
+                    throw new RuntimeException( "Unable to drop cottontail entity.", e );
+                }
+                break;
+            }
+            case TRUNCATE:{
+                final CottonDDLBlockingStub stub = CottonDDLGrpc.newBlockingStub(this.channel);
+                try {
+                    stub.truncate( (CottontailGrpc.Entity) cottontailQuery.query );
+                } catch ( StatusRuntimeException e) {
+                    log.error( "Unable to truncate cottontail entity: {}", (CottontailGrpc.Entity) cottontailQuery.query, e );
+                    throw new RuntimeException( "Unable to truncate cottontail entity.", e );
+                }
+                break;
+            }
+        }
+
+        return null;
+    }
+
+
+    private boolean insert( List<InsertMessage> messages ) {
+        CottonDMLStub managementStub = CottonDMLGrpc.newStub(this.channel);
+        final boolean[] status = {false, false}; /* {done, error}. */
+        final StreamObserver<Status> observer = new StreamObserver<CottontailGrpc.Status>() {
+
+            @Override
+            public void onNext(CottontailGrpc.Status value) {
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                status[0] = true;
+                status[1] = true;
+            }
+
+            @Override
+            public void onCompleted() {
+                status[0] = true;
+            }
+        };
+
+        try {
+            /* Start data transfer. */
+            final StreamObserver<InsertMessage> sink = managementStub.insert( observer );
+            for ( InsertMessage message : messages ) {
+                sink.onNext( message );
+            }
+            sink.onCompleted(); /* Send commit message. */
+
+            while ( !status[0] ) {
+                Thread.yield();
+            }
+        } catch ( Exception e ) {
+            e.printStackTrace();
+        }
+        return !status[1];
+    }
+
+
+    private String wrapperToString( CottontailQuery query ) {
+        String payload;
+        switch ( query.type ) {
+            case QUERY_BATCH:
+            case INSERT_BATCH:
+                payload = String.join( ",", (List) query.query );
+            default:
+                payload = query.query.toString();
+        }
+
+        payload = payload.replace( "\n", "" ).replace( "\r", "" );
+
+        return query.type + ":" + payload;
     }
 
 
@@ -42,13 +260,13 @@ public class CottontaildbExecutor implements Executor {
     public long executeQuery( Query query ) throws ExecutorException {
         long time;
         if ( query.getCottontail() != null ) {
-            // TODO JS: Build query
+            CottontailQuery cottontailQuery = query.getCottontail();
             try {
                 long start = System.nanoTime();
-                // TODO JS: execute query
+                this.executeWrappedQuery( cottontailQuery, query.isExpectResultSet() );
                 time = System.nanoTime() - start;
                 if ( csvWriter != null ) {
-                    csvWriter.appendToCsv( null/*TODO JS: The query*/, time );
+                    csvWriter.appendToCsv( wrapperToString( cottontailQuery ), time );
                 }
             } catch ( UnirestException e ) {
                 throw new ExecutorException( e );
@@ -61,25 +279,9 @@ public class CottontaildbExecutor implements Executor {
     }
 
 
-    // TODO JS: You can also remove this method in case it is not required for the knnBench benchmark
     @Override
     public long executeQueryAndGetNumber( Query query ) throws ExecutorException {
-        if ( query.getRest() != null ) {
-            // TODO JS: Build query
-            try {
-                long start = System.nanoTime();
-                // TODO: execute query
-                if ( csvWriter != null ) {
-                    csvWriter.appendToCsv( null/*TODO JS: The query*/, System.nanoTime() - start );
-                }
-                // TODO JS: Get result of a count query
-                return 0;
-            } catch ( UnirestException e ) {
-                throw new ExecutorException( e );
-            }
-        } else {
-            throw new RuntimeException( "There is no Cottontail GRPC message defined for this query!" );
-        }
+        throw new RuntimeException( "Not supported by CottontailExecutor." );
     }
 
 
@@ -103,22 +305,21 @@ public class CottontaildbExecutor implements Executor {
 
     @Override
     public void executeInsertList( List<BatchableInsert> batchList, AbstractConfig config ) throws ExecutorException {
-        String currentTable = null;
-        List<JsonObject> rows = new ArrayList<>();
-        for ( BatchableInsert query : batchList ) {
-            if ( currentTable == null ) {
-                currentTable = query.getTable();
-            }
 
-            if ( currentTable.equals( query.getTable() ) ) {
-                rows.add( Objects.requireNonNull( query.getRestRowExpression() ) );
-            } else {
-                throw new RuntimeException( "Different tables in multi-inserts. This should not happen!" );
+        List<InsertMessage> insertMessages = new ArrayList<>( batchList.size() );
+        for ( BatchableInsert insert : batchList ) {
+            CottontailQuery insertMessage = insert.getCottontail();
+            if ( insertMessage != null ) {
+                if ( insertMessage.type != QueryType.INSERT ) {
+                    log.error( "Batchable Insert is not an InsertMessage. {}", insertMessage.query );
+                    throw new RuntimeException( "Batchable Insert is not an InsertMessage." );
+                }
+
+                insertMessages.add( (InsertMessage) insertMessage.query );
             }
         }
-        if ( rows.size() > 0 ) {
-            executeQuery( new RawQuery( null, Query.buildRestInsert( currentTable, rows ), false ) );
-        }
+
+        this.executeWrappedQuery( new CottontailQuery( QueryType.INSERT_BATCH, insertMessages ), false );
     }
 
 
