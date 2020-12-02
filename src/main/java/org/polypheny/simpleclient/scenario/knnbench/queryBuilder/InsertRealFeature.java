@@ -109,6 +109,8 @@ public class InsertRealFeature extends QueryBuilder {
             return null;
         }
 
+        // TODO JS: Implement getCottontail()
+
     }
 
 }

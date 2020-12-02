@@ -48,6 +48,8 @@ public class CreateIntFeature extends QueryBuilder {
             return null;
         }
 
+        // TODO JS: Implement getCottontail()
+
     }
 
 }

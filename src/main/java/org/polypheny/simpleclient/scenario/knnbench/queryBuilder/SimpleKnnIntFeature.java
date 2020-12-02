@@ -80,6 +80,8 @@ public class SimpleKnnIntFeature extends QueryBuilder {
             return null;
         }
 
+        // TODO JS: Implement getCottontail()
+
     }
 
 }

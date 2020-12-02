@@ -81,6 +81,8 @@ public class MetadataKnnRealFeature extends QueryBuilder {
             return null;
         }
 
+        // TODO JS: Implement getCottontail()
+
     }
 
 }

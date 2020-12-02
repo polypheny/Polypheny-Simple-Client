@@ -42,6 +42,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.polypheny.simpleclient.cli.ChronosCommand;
+import org.polypheny.simpleclient.executor.CottontaildbExecutor.CottontailExecutorFactory;
+import org.polypheny.simpleclient.executor.CottontaildbExecutor.CottontailInstance;
 import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.executor.Executor.DatabaseInstance;
 import org.polypheny.simpleclient.executor.MonetdbExecutor.MonetdbExecutorFactory;
@@ -109,6 +111,9 @@ public class ChronosAgent extends AbstractChronosAgent {
             case "monetdb":
                 executorFactory = new MonetdbExecutorFactory( ChronosCommand.hostname );
                 break;
+            case "cottontaildb":
+                executorFactory = new CottontailExecutorFactory();
+                break;
             default:
                 throw new RuntimeException( "Unknown system: " + config.system );
         }
@@ -156,6 +161,10 @@ public class ChronosAgent extends AbstractChronosAgent {
                 break;
             case "monetdb":
                 databaseInstance = new MonetdbInstance();
+                scenario.createSchema( false );
+                break;
+            case "cottontaildb":
+                databaseInstance = new CottontailInstance();
                 scenario.createSchema( false );
                 break;
             default:

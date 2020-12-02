@@ -48,6 +48,8 @@ public class CreateRealFeature extends QueryBuilder {
             return null;
         }
 
+        // TODO JS: Implement getCottontail()
+
     }
 
 }

@@ -109,6 +109,8 @@ public class InsertIntFeature extends QueryBuilder {
             return null;
         }
 
+        // TODO JS: Implement getCottontail()
+
     }
 
 }

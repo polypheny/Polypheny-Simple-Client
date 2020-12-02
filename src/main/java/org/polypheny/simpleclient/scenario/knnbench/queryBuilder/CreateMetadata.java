@@ -44,6 +44,8 @@ public class CreateMetadata extends QueryBuilder {
             return null;
         }
 
+        // TODO JS: Implement getCottontail()
+
     }
 
 }

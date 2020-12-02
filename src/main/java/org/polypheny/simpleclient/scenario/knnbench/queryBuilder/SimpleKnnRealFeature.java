@@ -80,6 +80,8 @@ public class SimpleKnnRealFeature extends QueryBuilder {
             return null;
         }
 
+        // TODO JS: Implement getCottontail()
+
     }
 
 }

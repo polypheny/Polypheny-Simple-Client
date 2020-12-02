@@ -53,6 +53,12 @@ public abstract class Query {
     public abstract HttpRequest<?> getRest();
 
 
+    // TODO JS: Correct return type and implement in all knnBench query builders
+    public Object getCottontail() {
+        return null;
+    }
+
+
     public static HttpRequest<?> buildRestInsert( String table, List<JsonObject> rows ) {
         JsonArray array = new JsonArray();
         rows.forEach( array::add );

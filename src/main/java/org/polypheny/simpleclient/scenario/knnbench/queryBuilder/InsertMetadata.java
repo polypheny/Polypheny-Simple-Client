@@ -83,6 +83,8 @@ public class InsertMetadata extends QueryBuilder {
             return null;
         }
 
+        // TODO JS: Implement getCottontail()
+
     }
 
 }
