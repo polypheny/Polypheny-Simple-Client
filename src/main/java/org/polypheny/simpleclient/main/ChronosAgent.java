@@ -101,7 +101,7 @@ public class ChronosAgent extends AbstractChronosAgent {
 
         // Create Executor Factory
         Executor.ExecutorFactory executorFactory;
-        switch ( parsedConfig.get( "system" ) ) {
+        switch ( parsedConfig.get( "store" ) ) {
             case "polypheny":
                 executorFactory = new PolyphenyDbJdbcExecutorFactory( ChronosCommand.hostname );
                 break;
@@ -114,11 +114,11 @@ public class ChronosAgent extends AbstractChronosAgent {
             case "monetdb":
                 executorFactory = new MonetdbExecutorFactory( ChronosCommand.hostname );
                 break;
-            case "cottontaildb":
+            case "cottontail":
                 executorFactory = new CottontailExecutorFactory();
                 break;
             default:
-                throw new RuntimeException( "Unknown system: " + parsedConfig.get( "system" ) );
+                throw new RuntimeException( "Unknown system: " + parsedConfig.get( "store" ) );
         }
 
         Scenario scenario;
@@ -179,7 +179,7 @@ public class ChronosAgent extends AbstractChronosAgent {
                 databaseInstance = new MonetdbInstance();
                 scenario.createSchema( false );
                 break;
-            case "cottontaildb":
+            case "cottontail":
                 databaseInstance = new CottontailInstance();
                 scenario.createSchema( false );
                 break;

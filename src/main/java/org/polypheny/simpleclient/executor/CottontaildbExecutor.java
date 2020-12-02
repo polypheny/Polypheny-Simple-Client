@@ -404,7 +404,6 @@ public class CottontaildbExecutor implements Executor {
                 }
             }
             this.embeddedServer = CottontailKt.embedded( configFile.getAbsolutePath() );
-            this.embeddedServer.start();
         }
 
 
