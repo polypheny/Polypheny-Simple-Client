@@ -313,7 +313,7 @@ public class CottontaildbExecutor implements Executor {
 
     @Override
     public void closeConnection() throws ExecutorException {
-        // NoOp
+        this.channel.shutdown();
     }
 
 
@@ -411,6 +411,7 @@ public class CottontaildbExecutor implements Executor {
 
         @Override
         public void tearDown() {
+
             recursiveDeleteFolder( folder );
             embeddedServer.stop();
         }
