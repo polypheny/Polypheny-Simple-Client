@@ -35,7 +35,7 @@ import kong.unirest.HttpRequest;
 import kong.unirest.Unirest;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
-import org.polypheny.simpleclient.scenario.gavel.Config;
+import org.polypheny.simpleclient.scenario.gavel.GavelConfig;
 
 
 public class SelectTheHundredNextEndingAuctionsOfRandomCategory extends QueryBuilder {
@@ -48,7 +48,7 @@ public class SelectTheHundredNextEndingAuctionsOfRandomCategory extends QueryBui
     private final DateProducer dateProducer;
 
 
-    public SelectTheHundredNextEndingAuctionsOfRandomCategory( int numberOfCategories, Config config ) {
+    public SelectTheHundredNextEndingAuctionsOfRandomCategory( int numberOfCategories, GavelConfig config ) {
         this.numberOfCategories = numberOfCategories;
         this.auctionDateMaxYearsInPast = config.auctionDateMaxYearsInPast;
         this.dateProducer = Fairy.create().dateProducer();

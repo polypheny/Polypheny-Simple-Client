@@ -27,7 +27,6 @@ package org.polypheny.simpleclient.executor;
 
 
 import java.io.IOException;
-import java.sql.Array;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -45,8 +44,7 @@ import org.polypheny.simpleclient.query.BatchableInsert;
 import org.polypheny.simpleclient.query.BatchableInsert.DataTypes;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.RawQuery;
-import org.polypheny.simpleclient.scenario.IConfig;
-import org.polypheny.simpleclient.scenario.gavel.Config;
+import org.polypheny.simpleclient.scenario.AbstractConfig;
 
 
 @Slf4j
@@ -152,7 +150,7 @@ public abstract class JdbcExecutor implements Executor {
 
 
     @Override
-    public void executeInsertList( List<BatchableInsert> queryList, IConfig config ) throws ExecutorException {
+    public void executeInsertList( List<BatchableInsert> queryList, AbstractConfig config ) throws ExecutorException {
         if ( queryList.size() > 0 ) {
             if ( config.usePreparedBatchForDataInsertion() ) {
                 executeInsertListAsPreparedBatch( queryList );

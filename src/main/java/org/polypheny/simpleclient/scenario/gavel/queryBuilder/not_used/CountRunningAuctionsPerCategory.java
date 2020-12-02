@@ -33,7 +33,7 @@ import java.time.format.DateTimeFormatter;
 import kong.unirest.HttpRequest;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
-import org.polypheny.simpleclient.scenario.gavel.Config;
+import org.polypheny.simpleclient.scenario.gavel.GavelConfig;
 
 
 public class CountRunningAuctionsPerCategory extends QueryBuilder {
@@ -44,7 +44,7 @@ public class CountRunningAuctionsPerCategory extends QueryBuilder {
     private final DateProducer dateProducer;
 
 
-    public CountRunningAuctionsPerCategory( Config config ) {
+    public CountRunningAuctionsPerCategory( GavelConfig config ) {
         this.auctionDateMaxYearsInPast = config.auctionDateMaxYearsInPast;
         dateProducer = Fairy.create().dateProducer();
     }

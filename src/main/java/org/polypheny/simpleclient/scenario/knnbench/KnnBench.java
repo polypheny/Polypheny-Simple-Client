@@ -37,14 +37,14 @@ import org.polypheny.simpleclient.scenario.knnbench.queryBuilder.SimpleKnnRealFe
 @Slf4j
 public class KnnBench extends Scenario {
 
-    private final Config config;
+    private final KnnBenchConfig config;
 
     private final List<Long> measuredTimes;
     private final Map<Integer, String> queryTypes;
     private final Map<Integer, List<Long>> measuredTimePerQueryType;
 
 
-    public KnnBench( Executor.ExecutorFactory executorFactory, Config config, boolean commitAfterEveryQuery, boolean dumpQueryList ) {
+    public KnnBench( Executor.ExecutorFactory executorFactory, KnnBenchConfig config, boolean commitAfterEveryQuery, boolean dumpQueryList ) {
         super( executorFactory, commitAfterEveryQuery, dumpQueryList );
         this.config = config;
 
@@ -356,6 +356,12 @@ public class KnnBench extends Scenario {
             properties.put( "queryTypes_" + templateId + "_example", queryTypes.get( templateId ) );
         } );
         properties.put( "queryTypes_maxId", queryTypes.size() );
+    }
+
+
+    @Override
+    public int getNumberOfInsertThreads() {
+        return 1;
     }
 
 

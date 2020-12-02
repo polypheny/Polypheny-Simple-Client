@@ -29,25 +29,11 @@ package org.polypheny.simpleclient.scenario.gavel;
 import java.util.Map;
 import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
-import org.polypheny.simpleclient.scenario.IConfig;
+import org.polypheny.simpleclient.scenario.AbstractConfig;
 
 
 @Slf4j
-public class Config implements IConfig {
-
-    public final String system;
-
-    public final String pdbBranch;
-    public final String puiBranch;
-    public final boolean memoryCatalog;
-    public final boolean resetCatalog;
-
-    public final String dataStore;
-    public final String router;
-    public final String planAndImplementationCaching;
-
-    public final int numberOfThreads;
-    public final int numberOfWarmUpIterations;
+public class GavelConfig extends AbstractConfig {
 
     public final int numberOfAddUserQueries;
     public final int numberOfChangePasswordQueries;
@@ -86,18 +72,16 @@ public class Config implements IConfig {
     public final int numberOfAuctionGenerationThreads;
     public final boolean parallelizeUserGenerationAndAuctionGeneration;
 
-    public final int progressReportBase;
 
-
-    public Config( Properties properties, int multiplier ) {
-        system = "polypheny";
+    public GavelConfig( Properties properties, int multiplier ) {
+        super( "gavel", "polypheny" );
 
         pdbBranch = null;
         puiBranch = null;
         resetCatalog = false;
         memoryCatalog = false;
 
-        dataStore = "hsqldb";
+        dataStores.add( "hsqldb" );
         router = "icarus";
         planAndImplementationCaching = "Both";
 
@@ -144,8 +128,8 @@ public class Config implements IConfig {
     }
 
 
-    public Config( Map<String, String> cdl ) {
-        system = cdl.get( "store" );
+    public GavelConfig( Map<String, String> cdl ) {
+        super( "gavel", cdl.get( "store" ) );
 
         pdbBranch = cdl.get( "pdbBranch" );
         puiBranch = cdl.get( "puiBranch" );
@@ -156,7 +140,7 @@ public class Config implements IConfig {
         numberOfThreads = Integer.parseInt( cdl.get( "numberOfThreads" ) );
         numberOfWarmUpIterations = Integer.parseInt( cdl.getOrDefault( "numberOfWarmUpIterations", "4" ) );
 
-        dataStore = cdl.get( "dataStore" );
+        dataStores.add( cdl.get( "dataStore" ) );
         router = cdl.get( "router" );
         planAndImplementationCaching = cdl.getOrDefault( "planAndImplementationCaching", "Both" );
 
@@ -205,45 +189,6 @@ public class Config implements IConfig {
         parallelizeUserGenerationAndAuctionGeneration = Boolean.parseBoolean( cdl.get( "parallelizeUserGenerationAndAuctionGeneration" ) );
 
         progressReportBase = 100;
-    }
-
-
-    private String getStringProperty( Properties properties, String name ) {
-        String str = getProperty( properties, name );
-        if ( str == null ) {
-            log.error( "Property '{}' not found in config", name );
-            throw new RuntimeException( "Property '" + name + "' not found in config" );
-        }
-        return str;
-    }
-
-
-    private int getIntProperty( Properties properties, String name ) {
-        String str = getProperty( properties, name );
-        if ( str == null ) {
-            log.error( "Property '{}' not found in config", name );
-            throw new RuntimeException( "Property '" + name + "' not found in config" );
-        }
-        return Integer.parseInt( str );
-    }
-
-
-    private boolean getBooleanProperty( Properties properties, String name ) {
-        String str = getStringProperty( properties, name );
-        switch ( str ) {
-            case "true":
-                return true;
-            case "false":
-                return false;
-            default:
-                log.error( "Value for config property '{}' is unknown. Supported values are 'true' and 'false'. Current value is: {}", name, str );
-                throw new RuntimeException( "Value for config property '" + name + "' is unknown. " + "Supported values are 'true' and 'false'. Current value is: " + str );
-        }
-    }
-
-
-    private String getProperty( Properties properties, String name ) {
-        return properties.getProperty( name );
     }
 
 

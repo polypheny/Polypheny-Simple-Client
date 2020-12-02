@@ -34,7 +34,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import kong.unirest.HttpRequest;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
-import org.polypheny.simpleclient.scenario.gavel.Config;
+import org.polypheny.simpleclient.scenario.gavel.GavelConfig;
 
 
 public class SelectTenMostPopularAuctionsOfCategoryByNumberOfBids extends QueryBuilder {
@@ -47,7 +47,7 @@ public class SelectTenMostPopularAuctionsOfCategoryByNumberOfBids extends QueryB
     private final DateProducer dateProducer;
 
 
-    public SelectTenMostPopularAuctionsOfCategoryByNumberOfBids( int numberOfCategories, Config config ) {
+    public SelectTenMostPopularAuctionsOfCategoryByNumberOfBids( int numberOfCategories, GavelConfig config ) {
         this.numberOfCategories = numberOfCategories;
         this.auctionDateMaxYearsInPast = config.auctionDateMaxYearsInPast;
 

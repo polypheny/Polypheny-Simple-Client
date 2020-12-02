@@ -77,14 +77,14 @@ import org.polypheny.simpleclient.scenario.gavel.queryBuilder.SelectTopTenCities
 @Slf4j
 public class Gavel extends Scenario {
 
-    private final Config config;
+    private final GavelConfig config;
 
     private final List<Long> measuredTimes;
     private final Map<Integer, String> queryTypes;
     private final Map<Integer, List<Long>> measuredTimePerQueryType;
 
 
-    public Gavel( JdbcExecutor.ExecutorFactory executorFactory, Config config, boolean commitAfterEveryQuery, boolean dumpQueryList ) {
+    public Gavel( JdbcExecutor.ExecutorFactory executorFactory, GavelConfig config, boolean commitAfterEveryQuery, boolean dumpQueryList ) {
         super( executorFactory, commitAfterEveryQuery, dumpQueryList );
         this.config = config;
         measuredTimes = Collections.synchronizedList( new LinkedList<>() );
@@ -561,6 +561,12 @@ public class Gavel extends Scenario {
             properties.put( "queryTypes_" + templateId + "_example", queryTypes.get( templateId ) );
         } );
         properties.put( "queryTypes_maxId", queryTypes.size() );
+    }
+
+
+    @Override
+    public int getNumberOfInsertThreads() {
+        return config.numberOfUserGenerationThreads + config.numberOfAuctionGenerationThreads;
     }
 
 

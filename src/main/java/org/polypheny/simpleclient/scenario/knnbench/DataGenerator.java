@@ -17,7 +17,7 @@ import org.polypheny.simpleclient.scenario.knnbench.queryBuilder.InsertRealFeatu
 public class DataGenerator {
 
     private final Executor theExecutor;
-    private final Config config;
+    private final KnnBenchConfig config;
     private final ProgressReporter progressReporter;
 
     private final List<BatchableInsert> batchList;
@@ -25,7 +25,7 @@ public class DataGenerator {
     private boolean aborted;
 
 
-    DataGenerator( Executor executor, Config config, ProgressReporter progressReporter ) {
+    DataGenerator( Executor executor, KnnBenchConfig config, ProgressReporter progressReporter ) {
         theExecutor = executor;
         this.config = config;
         this.progressReporter = progressReporter;

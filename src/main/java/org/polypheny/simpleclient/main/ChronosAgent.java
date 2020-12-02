@@ -39,8 +39,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.ImmutableTriple;
+import org.apache.commons.lang3.tuple.Triple;
 import org.polypheny.simpleclient.cli.ChronosCommand;
 import org.polypheny.simpleclient.executor.CottontaildbExecutor.CottontailExecutorFactory;
 import org.polypheny.simpleclient.executor.CottontaildbExecutor.CottontailInstance;
@@ -53,9 +53,12 @@ import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.PolyphenyDbJd
 import org.polypheny.simpleclient.executor.PolyphenyDbRestExecutor.PolyphenyDbRestExecutorFactory;
 import org.polypheny.simpleclient.executor.PostgresExecutor.PostgresExecutorFactory;
 import org.polypheny.simpleclient.executor.PostgresExecutor.PostgresInstance;
+import org.polypheny.simpleclient.scenario.AbstractConfig;
 import org.polypheny.simpleclient.scenario.Scenario;
-import org.polypheny.simpleclient.scenario.gavel.Config;
 import org.polypheny.simpleclient.scenario.gavel.Gavel;
+import org.polypheny.simpleclient.scenario.gavel.GavelConfig;
+import org.polypheny.simpleclient.scenario.knnbench.KnnBench;
+import org.polypheny.simpleclient.scenario.knnbench.KnnBenchConfig;
 
 
 @Slf4j
@@ -94,11 +97,11 @@ public class ChronosAgent extends AbstractChronosAgent {
     @Override
     protected Object prepare( ChronosJob chronosJob, final File inputDirectory, final File outputDirectory, Properties properties, Object o ) {
         // Parse CDL
-        Config config = parseConfig( chronosJob );
+        Map<String, String> parsedConfig = parseConfig( chronosJob );
 
         // Create Executor Factory
         Executor.ExecutorFactory executorFactory;
-        switch ( config.system ) {
+        switch ( parsedConfig.get( "system" ) ) {
             case "polypheny":
                 executorFactory = new PolyphenyDbJdbcExecutorFactory( ChronosCommand.hostname );
                 break;
@@ -115,10 +118,23 @@ public class ChronosAgent extends AbstractChronosAgent {
                 executorFactory = new CottontailExecutorFactory();
                 break;
             default:
-                throw new RuntimeException( "Unknown system: " + config.system );
+                throw new RuntimeException( "Unknown system: " + parsedConfig.get( "system" ) );
         }
 
-        Scenario scenario = new Gavel( executorFactory, config, true, dumpQueryList );
+        Scenario scenario;
+        AbstractConfig config;
+        switch ( parsedConfig.get( "scenario" ) ) {
+            case "gavel":
+                config = new GavelConfig( parsedConfig );
+                scenario = new Gavel( executorFactory, (GavelConfig) config, true, dumpQueryList );
+                break;
+            case "knnBench":
+                config = new KnnBenchConfig( parsedConfig );
+                scenario = new KnnBench( executorFactory, (KnnBenchConfig) config, true, dumpQueryList );
+                break;
+            default:
+                throw new RuntimeException( "Unknown scenario: " + parsedConfig.get( "scenario" ) );
+        }
 
         // Store hostname of node
         try {
@@ -173,19 +189,18 @@ public class ChronosAgent extends AbstractChronosAgent {
 
         // Insert data
         log.info( "Inserting data..." );
-        int numberOfThreads = config.numberOfUserGenerationThreads + config.numberOfAuctionGenerationThreads;
-        ProgressReporter progressReporter = new ChronosProgressReporter( chronosJob, this, numberOfThreads, config.progressReportBase );
+        ProgressReporter progressReporter = new ChronosProgressReporter( chronosJob, this, scenario.getNumberOfInsertThreads(), config.progressReportBase );
         scenario.generateData( progressReporter );
 
-        return new ImmutablePair<>( scenario, databaseInstance );
+        return new ImmutableTriple<>( scenario, config, databaseInstance );
     }
 
 
     @Override
     protected Object warmUp( ChronosJob chronosJob, final File inputDirectory, final File outputDirectory, Properties properties, Object o ) {
-        Config config = parseConfig( chronosJob );
-        @SuppressWarnings("unchecked") Scenario scenario = ((Pair<Scenario, DatabaseInstance>) o).getLeft();
-        @SuppressWarnings("unchecked") DatabaseInstance databaseInstance = ((Pair<Scenario, DatabaseInstance>) o).getRight();
+        @SuppressWarnings("unchecked") Scenario scenario = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getLeft();
+        @SuppressWarnings("unchecked") AbstractConfig config = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getMiddle();
+        @SuppressWarnings("unchecked") DatabaseInstance databaseInstance = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getRight();
 
         // enable icarus training
         if ( config.system.equals( "polypheny" ) && config.router.equals( "icarus" ) ) {
@@ -200,15 +215,15 @@ public class ChronosAgent extends AbstractChronosAgent {
             ((PolyphenyDbInstance) databaseInstance).setIcarusRoutingTraining( false );
         }
 
-        return new ImmutablePair<>( scenario, databaseInstance );
+        return new ImmutableTriple<>( scenario, config, databaseInstance );
     }
 
 
     @Override
     protected Object execute( ChronosJob chronosJob, final File inputDirectory, final File outputDirectory, Properties properties, Object o ) {
-        Config config = parseConfig( chronosJob );
-        @SuppressWarnings("unchecked") Scenario scenario = ((Pair<Scenario, DatabaseInstance>) o).getLeft();
-        @SuppressWarnings("unchecked") DatabaseInstance databaseInstance = ((Pair<Scenario, DatabaseInstance>) o).getRight();
+        @SuppressWarnings("unchecked") Scenario scenario = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getLeft();
+        @SuppressWarnings("unchecked") AbstractConfig config = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getMiddle();
+        @SuppressWarnings("unchecked") DatabaseInstance databaseInstance = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getRight();
 
         final CsvWriter csvWriter;
         if ( writeCsv ) {
@@ -227,25 +242,27 @@ public class ChronosAgent extends AbstractChronosAgent {
         long runtime = scenario.execute( progressReporter, csvWriter, outputDirectory, numberOfThreads );
         properties.put( "runtime", runtime );
 
-        return new ImmutablePair<>( scenario, databaseInstance );
+        return new ImmutableTriple<>( scenario, config, databaseInstance );
     }
 
 
     @Override
     protected Object analyze( ChronosJob chronosJob, final File inputDirectory, final File outputDirectory, Properties properties, Object o ) {
-        @SuppressWarnings("unchecked") Scenario scenario = ((Pair<Scenario, DatabaseInstance>) o).getLeft();
-        @SuppressWarnings("unchecked") DatabaseInstance databaseInstance = ((Pair<Scenario, DatabaseInstance>) o).getRight();
+        @SuppressWarnings("unchecked") Scenario scenario = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getLeft();
+        @SuppressWarnings("unchecked") AbstractConfig config = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getMiddle();
+        @SuppressWarnings("unchecked") DatabaseInstance databaseInstance = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getRight();
 
         scenario.analyze( properties );
 
-        return new ImmutablePair<>( scenario, databaseInstance );
+        return new ImmutableTriple<>( scenario, config, databaseInstance );
     }
 
 
     @Override
     protected Object clean( ChronosJob chronosJob, final File inputDirectory, final File outputDirectory, Properties properties, Object o ) {
-        @SuppressWarnings("unchecked") Scenario scenario = ((Pair<Scenario, DatabaseInstance>) o).getLeft();
-        @SuppressWarnings("unchecked") DatabaseInstance databaseInstance = ((Pair<Scenario, DatabaseInstance>) o).getRight();
+        @SuppressWarnings("unchecked") Scenario scenario = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getLeft();
+        @SuppressWarnings("unchecked") AbstractConfig config = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getMiddle();
+        @SuppressWarnings("unchecked") DatabaseInstance databaseInstance = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getRight();
         databaseInstance.tearDown();
         return null;
     }
@@ -263,6 +280,17 @@ public class ChronosAgent extends AbstractChronosAgent {
     }
 
 
+    public Map<String, String> parseConfig( ChronosJob chronosJob ) {
+        Map<String, String> settings;
+        try {
+            settings = chronosJob.getParsedCdl();
+        } catch ( ExecutionException e ) {
+            throw new RuntimeException( "Exception while parsing cdl", e );
+        }
+        return settings;
+    }
+
+
     @Override
     protected void addChronosLogHandler( ChronosLogHandler chronosLogHandler ) {
         ChronosLog4JAppender.setChronosLogHandler( chronosLogHandler );
@@ -277,17 +305,6 @@ public class ChronosAgent extends AbstractChronosAgent {
 
     void updateProgress( ChronosJob job, int progress ) {
         setProgress( job, (byte) progress );
-    }
-
-
-    private Config parseConfig( ChronosJob chronosJob ) {
-        Map<String, String> settings;
-        try {
-            settings = chronosJob.getParsedCdl();
-        } catch ( ExecutionException e ) {
-            throw new RuntimeException( "Exception while parsing cdl", e );
-        }
-        return new Config( settings );
     }
 
 

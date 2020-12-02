@@ -82,4 +82,7 @@ public abstract class Scenario {
         return -1;
     }
 
+
+    public abstract int getNumberOfInsertThreads();
+
 }

@@ -17,7 +17,7 @@ import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.query.BatchableInsert;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.RawQuery;
-import org.polypheny.simpleclient.scenario.IConfig;
+import org.polypheny.simpleclient.scenario.AbstractConfig;
 
 
 @Slf4j
@@ -153,7 +153,7 @@ public class PolyphenyDbRestExecutor implements PolyphenyDbExecutor {
 
 
     @Override
-    public void executeInsertList( List<BatchableInsert> batchList, IConfig config ) throws ExecutorException {
+    public void executeInsertList( List<BatchableInsert> batchList, AbstractConfig config ) throws ExecutorException {
         String currentTable = null;
         List<JsonObject> rows = new ArrayList<>();
         for ( BatchableInsert query : batchList ) {

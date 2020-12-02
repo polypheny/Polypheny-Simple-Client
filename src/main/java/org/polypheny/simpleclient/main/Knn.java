@@ -7,22 +7,22 @@ import java.util.Objects;
 import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
-import org.polypheny.simpleclient.scenario.knnbench.Config;
 import org.polypheny.simpleclient.scenario.knnbench.KnnBench;
+import org.polypheny.simpleclient.scenario.knnbench.KnnBenchConfig;
 
 
 @Slf4j
 public class Knn {
 
     public static void schema( ExecutorFactory executorFactory, boolean commitAfterEveryQuery ) {
-        Config config = new Config( getProperties(), 1 );
+        KnnBenchConfig config = new KnnBenchConfig( getProperties(), 1 );
         KnnBench knnBench = new KnnBench( executorFactory, config, commitAfterEveryQuery, false );
         knnBench.createSchema( true );
     }
 
 
     public static void data( ExecutorFactory executorFactory, int multiplier, boolean commitAfterEveryQuery ) {
-        Config config = new Config( getProperties(), multiplier );
+        KnnBenchConfig config = new KnnBenchConfig( getProperties(), multiplier );
         KnnBench knnBench = new KnnBench( executorFactory, config, commitAfterEveryQuery, false );
 
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
@@ -31,7 +31,7 @@ public class Knn {
 
 
     public static void workload( ExecutorFactory executorFactory, int multiplier, boolean commitAfterEveryQuery, boolean writeCsv, boolean dumpQueryList ) {
-        Config config = new Config( getProperties(), multiplier );
+        KnnBenchConfig config = new KnnBenchConfig( getProperties(), multiplier );
         KnnBench knnBench = new KnnBench( executorFactory, config, commitAfterEveryQuery, dumpQueryList );
 
         final CsvWriter csvWriter;
@@ -47,7 +47,7 @@ public class Knn {
 
 
     public static void warmup( ExecutorFactory executorFactory, int multiplier, boolean commitAfterEveryQuery, boolean dumpQueryList ) {
-        Config config = new Config( getProperties(), multiplier );
+        KnnBenchConfig config = new KnnBenchConfig( getProperties(), multiplier );
         KnnBench knnBench = new KnnBench( executorFactory, config, commitAfterEveryQuery, dumpQueryList );
 
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );

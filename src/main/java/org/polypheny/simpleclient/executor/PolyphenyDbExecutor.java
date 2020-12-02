@@ -12,7 +12,7 @@ import org.polypheny.simpleclient.executor.MonetdbExecutor.MonetdbInstance;
 import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory;
 import org.polypheny.simpleclient.executor.PostgresExecutor.PostgresInstance;
 import org.polypheny.simpleclient.main.PolyphenyControlConnector;
-import org.polypheny.simpleclient.scenario.gavel.Config;
+import org.polypheny.simpleclient.scenario.AbstractConfig;
 
 
 public interface PolyphenyDbExecutor extends Executor {
@@ -78,10 +78,10 @@ public interface PolyphenyDbExecutor extends Executor {
     class PolyphenyDbInstance extends DatabaseInstance {
 
         private final PolyphenyControlConnector polyphenyControlConnector;
-        private final Config config;
+        private final AbstractConfig config;
 
 
-        public PolyphenyDbInstance( PolyphenyControlConnector polyphenyControlConnector, ExecutorFactory executorFactory, File outputDirectory, Config config ) {
+        public PolyphenyDbInstance( PolyphenyControlConnector polyphenyControlConnector, ExecutorFactory executorFactory, File outputDirectory, AbstractConfig config ) {
             this.polyphenyControlConnector = polyphenyControlConnector;
             this.config = config;
 
@@ -127,46 +127,32 @@ public interface PolyphenyDbExecutor extends Executor {
             try {
                 // Remove hsqldb store
                 executor.dropStore( "hsqldb" );
-                // Deploy store
-                switch ( config.dataStore ) {
-                    case "hsqldb":
-                        executor.deployHsqldb();
-                        break;
-                    case "postgres":
-                        PostgresInstance.reset();
-                        executor.deployPostgres();
-                        break;
-                    case "monetdb":
-                        MonetdbInstance.reset();
-                        executor.deployMonetDb();
-                        break;
-                    case "cassandra":
-                        executor.deployCassandra();
-                        break;
-                    case "file":
-                        executor.deployFileStore();
-                        break;
-                    case "cottontail":
-                        executor.deployCottontail();
-                        break;
-                    case "monetdb+postgres":
-                        PostgresInstance.reset();
-                        MonetdbInstance.reset();
-                        executor.deployPostgres();
-                        executor.deployMonetDb();
-                        break;
-                    case "all":
-                        PostgresInstance.reset();
-                        MonetdbInstance.reset();
-                        executor.deployHsqldb();
-                        executor.deployPostgres();
-                        executor.deployMonetDb();
-                        executor.deployCassandra();
-                        executor.deployFileStore();
-                        executor.deployCottontail();
-                        break;
-                    default:
-                        throw new RuntimeException( "Unknown data store: " + config.dataStore );
+                // Deploy stores
+                for ( String store : config.dataStores ) {
+                    switch ( store ) {
+                        case "hsqldb":
+                            executor.deployHsqldb();
+                            break;
+                        case "postgres":
+                            PostgresInstance.reset();
+                            executor.deployPostgres();
+                            break;
+                        case "monetdb":
+                            MonetdbInstance.reset();
+                            executor.deployMonetDb();
+                            break;
+                        case "cassandra":
+                            executor.deployCassandra();
+                            break;
+                        case "file":
+                            executor.deployFileStore();
+                            break;
+                        case "cottontail":
+                            executor.deployCottontail();
+                            break;
+                        default:
+                            throw new RuntimeException( "Unknown data store: " + store );
+                    }
                 }
                 executor.executeCommit();
             } catch ( ExecutorException e ) {
@@ -245,31 +231,25 @@ public interface PolyphenyDbExecutor extends Executor {
             } catch ( InterruptedException e ) {
                 throw new RuntimeException( "Unexpected interrupt", e );
             }
-            switch ( config.dataStore ) {
-                case "hsqldb":
-                    break;
-                case "postgres":
-                    PostgresInstance.reset();
-                    break;
-                case "monetdb":
-                    MonetdbInstance.reset();
-                    break;
-                case "cassandra":
-                    break;
-                case "file":
-                    break;
-                case "cottontail":
-                    break;
-                case "monetdb+postgres":
-                    PostgresInstance.reset();
-                    MonetdbInstance.reset();
-                    break;
-                case "all":
-                    PostgresInstance.reset();
-                    MonetdbInstance.reset();
-                    break;
-                default:
-                    throw new RuntimeException( "Unknown data store: " + config.dataStore );
+            for ( String store : config.dataStores ) {
+                switch ( store ) {
+                    case "hsqldb":
+                        break;
+                    case "postgres":
+                        PostgresInstance.reset();
+                        break;
+                    case "monetdb":
+                        MonetdbInstance.reset();
+                        break;
+                    case "cassandra":
+                        break;
+                    case "file":
+                        break;
+                    case "cottontail":
+                        break;
+                    default:
+                        throw new RuntimeException( "Unknown data store: " + store );
+                }
             }
         }
 

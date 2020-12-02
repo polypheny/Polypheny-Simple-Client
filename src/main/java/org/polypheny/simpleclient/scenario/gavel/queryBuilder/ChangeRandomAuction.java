@@ -36,7 +36,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import kong.unirest.HttpRequest;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
-import org.polypheny.simpleclient.scenario.gavel.Config;
+import org.polypheny.simpleclient.scenario.gavel.GavelConfig;
 
 
 public class ChangeRandomAuction extends QueryBuilder {
@@ -52,7 +52,7 @@ public class ChangeRandomAuction extends QueryBuilder {
     private final TextProducer text;
 
 
-    public ChangeRandomAuction( int numberOfAuctions, Config config ) {
+    public ChangeRandomAuction( int numberOfAuctions, GavelConfig config ) {
         this.numberOfAuctions = numberOfAuctions;
         this.auctionTitleMinLength = config.auctionTitleMinLength;
         this.auctionTitleMaxLength = config.auctionTitleMaxLength;
