@@ -10,7 +10,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.LongSummaryStatistics;
 import java.util.Map;
+import java.util.OptionalDouble;
 import java.util.Properties;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
@@ -30,6 +32,8 @@ import org.polypheny.simpleclient.scenario.knnbench.queryBuilder.CreateMetadata;
 import org.polypheny.simpleclient.scenario.knnbench.queryBuilder.CreateRealFeature;
 import org.polypheny.simpleclient.scenario.knnbench.queryBuilder.MetadataKnnIntFeature;
 import org.polypheny.simpleclient.scenario.knnbench.queryBuilder.MetadataKnnRealFeature;
+import org.polypheny.simpleclient.scenario.knnbench.queryBuilder.SimpleKnnIdIntFeature;
+import org.polypheny.simpleclient.scenario.knnbench.queryBuilder.SimpleKnnIdRealFeature;
 import org.polypheny.simpleclient.scenario.knnbench.queryBuilder.SimpleKnnIntFeature;
 import org.polypheny.simpleclient.scenario.knnbench.queryBuilder.SimpleKnnRealFeature;
 
@@ -97,6 +101,8 @@ public class KnnBench extends Scenario {
         List<QueryListEntry> queryList = new Vector<>();
         addNumberOfTimes( queryList, new SimpleKnnIntFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm ), config.numberOfSimpleKnnIntFeatureQueries );
         addNumberOfTimes( queryList, new SimpleKnnRealFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm ), config.numberOfSimpleKnnRealFeatureQueries );
+        addNumberOfTimes( queryList, new SimpleKnnIdIntFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm ), config.numberOfSimpleKnnIdIntFeatureQueries );
+        addNumberOfTimes( queryList, new SimpleKnnIdRealFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm ), config.numberOfSimpleKnnIdRealFeatureQueries );
         addNumberOfTimes( queryList, new MetadataKnnIntFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm ), config.numberOfMetadataKnnIntFeatureQueries );
         addNumberOfTimes( queryList, new MetadataKnnRealFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm ), config.numberOfMetadataKnnRealFeatureQueries );
 
@@ -148,32 +154,6 @@ public class KnnBench extends Scenario {
             throw new RuntimeException( "Exception while executing benchmark", threadMonitor.exception );
         }
 
-        /*Executor executor = executorFactory.createInstance( csvWriter );
-
-        SimpleKnnIntFeature simpleKnnIntFeatureBuilder = new SimpleKnnIntFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
-        SimpleKnnRealFeature simpleKnnRealFeatureBuilder = new SimpleKnnRealFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
-        MetadataKnnIntFeature metadataKnnIntFeature = new MetadataKnnIntFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
-        MetadataKnnRealFeature metadataKnnRealFeature = new MetadataKnnRealFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
-        try {
-            for ( int i = 0; i < config.numberOfPureKnnQueries; i++ ) {
-                executor.executeQuery( simpleKnnIntFeatureBuilder.getNewQuery() );
-            }
-            for ( int i = 0; i < config.numberOfPureKnnQueries; i++ ) {
-                executor.executeQuery( simpleKnnRealFeatureBuilder.getNewQuery() );
-            }
-            for ( int i = 0; i < config.numberOfPureKnnQueries; i++ ) {
-                executor.executeQuery( metadataKnnIntFeature.getNewQuery() );
-            }
-            for ( int i = 0; i < config.numberOfPureKnnQueries; i++ ) {
-                executor.executeQuery( metadataKnnRealFeature.getNewQuery() );
-            }
-            executor.flushCsvWriter();
-        } catch ( ExecutorException e ) {
-            throw new RuntimeException( "Error occured during workload.", e );
-        } finally {
-            commitAndCloseExecutor( executor );
-        }*/
-
         long runTime = System.nanoTime() - startTime;
         log.info( "run time: {} s", runTime / 1000000000 );
 
@@ -192,6 +172,8 @@ public class KnnBench extends Scenario {
         Executor executor = null;
         SimpleKnnIntFeature simpleKnnIntFeatureBuilder = new SimpleKnnIntFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
         SimpleKnnRealFeature simpleKnnRealFeatureBuilder = new SimpleKnnRealFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
+        SimpleKnnIdIntFeature simpleKnnIdIntFeatureBuilder = new SimpleKnnIdIntFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
+        SimpleKnnIdRealFeature simpleKnnIdRealFeatureBuilder = new SimpleKnnIdRealFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
         MetadataKnnIntFeature metadataKnnIntFeature = new MetadataKnnIntFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
         MetadataKnnRealFeature metadataKnnRealFeature = new MetadataKnnRealFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
 
@@ -203,6 +185,12 @@ public class KnnBench extends Scenario {
                 }
                 if ( config.numberOfSimpleKnnRealFeatureQueries > 0 ) {
                     executor.executeQuery( simpleKnnRealFeatureBuilder.getNewQuery() );
+                }
+                if ( config.numberOfSimpleKnnIdIntFeatureQueries > 0 ) {
+                    executor.executeQuery( simpleKnnIdIntFeatureBuilder.getNewQuery() );
+                }
+                if ( config.numberOfSimpleKnnIdRealFeatureQueries > 0 ) {
+                    executor.executeQuery( simpleKnnIdRealFeatureBuilder.getNewQuery() );
                 }
                 if ( config.numberOfMetadataKnnIntFeatureQueries > 0 ) {
                     executor.executeQuery( metadataKnnIntFeature.getNewQuery() );
@@ -349,14 +337,31 @@ public class KnnBench extends Scenario {
         properties.put( "measuredTime", calculateMean( measuredTimes ) );
 
         measuredTimePerQueryType.forEach( ( templateId, time ) -> {
-            properties.put( "queryTypes_" + templateId + "_mean", calculateMean( time ) );
-            if ( ChronosAgent.STORE_INDIVIDUAL_QUERY_TIMES ) {
-                properties.put( "queryTypes_" + templateId + "_all", Joiner.on( ',' ).join( time ) );
-            }
-            properties.put( "queryTypes_" + templateId + "_example", queryTypes.get( templateId ) );
+            calculateResults( properties, templateId, time );
         } );
         properties.put( "queryTypes_maxId", queryTypes.size() );
     }
+
+
+
+    private void calculateResults( Properties properties, int templateId, List<Long> time ) {
+        LongSummaryStatistics summaryStatistics = time.stream().mapToLong( Long::longValue ).summaryStatistics();
+        double mean = summaryStatistics.getAverage();
+        long max = summaryStatistics.getMax();
+        long min = summaryStatistics.getMin();
+        double stddev = calculateSampleStandardDeviation( time, mean );
+
+        properties.put( "queryTypes_" + templateId + "_mean", processDoubleValue( mean ) );
+        if ( ChronosAgent.STORE_INDIVIDUAL_QUERY_TIMES ) {
+            properties.put( "queryTypes_" + templateId + "_all", Joiner.on( ',' ).join( time ) );
+        }
+        properties.put( "queryTypes_" + templateId + "_stddev", processDoubleValue( stddev ) );
+        properties.put( "queryTypes_" + templateId + "_min", min / 1_000_000L );
+        properties.put( "queryTypes_" + templateId + "_max", max / 1_000_000L );
+        properties.put( "queryTypes_" + templateId + "_example", queryTypes.get( templateId ) );
+    }
+
+
 
 
     @Override

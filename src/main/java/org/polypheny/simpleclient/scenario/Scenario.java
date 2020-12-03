@@ -83,6 +83,25 @@ public abstract class Scenario {
     }
 
 
+    protected double calculateSampleStandardDeviation( List<Long> times, double mean ) {
+        double preVariance = times.stream().mapToDouble( it -> Math.pow( ( it - mean ), 2 ) ).sum();
+        double variance = preVariance / ( times.size() - 1.0 );
+        return Math.sqrt( variance );
+    }
+
+
+    protected double processDoubleValue( double value ) {
+        DecimalFormat df = new DecimalFormat( "0.000" );
+        double temp1 = value / 1_000_000;
+        String roundFormat = df.format( value );
+        try {
+            return df.parse( roundFormat ).doubleValue();
+        } catch ( ParseException e ) {
+            log.error( "Exception", e );
+        }
+        return -1;
+    }
+
     public abstract int getNumberOfInsertThreads();
 
 }
