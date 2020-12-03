@@ -124,7 +124,7 @@ public class InsertIntFeature extends QueryBuilder {
         public CottontailQuery getCottontail() {
             Map<String, Data> dataMap = new HashMap<>();
             dataMap.put( "id", Data.newBuilder().setIntData( (int) id ).build() );
-            dataMap.put( "feature",  Data.newBuilder().setVectorData(
+            dataMap.put( "feature", Data.newBuilder().setVectorData(
                     Vector.newBuilder().setIntVector( IntVector.newBuilder()
                             .addAllVector( Arrays.asList( feature ) )
                             .build() ).build() ).build() );
@@ -134,6 +134,7 @@ public class InsertIntFeature extends QueryBuilder {
                     .build();
             return new CottontailQuery( QueryType.INSERT, insertMessage );
         }
+
     }
 
 }

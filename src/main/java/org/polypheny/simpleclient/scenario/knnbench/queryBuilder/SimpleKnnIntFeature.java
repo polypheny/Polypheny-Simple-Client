@@ -2,8 +2,11 @@ package org.polypheny.simpleclient.scenario.knnbench.queryBuilder;
 
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 import kong.unirest.HttpRequest;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.CottontailQuery;
 import org.polypheny.simpleclient.query.CottontailQuery.QueryType;
 import org.polypheny.simpleclient.query.Query;
@@ -62,9 +65,9 @@ public class SimpleKnnIntFeature extends QueryBuilder {
 
     private static class SimpleKnnIntFeatureQuery extends Query {
 
-        private static final String SQL_1 = "SELECT id, distance(feature, ARRAY";
-        private static final String SQL_2 = ", '";
-        private static final String SQL_3 = "') as dist FROM knn_intfeature ORDER BY dist ASC LIMIT ";
+        private static final String SQL_1 = "SELECT id, distance(feature, ";
+        private static final String SQL_2 = ", ";
+        private static final String SQL_3 = ") as dist FROM knn_intfeature ORDER BY dist ASC LIMIT ";
 
         private final Integer[] target;
         private final int limit;
@@ -81,7 +84,21 @@ public class SimpleKnnIntFeature extends QueryBuilder {
 
         @Override
         public String getSql() {
-            return SQL_1 + Arrays.toString( target ) + SQL_2 + norm + SQL_3 + limit;
+            return SQL_1 + "ARRAY" + Arrays.toString( target ) + SQL_2 + " '" + norm + "' " + SQL_3 + limit;
+        }
+
+
+        @Override
+        public String getParameterizedSqlQuery() {
+            return SQL_1 + "?" + SQL_2 + "'" + norm + "'" + SQL_3 + limit;
+        }
+
+
+        @Override
+        public Map<Integer, ImmutablePair<DataTypes, Object>> getParameterValues() {
+            Map<Integer, ImmutablePair<DataTypes, Object>> map = new HashMap<>();
+            map.put( 1, new ImmutablePair<>( DataTypes.ARRAY_INT, target ) );
+            return map;
         }
 
 
@@ -129,6 +146,7 @@ public class SimpleKnnIntFeature extends QueryBuilder {
 
             throw new RuntimeException( "Unsupported norm: " + norm );
         }
+
     }
 
 }

@@ -33,7 +33,7 @@ public class PolyphenyDbRestExecutor implements PolyphenyDbExecutor {
         super();
         this.host = host;
         this.csvWriter = csvWriter;
-        jdbcExecutorFactory = new PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory( host );
+        jdbcExecutorFactory = new PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory( host, false );
     }
 
 
@@ -275,6 +275,7 @@ public class PolyphenyDbRestExecutor implements PolyphenyDbExecutor {
         public int getMaxNumberOfThreads() {
             return 0;
         }
+
     }
 
 }

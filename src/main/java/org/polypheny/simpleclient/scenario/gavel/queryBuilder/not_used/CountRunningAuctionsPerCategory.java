@@ -30,7 +30,10 @@ import com.devskiller.jfairy.Fairy;
 import com.devskiller.jfairy.producer.DateProducer;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.Map;
 import kong.unirest.HttpRequest;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 import org.polypheny.simpleclient.scenario.gavel.GavelConfig;
@@ -75,6 +78,24 @@ public class CountRunningAuctionsPerCategory extends QueryBuilder {
                     " WHERE a.category = c.id" +
                     " AND a.end_date > '" + date.format( DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss" ) ) + "'" +
                     " GROUP BY c.name";
+        }
+
+
+        @Override
+        public String getParameterizedSqlQuery() {
+            return "SELECT c.name, count(a.id) " +
+                    " FROM auction a, category c " +
+                    " WHERE a.category = c.id" +
+                    " AND a.end_date > ?" +
+                    " GROUP BY c.name";
+        }
+
+
+        @Override
+        public Map<Integer, ImmutablePair<DataTypes, Object>> getParameterValues() {
+            Map<Integer, ImmutablePair<DataTypes, Object>> map = new HashMap<>();
+            map.put( 1, new ImmutablePair<>( DataTypes.TIMESTAMP, date ) );
+            return map;
         }
 
 

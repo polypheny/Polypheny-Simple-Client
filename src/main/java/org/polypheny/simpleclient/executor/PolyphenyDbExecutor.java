@@ -255,7 +255,7 @@ public interface PolyphenyDbExecutor extends Executor {
 
 
         public void setIcarusRoutingTraining( boolean b ) {
-            PolyphenyDbExecutor executor = (PolyphenyDbExecutor) new PolyphenyDbJdbcExecutorFactory( ChronosCommand.hostname ).createExecutorInstance();
+            PolyphenyDbExecutor executor = (PolyphenyDbExecutor) new PolyphenyDbJdbcExecutorFactory( ChronosCommand.hostname, false ).createExecutorInstance();
             try {
                 // disable icarus training
                 executor.setConfig( "icarusRouting/training", b ? "true" : "false" );

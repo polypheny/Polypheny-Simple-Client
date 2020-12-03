@@ -26,7 +26,10 @@
 package org.polypheny.simpleclient.scenario.gavel.queryBuilder.not_used;
 
 
+import java.util.HashMap;
+import java.util.Map;
 import kong.unirest.HttpRequest;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
@@ -52,6 +55,18 @@ public class SelectTopHundredSellerByNumberOfAuctions extends QueryBuilder {
         @Override
         public String getSql() {
             return "SELECT u.last_name, u.first_name, count(a.id) as number FROM auction a INNER JOIN user u ON a.user = u.id GROUP BY a.user, u.last_name, u.first_name ORDER BY number desc LIMIT 100";
+        }
+
+
+        @Override
+        public String getParameterizedSqlQuery() {
+            return getSql();
+        }
+
+
+        @Override
+        public Map<Integer, ImmutablePair<DataTypes, Object>> getParameterValues() {
+            return new HashMap<>();
         }
 
 

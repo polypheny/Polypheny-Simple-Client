@@ -3,7 +3,7 @@ group "org.polypheny"
 description = "A lightweight Polypheny-DB benchmarking client"
 
 def versionMajor = 1
-def versionMinor = 6.3
+def versionMinor = 7.2
 def versionQualifier = "-SNAPSHOT"
 version = versionMajor + "." + versionMinor + versionQualifier
 
@@ -143,7 +143,12 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
     from javadoc.destinationDir
 }
 shadowJar {
-    classifier = ''
+    zip64 true
+    classifier = ""
+    mergeServiceFiles {
+        setPath("META-INF/services")
+        include("io.grpc.*")
+    }
 }
 assemble.dependsOn shadowJar
 artifacts {

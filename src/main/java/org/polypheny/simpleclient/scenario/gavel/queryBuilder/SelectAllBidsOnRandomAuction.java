@@ -26,9 +26,12 @@
 package org.polypheny.simpleclient.scenario.gavel.queryBuilder;
 
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import kong.unirest.HttpRequest;
 import kong.unirest.Unirest;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
@@ -67,6 +70,20 @@ public class SelectAllBidsOnRandomAuction extends QueryBuilder {
         @Override
         public String getSql() {
             return "SELECT * FROM bid b WHERE b.auction=" + auctionId;
+        }
+
+
+        @Override
+        public String getParameterizedSqlQuery() {
+            return "SELECT * FROM bid b WHERE b.auction=?";
+        }
+
+
+        @Override
+        public Map<Integer, ImmutablePair<DataTypes, Object>> getParameterValues() {
+            Map<Integer, ImmutablePair<DataTypes, Object>> map = new HashMap<>();
+            map.put( 1, new ImmutablePair<>( DataTypes.INTEGER, auctionId ) );
+            return map;
         }
 
 

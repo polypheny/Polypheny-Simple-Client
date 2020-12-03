@@ -26,8 +26,11 @@
 package org.polypheny.simpleclient.scenario.gavel.queryBuilder;
 
 
+import java.util.HashMap;
+import java.util.Map;
 import kong.unirest.HttpRequest;
 import kong.unirest.Unirest;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
@@ -53,6 +56,18 @@ public class SelectTopTenCitiesByNumberOfCustomers extends QueryBuilder {
         @Override
         public String getSql() {
             return "SELECT city, COUNT(city) as number FROM \"user\" GROUP BY city ORDER BY number desc LIMIT 10";
+        }
+
+
+        @Override
+        public String getParameterizedSqlQuery() {
+            return getSql();
+        }
+
+
+        @Override
+        public Map<Integer, ImmutablePair<DataTypes, Object>> getParameterValues() {
+            return new HashMap<>();
         }
 
 

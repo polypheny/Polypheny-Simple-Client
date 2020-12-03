@@ -196,4 +196,5 @@ public class GavelConfig extends AbstractConfig {
     public boolean usePreparedBatchForDataInsertion() {
         return this.usePreparedBatchForDataInsertion;
     }
+
 }

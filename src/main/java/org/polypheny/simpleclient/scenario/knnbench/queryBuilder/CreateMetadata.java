@@ -3,7 +3,9 @@ package org.polypheny.simpleclient.scenario.knnbench.queryBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import kong.unirest.HttpRequest;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.CottontailQuery;
 import org.polypheny.simpleclient.query.CottontailQuery.QueryType;
 import org.polypheny.simpleclient.query.Query;
@@ -49,6 +51,18 @@ public class CreateMetadata extends QueryBuilder {
 
 
         @Override
+        public String getParameterizedSqlQuery() {
+            return null;
+        }
+
+
+        @Override
+        public Map<Integer, ImmutablePair<DataTypes, Object>> getParameterValues() {
+            return null;
+        }
+
+
+        @Override
         public HttpRequest<?> getRest() {
             return null;
         }
@@ -68,6 +82,7 @@ public class CreateMetadata extends QueryBuilder {
                     entityDefinition
             );
         }
+
     }
 
 }

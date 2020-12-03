@@ -36,8 +36,8 @@ import org.polypheny.simpleclient.query.RawQuery;
 
 public class PostgresExecutor extends JdbcExecutor {
 
-    public PostgresExecutor( String host, CsvWriter csvWriter ) {
-        super( csvWriter );
+    public PostgresExecutor( String host, CsvWriter csvWriter, boolean prepareStatements ) {
+        super( csvWriter, prepareStatements );
         try {
             Class.forName( "org.postgresql.Driver" );
         } catch ( ClassNotFoundException e ) {
@@ -68,16 +68,18 @@ public class PostgresExecutor extends JdbcExecutor {
     public static class PostgresExecutorFactory extends ExecutorFactory {
 
         private final String host;
+        private final boolean prepareStatements;
 
 
-        public PostgresExecutorFactory( String host ) {
+        public PostgresExecutorFactory( String host, boolean prepareStatements ) {
             this.host = host;
+            this.prepareStatements = prepareStatements;
         }
 
 
         @Override
         public PostgresExecutor createExecutorInstance( CsvWriter csvWriter ) {
-            return new PostgresExecutor( host, csvWriter );
+            return new PostgresExecutor( host, csvWriter, prepareStatements );
         }
 
 
@@ -104,7 +106,7 @@ public class PostgresExecutor extends JdbcExecutor {
 
 
         public static void reset() {
-            JdbcExecutor postgresExecutor = new PostgresExecutor( ChronosCommand.hostname, null );
+            JdbcExecutor postgresExecutor = new PostgresExecutor( ChronosCommand.hostname, null, false );
             try {
                 postgresExecutor.reset();
                 postgresExecutor.executeCommit();
