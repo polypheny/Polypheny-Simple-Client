@@ -59,6 +59,8 @@ import org.polypheny.simpleclient.scenario.gavel.Gavel;
 import org.polypheny.simpleclient.scenario.gavel.GavelConfig;
 import org.polypheny.simpleclient.scenario.knnbench.KnnBench;
 import org.polypheny.simpleclient.scenario.knnbench.KnnBenchConfig;
+import org.polypheny.simpleclient.scenario.multimedia.MultimediaBench;
+import org.polypheny.simpleclient.scenario.multimedia.MultimediaConfig;
 
 
 @Slf4j
@@ -131,6 +133,10 @@ public class ChronosAgent extends AbstractChronosAgent {
             case "knnBench":
                 config = new KnnBenchConfig( parsedConfig );
                 scenario = new KnnBench( executorFactory, (KnnBenchConfig) config, true, dumpQueryList );
+                break;
+            case "multimedia":
+                config = new MultimediaConfig( parsedConfig );
+                scenario = new MultimediaBench( executorFactory, (MultimediaConfig) config, true, dumpQueryList );
                 break;
             default:
                 throw new RuntimeException( "Unknown scenario: " + parsedConfig.get( "scenario" ) );

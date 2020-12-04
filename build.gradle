@@ -91,6 +91,9 @@ dependencies {
     // Fake data generator
     implementation group: 'com.devskiller', name: 'jfairy', version: '0.6.4' // License: Apache 2.0
 
+    // Video processing
+    implementation group: 'io.humble', name: 'humble-video-all', version: '0.3.0'
+
     // CSV
     implementation group: 'com.opencsv', name: 'opencsv', version: '5.0' // License: Apache 2.0
 

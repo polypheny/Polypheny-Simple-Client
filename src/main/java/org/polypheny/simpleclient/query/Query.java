@@ -48,7 +48,7 @@ public abstract class Query {
     }
 
 
-    public enum DataTypes {INTEGER, VARCHAR, TIMESTAMP, DATE, ARRAY_INT, ARRAY_REAL}
+    public enum DataTypes {INTEGER, VARCHAR, TIMESTAMP, DATE, ARRAY_INT, ARRAY_REAL, BYTE_ARRAY}
 
 
     public abstract String getSql();
