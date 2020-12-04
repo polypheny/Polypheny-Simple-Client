@@ -56,10 +56,10 @@ public class MetadataKnnIntFeature extends QueryBuilder {
 
     private static class MetadataKnnIntFeatureQuery extends Query {
 
-        private static final String SQL_1 = "SELECT knn_metadata.id, knn_metadata.textdata FROM knn_metadata WHERE knn_metadata.id in ( SELECT id FROM knn_intfeature ORDER BY distance(feature, ";
+        private static final String SQL_1 = "SELECT knn_metadata.id, knn_metadata.textdata, closest.dist FROM knn_metadata, ( SELECT id, distance(feature, ";
         private static final String SQL_2 = ", ";
-        private static final String SQL_3 = ") ASC LIMIT ";
-        private static final String SQL_4 = ")";
+        private static final String SQL_3 = ") AS dist FROM knn_intfeature ORDER BY dist ASC LIMIT ";
+        private static final String SQL_4 = ") AS closest WHERE knn_metadata.id = closest.id ORDER BY closest.dist ASC";
 
         private final Integer[] target;
         private final int limit;

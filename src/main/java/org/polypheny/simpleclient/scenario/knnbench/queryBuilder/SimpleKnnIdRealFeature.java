@@ -66,9 +66,10 @@ public class SimpleKnnIdRealFeature extends QueryBuilder {
 
     private static class SimpleKnnIdRealFeatureQuery extends Query {
 
-        private static final String SQL_1 = "SELECT id FROM knn_realfeature ORDER BY distance(feature, ";
+        private static final String SQL_1 = "SELECT closest.dist FROM ( SELECT id, distance(feature, ";
         private static final String SQL_2 = ", ";
-        private static final String SQL_3 = ") ASC LIMIT ";
+        private static final String SQL_3 = ") AS dist FROM knn_intfeature ORDER BY dist ASC LIMIT ";
+        private static final String SQL_4 = ") AS closest";
 
         private final Float[] target;
         private final int limit;
@@ -85,13 +86,13 @@ public class SimpleKnnIdRealFeature extends QueryBuilder {
 
         @Override
         public String getSql() {
-            return SQL_1 + "ARRAY" + Arrays.toString( target ) + SQL_2 + "'" + norm + "'" + SQL_3 + limit;
+            return SQL_1 + "ARRAY" + Arrays.toString( target ) + SQL_2 + "'" + norm + "'" + SQL_3 + limit + SQL_4;
         }
 
 
         @Override
         public String getParameterizedSqlQuery() {
-            return SQL_1 + "?" + SQL_2 + "'" + norm + "'" + SQL_3 + limit;
+            return SQL_1 + "?" + SQL_2 + "'" + norm + "'" + SQL_3 + limit + SQL_4;
         }
 
 
