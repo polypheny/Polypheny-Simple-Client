@@ -151,6 +151,7 @@ public class SimpleKnnIdRealFeature extends QueryBuilder {
 
             throw new RuntimeException( "Unsupported norm: " + norm );
         }
+
     }
 
 }
