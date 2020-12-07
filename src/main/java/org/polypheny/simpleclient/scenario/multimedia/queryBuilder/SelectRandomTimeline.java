@@ -35,14 +35,14 @@ import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
 
-public class SelectRandomUser extends QueryBuilder {
+public class SelectRandomTimeline extends QueryBuilder {
 
     private static final boolean EXPECT_RESULT = true;
 
     private final int numberOfUsers;
 
 
-    public SelectRandomUser( int numberOfUsers ) {
+    public SelectRandomTimeline( int numberOfUsers ) {
         this.numberOfUsers = numberOfUsers;
     }
 
@@ -50,16 +50,16 @@ public class SelectRandomUser extends QueryBuilder {
     @Override
     public Query getNewQuery() {
         int userId = ThreadLocalRandom.current().nextInt( 1, numberOfUsers + 1 );
-        return new SelectRandomUserQuery( userId );
+        return new SelectRandomTimelineQuery( userId );
     }
 
 
-    public static class SelectRandomUserQuery extends Query {
+    public static class SelectRandomTimelineQuery extends Query {
 
         private final int userId;
 
 
-        public SelectRandomUserQuery( int userId ) {
+        public SelectRandomTimelineQuery( int userId ) {
             super( EXPECT_RESULT );
             this.userId = userId;
         }
@@ -67,13 +67,30 @@ public class SelectRandomUser extends QueryBuilder {
 
         @Override
         public String getSql() {
-            return "SELECT * FROM \"users\" WHERE id=" + userId;
+            //TODO LIMIT
+            return "SELECT friend.firstname, friend.profile_pic, timeline.message, timeline.img, timeline.\"video\", timeline.\"sound\" "
+                    + "FROM public.timeline, "
+                    + "public.\"users\" usr, "
+                    + "public.\"users\" friend, "
+                    + "public.followers "
+                    + "WHERE usr.id = followers.\"user_id\" "
+                    + "AND friend.id = followers.friend_id "
+                    + "AND timeline.user_id = friend.id "
+                    + "AND usr.id=" + userId;
         }
 
 
         @Override
         public String getParameterizedSqlQuery() {
-            return "SELECT * FROM \"users\" WHERE id=?";
+            return "SELECT friend.firstname, friend.profile_pic, timeline.message, timeline.img, timeline.\"video\", timeline.\"sound\" "
+                    + "FROM public.timeline, "
+                    + "public.\"users\" usr, "
+                    + "public.\"users\" friend, "
+                    + "public.followers "
+                    + "WHERE usr.id = followers.\"user_id\" "
+                    + "AND friend.id = followers.friend_id "
+                    + "AND timeline.user_id = friend.id "
+                    + "AND usr.id=?";
         }
 
 

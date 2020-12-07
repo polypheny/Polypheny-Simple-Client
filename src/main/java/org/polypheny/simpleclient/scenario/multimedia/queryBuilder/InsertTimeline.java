@@ -80,7 +80,7 @@ public class InsertTimeline extends QueryBuilder {
 
     private static class InsertTimelineQuery extends BatchableInsert {
 
-        private static final String SQL = "INSERT INTO \"timeline\" (\"id\", \"timestamp\", \"user_id\", \"img\", \"video\", \"sound\") VALUES ";
+        private static final String SQL = "INSERT INTO \"timeline\" (\"id\", \"timestamp\", \"user_id\", \"message\", \"img\", \"video\", \"sound\") VALUES ";
         private final int timelineId;
         private final Timestamp timestamp;
         private final int userId;
@@ -113,6 +113,7 @@ public class InsertTimeline extends QueryBuilder {
                     + timelineId + ","
                     + "timestamp '" + timestamp.toString() + "',"
                     + userId + ","
+                    + "'" + message + "',"
                     + MediaGenerator.insertByteHexString( img ) + ","
                     + MediaGenerator.insertByteHexString( MediaGenerator.getVideo( video ) ) + ","
                     + MediaGenerator.insertByteHexString( sound )
@@ -122,7 +123,7 @@ public class InsertTimeline extends QueryBuilder {
 
         @Override
         public String getParameterizedSqlQuery() {
-            return SQL + "(?, ?, ?, ?, ?, ?)";
+            return SQL + "(?, ?, ?, ?, ?, ?, ?)";
         }
 
 
@@ -132,9 +133,10 @@ public class InsertTimeline extends QueryBuilder {
             map.put( 1, new ImmutablePair<>( DataTypes.INTEGER, timelineId ) );
             map.put( 2, new ImmutablePair<>( DataTypes.TIMESTAMP, timestamp ) );
             map.put( 3, new ImmutablePair<>( DataTypes.INTEGER, userId ) );
-            map.put( 4, new ImmutablePair<>( DataTypes.BYTE_ARRAY, img ) );
-            map.put( 5, new ImmutablePair<>( DataTypes.BYTE_ARRAY, MediaGenerator.getVideo( video ) ) );
-            map.put( 6, new ImmutablePair<>( DataTypes.BYTE_ARRAY, sound ) );
+            map.put( 4, new ImmutablePair<>( DataTypes.VARCHAR, message ) );
+            map.put( 5, new ImmutablePair<>( DataTypes.BYTE_ARRAY, img ) );
+            map.put( 6, new ImmutablePair<>( DataTypes.BYTE_ARRAY, MediaGenerator.getVideo( video ) ) );
+            map.put( 7, new ImmutablePair<>( DataTypes.BYTE_ARRAY, sound ) );
             return map;
         }
 

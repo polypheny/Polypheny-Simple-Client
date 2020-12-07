@@ -51,7 +51,8 @@ import org.polypheny.simpleclient.query.QueryBuilder;
 import org.polypheny.simpleclient.query.QueryListEntry;
 import org.polypheny.simpleclient.scenario.Scenario;
 import org.polypheny.simpleclient.scenario.multimedia.queryBuilder.CreateTable;
-import org.polypheny.simpleclient.scenario.multimedia.queryBuilder.InsertUser;
+import org.polypheny.simpleclient.scenario.multimedia.queryBuilder.SelectRandomAlbum;
+import org.polypheny.simpleclient.scenario.multimedia.queryBuilder.SelectRandomTimeline;
 import org.polypheny.simpleclient.scenario.multimedia.queryBuilder.SelectRandomUser;
 
 
@@ -82,16 +83,24 @@ public class MultimediaBench extends Scenario {
 
         try {
             executor = executorFactory.createExecutorInstance();
-            executor.executeQuery( (new CreateTable( "CREATE TABLE IF NOT EXISTS \"user\" (\"id\" INTEGER NOT NULL, \"firstName\" VARCHAR(1000) NOT NULL, \"lastName\" VARCHAR(1000) NOT NULL, \"email\" VARCHAR(1000) NOT NULL, \"password\" VARCHAR(1000) NOT NULL, \"profile_pic\" IMAGE NOT NULL, PRIMARY KEY(\"id\"))" )).getNewQuery() );
+            executor.executeQuery( (new CreateTable( "CREATE TABLE IF NOT EXISTS \"users\" (\"id\" INTEGER NOT NULL, \"firstName\" VARCHAR(1000) NOT NULL, \"lastName\" VARCHAR(1000) NOT NULL, \"email\" VARCHAR(1000) NOT NULL, \"password\" VARCHAR(1000) NOT NULL, \"profile_pic\" IMAGE NOT NULL, PRIMARY KEY(\"id\"))" )).getNewQuery() );
             executor.executeQuery( (new CreateTable( "CREATE TABLE IF NOT EXISTS \"album\" (\"id\" INTEGER NOT NULL, \"user_id\" INTEGER NOT NULL, \"name\" VARCHAR(200) NOT NULL, PRIMARY KEY(\"id\"))" )).getNewQuery() );
             executor.executeQuery( (new CreateTable( "CREATE TABLE IF NOT EXISTS \"media\" (\"id\" INTEGER NOT NULL, \"timestamp\" TIMESTAMP NOT NULL, \"album_id\" INTEGER NOT NULL, \"img\" IMAGE, \"video\" VIDEO, \"sound\" SOUND, PRIMARY KEY(\"id\"))" )).getNewQuery() );
             executor.executeQuery( (new CreateTable( "CREATE TABLE IF NOT EXISTS \"timeline\" (\"id\" INTEGER NOT NULL, \"timestamp\" TIMESTAMP NOT NULL, \"user_id\" INTEGER NOT NULL, \"message\" VARCHAR(2000), \"img\" IMAGE, \"video\" VIDEO, \"sound\" SOUND, PRIMARY KEY(\"id\"))" )).getNewQuery() );
-            executor.executeQuery( (new CreateTable( "CREATE TABLE IF NOT EXISTS \"followers\" (\"user\" INTEGER NOT NULL,\"friend\" INTEGER NOT NULL, PRIMARY KEY(\"user\", \"friend\"))" )).getNewQuery() );
-            executor.executeQuery( (new CreateTable( "TRUNCATE TABLE \"user\"" )).getNewQuery() );
+            executor.executeQuery( (new CreateTable( "CREATE TABLE IF NOT EXISTS \"followers\" (\"user_id\" INTEGER NOT NULL,\"friend_id\" INTEGER NOT NULL, PRIMARY KEY(\"user_id\", \"friend_id\"))" )).getNewQuery() );
+            executor.executeQuery( (new CreateTable( "TRUNCATE TABLE \"users\"" )).getNewQuery() );
             executor.executeQuery( (new CreateTable( "TRUNCATE TABLE \"album\"" )).getNewQuery() );
             executor.executeQuery( (new CreateTable( "TRUNCATE TABLE \"media\"" )).getNewQuery() );
             executor.executeQuery( (new CreateTable( "TRUNCATE TABLE \"timeline\"" )).getNewQuery() );
             executor.executeQuery( (new CreateTable( "TRUNCATE TABLE \"followers\"" )).getNewQuery() );
+
+            if ( includingKeys ) {
+                executor.executeQuery( (new CreateTable( "ALTER TABLE public.\"album\" ADD CONSTRAINT \"fk1\" FOREIGN KEY(\"user_id\") REFERENCES \"users\"(\"id\") ON UPDATE CASCADE ON DELETE CASCADE" )).getNewQuery() );
+                executor.executeQuery( (new CreateTable( "ALTER TABLE public.\"media\" ADD CONSTRAINT \"fk2\" FOREIGN KEY(\"album_id\") REFERENCES \"album\"(\"id\") ON UPDATE CASCADE ON DELETE CASCADE" )).getNewQuery() );
+                executor.executeQuery( (new CreateTable( "ALTER TABLE public.\"timeline\" ADD CONSTRAINT \"fk3\" FOREIGN KEY(\"user_id\") REFERENCES \"users\"(\"id\") ON UPDATE CASCADE ON DELETE CASCADE" )).getNewQuery() );
+                executor.executeQuery( (new CreateTable( "ALTER TABLE public.\"followers\" ADD CONSTRAINT \"fk4\" FOREIGN KEY(\"user_id\") REFERENCES \"users\"(\"id\") ON UPDATE CASCADE ON DELETE CASCADE" )).getNewQuery() );
+                executor.executeQuery( (new CreateTable( "ALTER TABLE public.\"followers\" ADD CONSTRAINT \"fk5\" FOREIGN KEY(\"friend_id\") REFERENCES \"users\"(\"id\") ON UPDATE CASCADE ON DELETE CASCADE" )).getNewQuery() );
+            }
         } catch ( ExecutorException e ) {
             throw new RuntimeException( "Exception while creating schema", e );
         } finally {
@@ -122,7 +131,8 @@ public class MultimediaBench extends Scenario {
         log.info( "Preparing query list for the benchmark..." );
         List<QueryListEntry> queryList = new Vector<>();
         addNumberOfTimes( queryList, new SelectRandomUser( config.numberOfUsers ), config.numberOfUsers );
-        //todo more select queries
+        addNumberOfTimes( queryList, new SelectRandomAlbum( config.numberOfUsers ), config.numberOfUsers );
+        addNumberOfTimes( queryList, new SelectRandomTimeline( config.numberOfUsers ), config.numberOfUsers );
 
         Collections.shuffle( queryList );
 
@@ -193,7 +203,9 @@ public class MultimediaBench extends Scenario {
             try {
                 executor = executorFactory.createExecutorInstance();
                 if ( config.numberOfUsers > 0 ) {
-                    executor.executeQuery( new InsertUser( config.minImgSize, config.maxImgSize ).getNewQuery() );
+                    executor.executeQuery( new SelectRandomUser( config.numberOfUsers ).getNewQuery() );
+                    executor.executeQuery( new SelectRandomAlbum( config.numberOfUsers ).getNewQuery() );
+                    executor.executeQuery( new SelectRandomTimeline( config.numberOfUsers ).getNewQuery() );
                 }
             } catch ( ExecutorException e ) {
                 throw new RuntimeException( "Error while executing warm-up queries", e );

@@ -82,7 +82,7 @@ public class InsertUser extends QueryBuilder {
 
     public static class InsertUserQuery extends BatchableInsert {
 
-        private static final String SQL = "INSERT INTO \"user\" (\"id\", \"firstName\", \"lastName\", \"email\", \"password\", \"profile_pic\") VALUES ";
+        private static final String SQL = "INSERT INTO \"users\" (\"id\", \"firstName\", \"lastName\", \"email\", \"password\", \"profile_pic\") VALUES ";
         public final int id;
         private final String firstName;
         private final String lastName;

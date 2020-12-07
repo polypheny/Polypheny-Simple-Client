@@ -26,73 +26,69 @@
 package org.polypheny.simpleclient.scenario.multimedia.queryBuilder;
 
 
-import com.google.gson.JsonObject;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 import kong.unirest.HttpRequest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.polypheny.simpleclient.query.BatchableInsert;
+import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
 
-public class InsertFriends extends QueryBuilder {
+public class SelectRandomAlbum extends QueryBuilder {
 
-    private final int userId;
-    private final int friend;
+    private static final boolean EXPECT_RESULT = true;
 
-    public InsertFriends( int userId, int friend ) {
-        this.userId = userId;
-        this.friend = friend;
+    private final int numberOfUsers;
+
+
+    public SelectRandomAlbum( int numberOfUsers ) {
+        this.numberOfUsers = numberOfUsers;
     }
+
 
     @Override
-    public InsertAlbumQuery getNewQuery() {
-        return new InsertAlbumQuery(
-                userId,
-                friend
-        );
+    public Query getNewQuery() {
+        int userId = ThreadLocalRandom.current().nextInt( 1, numberOfUsers + 1 );
+        return new SelectRandomAlbumQuery( userId );
     }
 
 
-    public static class InsertAlbumQuery extends BatchableInsert {
+    public static class SelectRandomAlbumQuery extends Query {
 
-        private static final String SQL = "INSERT INTO \"followers\" (\"user_id\", \"friend_id\") VALUES ";
-        private final int user;
-        private final int friend;
+        private final int userId;
 
 
-        public InsertAlbumQuery( int user, int friend ) {
-            super( false );
-            this.user = user;
-            this.friend = friend;
+        public SelectRandomAlbumQuery( int userId ) {
+            super( EXPECT_RESULT );
+            this.userId = userId;
         }
+
 
         @Override
         public String getSql() {
-            return SQL + getSqlRowExpression();
-        }
-
-
-        @Override
-        public String getSqlRowExpression() {
-            return "("
-                    + user + ","
-                    + friend + ","
-                    + ")";
+            return "SELECT album.name AS album_name, media.\"timestamp\", media.img, media.\"video\", media.\"sound\" "
+                    + "FROM public.media, public.album, public.\"users\" WHERE "
+                    + "media.album_id = album.id "
+                    + "AND album.user_id = \"users\".id "
+                    + "AND \"users\".id=" + userId;
         }
 
 
         @Override
         public String getParameterizedSqlQuery() {
-            return SQL + "(?, ?)";
+            return "SELECT album.name AS album_name, media.\"timestamp\", media.img, media.\"video\", media.\"sound\" "
+                    + "FROM public.media, public.album, public.\"users\" WHERE "
+                    + "media.album_id = album.id "
+                    + "AND album.user_id = \"users\".id "
+                    + "AND \"users\".id=?";
         }
 
 
         @Override
         public Map<Integer, ImmutablePair<DataTypes, Object>> getParameterValues() {
             Map<Integer, ImmutablePair<DataTypes, Object>> map = new HashMap<>();
-            map.put( 1, new ImmutablePair<>( DataTypes.INTEGER, user ) );
-            map.put( 2, new ImmutablePair<>( DataTypes.INTEGER, friend ) );
+            map.put( 1, new ImmutablePair<>( DataTypes.INTEGER, userId ) );
             return map;
         }
 
@@ -100,18 +96,6 @@ public class InsertFriends extends QueryBuilder {
         @Override
         public HttpRequest<?> getRest() {
             return null;
-        }
-
-
-        @Override
-        public JsonObject getRestRowExpression() {
-            return null;
-        }
-
-
-        @Override
-        public String getTable() {
-            return "public.followers";
         }
 
     }
