@@ -39,25 +39,29 @@ import io.humble.video.Rational;
 import io.humble.video.awt.MediaPictureConverter;
 import io.humble.video.awt.MediaPictureConverterFactory;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.sql.Timestamp;
+import java.util.HashMap;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import javax.imageio.ImageIO;
-import javax.sound.sampled.AudioFileFormat.Type;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioSystem;
+import org.apache.commons.io.FileUtils;
 
 
 public final class MediaGenerator {
 
-    public static BufferedImage generateRandomBufferedImg( int height, int width ) {
+    /**
+     * Map to remember file accesses, to delete a file after n reads
+     */
+    final static HashMap<String, Integer> fileMap = new HashMap<>();
+
+    private static BufferedImage generateRandomBufferedImg( int height, int width ) {
         //see https://dyclassroom.com/image-processing-project/how-to-create-a-random-pixel-image-in-java
         BufferedImage img = new BufferedImage( width, height, BufferedImage.TYPE_INT_ARGB );
         for ( int y = 0; y < height; y++ ) {
@@ -73,29 +77,32 @@ public final class MediaGenerator {
         return img;
     }
 
-    public static byte[] generateRandomImg( int height, int width ) {
+    private static File randomFile( String extension ) {
+        return new File( System.getProperty( "user.home" ), ".polypheny/tmp/" + UUID.randomUUID().toString() + "." + extension );
+    }
+
+    public static File generateRandomImg( int height, int width ) {
+        File out = randomFile( "png" );
         BufferedImage img = generateRandomBufferedImg( height, width );
-        //see https://www.tutorialspoint.com/How-to-convert-Image-to-Byte-Array-in-java
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
         try {
-            ImageIO.write( img, "png", bos );
+            ImageIO.write( img, "png", out );
         } catch ( IOException e ) {
             e.printStackTrace();
         }
-        return bos.toByteArray();
+        return out;
     }
 
-    public static byte[] generateRandomWav( int sizeKB ) {
+    public static File generateRandomWav( int sizeKB ) {
+        File out = randomFile( "wav" );
         //see https://www.programcreek.com/java-api-examples/?class=javax.sound.sampled.AudioSystem&method=write
         AudioFormat format = new AudioFormat( PCM_SIGNED, 44100, 8, 1, 1, 44100, false );
         AudioInputStream ais = new AudioInputStream( new RandomInputStream( sizeKB * 1000 ), format, sizeKB * 1000 );
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try {
-            AudioSystem.write( ais, Type.WAVE, baos );
+            FileUtils.copyInputStreamToFile( ais, out );
         } catch ( IOException e ) {
             e.printStackTrace();
         }
-        return baos.toByteArray();
+        return out;
     }
 
     static class RandomInputStream extends InputStream {
@@ -119,7 +126,7 @@ public final class MediaGenerator {
     public static synchronized File generateRandomVideoFile( int numberOfFrames, int width, int height ) {
         //see https://github.com/artclarke/humble-video/blob/master/humble-video-demos/src/main/java/io/humble/video/demos/RecordAndEncodeVideo.java
 
-        File out = new File( System.getProperty( "user.home" ), ".polypheny/tmp/" + UUID.randomUUID().toString() + ".avi" );
+        File out = randomFile( "avi" );
         final Muxer muxer = Muxer.make( out.getAbsolutePath(), null, "avi" );
         final MuxerFormat format = muxer.getFormat();
         final Codec codec = Codec.findEncodingCodec( format.getDefaultVideoCodecId() );
@@ -209,16 +216,43 @@ public final class MediaGenerator {
 
     /**
      * Reads all bytes of a file and then deletes it
+     *
+     * @param file File to read
      */
-    public static byte[] getVideo( File videoFile ) {
+    public static byte[] getAndDeleteFile( File file ) {
         byte[] bytes;
         try {
-            bytes = Files.readAllBytes( videoFile.toPath() );
+            bytes = Files.readAllBytes( file.toPath() );
         } catch ( IOException e ) {
             e.printStackTrace();
             return null;
         }
-        videoFile.delete();
+        file.delete();
+        return bytes;
+    }
+
+    /**
+     * Reads all bytes of a file and then deletes it
+     *
+     * @param file File to read
+     * @param getNTimes Number of times a file should be read before being deleted
+     */
+    public static byte[] getAndDeleteFile( File file, int getNTimes ) {
+        byte[] bytes;
+        try {
+            bytes = Files.readAllBytes( file.toPath() );
+        } catch ( IOException e ) {
+            e.printStackTrace();
+            return null;
+        }
+        if ( !fileMap.containsKey( file.getAbsolutePath() ) ) {
+            fileMap.put( file.getAbsolutePath(), getNTimes - 1 );
+        } else if ( fileMap.get( file.getAbsolutePath() ) > 1 ) {
+            fileMap.put( file.getAbsolutePath(), fileMap.get( file.getAbsolutePath() ) - 1 );
+        } else {
+            fileMap.remove( file.getAbsolutePath() );
+            file.delete();
+        }
         return bytes;
     }
 

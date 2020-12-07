@@ -39,6 +39,8 @@ public class MultimediaConfig extends AbstractConfig {
     public final int albumSize;
     public final int postsPerUser;
     public final int numberOfFriends;
+    public final int read;
+    public final int write;
 
     public final int minImgSize;
     public final int maxImgSize;
@@ -70,6 +72,8 @@ public class MultimediaConfig extends AbstractConfig {
         albumSize = getIntProperty( properties, "albumSize" );
         postsPerUser = getIntProperty( properties, "postsPerUser" );
         numberOfFriends = getIntProperty( properties, "numberOfFriends" );
+        read = getIntProperty( properties, "read" );
+        write = getIntProperty( properties, "write" );
 
         minImgSize = getIntProperty( properties, "minImgSize" );
         maxImgSize = getIntProperty( properties, "maxImgSize" );
@@ -100,6 +104,8 @@ public class MultimediaConfig extends AbstractConfig {
         albumSize = Integer.parseInt( cdl.get( "albumSize" ) );
         postsPerUser = Integer.parseInt( cdl.get( "postsPerUser" ) );
         numberOfFriends = Integer.parseInt( cdl.get( "numberOfFriends" ) );
+        read = Integer.parseInt( cdl.get( "read" ) );
+        write = Integer.parseInt( cdl.get( "write" ) );
 
         minImgSize = Integer.parseInt( cdl.get( "minImgSize" ) );
         maxImgSize = Integer.parseInt( cdl.get( "maxImgSize" ) );

@@ -85,12 +85,12 @@ public class InsertTimeline extends QueryBuilder {
         private final Timestamp timestamp;
         private final int userId;
         private final String message;
-        private final byte[] img;
+        private final File img;
         private final File video;
-        private final byte[] sound;
+        private final File sound;
 
 
-        public InsertTimelineQuery( int timelineId, Timestamp timestamp, int userId, String message, byte[] img, File video, byte[] sound ) {
+        public InsertTimelineQuery( int timelineId, Timestamp timestamp, int userId, String message, File img, File video, File sound ) {
             super( false );
             this.timelineId = timelineId;
             this.timestamp = timestamp;
@@ -114,9 +114,9 @@ public class InsertTimeline extends QueryBuilder {
                     + "timestamp '" + timestamp.toString() + "',"
                     + userId + ","
                     + "'" + message + "',"
-                    + MediaGenerator.insertByteHexString( img ) + ","
-                    + MediaGenerator.insertByteHexString( MediaGenerator.getVideo( video ) ) + ","
-                    + MediaGenerator.insertByteHexString( sound )
+                    + MediaGenerator.insertByteHexString( MediaGenerator.getAndDeleteFile( img ) ) + ","
+                    + MediaGenerator.insertByteHexString( MediaGenerator.getAndDeleteFile( video ) ) + ","
+                    + MediaGenerator.insertByteHexString( MediaGenerator.getAndDeleteFile( sound ) )
                     + ")";
         }
 
@@ -134,9 +134,9 @@ public class InsertTimeline extends QueryBuilder {
             map.put( 2, new ImmutablePair<>( DataTypes.TIMESTAMP, timestamp ) );
             map.put( 3, new ImmutablePair<>( DataTypes.INTEGER, userId ) );
             map.put( 4, new ImmutablePair<>( DataTypes.VARCHAR, message ) );
-            map.put( 5, new ImmutablePair<>( DataTypes.BYTE_ARRAY, img ) );
-            map.put( 6, new ImmutablePair<>( DataTypes.BYTE_ARRAY, MediaGenerator.getVideo( video ) ) );
-            map.put( 7, new ImmutablePair<>( DataTypes.BYTE_ARRAY, sound ) );
+            map.put( 5, new ImmutablePair<>( DataTypes.BYTE_ARRAY, MediaGenerator.getAndDeleteFile( img ) ) );
+            map.put( 6, new ImmutablePair<>( DataTypes.BYTE_ARRAY, MediaGenerator.getAndDeleteFile( video ) ) );
+            map.put( 7, new ImmutablePair<>( DataTypes.BYTE_ARRAY, MediaGenerator.getAndDeleteFile( sound ) ) );
             return map;
         }
 

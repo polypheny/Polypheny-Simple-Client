@@ -51,6 +51,8 @@ import org.polypheny.simpleclient.query.QueryBuilder;
 import org.polypheny.simpleclient.query.QueryListEntry;
 import org.polypheny.simpleclient.scenario.Scenario;
 import org.polypheny.simpleclient.scenario.multimedia.queryBuilder.CreateTable;
+import org.polypheny.simpleclient.scenario.multimedia.queryBuilder.DeleteRandomTimeline;
+import org.polypheny.simpleclient.scenario.multimedia.queryBuilder.InsertRandomTimeline;
 import org.polypheny.simpleclient.scenario.multimedia.queryBuilder.SelectRandomAlbum;
 import org.polypheny.simpleclient.scenario.multimedia.queryBuilder.SelectRandomTimeline;
 import org.polypheny.simpleclient.scenario.multimedia.queryBuilder.SelectRandomUser;
@@ -73,6 +75,9 @@ public class MultimediaBench extends Scenario {
         measuredTimes = Collections.synchronizedList( new LinkedList<>() );
         queryTypes = new HashMap<>();
         measuredTimePerQueryType = new ConcurrentHashMap<>();
+
+        //make sure the tmp folder exists
+        new File( System.getProperty( "user.home" ), ".polypheny/tmp/" ).mkdirs();
     }
 
 
@@ -130,9 +135,11 @@ public class MultimediaBench extends Scenario {
 
         log.info( "Preparing query list for the benchmark..." );
         List<QueryListEntry> queryList = new Vector<>();
-        addNumberOfTimes( queryList, new SelectRandomUser( config.numberOfUsers ), config.numberOfUsers );
-        addNumberOfTimes( queryList, new SelectRandomAlbum( config.numberOfUsers ), config.numberOfUsers );
-        addNumberOfTimes( queryList, new SelectRandomTimeline( config.numberOfUsers ), config.numberOfUsers );
+        addNumberOfTimes( queryList, new SelectRandomUser( config.numberOfUsers ), config.read );
+        addNumberOfTimes( queryList, new SelectRandomAlbum( config.numberOfUsers ), config.read );
+        addNumberOfTimes( queryList, new SelectRandomTimeline( config.numberOfUsers ), config.read );
+        addNumberOfTimes( queryList, new DeleteRandomTimeline( config.numberOfUsers * config.postsPerUser ), config.write );
+        addNumberOfTimes( queryList, new InsertRandomTimeline( config.numberOfUsers, config.minImgSize, config.maxImgSize, config.numberOfFrames, config.minFileSizeKB, config.maxFileSizeKB ), config.write );
 
         Collections.shuffle( queryList );
 
@@ -206,6 +213,8 @@ public class MultimediaBench extends Scenario {
                     executor.executeQuery( new SelectRandomUser( config.numberOfUsers ).getNewQuery() );
                     executor.executeQuery( new SelectRandomAlbum( config.numberOfUsers ).getNewQuery() );
                     executor.executeQuery( new SelectRandomTimeline( config.numberOfUsers ).getNewQuery() );
+                    executor.executeQuery( new DeleteRandomTimeline( config.numberOfUsers * config.postsPerUser ).getNewQuery() );
+                    executor.executeQuery( new InsertRandomTimeline( config.numberOfUsers, config.minImgSize, config.maxImgSize, config.numberOfFrames, config.minFileSizeKB, config.maxFileSizeKB ).getNewQuery() );
                 }
             } catch ( ExecutorException e ) {
                 throw new RuntimeException( "Error while executing warm-up queries", e );

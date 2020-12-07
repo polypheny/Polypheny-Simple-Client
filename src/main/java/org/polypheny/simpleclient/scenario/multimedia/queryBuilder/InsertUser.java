@@ -29,6 +29,7 @@ package org.polypheny.simpleclient.scenario.multimedia.queryBuilder;
 import com.devskiller.jfairy.Fairy;
 import com.devskiller.jfairy.producer.person.Person;
 import com.google.gson.JsonObject;
+import java.io.File;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -88,10 +89,10 @@ public class InsertUser extends QueryBuilder {
         private final String lastName;
         private final String email;
         private final String password;
-        private final byte[] profile_pic;
+        private final File profile_pic;
 
 
-        public InsertUserQuery( int id, String firstName, String lastName, String email, String password, byte[] profile_pic ) {
+        public InsertUserQuery( int id, String firstName, String lastName, String email, String password, File profile_pic ) {
             super( false );
             this.id = id;
             this.firstName = firstName;
@@ -116,7 +117,7 @@ public class InsertUser extends QueryBuilder {
                     + "'" + lastName + "',"
                     + "'" + email + "',"
                     + "'" + password + "',"
-                    + MediaGenerator.insertByteHexString( profile_pic )
+                    + MediaGenerator.insertByteHexString( MediaGenerator.getAndDeleteFile( profile_pic ) )
                     + ")";
         }
 
@@ -135,7 +136,7 @@ public class InsertUser extends QueryBuilder {
             map.put( 3, new ImmutablePair<>( DataTypes.VARCHAR, lastName ) );
             map.put( 4, new ImmutablePair<>( DataTypes.VARCHAR, email ) );
             map.put( 5, new ImmutablePair<>( DataTypes.VARCHAR, password ) );
-            map.put( 6, new ImmutablePair<>( DataTypes.BYTE_ARRAY, profile_pic ) );
+            map.put( 6, new ImmutablePair<>( DataTypes.BYTE_ARRAY, MediaGenerator.getAndDeleteFile( profile_pic ) ) );
             return map;
         }
 
