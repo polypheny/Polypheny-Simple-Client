@@ -93,7 +93,7 @@ public abstract class Scenario {
     protected double processDoubleValue( double value ) {
         DecimalFormat df = new DecimalFormat( "0.000" );
         double temp1 = value / 1_000_000;
-        String roundFormat = df.format( value );
+        String roundFormat = df.format( temp1 );
         try {
             return df.parse( roundFormat ).doubleValue();
         } catch ( ParseException e ) {

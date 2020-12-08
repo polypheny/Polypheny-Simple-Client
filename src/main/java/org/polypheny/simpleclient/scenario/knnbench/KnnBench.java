@@ -12,7 +12,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.LongSummaryStatistics;
 import java.util.Map;
-import java.util.OptionalDouble;
 import java.util.Properties;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
@@ -32,10 +31,10 @@ import org.polypheny.simpleclient.scenario.knnbench.queryBuilder.CreateMetadata;
 import org.polypheny.simpleclient.scenario.knnbench.queryBuilder.CreateRealFeature;
 import org.polypheny.simpleclient.scenario.knnbench.queryBuilder.MetadataKnnIntFeature;
 import org.polypheny.simpleclient.scenario.knnbench.queryBuilder.MetadataKnnRealFeature;
-import org.polypheny.simpleclient.scenario.knnbench.queryBuilder.SimpleKnnIdIntFeature;
 import org.polypheny.simpleclient.scenario.knnbench.queryBuilder.SimpleKnnIdRealFeature;
 import org.polypheny.simpleclient.scenario.knnbench.queryBuilder.SimpleKnnIntFeature;
 import org.polypheny.simpleclient.scenario.knnbench.queryBuilder.SimpleKnnRealFeature;
+import org.polypheny.simpleclient.scenario.knnbench.queryBuilder.SimpleMetadata;
 
 
 @Slf4j
@@ -101,7 +100,8 @@ public class KnnBench extends Scenario {
         List<QueryListEntry> queryList = new Vector<>();
         addNumberOfTimes( queryList, new SimpleKnnIntFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm ), config.numberOfSimpleKnnIntFeatureQueries );
         addNumberOfTimes( queryList, new SimpleKnnRealFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm ), config.numberOfSimpleKnnRealFeatureQueries );
-        addNumberOfTimes( queryList, new SimpleKnnIdIntFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm ), config.numberOfSimpleKnnIdIntFeatureQueries );
+        addNumberOfTimes( queryList, new SimpleMetadata( config.randomSeedQuery, config.numberOfEntries ), config.numberOfSimpleMetadataQueries );
+//        addNumberOfTimes( queryList, new SimpleKnnIdIntFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm ), config.numberOfSimpleKnnIdIntFeatureQueries );
         addNumberOfTimes( queryList, new SimpleKnnIdRealFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm ), config.numberOfSimpleKnnIdRealFeatureQueries );
         addNumberOfTimes( queryList, new MetadataKnnIntFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm ), config.numberOfMetadataKnnIntFeatureQueries );
         addNumberOfTimes( queryList, new MetadataKnnRealFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm ), config.numberOfMetadataKnnRealFeatureQueries );
@@ -172,7 +172,8 @@ public class KnnBench extends Scenario {
         Executor executor = null;
         SimpleKnnIntFeature simpleKnnIntFeatureBuilder = new SimpleKnnIntFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
         SimpleKnnRealFeature simpleKnnRealFeatureBuilder = new SimpleKnnRealFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
-        SimpleKnnIdIntFeature simpleKnnIdIntFeatureBuilder = new SimpleKnnIdIntFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
+        SimpleMetadata simpleMetadataBuilder = new SimpleMetadata( config.randomSeedQuery, config.numberOfEntries );
+//        SimpleKnnIdIntFeature simpleKnnIdIntFeatureBuilder = new SimpleKnnIdIntFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
         SimpleKnnIdRealFeature simpleKnnIdRealFeatureBuilder = new SimpleKnnIdRealFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
         MetadataKnnIntFeature metadataKnnIntFeature = new MetadataKnnIntFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
         MetadataKnnRealFeature metadataKnnRealFeature = new MetadataKnnRealFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
@@ -186,9 +187,14 @@ public class KnnBench extends Scenario {
                 if ( config.numberOfSimpleKnnRealFeatureQueries > 0 ) {
                     executor.executeQuery( simpleKnnRealFeatureBuilder.getNewQuery() );
                 }
-                if ( config.numberOfSimpleKnnIdIntFeatureQueries > 0 ) {
-                    executor.executeQuery( simpleKnnIdIntFeatureBuilder.getNewQuery() );
+
+                if ( config.numberOfSimpleMetadataQueries > 0 ) {
+                    executor.executeQuery( simpleMetadataBuilder.getNewQuery() );
                 }
+
+//                if ( config.numberOfSimpleKnnIdIntFeatureQueries > 0 ) {
+//                    executor.executeQuery( simpleKnnIdIntFeatureBuilder.getNewQuery() );
+//                }
                 if ( config.numberOfSimpleKnnIdRealFeatureQueries > 0 ) {
                     executor.executeQuery( simpleKnnIdRealFeatureBuilder.getNewQuery() );
                 }
