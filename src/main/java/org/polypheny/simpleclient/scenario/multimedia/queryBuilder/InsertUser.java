@@ -34,7 +34,6 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 import kong.unirest.HttpRequest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -56,13 +55,11 @@ public class InsertUser extends QueryBuilder {
             new Locale( "it" ),
     };
 
-    private final int minImgSize;
-    private final int maxImgSize;
+    private final int imgSize;
 
 
-    public InsertUser( int minImgSize, int maxImgSize ) {
-        this.minImgSize = minImgSize;
-        this.maxImgSize = maxImgSize;
+    public InsertUser( int imgSize ) {
+        this.imgSize = imgSize;
     }
 
 
@@ -70,7 +67,6 @@ public class InsertUser extends QueryBuilder {
     public InsertUserQuery getNewQuery() {
         Fairy fairy = Fairy.create( locales[RANDOM.nextInt( locales.length )] );
         Person person = fairy.person();
-        int imgSize = ThreadLocalRandom.current().nextInt( minImgSize, maxImgSize );
         return new InsertUserQuery(
                 nextId.getAndIncrement(),
                 person.getFirstName(),

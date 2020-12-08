@@ -68,7 +68,7 @@ public class DataGenerator {
 
     void generateUsers() throws ExecutorException {
         int numberOfUsers = config.numberOfUsers;
-        InsertUser insertUser = new InsertUser( config.minImgSize, config.maxImgSize );
+        InsertUser insertUser = new InsertUser( config.imgSize );
         for ( int i = 0; i < numberOfUsers; i++ ) {
             if ( aborted ) {
                 break;
@@ -85,14 +85,14 @@ public class DataGenerator {
 
             //add media data to the album
             for ( int j = 0; j < config.albumSize; j++ ) {
-                InsertMedia insertMedia = new InsertMedia( insertAlbumQuery.album_id, config.minImgSize, config.maxImgSize, config.numberOfFrames, config.minFileSizeKB, config.maxFileSizeKB );
+                InsertMedia insertMedia = new InsertMedia( insertAlbumQuery.album_id, config.imgSize, config.numberOfFrames, config.fileSizeKB );
                 addToInsertList( insertMedia.getNewQuery() );
             }
             executeInsertList();
 
             //add posts to timeline
             for ( int j = 0; j < config.postsPerUser; j++ ) {
-                InsertTimeline insertTimeline = new InsertTimeline( insertUserQuery.id, config.minImgSize, config.maxImgSize, config.numberOfFrames, config.minFileSizeKB, config.maxFileSizeKB );
+                InsertTimeline insertTimeline = new InsertTimeline( insertUserQuery.id, config.imgSize, config.numberOfFrames, config.fileSizeKB );
                 addToInsertList( insertTimeline.getNewQuery() );
             }
             executeInsertList();

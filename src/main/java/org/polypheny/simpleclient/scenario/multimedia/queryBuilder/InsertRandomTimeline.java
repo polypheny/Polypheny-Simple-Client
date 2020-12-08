@@ -48,26 +48,21 @@ public class InsertRandomTimeline extends QueryBuilder {
     private static final AtomicInteger nextId = new AtomicInteger( 1 );
 
     private final int numberOfUsers;
-    private final int minImgSize;
-    private final int maxImgSize;
+    private final int imgSize;
     private final int numberOfFrames;
-    private final int minFileSizeKB;
-    private final int maxFileSizeKB;
+    private final int fileSizeKB;
 
 
-    public InsertRandomTimeline( int numberOfUsers, int minImgSize, int maxImgSize, int numberOfFrames, int minFileSizeKB, int maxFileSizeKB ) {
+    public InsertRandomTimeline( int numberOfUsers, int imgSize, int numberOfFrames, int fileSizeKB ) {
         this.numberOfUsers = numberOfUsers;
-        this.minImgSize = minImgSize;
-        this.maxImgSize = maxImgSize;
+        this.imgSize = imgSize;
         this.numberOfFrames = numberOfFrames;
-        this.minFileSizeKB = minFileSizeKB;
-        this.maxFileSizeKB = maxFileSizeKB;
+        this.fileSizeKB = fileSizeKB;
     }
 
 
     @Override
     public BatchableInsert getNewQuery() {
-        int imgSize = ThreadLocalRandom.current().nextInt( minImgSize, maxImgSize );
         Fairy fairy = Fairy.create();
         return new InsertRandomTimelineQuery(
                 nextId.getAndIncrement(),
@@ -76,7 +71,7 @@ public class InsertRandomTimeline extends QueryBuilder {
                 fairy.textProducer().paragraph( 5 ),
                 MediaGenerator.generateRandomImg( imgSize, imgSize ),
                 MediaGenerator.generateRandomVideoFile( numberOfFrames, imgSize, imgSize ),
-                MediaGenerator.generateRandomWav( ThreadLocalRandom.current().nextInt( minFileSizeKB, maxFileSizeKB ) )
+                MediaGenerator.generateRandomWav( fileSizeKB )
         );
     }
 

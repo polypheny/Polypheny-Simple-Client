@@ -36,22 +36,20 @@ import org.polypheny.simpleclient.scenario.AbstractConfig;
 public class MultimediaConfig extends AbstractConfig {
 
     public final int numberOfUsers;
-    public final int albumSize;
     public final int postsPerUser;
     public final int numberOfFriends;
+    public final int albumSize;
+    public final int imgSize;
+    public final int numberOfFrames;
+    public final int fileSizeKB;
+
+    public final int maxBatchSize;
     public final int read;
     public final int write;
 
-    public final int minImgSize;
-    public final int maxImgSize;
-    public final int numberOfFrames;
-    public final int minFileSizeKB;
-    public final int maxFileSizeKB;
-    public final int maxBatchSize;
-
 
     public MultimediaConfig( Properties properties, int multiplier ) {
-        super( "knnBench", "polypheny" );
+        super( "multimedia", "polypheny" );
 
         pdbBranch = null;
         puiBranch = null;
@@ -60,14 +58,12 @@ public class MultimediaConfig extends AbstractConfig {
 
         router = "icarus";
         planAndImplementationCaching = "Both";
-
-        //dataStores.add( "cottontail" );
+        dataStores.add( "file" );
 
         progressReportBase = getIntProperty( properties, "progressReportBase" );
         numberOfThreads = getIntProperty( properties, "numberOfThreads" );
         numberOfWarmUpIterations = getIntProperty( properties, "numberOfWarmUpIterations" );
 
-        //own properties
         numberOfUsers = getIntProperty( properties, "numberOfUsers" ) * multiplier;
         albumSize = getIntProperty( properties, "albumSize" );
         postsPerUser = getIntProperty( properties, "postsPerUser" );
@@ -75,11 +71,9 @@ public class MultimediaConfig extends AbstractConfig {
         read = getIntProperty( properties, "read" );
         write = getIntProperty( properties, "write" );
 
-        minImgSize = getIntProperty( properties, "minImgSize" );
-        maxImgSize = getIntProperty( properties, "maxImgSize" );
+        imgSize = getIntProperty( properties, "imgSize" );
         numberOfFrames = getIntProperty( properties, "numberOfFrames" );
-        minFileSizeKB = getIntProperty( properties, "minFileSizeKB" );
-        maxFileSizeKB = getIntProperty( properties, "maxFileSizeKB" );
+        fileSizeKB = getIntProperty( properties, "fileSizeKB" );
         maxBatchSize = getIntProperty( properties, "maxBatchSize" );
     }
 
@@ -92,6 +86,7 @@ public class MultimediaConfig extends AbstractConfig {
         resetCatalog = Boolean.parseBoolean( cdl.get( "resetCatalog" ) );
         memoryCatalog = Boolean.parseBoolean( cdl.get( "memoryCatalog" ) );
 
+        dataStores.add( cdl.get( "dataStore" ) );
         router = cdl.get( "router" );
         planAndImplementationCaching = cdl.getOrDefault( "planAndImplementationCaching", "Both" );
 
@@ -99,7 +94,6 @@ public class MultimediaConfig extends AbstractConfig {
         numberOfThreads = Integer.parseInt( cdl.get( "numberOfThreads" ) );
         numberOfWarmUpIterations = Integer.parseInt( cdl.get( "numberOfWarmUpIterations" ) );
 
-        //own properties
         numberOfUsers = Integer.parseInt( cdl.get( "numberOfUsers" ) );
         albumSize = Integer.parseInt( cdl.get( "albumSize" ) );
         postsPerUser = Integer.parseInt( cdl.get( "postsPerUser" ) );
@@ -107,11 +101,9 @@ public class MultimediaConfig extends AbstractConfig {
         read = Integer.parseInt( cdl.get( "read" ) );
         write = Integer.parseInt( cdl.get( "write" ) );
 
-        minImgSize = Integer.parseInt( cdl.get( "minImgSize" ) );
-        maxImgSize = Integer.parseInt( cdl.get( "maxImgSize" ) );
+        imgSize = Integer.parseInt( cdl.get( "imgSize" ) );
         numberOfFrames = Integer.parseInt( cdl.get( "numberOfFrames" ) );
-        minFileSizeKB = Integer.parseInt( cdl.get( "minFileSizeKB" ) );
-        maxFileSizeKB = Integer.parseInt( cdl.get( "maxFileSizeKB" ) );
+        fileSizeKB = Integer.parseInt( cdl.get( "fileSizeKB" ) );
         maxBatchSize = Integer.parseInt( cdl.get( "maxBatchSize" ) );
     }
 
