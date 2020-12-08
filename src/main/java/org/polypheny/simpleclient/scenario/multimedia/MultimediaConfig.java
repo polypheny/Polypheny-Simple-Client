@@ -51,7 +51,7 @@ public class MultimediaConfig extends AbstractConfig {
 
 
     public MultimediaConfig( Properties properties, int multiplier ) {
-        super( "knnBench", "polypheny" );
+        super( "multimedia", "polypheny" );
 
         pdbBranch = null;
         puiBranch = null;
@@ -60,14 +60,12 @@ public class MultimediaConfig extends AbstractConfig {
 
         router = "icarus";
         planAndImplementationCaching = "Both";
-
-        //dataStores.add( "cottontail" );
+        dataStores.add( "file" );
 
         progressReportBase = getIntProperty( properties, "progressReportBase" );
         numberOfThreads = getIntProperty( properties, "numberOfThreads" );
         numberOfWarmUpIterations = getIntProperty( properties, "numberOfWarmUpIterations" );
 
-        //own properties
         numberOfUsers = getIntProperty( properties, "numberOfUsers" ) * multiplier;
         albumSize = getIntProperty( properties, "albumSize" );
         postsPerUser = getIntProperty( properties, "postsPerUser" );
@@ -92,6 +90,7 @@ public class MultimediaConfig extends AbstractConfig {
         resetCatalog = Boolean.parseBoolean( cdl.get( "resetCatalog" ) );
         memoryCatalog = Boolean.parseBoolean( cdl.get( "memoryCatalog" ) );
 
+        dataStores.add( cdl.get( "dataStore" ) );
         router = cdl.get( "router" );
         planAndImplementationCaching = cdl.getOrDefault( "planAndImplementationCaching", "Both" );
 
@@ -99,7 +98,6 @@ public class MultimediaConfig extends AbstractConfig {
         numberOfThreads = Integer.parseInt( cdl.get( "numberOfThreads" ) );
         numberOfWarmUpIterations = Integer.parseInt( cdl.get( "numberOfWarmUpIterations" ) );
 
-        //own properties
         numberOfUsers = Integer.parseInt( cdl.get( "numberOfUsers" ) );
         albumSize = Integer.parseInt( cdl.get( "albumSize" ) );
         postsPerUser = Integer.parseInt( cdl.get( "postsPerUser" ) );
