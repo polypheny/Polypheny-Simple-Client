@@ -106,6 +106,9 @@ public abstract class JdbcExecutor implements Executor {
                         case ARRAY_REAL:
                             preparedStatement.setArray( entry.getKey(), connection.createArrayOf( "REAL", (Object[]) entry.getValue().right ) );
                             break;
+                        case BYTE_ARRAY:
+                            preparedStatement.setBytes( entry.getKey(), (byte[]) entry.getValue().right );
+                            break;
                     }
                 }
                 if ( query.isExpectResultSet() ) {
@@ -234,6 +237,9 @@ public abstract class JdbcExecutor implements Executor {
                             break;
                         case ARRAY_REAL:
                             preparedStatement.setArray( entry.getKey(), connection.createArrayOf( "REAL", (Object[]) entry.getValue().right ) );
+                            break;
+                        case BYTE_ARRAY:
+                            preparedStatement.setBytes( entry.getKey(), (byte[]) entry.getValue().right );
                             break;
                     }
                 }

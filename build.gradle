@@ -63,6 +63,7 @@ java {
 
 dependencies {
     implementation group: 'commons-lang', name: 'commons-lang', version: '2.6' // License: Apache 2.0
+    implementation group: "commons-io", name: "commons-io", version: '2.6'  // Apache 2.0
 
     // Chronos
     implementation group: 'ch.unibas.dmi.dbis.chronos', name: 'chronos-agent', version: '2.3.2' // License: MIT
@@ -90,6 +91,9 @@ dependencies {
 
     // Fake data generator
     implementation group: 'com.devskiller', name: 'jfairy', version: '0.6.4' // License: Apache 2.0
+
+    // Video processing
+    implementation group: 'io.humble', name: 'humble-video-all', version: '0.3.0'
 
     // CSV
     implementation group: 'com.opencsv', name: 'opencsv', version: '5.0' // License: Apache 2.0

@@ -23,32 +23,66 @@
  *
  */
 
-package org.polypheny.simpleclient.cli;
+package org.polypheny.simpleclient.scenario.multimedia.queryBuilder;
 
 
-import com.github.rvesse.airline.Cli;
-import com.github.rvesse.airline.builder.CliBuilder;
-import java.sql.SQLException;
+import java.util.Map;
+import kong.unirest.HttpRequest;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.polypheny.simpleclient.query.Query;
+import org.polypheny.simpleclient.query.QueryBuilder;
 
 
-@SuppressWarnings("unchecked")
-public class Main {
+public class CreateTable extends QueryBuilder {
+
+    final String sql;
 
 
-    public static void main( String[] args ) throws SQLException {
-        CliBuilder<CliRunnable> builder = Cli.builder( "polypheny-simple-client.jar" );
-        builder.withDescription( "Polypheny Simple Client" );
+    public CreateTable( String sql ) {
+        this.sql = sql;
+    }
 
-        // define top level commands
-        builder.withCommands( ChronosCommand.class );
-        builder.withCommands( EasyCommand.class );
-        builder.withCommands( KnnCommand.class );
-        builder.withCommands( MultimediaCommand.class );
-        builder.withCommands( HelpCommand.class );
-        builder.withDefaultCommand( HelpCommand.class );
 
-        CliRunnable cmd = builder.build().parse( args );
-        cmd.run();
+    @Override
+    public Query getNewQuery() {
+        return new CreateTableQuery( sql );
+    }
+
+
+    private static class CreateTableQuery extends Query {
+
+        private final String sql;
+
+
+        CreateTableQuery( final String sql ) {
+            super( false );
+            this.sql = sql;
+        }
+
+
+        @Override
+        public String getSql() {
+            return sql;
+        }
+
+
+        @Override
+        public String getParameterizedSqlQuery() {
+            return null;
+        }
+
+
+        @Override
+        public Map<Integer, ImmutablePair<DataTypes, Object>> getParameterValues() {
+            return null;
+        }
+
+
+        @Override
+        public HttpRequest<?> getRest() {
+            return null;
+        }
+
     }
 
 }
