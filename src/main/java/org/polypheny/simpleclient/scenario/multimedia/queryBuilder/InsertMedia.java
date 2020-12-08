@@ -31,7 +31,6 @@ import java.io.File;
 import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 import kong.unirest.HttpRequest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -45,33 +44,28 @@ public class InsertMedia extends QueryBuilder {
     private static final AtomicInteger nextId = new AtomicInteger( 1 );
 
     private final int albumId;
-    private final int minImgSize;
-    private final int maxImgSize;
+    private final int imgSize;
     private final int numberOfFrames;
-    private final int minFileSizeKB;
-    private final int maxFileSizeKB;
+    private final int fileSizeKB;
 
 
-    public InsertMedia( int albumId, int minImgSize, int maxImgSize, int numberOfFrames, int minFileSizeKB, int maxFileSizeKB ) {
+    public InsertMedia( int albumId, int imgSize, int numberOfFrames, int fileSizeKB ) {
         this.albumId = albumId;
-        this.minImgSize = minImgSize;
-        this.maxImgSize = maxImgSize;
+        this.imgSize = imgSize;
         this.numberOfFrames = numberOfFrames;
-        this.minFileSizeKB = minFileSizeKB;
-        this.maxFileSizeKB = maxFileSizeKB;
+        this.fileSizeKB = fileSizeKB;
     }
 
 
     @Override
     public BatchableInsert getNewQuery() {
-        int imgSize = ThreadLocalRandom.current().nextInt( minImgSize, maxImgSize );
         return new InsertMediaQuery(
                 nextId.getAndIncrement(),
                 MediaGenerator.randomTimestamp(),
                 albumId,
                 MediaGenerator.generateRandomImg( imgSize, imgSize ),
                 MediaGenerator.generateRandomVideoFile( numberOfFrames, imgSize, imgSize ),
-                MediaGenerator.generateRandomWav( ThreadLocalRandom.current().nextInt( minFileSizeKB, maxFileSizeKB ) )
+                MediaGenerator.generateRandomWav( fileSizeKB )
         );
     }
 

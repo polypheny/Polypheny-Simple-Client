@@ -32,7 +32,6 @@ import java.io.File;
 import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 import kong.unirest.HttpRequest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -46,26 +45,21 @@ public class InsertTimeline extends QueryBuilder {
     private static final AtomicInteger nextId = new AtomicInteger( 1 );
 
     private final int userId;
-    private final int minImgSize;
-    private final int maxImgSize;
+    private final int imgSize;
     private final int numberOfFrames;
-    private final int minFileSizeKB;
-    private final int maxFileSizeKB;
+    private final int fileSizeKB;
 
 
-    public InsertTimeline( int userId, int minImgSize, int maxImgSize, int numberOfFrames, int minFileSizeKB, int maxFileSizeKB ) {
+    public InsertTimeline( int userId, int imgSize, int numberOfFrames, int fileSizeKB ) {
         this.userId = userId;
-        this.minImgSize = minImgSize;
-        this.maxImgSize = maxImgSize;
+        this.imgSize = imgSize;
         this.numberOfFrames = numberOfFrames;
-        this.minFileSizeKB = minFileSizeKB;
-        this.maxFileSizeKB = maxFileSizeKB;
+        this.fileSizeKB = fileSizeKB;
     }
 
 
     @Override
     public BatchableInsert getNewQuery() {
-        int imgSize = ThreadLocalRandom.current().nextInt( minImgSize, maxImgSize );
         Fairy fairy = Fairy.create();
         return new InsertTimelineQuery(
                 nextId.getAndIncrement(),
@@ -74,7 +68,7 @@ public class InsertTimeline extends QueryBuilder {
                 fairy.textProducer().paragraph( 5 ),
                 MediaGenerator.generateRandomImg( imgSize, imgSize ),
                 MediaGenerator.generateRandomVideoFile( numberOfFrames, imgSize, imgSize ),
-                MediaGenerator.generateRandomWav( ThreadLocalRandom.current().nextInt( minFileSizeKB, maxFileSizeKB ) )
+                MediaGenerator.generateRandomWav( fileSizeKB )
         );
     }
 

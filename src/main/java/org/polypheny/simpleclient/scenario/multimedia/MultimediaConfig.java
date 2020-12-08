@@ -36,18 +36,16 @@ import org.polypheny.simpleclient.scenario.AbstractConfig;
 public class MultimediaConfig extends AbstractConfig {
 
     public final int numberOfUsers;
-    public final int albumSize;
     public final int postsPerUser;
     public final int numberOfFriends;
+    public final int albumSize;
+    public final int imgSize;
+    public final int numberOfFrames;
+    public final int fileSizeKB;
+
+    public final int maxBatchSize;
     public final int read;
     public final int write;
-
-    public final int minImgSize;
-    public final int maxImgSize;
-    public final int numberOfFrames;
-    public final int minFileSizeKB;
-    public final int maxFileSizeKB;
-    public final int maxBatchSize;
 
 
     public MultimediaConfig( Properties properties, int multiplier ) {
@@ -73,11 +71,9 @@ public class MultimediaConfig extends AbstractConfig {
         read = getIntProperty( properties, "read" );
         write = getIntProperty( properties, "write" );
 
-        minImgSize = getIntProperty( properties, "minImgSize" );
-        maxImgSize = getIntProperty( properties, "maxImgSize" );
+        imgSize = getIntProperty( properties, "imgSize" );
         numberOfFrames = getIntProperty( properties, "numberOfFrames" );
-        minFileSizeKB = getIntProperty( properties, "minFileSizeKB" );
-        maxFileSizeKB = getIntProperty( properties, "maxFileSizeKB" );
+        fileSizeKB = getIntProperty( properties, "fileSizeKB" );
         maxBatchSize = getIntProperty( properties, "maxBatchSize" );
     }
 
@@ -105,11 +101,9 @@ public class MultimediaConfig extends AbstractConfig {
         read = Integer.parseInt( cdl.get( "read" ) );
         write = Integer.parseInt( cdl.get( "write" ) );
 
-        minImgSize = Integer.parseInt( cdl.get( "minImgSize" ) );
-        maxImgSize = Integer.parseInt( cdl.get( "maxImgSize" ) );
+        imgSize = Integer.parseInt( cdl.get( "imgSize" ) );
         numberOfFrames = Integer.parseInt( cdl.get( "numberOfFrames" ) );
-        minFileSizeKB = Integer.parseInt( cdl.get( "minFileSizeKB" ) );
-        maxFileSizeKB = Integer.parseInt( cdl.get( "maxFileSizeKB" ) );
+        fileSizeKB = Integer.parseInt( cdl.get( "fileSizeKB" ) );
         maxBatchSize = Integer.parseInt( cdl.get( "maxBatchSize" ) );
     }
 

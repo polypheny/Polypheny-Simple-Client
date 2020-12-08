@@ -139,7 +139,7 @@ public class MultimediaBench extends Scenario {
         addNumberOfTimes( queryList, new SelectRandomAlbum( config.numberOfUsers ), config.read );
         addNumberOfTimes( queryList, new SelectRandomTimeline( config.numberOfUsers ), config.read );
         addNumberOfTimes( queryList, new DeleteRandomTimeline( config.numberOfUsers * config.postsPerUser ), config.write );
-        addNumberOfTimes( queryList, new InsertRandomTimeline( config.numberOfUsers, config.minImgSize, config.maxImgSize, config.numberOfFrames, config.minFileSizeKB, config.maxFileSizeKB ), config.write );
+        addNumberOfTimes( queryList, new InsertRandomTimeline( config.numberOfUsers, config.imgSize, config.numberOfFrames, config.fileSizeKB ), config.write );
 
         Collections.shuffle( queryList );
 
@@ -214,7 +214,7 @@ public class MultimediaBench extends Scenario {
                     executor.executeQuery( new SelectRandomAlbum( config.numberOfUsers ).getNewQuery() );
                     executor.executeQuery( new SelectRandomTimeline( config.numberOfUsers ).getNewQuery() );
                     executor.executeQuery( new DeleteRandomTimeline( config.numberOfUsers * config.postsPerUser ).getNewQuery() );
-                    executor.executeQuery( new InsertRandomTimeline( config.numberOfUsers, config.minImgSize, config.maxImgSize, config.numberOfFrames, config.minFileSizeKB, config.maxFileSizeKB ).getNewQuery() );
+                    executor.executeQuery( new InsertRandomTimeline( config.numberOfUsers, config.imgSize, config.numberOfFrames, config.fileSizeKB ).getNewQuery() );
                 }
             } catch ( ExecutorException e ) {
                 throw new RuntimeException( "Error while executing warm-up queries", e );
