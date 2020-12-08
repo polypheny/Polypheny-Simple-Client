@@ -40,10 +40,12 @@ public class InsertFriends extends QueryBuilder {
     private final int userId;
     private final int friend;
 
+
     public InsertFriends( int userId, int friend ) {
         this.userId = userId;
         this.friend = friend;
     }
+
 
     @Override
     public InsertAlbumQuery getNewQuery() {
@@ -66,6 +68,7 @@ public class InsertFriends extends QueryBuilder {
             this.user = user;
             this.friend = friend;
         }
+
 
         @Override
         public String getSql() {

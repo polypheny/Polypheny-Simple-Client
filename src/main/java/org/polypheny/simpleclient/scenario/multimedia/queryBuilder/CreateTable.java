@@ -37,9 +37,11 @@ public class CreateTable extends QueryBuilder {
 
     final String sql;
 
+
     public CreateTable( String sql ) {
         this.sql = sql;
     }
+
 
     @Override
     public Query getNewQuery() {
@@ -50,6 +52,7 @@ public class CreateTable extends QueryBuilder {
     private static class CreateTableQuery extends Query {
 
         private final String sql;
+
 
         CreateTableQuery( final String sql ) {
             super( false );

@@ -55,9 +55,11 @@ public class InsertAlbum extends QueryBuilder {
 
     private final int userId;
 
+
     public InsertAlbum( int userId ) {
         this.userId = userId;
     }
+
 
     @Override
     public InsertAlbumQuery getNewQuery() {

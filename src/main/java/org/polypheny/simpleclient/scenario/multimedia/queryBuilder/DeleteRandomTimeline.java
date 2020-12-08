@@ -41,6 +41,7 @@ public class DeleteRandomTimeline extends QueryBuilder {
     private final HashSet<Integer> deletedTimelines = new HashSet<>();
     private final int numberOfTimelines;
 
+
     public DeleteRandomTimeline( int numberOfTimelines ) {
         this.numberOfTimelines = numberOfTimelines;
     }

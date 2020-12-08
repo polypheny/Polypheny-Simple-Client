@@ -61,6 +61,7 @@ public final class MediaGenerator {
      */
     final static HashMap<String, Integer> fileMap = new HashMap<>();
 
+
     private static BufferedImage generateRandomBufferedImg( int height, int width ) {
         //see https://dyclassroom.com/image-processing-project/how-to-create-a-random-pixel-image-in-java
         BufferedImage img = new BufferedImage( width, height, BufferedImage.TYPE_INT_ARGB );
@@ -77,9 +78,11 @@ public final class MediaGenerator {
         return img;
     }
 
+
     private static File randomFile( String extension ) {
         return new File( System.getProperty( "user.home" ), ".polypheny/tmp/" + UUID.randomUUID().toString() + "." + extension );
     }
+
 
     public static File generateRandomImg( int height, int width ) {
         File out = randomFile( "png" );
@@ -91,6 +94,7 @@ public final class MediaGenerator {
         }
         return out;
     }
+
 
     public static File generateRandomWav( int sizeKB ) {
         File out = randomFile( "wav" );
@@ -105,14 +109,17 @@ public final class MediaGenerator {
         return out;
     }
 
+
     static class RandomInputStream extends InputStream {
 
         Random random = new Random();
         int counter;
 
+
         RandomInputStream( int size ) {
             this.counter = size;
         }
+
 
         @Override
         public int read() throws IOException {
@@ -121,7 +128,9 @@ public final class MediaGenerator {
             }
             return random.nextInt( 256 );
         }
+
     }
+
 
     public static synchronized File generateRandomVideoFile( int numberOfFrames, int width, int height ) {
         //see https://github.com/artclarke/humble-video/blob/master/humble-video-demos/src/main/java/io/humble/video/demos/RecordAndEncodeVideo.java
@@ -184,6 +193,7 @@ public final class MediaGenerator {
         return out;
     }
 
+
     //from https://github.com/artclarke/humble-video/blob/master/humble-video-demos/src/main/java/io/humble/video/demos/RecordAndEncodeVideo.java
     public static BufferedImage convertToType( BufferedImage sourceImage, int targetType ) {
         BufferedImage image;
@@ -200,6 +210,7 @@ public final class MediaGenerator {
         return image;
     }
 
+
     public static String insertByteHexString( byte[] bytes ) {
         if ( bytes == null ) {
             return "NULL";
@@ -213,6 +224,7 @@ public final class MediaGenerator {
             return builder.toString();
         }
     }
+
 
     /**
      * Reads all bytes of a file and then deletes it
@@ -230,6 +242,7 @@ public final class MediaGenerator {
         file.delete();
         return bytes;
     }
+
 
     /**
      * Reads all bytes of a file and then deletes it
@@ -255,6 +268,7 @@ public final class MediaGenerator {
         }
         return bytes;
     }
+
 
     public static Timestamp randomTimestamp() {
         //see https://stackoverflow.com/questions/11016336/how-to-generate-a-random-timestamp-in-java

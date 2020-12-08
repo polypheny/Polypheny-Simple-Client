@@ -59,6 +59,7 @@ public class InsertUser extends QueryBuilder {
     private final int minImgSize;
     private final int maxImgSize;
 
+
     public InsertUser( int minImgSize, int maxImgSize ) {
         this.minImgSize = minImgSize;
         this.maxImgSize = maxImgSize;

@@ -62,6 +62,7 @@ public class InsertTimeline extends QueryBuilder {
         this.maxFileSizeKB = maxFileSizeKB;
     }
 
+
     @Override
     public BatchableInsert getNewQuery() {
         int imgSize = ThreadLocalRandom.current().nextInt( minImgSize, maxImgSize );
@@ -100,6 +101,7 @@ public class InsertTimeline extends QueryBuilder {
             this.video = video;
             this.sound = sound;
         }
+
 
         @Override
         public String getSql() {

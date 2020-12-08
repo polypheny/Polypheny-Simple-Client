@@ -51,6 +51,7 @@ public class InsertMedia extends QueryBuilder {
     private final int minFileSizeKB;
     private final int maxFileSizeKB;
 
+
     public InsertMedia( int albumId, int minImgSize, int maxImgSize, int numberOfFrames, int minFileSizeKB, int maxFileSizeKB ) {
         this.albumId = albumId;
         this.minImgSize = minImgSize;
