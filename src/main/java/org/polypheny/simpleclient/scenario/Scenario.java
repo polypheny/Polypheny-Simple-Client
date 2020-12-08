@@ -84,8 +84,8 @@ public abstract class Scenario {
 
 
     protected double calculateSampleStandardDeviation( List<Long> times, double mean ) {
-        double preVariance = times.stream().mapToDouble( it -> Math.pow( ( it - mean ), 2 ) ).sum();
-        double variance = preVariance / ( times.size() - 1.0 );
+        double preVariance = times.stream().mapToDouble( it -> Math.pow( (it - mean), 2 ) ).sum();
+        double variance = preVariance / (times.size() - 1.0);
         return Math.sqrt( variance );
     }
 
@@ -101,6 +101,7 @@ public abstract class Scenario {
         }
         return -1;
     }
+
 
     public abstract int getNumberOfInsertThreads();
 

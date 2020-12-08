@@ -11,6 +11,7 @@ import org.polypheny.simpleclient.query.QueryBuilder;
 
 
 public class SimpleMetadata extends QueryBuilder {
+
     private static final boolean EXPECT_RESULT = true;
 
     private final long randomSeed;
@@ -39,6 +40,7 @@ public class SimpleMetadata extends QueryBuilder {
 
 
     private static class SimpleMetadataQuery extends Query {
+
         private static final String SQL = "SELECT id, textdata FROM knn_metadata WHERE id = ";
 
         private final int id;
@@ -74,5 +76,7 @@ public class SimpleMetadata extends QueryBuilder {
         public HttpRequest<?> getRest() {
             return null;
         }
+
     }
+
 }

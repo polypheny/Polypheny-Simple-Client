@@ -349,7 +349,6 @@ public class KnnBench extends Scenario {
     }
 
 
-
     private void calculateResults( Properties properties, int templateId, List<Long> time ) {
         LongSummaryStatistics summaryStatistics = time.stream().mapToLong( Long::longValue ).summaryStatistics();
         double mean = summaryStatistics.getAverage();
@@ -366,8 +365,6 @@ public class KnnBench extends Scenario {
         properties.put( "queryTypes_" + templateId + "_max", max / 1_000_000L );
         properties.put( "queryTypes_" + templateId + "_example", queryTypes.get( templateId ) );
     }
-
-
 
 
     @Override
