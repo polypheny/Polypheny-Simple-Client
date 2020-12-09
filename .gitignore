@@ -257,3 +257,8 @@ nbdist/
 !/libs/PolySqlParser-1.0.jar
 
 /results.csv
+
+# humble video libraries
+libhumblevideo-0.dll
+libhumblevideo.dylib
+libhumblevideo.so

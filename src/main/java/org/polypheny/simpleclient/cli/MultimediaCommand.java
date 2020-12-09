@@ -30,9 +30,16 @@ import com.github.rvesse.airline.HelpOption;
 import com.github.rvesse.airline.annotations.Arguments;
 import com.github.rvesse.airline.annotations.Command;
 import com.github.rvesse.airline.annotations.Option;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.List;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.SystemUtils;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
 import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory;
 import org.polypheny.simpleclient.main.Multimedia;
@@ -87,12 +94,15 @@ public class MultimediaCommand implements CliRunnable {
         executorFactory = new PolyphenyDbJdbcExecutorFactory( polyphenyDbHost, true );
 
         if ( args.get( 0 ).equalsIgnoreCase( "data" ) ) {
+            loadHumbleLibrary();
             Multimedia.data( executorFactory, multiplier, true );
         } else if ( args.get( 0 ).equalsIgnoreCase( "workload" ) ) {
+            loadHumbleLibrary();
             Multimedia.workload( executorFactory, multiplier, true, writeCsv, dumpQueryList );
         } else if ( args.get( 0 ).equalsIgnoreCase( "schema" ) ) {
             Multimedia.schema( executorFactory, true );
         } else if ( args.get( 0 ).equalsIgnoreCase( "warmup" ) ) {
+            loadHumbleLibrary();
             Multimedia.warmup( executorFactory, multiplier, true, dumpQueryList );
         } else {
             System.err.println( "Unknown task: " + args.get( 0 ) );
@@ -105,6 +115,32 @@ public class MultimediaCommand implements CliRunnable {
         }
 
         return 0;
+    }
+
+
+    private void loadHumbleLibrary() {
+        final String libraryName;
+        if( SystemUtils.IS_OS_WINDOWS ) {
+            libraryName = "libhumblevideo-0.dll";
+        } else if (SystemUtils.IS_OS_LINUX ) {
+            libraryName = "libhumblevideo.so";
+        } else if (SystemUtils.IS_OS_MAC) {
+            libraryName = "libhumblevideo.dylib";
+        } else {
+            throw new RuntimeException("Unexpected system");
+        }
+        File out = new File(libraryName);
+        if(!out.exists()){
+            try (
+                    InputStream is = getClass().getResourceAsStream( "/" + libraryName );
+                    OutputStream os = new FileOutputStream(out)
+            ) {
+                IOUtils.copy(is, os);
+            } catch ( IOException e ) {
+                e.printStackTrace();
+            }
+        }
+        System.load(out.getAbsolutePath());
     }
 
 }
