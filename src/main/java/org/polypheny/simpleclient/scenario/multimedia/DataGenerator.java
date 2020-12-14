@@ -68,10 +68,14 @@ public class DataGenerator {
 
     void generateUsers() throws ExecutorException {
         int numberOfUsers = config.numberOfUsers;
+        int mod = numberOfUsers / progressReporter.base;
         InsertUser insertUser = new InsertUser( config.imgSize );
         for ( int i = 0; i < numberOfUsers; i++ ) {
             if ( aborted ) {
                 break;
+            }
+            if ( mod > 0 && (i % mod) == 0 ) {
+                progressReporter.updateProgress();
             }
             InsertUserQuery insertUserQuery = insertUser.getNewQuery();
             addToInsertList( insertUserQuery );
