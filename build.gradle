@@ -1,3 +1,4 @@
+import org.gradle.internal.os.OperatingSystem;
 
 group "org.polypheny"
 description = "A lightweight Polypheny-DB benchmarking client"
@@ -93,7 +94,29 @@ dependencies {
     implementation group: 'com.devskiller', name: 'jfairy', version: '0.6.4' // License: Apache 2.0
 
     // Video processing
-    implementation group: 'io.humble', name: 'humble-video-all', version: '0.3.0'
+    implementation group: 'io.humble', name: 'humble-video-noarch', version: '0.3.0'
+    //see https://stackoverflow.com/questions/11235614/how-to-detect-the-current-os-from-gradle
+    if( OperatingSystem.current().isMacOsX()){
+        println 'mac os x'
+        implementation group: 'io.humble', name: 'humble-video-arch-x86_64-apple-darwin18', version: '0.3.0'
+    } else if ( OperatingSystem.current().isWindows()){
+        if( System.properties['os.arch'].contains('64') ){
+            println 'windows 64 bit'
+            implementation group: 'io.humble', name: 'humble-video-arch-x86_64-w64-migw32', version: '0.3.0'
+        } else {
+            println 'windows 32 bit'
+            implementation group: 'io.humble', name: 'humble-video-arch-i686-w64-migw32', version: '0.3.0'
+        }
+    } else {
+        //linux
+        if( System.properties['os.arch'].contains('64') ){
+            println 'linux 64 bit'
+            implementation group: 'io.humble', name: 'humble-video-arch-x86_64-pc-linux-gnu6', version: '0.3.0'
+        } else {
+            println 'linux 32 bit'
+            implementation group: 'io.humble', name: 'humble-video-arch-i686-pc-linux-gnu6', version: '0.3.0'
+        }
+    }
 
     // CSV
     implementation group: 'com.opencsv', name: 'opencsv', version: '5.0' // License: Apache 2.0
