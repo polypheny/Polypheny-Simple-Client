@@ -51,9 +51,10 @@ import java.util.concurrent.ThreadLocalRandom;
 import javax.imageio.ImageIO;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 
-
+@Slf4j
 public final class MediaGenerator {
 
     /**
@@ -90,7 +91,7 @@ public final class MediaGenerator {
         try {
             ImageIO.write( img, "png", out );
         } catch ( IOException e ) {
-            e.printStackTrace();
+            log.error( "Exception while generating random image", e );
         }
         return out;
     }
@@ -104,7 +105,7 @@ public final class MediaGenerator {
         try {
             FileUtils.copyInputStreamToFile( ais, out );
         } catch ( IOException e ) {
-            e.printStackTrace();
+            log.error( "Exception while generating random audio", e );
         }
         return out;
     }
@@ -155,7 +156,7 @@ public final class MediaGenerator {
         try {
             muxer.open( null, null );
         } catch ( InterruptedException | IOException e ) {
-            e.printStackTrace();
+            log.error( "Exception while generating random vido", e );
         }
 
         MediaPictureConverter converter = null;
@@ -236,7 +237,7 @@ public final class MediaGenerator {
         try {
             bytes = Files.readAllBytes( file.toPath() );
         } catch ( IOException e ) {
-            e.printStackTrace();
+            log.error( "Exception while deleting file", e );
             return null;
         }
         file.delete();
@@ -255,7 +256,7 @@ public final class MediaGenerator {
         try {
             bytes = Files.readAllBytes( file.toPath() );
         } catch ( IOException e ) {
-            e.printStackTrace();
+            log.error( "Exception while deleting file", e );
             return null;
         }
         if ( !fileMap.containsKey( file.getAbsolutePath() ) ) {

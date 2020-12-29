@@ -241,7 +241,7 @@ public class CottontaildbExecutor implements Executor {
                 Thread.yield();
             }
         } catch ( Exception e ) {
-            e.printStackTrace();
+            log.error( "Exception while insert on cottontail db", e );
         }
         return !status[1];
     }

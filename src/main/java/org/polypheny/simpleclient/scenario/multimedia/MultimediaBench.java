@@ -107,7 +107,7 @@ public class MultimediaBench extends Scenario {
             ) {
                 IOUtils.copy( is, os );
             } catch ( IOException e ) {
-                e.printStackTrace();
+                log.error( "Caught exception while loading humble video lib", e );
             }
         }
         System.load( out.getAbsolutePath() );
