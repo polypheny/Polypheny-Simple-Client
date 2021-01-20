@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import kong.unirest.HttpRequest;
+import kong.unirest.Unirest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
@@ -87,7 +88,8 @@ public class SelectRandomUser extends QueryBuilder {
 
         @Override
         public HttpRequest<?> getRest() {
-            return null;
+            return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.users" )
+                    .queryString( "public.users.id", "=" + userId );
         }
 
     }

@@ -27,18 +27,23 @@ package org.polypheny.simpleclient.scenario.multimedia.queryBuilder;
 
 
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import java.io.File;
 import java.sql.Timestamp;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import kong.unirest.HttpRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.BatchableInsert;
+import org.polypheny.simpleclient.query.MultipartInsert;
 import org.polypheny.simpleclient.query.QueryBuilder;
 import org.polypheny.simpleclient.scenario.multimedia.MediaGenerator;
 
 
+@Slf4j
 public class InsertMedia extends QueryBuilder {
 
     private static final AtomicInteger nextId = new AtomicInteger( 1 );
@@ -70,7 +75,7 @@ public class InsertMedia extends QueryBuilder {
     }
 
 
-    private static class InsertMediaQuery extends BatchableInsert {
+    private static class InsertMediaQuery extends MultipartInsert {
 
         private static final String SQL = "INSERT INTO \"media\" (\"id\", \"timestamp\", \"album_id\", \"img\", \"video\", \"sound\") VALUES ";
         private final int id;
@@ -89,6 +94,9 @@ public class InsertMedia extends QueryBuilder {
             this.img = img;
             this.video = video;
             this.sound = sound;
+            setFile( "img", img );
+            setFile( "video", video );
+            setFile( "sound", sound );
         }
 
 
@@ -104,9 +112,9 @@ public class InsertMedia extends QueryBuilder {
                     + id + ","
                     + "timestamp '" + timestamp.toString() + "',"
                     + album_id + ","
-                    + MediaGenerator.insertByteHexString( MediaGenerator.getAndDeleteFile( img ) ) + ","
-                    + MediaGenerator.insertByteHexString( MediaGenerator.getAndDeleteFile( video ) ) + ","
-                    + MediaGenerator.insertByteHexString( MediaGenerator.getAndDeleteFile( sound ) )
+                    + MediaGenerator.insertByteHexString( MediaGenerator.getAndDeleteFile( img, 2 ) ) + ","
+                    + MediaGenerator.insertByteHexString( MediaGenerator.getAndDeleteFile( video, 2 ) ) + ","
+                    + MediaGenerator.insertByteHexString( MediaGenerator.getAndDeleteFile( sound, 2 ) )
                     + ")";
         }
 
@@ -123,9 +131,9 @@ public class InsertMedia extends QueryBuilder {
             map.put( 1, new ImmutablePair<>( DataTypes.INTEGER, id ) );
             map.put( 2, new ImmutablePair<>( DataTypes.TIMESTAMP, timestamp ) );
             map.put( 3, new ImmutablePair<>( DataTypes.INTEGER, album_id ) );
-            map.put( 4, new ImmutablePair<>( DataTypes.BYTE_ARRAY, MediaGenerator.getAndDeleteFile( img ) ) );
-            map.put( 5, new ImmutablePair<>( DataTypes.BYTE_ARRAY, MediaGenerator.getAndDeleteFile( video ) ) );
-            map.put( 6, new ImmutablePair<>( DataTypes.BYTE_ARRAY, MediaGenerator.getAndDeleteFile( sound ) ) );
+            map.put( 4, new ImmutablePair<>( DataTypes.FILE, img ) );
+            map.put( 5, new ImmutablePair<>( DataTypes.FILE, video ) );
+            map.put( 6, new ImmutablePair<>( DataTypes.FILE, sound ) );
             return map;
         }
 
@@ -138,7 +146,15 @@ public class InsertMedia extends QueryBuilder {
 
         @Override
         public JsonObject getRestRowExpression() {
-            return null;
+            JsonObject set = new JsonObject();
+            String table = getTable() + ".";
+            set.add( table + "id", new JsonPrimitive( id ) );
+            set.add( table + "timestamp", new JsonPrimitive( timestamp.toLocalDateTime().format( DateTimeFormatter.ISO_LOCAL_DATE_TIME ) ) );
+            set.add( table + "album_id", new JsonPrimitive( album_id ) );
+            set.add( table + "img", new JsonPrimitive( "img" ) );
+            set.add( table + "video", new JsonPrimitive( "video" ) );
+            set.add( table + "sound", new JsonPrimitive( "sound" ) );
+            return set;
         }
 
 
@@ -147,6 +163,11 @@ public class InsertMedia extends QueryBuilder {
             return "public.media";
         }
 
+
+        @Override
+        public Map<String, String> getRestParameters() {
+            return null;
+        }
     }
 
 }

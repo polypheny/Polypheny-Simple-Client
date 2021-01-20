@@ -34,9 +34,11 @@ import kong.unirest.HttpRequest;
 import kong.unirest.RequestBodyEntity;
 import kong.unirest.Unirest;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
 
+@Slf4j
 public abstract class Query {
 
     @Getter
@@ -48,7 +50,7 @@ public abstract class Query {
     }
 
 
-    public enum DataTypes {INTEGER, VARCHAR, TIMESTAMP, DATE, ARRAY_INT, ARRAY_REAL, BYTE_ARRAY}
+    public enum DataTypes {INTEGER, VARCHAR, TIMESTAMP, DATE, ARRAY_INT, ARRAY_REAL, BYTE_ARRAY, FILE}
 
 
     public abstract String getSql();
@@ -92,6 +94,18 @@ public abstract class Query {
         }
 
         return request;
+    }
+
+    public void debug() {
+        String parametrizedQuery = getParameterizedSqlQuery();
+        if ( parametrizedQuery != null ) {
+            log.debug( parametrizedQuery.substring( 0, Math.min( 500, parametrizedQuery.length() ) ) );
+        } else {
+            String sql = getSql();
+            if ( sql != null ) {
+                log.debug( sql.substring( 0, Math.min( 500, sql.length() ) ) );
+            }
+        }
     }
 
 }

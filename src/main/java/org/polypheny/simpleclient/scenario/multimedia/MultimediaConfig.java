@@ -35,6 +35,8 @@ import org.polypheny.simpleclient.scenario.AbstractConfig;
 @Slf4j
 public class MultimediaConfig extends AbstractConfig {
 
+    public final String dataStore;
+    public final String multimediaStore;
     public final int numberOfUsers;
     public final int postsPerUser;
     public final int numberOfFriends;
@@ -49,7 +51,7 @@ public class MultimediaConfig extends AbstractConfig {
 
 
     public MultimediaConfig( Properties properties, int multiplier ) {
-        super( "multimedia", "polypheny" );
+        super( "multimedia", "polypheny-rest" );
 
         pdbBranch = null;
         puiBranch = null;
@@ -58,12 +60,17 @@ public class MultimediaConfig extends AbstractConfig {
 
         router = "icarus";
         planAndImplementationCaching = "Both";
-        dataStores.add( "file" );
 
         progressReportBase = getIntProperty( properties, "progressReportBase" );
         numberOfThreads = getIntProperty( properties, "numberOfThreads" );
         numberOfWarmUpIterations = getIntProperty( properties, "numberOfWarmUpIterations" );
 
+        dataStore = getStringProperty( properties, "dataStore" );
+        multimediaStore = getStringProperty( properties, "multimediaStore" );
+        dataStores.add( dataStore );
+        if ( !multimediaStore.equals( "same" ) ) {
+            dataStores.add( multimediaStore );
+        }
         numberOfUsers = getIntProperty( properties, "numberOfUsers" ) * multiplier;
         albumSize = getIntProperty( properties, "albumSize" );
         postsPerUser = getIntProperty( properties, "postsPerUser" );
@@ -86,7 +93,6 @@ public class MultimediaConfig extends AbstractConfig {
         resetCatalog = Boolean.parseBoolean( cdl.get( "resetCatalog" ) );
         memoryCatalog = Boolean.parseBoolean( cdl.get( "memoryCatalog" ) );
 
-        dataStores.add( cdl.get( "dataStore" ) );
         router = cdl.get( "router" );
         planAndImplementationCaching = cdl.getOrDefault( "planAndImplementationCaching", "Both" );
 
@@ -94,6 +100,12 @@ public class MultimediaConfig extends AbstractConfig {
         numberOfThreads = Integer.parseInt( cdl.get( "numberOfThreads" ) );
         numberOfWarmUpIterations = Integer.parseInt( cdl.get( "numberOfWarmUpIterations" ) );
 
+        dataStore = cdl.get( "dataStore" );
+        multimediaStore = cdl.get( "multimediaStore" );
+        dataStores.add( dataStore );
+        if ( !multimediaStore.equals( "same" ) ) {
+            dataStores.add( multimediaStore );
+        }
         numberOfUsers = Integer.parseInt( cdl.get( "numberOfUsers" ) );
         albumSize = Integer.parseInt( cdl.get( "albumSize" ) );
         postsPerUser = Integer.parseInt( cdl.get( "postsPerUser" ) );

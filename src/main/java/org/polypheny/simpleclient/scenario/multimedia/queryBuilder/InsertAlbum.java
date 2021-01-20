@@ -28,7 +28,9 @@ package org.polypheny.simpleclient.scenario.multimedia.queryBuilder;
 
 import com.devskiller.jfairy.Fairy;
 import com.devskiller.jfairy.producer.person.Person;
+import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -123,13 +125,17 @@ public class InsertAlbum extends QueryBuilder {
 
         @Override
         public HttpRequest<?> getRest() {
-            return null;
+            return buildRestInsert( "public.album", ImmutableList.of( getRestRowExpression() ) );
         }
 
 
         @Override
         public JsonObject getRestRowExpression() {
-            return null;
+            JsonObject row = new JsonObject();
+            row.add( "public.album.id", new JsonPrimitive( album_id ) );
+            row.add( "public.album.user_id", new JsonPrimitive( user_id ) );
+            row.add( "public.album.name", new JsonPrimitive( name ) );
+            return row;
         }
 
 

@@ -26,7 +26,9 @@
 package org.polypheny.simpleclient.scenario.multimedia.queryBuilder;
 
 
+import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import java.util.HashMap;
 import java.util.Map;
 import kong.unirest.HttpRequest;
@@ -102,13 +104,16 @@ public class InsertFriends extends QueryBuilder {
 
         @Override
         public HttpRequest<?> getRest() {
-            return null;
+            return buildRestInsert( "public.followers", ImmutableList.of( getRestRowExpression() ) );
         }
 
 
         @Override
         public JsonObject getRestRowExpression() {
-            return null;
+            JsonObject row = new JsonObject();
+            row.add( "public.followers.user_id", new JsonPrimitive( user ) );
+            row.add( "public.followers.friend_id", new JsonPrimitive( friend ) );
+            return row;
         }
 
 

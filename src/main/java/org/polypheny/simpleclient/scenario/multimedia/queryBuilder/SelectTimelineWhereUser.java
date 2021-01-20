@@ -27,8 +27,8 @@ package org.polypheny.simpleclient.scenario.multimedia.queryBuilder;
 
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
+import java.util.StringJoiner;
 import java.util.concurrent.ThreadLocalRandom;
 import kong.unirest.HttpRequest;
 import kong.unirest.Unirest;
@@ -37,51 +37,46 @@ import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
 
-public class DeleteRandomTimeline extends QueryBuilder {
+public class SelectTimelineWhereUser extends QueryBuilder {
 
-    private final HashSet<Integer> deletedTimelines = new HashSet<>();
-    private final int numberOfTimelines;
+    private static final boolean EXPECT_RESULT = true;
+    private static final int LIMIT = 20;
+
+    private final int numberOfUsers;
 
 
-    public DeleteRandomTimeline( int numberOfTimelines ) {
-        this.numberOfTimelines = numberOfTimelines;
+    public SelectTimelineWhereUser( int numberOfUsers ) {
+        this.numberOfUsers = numberOfUsers;
     }
 
 
     @Override
     public Query getNewQuery() {
-        //make sure that only existing posts are deleted
-        int timelineId = ThreadLocalRandom.current().nextInt( 1, numberOfTimelines );
-        int counter = 0;
-        while ( deletedTimelines.contains( timelineId ) && counter < 5 ) {
-            timelineId = ThreadLocalRandom.current().nextInt( 1, numberOfTimelines );
-            counter++;
-        }
-        deletedTimelines.add( timelineId );
-        return new DeleteRandomTimelineQuery( timelineId );
+        int userId = ThreadLocalRandom.current().nextInt( 1, numberOfUsers + 1 );
+        return new SelectTimelineWhereUserQuery( userId );
     }
 
 
-    public static class DeleteRandomTimelineQuery extends Query {
+    public static class SelectTimelineWhereUserQuery extends Query {
 
         private final int userId;
 
 
-        public DeleteRandomTimelineQuery( int userId ) {
-            super( false );
+        public SelectTimelineWhereUserQuery( int userId ) {
+            super( EXPECT_RESULT );
             this.userId = userId;
         }
 
 
         @Override
         public String getSql() {
-            return "DELETE FROM public.timeline WHERE id=" + userId;
+            return "SELECT \"message\", \"img\", \"video\", \"sound\" FROM \"timeline\" WHERE \"user_id\" = " + userId + " LIMIT " + LIMIT;
         }
 
 
         @Override
         public String getParameterizedSqlQuery() {
-            return "DELETE FROM public.timeline WHERE id=?";
+            return "SELECT \"message\", \"img\", \"video\", \"sound\" FROM \"timeline\" WHERE \"user_id\" = ? LIMIT " + LIMIT;
         }
 
 
@@ -95,8 +90,16 @@ public class DeleteRandomTimeline extends QueryBuilder {
 
         @Override
         public HttpRequest<?> getRest() {
-            return Unirest.delete( "{protocol}://{host}:{port}/restapi/v1/res/public.timeline" )
-                    .queryString( "public.timeline.id", "=" + userId );
+            String table = "public.timeline.";
+            StringJoiner joiner = new StringJoiner( "," );
+            joiner.add( table + "message" );
+            joiner.add( table + "img" );
+            joiner.add( table + "video" );
+            joiner.add( table + "sound" );
+            return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.timeline" )
+                    .queryString( "public.timeline.user_id", "=" + userId )
+                    .queryString( "_project", joiner.toString() )
+                    .queryString( "_limit", LIMIT );
         }
 
     }

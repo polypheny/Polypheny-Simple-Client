@@ -1,5 +1,6 @@
 package org.polypheny.simpleclient.executor;
 
+
 import com.google.gson.JsonObject;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -15,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.query.BatchableInsert;
+import org.polypheny.simpleclient.query.MultipartInsert;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.RawQuery;
 import org.polypheny.simpleclient.scenario.AbstractConfig;
@@ -45,6 +47,12 @@ public class PolyphenyDbRestExecutor implements PolyphenyDbExecutor {
 
     @Override
     public long executeQuery( Query query ) throws ExecutorException {
+        //query.debug();
+        if ( query instanceof MultipartInsert ) {
+            long l = executeQuery( new RawQuery( null, ((MultipartInsert) query).buildMultipartInsert(), query.isExpectResultSet() ) );
+            ((MultipartInsert) query).cleanup();
+            return l;
+        }
         long time;
         if ( query.getRest() != null ) {
             HttpRequest<?> request = query.getRest();
@@ -55,7 +63,7 @@ public class PolyphenyDbRestExecutor implements PolyphenyDbExecutor {
             log.debug( request.getUrl() );
             try {
                 long start = System.nanoTime();
-                HttpResponse<JsonNode> result = request.asJson();
+                @SuppressWarnings("rawtypes") HttpResponse result = request.asBytes();
                 if ( !result.isSuccess() ) {
                     throw new ExecutorException( "Error while executing REST query. Message: " + result.getStatusText() + "  |  URL: " + request.getUrl() );
                 }
@@ -68,7 +76,7 @@ public class PolyphenyDbRestExecutor implements PolyphenyDbExecutor {
             }
         } else {
             // There is no REST expression available for this query. Executing SQL expression via JDBC.
-            log.warn( query.getSql() );
+            //log.warn( query.getSql() );
             JdbcExecutor executor = null;
             try {
                 executor = jdbcExecutorFactory.createExecutorInstance( csvWriter );
@@ -89,6 +97,12 @@ public class PolyphenyDbRestExecutor implements PolyphenyDbExecutor {
 
     @Override
     public long executeQueryAndGetNumber( Query query ) throws ExecutorException {
+        query.debug();
+        if ( query instanceof MultipartInsert ) {
+            long l = executeQuery( new RawQuery( null, ((MultipartInsert) query).buildMultipartInsert(), query.isExpectResultSet() ) );
+            ((MultipartInsert) query).cleanup();
+            return l;
+        }
         if ( query.getRest() != null ) {
             HttpRequest<?> request = query.getRest();
             request.basicAuth( "pa", "" );
@@ -120,7 +134,7 @@ public class PolyphenyDbRestExecutor implements PolyphenyDbExecutor {
             }
         } else {
             // There is no REST expression available for this query. Executing SQL expression via JDBC.
-            log.warn( query.getSql() );
+            log.warn( query.getSql().substring( 0, Math.min( 500, query.getSql().length() ) ) );
             JdbcExecutor executor = null;
             try {
                 executor = jdbcExecutorFactory.createExecutorInstance( csvWriter );
@@ -157,6 +171,12 @@ public class PolyphenyDbRestExecutor implements PolyphenyDbExecutor {
         String currentTable = null;
         List<JsonObject> rows = new ArrayList<>();
         for ( BatchableInsert query : batchList ) {
+            query.debug();
+            if ( query instanceof MultipartInsert ) {
+                executeQuery( new RawQuery( null, ((MultipartInsert) query).buildMultipartInsert(), query.isExpectResultSet() ) );
+                ((MultipartInsert) query).cleanup();
+                continue;
+            }
             if ( currentTable == null ) {
                 currentTable = query.getTable();
             }

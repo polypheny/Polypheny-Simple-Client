@@ -35,6 +35,7 @@ import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
 import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory;
+import org.polypheny.simpleclient.executor.PolyphenyDbRestExecutor.PolyphenyDbRestExecutorFactory;
 import org.polypheny.simpleclient.main.Multimedia;
 
 
@@ -52,8 +53,8 @@ public class MultimediaCommand implements CliRunnable {
     @Option(name = { "-pdb", "--polyphenydb" }, title = "IP or Hostname", arity = 1, description = "IP or Hostname of the Polypheny-DB server (default: 127.0.0.1).")
     public static String polyphenyDbHost = "127.0.0.1";
 
-    //@Option(name = { "--rest" }, arity = 0, description = "Use Polypheny-DB REST interface instead of the JDBC interface (default: false).")
-    //public static boolean restInterface = false;
+    @Option(name = { "--rest" }, arity = 0, description = "Use Polypheny-DB REST interface instead of the JDBC interface (default: false).")
+    public static boolean restInterface = false;
 
     @Option(name = { "--writeCSV" }, arity = 0, description = "Write a CSV file containing execution times for all executed queries (default: false).")
     public boolean writeCsv = false;
@@ -79,12 +80,11 @@ public class MultimediaCommand implements CliRunnable {
         }
 
         ExecutorFactory executorFactory;
-        /*if ( restInterface ) {
+        if ( restInterface ) {
             executorFactory = new PolyphenyDbRestExecutorFactory( polyphenyDbHost );
         } else {
-            executorFactory = new PolyphenyDbJdbcExecutorFactory( polyphenyDbHost );
-        }*/
-        executorFactory = new PolyphenyDbJdbcExecutorFactory( polyphenyDbHost, true );
+            executorFactory = new PolyphenyDbJdbcExecutorFactory( polyphenyDbHost, true );
+        }
 
         if ( args.get( 0 ).equalsIgnoreCase( "data" ) ) {
             Multimedia.data( executorFactory, multiplier, true );

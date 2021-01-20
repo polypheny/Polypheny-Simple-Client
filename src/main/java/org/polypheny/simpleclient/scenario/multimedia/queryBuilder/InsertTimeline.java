@@ -28,14 +28,17 @@ package org.polypheny.simpleclient.scenario.multimedia.queryBuilder;
 
 import com.devskiller.jfairy.Fairy;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import java.io.File;
 import java.sql.Timestamp;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import kong.unirest.HttpRequest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.BatchableInsert;
+import org.polypheny.simpleclient.query.MultipartInsert;
 import org.polypheny.simpleclient.query.QueryBuilder;
 import org.polypheny.simpleclient.scenario.multimedia.MediaGenerator;
 
@@ -73,7 +76,7 @@ public class InsertTimeline extends QueryBuilder {
     }
 
 
-    private static class InsertTimelineQuery extends BatchableInsert {
+    private static class InsertTimelineQuery extends MultipartInsert {
 
         private static final String SQL = "INSERT INTO \"timeline\" (\"id\", \"timestamp\", \"user_id\", \"message\", \"img\", \"video\", \"sound\") VALUES ";
         private final int timelineId;
@@ -94,6 +97,9 @@ public class InsertTimeline extends QueryBuilder {
             this.img = img;
             this.video = video;
             this.sound = sound;
+            setFile( "img", img );
+            setFile( "video", video );
+            setFile( "sound", sound );
         }
 
 
@@ -130,9 +136,9 @@ public class InsertTimeline extends QueryBuilder {
             map.put( 2, new ImmutablePair<>( DataTypes.TIMESTAMP, timestamp ) );
             map.put( 3, new ImmutablePair<>( DataTypes.INTEGER, userId ) );
             map.put( 4, new ImmutablePair<>( DataTypes.VARCHAR, message ) );
-            map.put( 5, new ImmutablePair<>( DataTypes.BYTE_ARRAY, MediaGenerator.getAndDeleteFile( img ) ) );
-            map.put( 6, new ImmutablePair<>( DataTypes.BYTE_ARRAY, MediaGenerator.getAndDeleteFile( video ) ) );
-            map.put( 7, new ImmutablePair<>( DataTypes.BYTE_ARRAY, MediaGenerator.getAndDeleteFile( sound ) ) );
+            map.put( 5, new ImmutablePair<>( DataTypes.FILE, img ) );
+            map.put( 6, new ImmutablePair<>( DataTypes.FILE, video ) );
+            map.put( 7, new ImmutablePair<>( DataTypes.FILE, sound ) );
             return map;
         }
 
@@ -145,7 +151,17 @@ public class InsertTimeline extends QueryBuilder {
 
         @Override
         public JsonObject getRestRowExpression() {
-            return null;
+            JsonObject set = new JsonObject();
+            String table = getTable() + ".";
+            set.add( table + "id", new JsonPrimitive( timelineId ) );
+            set.add( table + "timestamp", new JsonPrimitive( timestamp.toLocalDateTime().format( DateTimeFormatter.ISO_LOCAL_DATE_TIME ) ) );
+            set.add( table + "user_id", new JsonPrimitive( userId ) );
+            set.add( table + "message", new JsonPrimitive( message ) );
+            set.add( table + "img", new JsonPrimitive( "img" ) );
+            set.add( table + "video", new JsonPrimitive( "video" ) );
+            set.add( table + "sound", new JsonPrimitive( "sound" ) );
+            return set;
+
         }
 
 
@@ -154,6 +170,10 @@ public class InsertTimeline extends QueryBuilder {
             return "public.timeline";
         }
 
+        @Override
+        public Map<String, String> getRestParameters() {
+            return null;
+        }
     }
 
 }

@@ -29,6 +29,7 @@ package org.polypheny.simpleclient.scenario.multimedia.queryBuilder;
 import com.devskiller.jfairy.Fairy;
 import com.devskiller.jfairy.producer.person.Person;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Locale;
@@ -37,7 +38,7 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 import kong.unirest.HttpRequest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.polypheny.simpleclient.query.BatchableInsert;
+import org.polypheny.simpleclient.query.MultipartInsert;
 import org.polypheny.simpleclient.query.QueryBuilder;
 import org.polypheny.simpleclient.scenario.multimedia.MediaGenerator;
 
@@ -78,7 +79,7 @@ public class InsertUser extends QueryBuilder {
     }
 
 
-    public static class InsertUserQuery extends BatchableInsert {
+    public static class InsertUserQuery extends MultipartInsert {
 
         private static final String SQL = "INSERT INTO \"users\" (\"id\", \"firstName\", \"lastName\", \"email\", \"password\", \"profile_pic\") VALUES ";
         public final int id;
@@ -97,6 +98,7 @@ public class InsertUser extends QueryBuilder {
             this.email = email;
             this.password = password;
             this.profile_pic = profile_pic;
+            setFile( "profile_pic", profile_pic );
         }
 
 
@@ -133,7 +135,7 @@ public class InsertUser extends QueryBuilder {
             map.put( 3, new ImmutablePair<>( DataTypes.VARCHAR, lastName ) );
             map.put( 4, new ImmutablePair<>( DataTypes.VARCHAR, email ) );
             map.put( 5, new ImmutablePair<>( DataTypes.VARCHAR, password ) );
-            map.put( 6, new ImmutablePair<>( DataTypes.BYTE_ARRAY, MediaGenerator.getAndDeleteFile( profile_pic ) ) );
+            map.put( 6, new ImmutablePair<>( DataTypes.FILE, profile_pic ) );
             return map;
         }
 
@@ -146,15 +148,28 @@ public class InsertUser extends QueryBuilder {
 
         @Override
         public JsonObject getRestRowExpression() {
-            return null;
+            JsonObject set = new JsonObject();
+            String table = getTable() + ".";
+            set.add( table + "id", new JsonPrimitive( id ) );
+            set.add( table + "firstname", new JsonPrimitive( firstName ) );
+            set.add( table + "lastname", new JsonPrimitive( lastName ) );
+            set.add( table + "email", new JsonPrimitive( email ) );
+            set.add( table + "password", new JsonPrimitive( password ) );
+            set.add( table + "profile_pic", new JsonPrimitive( "profile_pic" ) );
+            return set;
+
         }
 
 
         @Override
         public String getTable() {
-            return "public.user";
+            return "public.users";
         }
 
+        @Override
+        public Map<String, String> getRestParameters() {
+            return null;
+        }
     }
 
 }
