@@ -70,13 +70,13 @@ public class PolyphenyDbJdbcExecutor extends JdbcExecutor implements PolyphenyDb
 
     @Override
     public void dropStore( String name ) throws ExecutorException {
-        executeQuery( new RawQuery( "ALTER STORES DROP \"" + name + "\"", null, false ) );
+        executeQuery( new RawQuery( "ALTER ADAPTERS DROP \"" + name + "\"", null, false ) );
     }
 
 
     @Override
     public void deployStore( String name, String clazz, String config ) throws ExecutorException {
-        executeQuery( new RawQuery( "ALTER STORES ADD \"" + name + "\" USING '" + clazz + "' WITH '" + config + "'", null, false ) );
+        executeQuery( new RawQuery( "ALTER ADAPTERS ADD \"" + name + "\" USING '" + clazz + "' WITH '" + config + "'", null, false ) );
     }
 
 
