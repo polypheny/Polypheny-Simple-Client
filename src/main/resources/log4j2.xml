@@ -29,7 +29,7 @@
             <AppenderRef ref="ConsoleAppenderChronos"/>
             <AppenderRef ref="ChronosAppender"/>
         </logger>
-        <logger name="org.polypheny" level="WARN" additivity="false">
+        <logger name="org.polypheny" level="DEBUG" additivity="false">
             <AppenderRef ref="ConsoleAppender"/>
             <AppenderRef ref="ChronosAppender"/>
         </logger>

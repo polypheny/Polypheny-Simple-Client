@@ -37,53 +37,52 @@ import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
 
-public class SelectTimelineWhereUser extends QueryBuilder {
+public class SelectRandomTimeline extends QueryBuilder {
 
     private static final boolean EXPECT_RESULT = true;
-    private static final int LIMIT = 20;
 
-    private final int numberOfUsers;
+    private final int numberOfTimelineEntries;
 
 
-    public SelectTimelineWhereUser( int numberOfUsers ) {
-        this.numberOfUsers = numberOfUsers;
+    public SelectRandomTimeline( int numberOfTimelineEntries ) {
+        this.numberOfTimelineEntries = numberOfTimelineEntries;
     }
 
 
     @Override
     public Query getNewQuery() {
-        int userId = ThreadLocalRandom.current().nextInt( 1, numberOfUsers + 1 );
-        return new SelectTimelineWhereUserQuery( userId );
+        int id = ThreadLocalRandom.current().nextInt( 1, numberOfTimelineEntries + 1 );
+        return new SelectTimelineWhereUserQuery( id );
     }
 
 
     public static class SelectTimelineWhereUserQuery extends Query {
 
-        private final int userId;
+        private final int id;
 
 
-        public SelectTimelineWhereUserQuery( int userId ) {
+        public SelectTimelineWhereUserQuery( int id ) {
             super( EXPECT_RESULT );
-            this.userId = userId;
+            this.id = id;
         }
 
 
         @Override
         public String getSql() {
-            return "SELECT \"message\", \"img\", \"video\", \"sound\" FROM \"timeline\" WHERE \"user_id\" = " + userId + " LIMIT " + LIMIT;
+            return "SELECT \"message\", \"img\", \"video\", \"sound\" FROM \"timeline\" WHERE \"id\" = " + id;
         }
 
 
         @Override
         public String getParameterizedSqlQuery() {
-            return "SELECT \"message\", \"img\", \"video\", \"sound\" FROM \"timeline\" WHERE \"user_id\" = ? LIMIT " + LIMIT;
+            return "SELECT \"message\", \"img\", \"video\", \"sound\" FROM \"timeline\" WHERE \"id\" = ?";
         }
 
 
         @Override
         public Map<Integer, ImmutablePair<DataTypes, Object>> getParameterValues() {
             Map<Integer, ImmutablePair<DataTypes, Object>> map = new HashMap<>();
-            map.put( 1, new ImmutablePair<>( DataTypes.INTEGER, userId ) );
+            map.put( 1, new ImmutablePair<>( DataTypes.INTEGER, id ) );
             return map;
         }
 
@@ -97,9 +96,8 @@ public class SelectTimelineWhereUser extends QueryBuilder {
             joiner.add( table + "video" );
             joiner.add( table + "sound" );
             return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.timeline" )
-                    .queryString( "public.timeline.user_id", "=" + userId )
-                    .queryString( "_project", joiner.toString() )
-                    .queryString( "_limit", LIMIT );
+                    .queryString( "public.timeline.id", "=" + id )
+                    .queryString( "_project", joiner.toString() );
         }
 
     }

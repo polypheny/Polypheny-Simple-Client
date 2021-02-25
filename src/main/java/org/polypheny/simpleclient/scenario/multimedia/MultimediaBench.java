@@ -61,8 +61,8 @@ import org.polypheny.simpleclient.scenario.multimedia.queryBuilder.InsertRandomT
 import org.polypheny.simpleclient.scenario.multimedia.queryBuilder.SelectMediaWhereAlbum;
 import org.polypheny.simpleclient.scenario.multimedia.queryBuilder.SelectMultipleProfilePics;
 import org.polypheny.simpleclient.scenario.multimedia.queryBuilder.SelectRandomProfilePic;
+import org.polypheny.simpleclient.scenario.multimedia.queryBuilder.SelectRandomTimeline;
 import org.polypheny.simpleclient.scenario.multimedia.queryBuilder.SelectRandomUser;
-import org.polypheny.simpleclient.scenario.multimedia.queryBuilder.SelectTimelineWhereUser;
 
 
 @Slf4j
@@ -193,7 +193,7 @@ public class MultimediaBench extends Scenario {
         addNumberOfTimes( queryList, new SelectRandomProfilePic( config.numberOfUsers ), config.numberOfSelectProfilePicQueries );
         addNumberOfTimes( queryList, new SelectMultipleProfilePics( config.numberOfUsers ), config.numberOfSelectProfilePicsQueries );
         addNumberOfTimes( queryList, new SelectMediaWhereAlbum( config.numberOfUsers ), config.numberOfSelectMediaQueries );//numberOfAlbums = numberOfUsers (1 album per user)
-        addNumberOfTimes( queryList, new SelectTimelineWhereUser( config.numberOfUsers ), config.numberOfSelectTimelineQueries );
+        addNumberOfTimes( queryList, new SelectRandomTimeline( config.numberOfUsers * config.postsPerUser ), config.numberOfSelectTimelineQueries );
         addNumberOfTimes( queryList, new DeleteRandomTimeline( config.numberOfUsers * config.postsPerUser ), config.numberOfDeleteTimelineQueries );
         addNumberOfTimes( queryList, new InsertRandomTimeline( config.numberOfUsers, config.postsPerUser, config.imgSize, config.numberOfFrames, config.fileSizeKB, false ), config.numberOfInsertTimelineQueries );
 
@@ -270,10 +270,8 @@ public class MultimediaBench extends Scenario {
                     executor.executeQuery( new SelectRandomUser( config.numberOfUsers ).getNewQuery() );
                     executor.executeQuery( new SelectRandomProfilePic( config.numberOfUsers ).getNewQuery() );
                     executor.executeQuery( new SelectMultipleProfilePics( config.numberOfUsers ).getNewQuery() );
-                    //executor.executeQuery( new SelectRandomAlbum( config.numberOfUsers ).getNewQuery() );
                     executor.executeQuery( new SelectMediaWhereAlbum( config.numberOfUsers ).getNewQuery() );//numberOfAlbums = numberOfUsers (1 album per user)
-                    //executor.executeQuery( new SelectRandomTimeline( config.numberOfUsers ).getNewQuery() );
-                    executor.executeQuery( new SelectTimelineWhereUser( config.numberOfUsers ).getNewQuery() );
+                    executor.executeQuery( new SelectRandomTimeline( config.numberOfUsers * config.postsPerUser ).getNewQuery() );
                     executor.executeQuery( new DeleteRandomTimeline( config.numberOfUsers * config.postsPerUser ).getNewQuery() );
                     executor.executeQuery( new InsertRandomTimeline( config.numberOfUsers, config.postsPerUser, config.imgSize, config.numberOfFrames, config.fileSizeKB, true ).getNewQuery() );
                 }
