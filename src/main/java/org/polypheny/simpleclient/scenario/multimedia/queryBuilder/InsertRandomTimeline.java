@@ -51,24 +51,34 @@ public class InsertRandomTimeline extends QueryBuilder {
     private static final AtomicInteger nextId = new AtomicInteger( 1 );
 
     private final int numberOfUsers;
+    private final int postsPerUser;
     private final int imgSize;
     private final int numberOfFrames;
     private final int fileSizeKB;
+    private final boolean isWarmup;
 
 
-    public InsertRandomTimeline( int numberOfUsers, int imgSize, int numberOfFrames, int fileSizeKB ) {
+    public InsertRandomTimeline( int numberOfUsers, int postsPerUser, int imgSize, int numberOfFrames, int fileSizeKB, boolean isWarmup ) {
         this.numberOfUsers = numberOfUsers;
+        this.postsPerUser = postsPerUser;
         this.imgSize = imgSize;
         this.numberOfFrames = numberOfFrames;
         this.fileSizeKB = fileSizeKB;
+        this.isWarmup = isWarmup;
     }
 
 
     @Override
     public BatchableInsert getNewQuery() {
         Fairy fairy = Fairy.create();
+        int id = nextId.getAndIncrement();
+        if ( isWarmup ) {
+            id = id * -1;
+        } else {
+            id = id + numberOfUsers * postsPerUser + 1;
+        }
         return new InsertRandomTimelineQuery(
-                nextId.getAndIncrement(),
+                id,
                 MediaGenerator.randomTimestamp(),
                 ThreadLocalRandom.current().nextInt( 1, numberOfUsers ),
                 fairy.textProducer().paragraph( 5 ),

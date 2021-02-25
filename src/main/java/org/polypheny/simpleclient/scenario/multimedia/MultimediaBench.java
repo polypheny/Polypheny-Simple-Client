@@ -124,12 +124,13 @@ public class MultimediaBench extends Scenario {
 
         try {
             executor = executorFactory.createExecutorInstance();
+            String onStore = String.format( " ON STORE \"%s\"", config.dataStore );
             executor.executeQuery( (new CreateTable( "ALTER CONFIG 'validation/validateMultimediaContentType' SET FALSE" )).getNewQuery() );
-            executor.executeQuery( (new CreateTable( "CREATE TABLE IF NOT EXISTS \"users\" (\"id\" INTEGER NOT NULL, \"firstName\" VARCHAR(1000) NOT NULL, \"lastName\" VARCHAR(1000) NOT NULL, \"email\" VARCHAR(1000) NOT NULL, \"password\" VARCHAR(1000) NOT NULL, \"profile_pic\" IMAGE NOT NULL, PRIMARY KEY(\"id\"))" )).getNewQuery() );
-            executor.executeQuery( (new CreateTable( "CREATE TABLE IF NOT EXISTS \"album\" (\"id\" INTEGER NOT NULL, \"user_id\" INTEGER NOT NULL, \"name\" VARCHAR(200) NOT NULL, PRIMARY KEY(\"id\"))" )).getNewQuery() );
-            executor.executeQuery( (new CreateTable( "CREATE TABLE IF NOT EXISTS \"media\" (\"id\" INTEGER NOT NULL, \"timestamp\" TIMESTAMP NOT NULL, \"album_id\" INTEGER NOT NULL, \"img\" IMAGE, \"video\" VIDEO, \"sound\" SOUND, PRIMARY KEY(\"id\"))" )).getNewQuery() );
-            executor.executeQuery( (new CreateTable( "CREATE TABLE IF NOT EXISTS \"timeline\" (\"id\" INTEGER NOT NULL, \"timestamp\" TIMESTAMP NOT NULL, \"user_id\" INTEGER NOT NULL, \"message\" VARCHAR(2000), \"img\" IMAGE, \"video\" VIDEO, \"sound\" SOUND, PRIMARY KEY(\"id\"))" )).getNewQuery() );
-            executor.executeQuery( (new CreateTable( "CREATE TABLE IF NOT EXISTS \"followers\" (\"user_id\" INTEGER NOT NULL,\"friend_id\" INTEGER NOT NULL, PRIMARY KEY(\"user_id\", \"friend_id\"))" )).getNewQuery() );
+            executor.executeQuery( (new CreateTable( "CREATE TABLE IF NOT EXISTS \"users\" (\"id\" INTEGER NOT NULL, \"firstName\" VARCHAR(1000) NOT NULL, \"lastName\" VARCHAR(1000) NOT NULL, \"email\" VARCHAR(1000) NOT NULL, \"password\" VARCHAR(1000) NOT NULL, \"profile_pic\" IMAGE NOT NULL, PRIMARY KEY(\"id\"))" + onStore )).getNewQuery() );
+            executor.executeQuery( (new CreateTable( "CREATE TABLE IF NOT EXISTS \"album\" (\"id\" INTEGER NOT NULL, \"user_id\" INTEGER NOT NULL, \"name\" VARCHAR(200) NOT NULL, PRIMARY KEY(\"id\"))" + onStore )).getNewQuery() );
+            executor.executeQuery( (new CreateTable( "CREATE TABLE IF NOT EXISTS \"media\" (\"id\" INTEGER NOT NULL, \"timestamp\" TIMESTAMP NOT NULL, \"album_id\" INTEGER NOT NULL, \"img\" IMAGE, \"video\" VIDEO, \"sound\" SOUND, PRIMARY KEY(\"id\"))" + onStore )).getNewQuery() );
+            executor.executeQuery( (new CreateTable( "CREATE TABLE IF NOT EXISTS \"timeline\" (\"id\" INTEGER NOT NULL, \"timestamp\" TIMESTAMP NOT NULL, \"user_id\" INTEGER NOT NULL, \"message\" VARCHAR(2000), \"img\" IMAGE, \"video\" VIDEO, \"sound\" SOUND, PRIMARY KEY(\"id\"))" + onStore )).getNewQuery() );
+            executor.executeQuery( (new CreateTable( "CREATE TABLE IF NOT EXISTS \"followers\" (\"user_id\" INTEGER NOT NULL,\"friend_id\" INTEGER NOT NULL, PRIMARY KEY(\"user_id\", \"friend_id\"))" + onStore )).getNewQuery() );
             executor.executeQuery( (new CreateTable( "TRUNCATE TABLE \"users\"" )).getNewQuery() );
             executor.executeQuery( (new CreateTable( "TRUNCATE TABLE \"album\"" )).getNewQuery() );
             executor.executeQuery( (new CreateTable( "TRUNCATE TABLE \"media\"" )).getNewQuery() );
@@ -188,15 +189,13 @@ public class MultimediaBench extends Scenario {
 
         log.info( "Preparing query list for the benchmark..." );
         List<QueryListEntry> queryList = new Vector<>();
-        addNumberOfTimes( queryList, new SelectRandomUser( config.numberOfUsers ), config.read );
-        addNumberOfTimes( queryList, new SelectRandomProfilePic( config.numberOfUsers ), config.read );
-        addNumberOfTimes( queryList, new SelectMultipleProfilePics( config.numberOfUsers ), config.read );
-        //addNumberOfTimes( queryList, new SelectRandomAlbum( config.numberOfUsers ), config.read );
-        addNumberOfTimes( queryList, new SelectMediaWhereAlbum( config.numberOfUsers ), config.read );//numberOfAlbums = numberOfUsers (1 album per user)
-        //addNumberOfTimes( queryList, new SelectRandomTimeline( config.numberOfUsers ), config.read );
-        addNumberOfTimes( queryList, new SelectTimelineWhereUser( config.numberOfUsers ), config.read );
-        addNumberOfTimes( queryList, new DeleteRandomTimeline( config.numberOfUsers * config.postsPerUser ), config.write );
-        addNumberOfTimes( queryList, new InsertRandomTimeline( config.numberOfUsers, config.imgSize, config.numberOfFrames, config.fileSizeKB ), config.write );
+        addNumberOfTimes( queryList, new SelectRandomUser( config.numberOfUsers ), config.numberOfSelectUserQueries );
+        addNumberOfTimes( queryList, new SelectRandomProfilePic( config.numberOfUsers ), config.numberOfSelectProfilePicQueries );
+        addNumberOfTimes( queryList, new SelectMultipleProfilePics( config.numberOfUsers ), config.numberOfSelectProfilePicsQueries );
+        addNumberOfTimes( queryList, new SelectMediaWhereAlbum( config.numberOfUsers ), config.numberOfSelectMediaQueries );//numberOfAlbums = numberOfUsers (1 album per user)
+        addNumberOfTimes( queryList, new SelectTimelineWhereUser( config.numberOfUsers ), config.numberOfSelectTimelineQueries );
+        addNumberOfTimes( queryList, new DeleteRandomTimeline( config.numberOfUsers * config.postsPerUser ), config.numberOfDeleteTimelineQueries );
+        addNumberOfTimes( queryList, new InsertRandomTimeline( config.numberOfUsers, config.postsPerUser, config.imgSize, config.numberOfFrames, config.fileSizeKB, false ), config.numberOfInsertTimelineQueries );
 
         Collections.shuffle( queryList );
 
@@ -276,7 +275,7 @@ public class MultimediaBench extends Scenario {
                     //executor.executeQuery( new SelectRandomTimeline( config.numberOfUsers ).getNewQuery() );
                     executor.executeQuery( new SelectTimelineWhereUser( config.numberOfUsers ).getNewQuery() );
                     executor.executeQuery( new DeleteRandomTimeline( config.numberOfUsers * config.postsPerUser ).getNewQuery() );
-                    executor.executeQuery( new InsertRandomTimeline( config.numberOfUsers, config.imgSize, config.numberOfFrames, config.fileSizeKB ).getNewQuery() );
+                    executor.executeQuery( new InsertRandomTimeline( config.numberOfUsers, config.postsPerUser, config.imgSize, config.numberOfFrames, config.fileSizeKB, true ).getNewQuery() );
                 }
             } catch ( ExecutorException e ) {
                 throw new RuntimeException( "Error while executing warm-up queries", e );

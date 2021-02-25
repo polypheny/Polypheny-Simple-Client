@@ -44,10 +44,16 @@ public class MultimediaConfig extends AbstractConfig {
     public final int imgSize;
     public final int numberOfFrames;
     public final int fileSizeKB;
+    public final int numberOfSelectUserQueries;
+    public final int numberOfSelectProfilePicQueries;
+    public final int numberOfSelectProfilePicsQueries;
+    public final int numberOfSelectMediaQueries;
+    public final int numberOfSelectTimelineQueries;
+    public final int numberOfDeleteTimelineQueries;
+    public final int numberOfInsertTimelineQueries;
+
 
     public final int maxBatchSize;
-    public final int read;
-    public final int write;
 
 
     public MultimediaConfig( Properties properties, int multiplier ) {
@@ -75,8 +81,13 @@ public class MultimediaConfig extends AbstractConfig {
         albumSize = getIntProperty( properties, "albumSize" );
         postsPerUser = getIntProperty( properties, "postsPerUser" );
         numberOfFriends = getIntProperty( properties, "numberOfFriends" );
-        read = getIntProperty( properties, "read" );
-        write = getIntProperty( properties, "write" );
+        numberOfSelectUserQueries = getIntProperty( properties, "numberOfSelectUserQueries" );
+        numberOfSelectProfilePicQueries = getIntProperty( properties, "numberOfSelectProfilePicQueries" );
+        numberOfSelectProfilePicsQueries = getIntProperty( properties, "numberOfSelectProfilePicsQueries" );
+        numberOfSelectMediaQueries = getIntProperty( properties, "numberOfSelectMediaQueries" );
+        numberOfSelectTimelineQueries = getIntProperty( properties, "numberOfSelectTimelineQueries" );
+        numberOfDeleteTimelineQueries = getIntProperty( properties, "numberOfDeleteTimelineQueries" );
+        numberOfInsertTimelineQueries = getIntProperty( properties, "numberOfInsertTimelineQueries" );
 
         imgSize = getIntProperty( properties, "imgSize" );
         numberOfFrames = getIntProperty( properties, "numberOfFrames" );
@@ -110,8 +121,13 @@ public class MultimediaConfig extends AbstractConfig {
         albumSize = Integer.parseInt( cdl.get( "albumSize" ) );
         postsPerUser = Integer.parseInt( cdl.get( "postsPerUser" ) );
         numberOfFriends = Integer.parseInt( cdl.get( "numberOfFriends" ) );
-        read = Integer.parseInt( cdl.get( "read" ) );
-        write = Integer.parseInt( cdl.get( "write" ) );
+        numberOfSelectUserQueries = Integer.parseInt( cdl.get( "numberOfSelectUserQueries" ) );
+        numberOfSelectProfilePicQueries = Integer.parseInt( cdl.get( "numberOfSelectProfilePicQueries" ) );
+        numberOfSelectProfilePicsQueries = Integer.parseInt( cdl.get( "numberOfSelectProfilePicsQueries" ) );
+        numberOfSelectMediaQueries = Integer.parseInt( cdl.get( "numberOfSelectMediaQueries" ) );
+        numberOfSelectTimelineQueries = Integer.parseInt( cdl.get( "numberOfSelectTimelineQueries" ) );
+        numberOfDeleteTimelineQueries = Integer.parseInt( cdl.get( "numberOfDeleteTimelineQueries" ) );
+        numberOfInsertTimelineQueries = Integer.parseInt( cdl.get( "numberOfInsertTimelineQueries" ) );
 
         imgSize = Integer.parseInt( cdl.get( "imgSize" ) );
         numberOfFrames = Integer.parseInt( cdl.get( "numberOfFrames" ) );
