@@ -26,7 +26,11 @@
 package org.polypheny.simpleclient.executor;
 
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -34,6 +38,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -74,8 +79,9 @@ public abstract class JdbcExecutor implements Executor {
     @Override
     public long executeQuery( Query query ) throws ExecutorException {
         try {
-            log.debug( query.getSql() );
+            log.debug( query.getSql().substring( 0, Math.min( 500, query.getSql().length() ) ) );
 
+            ArrayList<File> files = new ArrayList<>();
             long start = System.nanoTime();
 
             if ( prepareStatements && query.getParameterizedSqlQuery() != null ) {
@@ -109,6 +115,11 @@ public abstract class JdbcExecutor implements Executor {
                         case BYTE_ARRAY:
                             preparedStatement.setBytes( entry.getKey(), (byte[]) entry.getValue().right );
                             break;
+                        case FILE:
+                            File f = (File) entry.getValue().right;
+                            files.add( f );
+                            preparedStatement.setBinaryStream( entry.getKey(), new FileInputStream( f ) );
+                            break;
                     }
                 }
                 if ( query.isExpectResultSet() ) {
@@ -131,11 +142,12 @@ public abstract class JdbcExecutor implements Executor {
             }
 
             long time = System.nanoTime() - start;
+            files.forEach( File::delete );
             if ( csvWriter != null ) {
                 csvWriter.appendToCsv( query.getSql(), time );
             }
             return time;
-        } catch ( SQLException e ) {
+        } catch ( SQLException | FileNotFoundException e ) {
             throw new ExecutorException( e );
         }
     }
@@ -144,7 +156,7 @@ public abstract class JdbcExecutor implements Executor {
     @Override
     public long executeQueryAndGetNumber( Query query ) throws ExecutorException {
         try {
-            log.debug( query.getSql() );
+            //log.debug( query.getSql() );
 
             ResultSet resultSet = executeStatement.executeQuery( query.getSql() );
 
@@ -216,6 +228,7 @@ public abstract class JdbcExecutor implements Executor {
     protected void executeInsertListAsPreparedBatch( List<BatchableInsert> queryList ) throws ExecutorException {
         try {
             PreparedStatement preparedStatement = connection.prepareStatement( queryList.get( 0 ).getParameterizedSqlQuery() );
+            ArrayList<File> files = new ArrayList<>();
             for ( BatchableInsert insert : queryList ) {
                 Map<Integer, ImmutablePair<DataTypes, Object>> data = insert.getParameterValues();
                 for ( Map.Entry<Integer, ImmutablePair<DataTypes, Object>> entry : data.entrySet() ) {
@@ -241,13 +254,21 @@ public abstract class JdbcExecutor implements Executor {
                         case BYTE_ARRAY:
                             preparedStatement.setBytes( entry.getKey(), (byte[]) entry.getValue().right );
                             break;
+                        case FILE:
+                            File f = (File) entry.getValue().right;
+                            byte[] b = Files.readAllBytes( f.toPath() );
+                            preparedStatement.setBytes( entry.getKey(), b );
+                            break;
                     }
                 }
                 preparedStatement.addBatch();
             }
             preparedStatement.executeBatch();
             preparedStatement.close();
-        } catch ( SQLException e ) {
+            files.forEach( File::delete );
+        } catch ( SQLException | FileNotFoundException e ) {
+            throw new ExecutorException( e );
+        } catch ( IOException e ) {
             throw new ExecutorException( e );
         }
     }

@@ -30,19 +30,20 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import kong.unirest.HttpRequest;
+import kong.unirest.Unirest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
 
-public class SelectRandomAlbum extends QueryBuilder {
+public class SelectRandomProfilePic extends QueryBuilder {
 
     private static final boolean EXPECT_RESULT = true;
 
     private final int numberOfUsers;
 
 
-    public SelectRandomAlbum( int numberOfUsers ) {
+    public SelectRandomProfilePic( int numberOfUsers ) {
         this.numberOfUsers = numberOfUsers;
     }
 
@@ -50,16 +51,16 @@ public class SelectRandomAlbum extends QueryBuilder {
     @Override
     public Query getNewQuery() {
         int userId = ThreadLocalRandom.current().nextInt( 1, numberOfUsers + 1 );
-        return new SelectRandomAlbumQuery( userId );
+        return new SelectRandomProfilePicQuery( userId );
     }
 
 
-    public static class SelectRandomAlbumQuery extends Query {
+    public static class SelectRandomProfilePicQuery extends Query {
 
         private final int userId;
 
 
-        public SelectRandomAlbumQuery( int userId ) {
+        public SelectRandomProfilePicQuery( int userId ) {
             super( EXPECT_RESULT );
             this.userId = userId;
         }
@@ -67,21 +68,13 @@ public class SelectRandomAlbum extends QueryBuilder {
 
         @Override
         public String getSql() {
-            return "SELECT album.name AS album_name, media.\"timestamp\", media.img, media.\"video\", media.\"sound\" "
-                    + "FROM public.media, public.album, public.\"users\" WHERE "
-                    + "media.album_id = album.id "
-                    + "AND album.user_id = \"users\".id "
-                    + "AND \"users\".id=" + userId;
+            return "SELECT profile_pic FROM \"users\" WHERE id=" + userId;
         }
 
 
         @Override
         public String getParameterizedSqlQuery() {
-            return "SELECT album.name AS album_name, media.\"timestamp\", media.img, media.\"video\", media.\"sound\" "
-                    + "FROM public.media, public.album, public.\"users\" WHERE "
-                    + "media.album_id = album.id "
-                    + "AND album.user_id = \"users\".id "
-                    + "AND \"users\".id=?";
+            return "SELECT profile_pic FROM \"users\" WHERE id=?";
         }
 
 
@@ -95,7 +88,9 @@ public class SelectRandomAlbum extends QueryBuilder {
 
         @Override
         public HttpRequest<?> getRest() {
-            return null;
+            return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.users" )
+                    .queryString( "public.users.id", "=" + userId )
+                    .queryString( "_project", "public.users.profile_pic" );
         }
 
     }

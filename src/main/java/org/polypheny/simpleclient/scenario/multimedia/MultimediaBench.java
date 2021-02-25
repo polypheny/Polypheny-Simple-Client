@@ -58,7 +58,9 @@ import org.polypheny.simpleclient.scenario.Scenario;
 import org.polypheny.simpleclient.scenario.multimedia.queryBuilder.CreateTable;
 import org.polypheny.simpleclient.scenario.multimedia.queryBuilder.DeleteRandomTimeline;
 import org.polypheny.simpleclient.scenario.multimedia.queryBuilder.InsertRandomTimeline;
-import org.polypheny.simpleclient.scenario.multimedia.queryBuilder.SelectRandomAlbum;
+import org.polypheny.simpleclient.scenario.multimedia.queryBuilder.SelectMediaWhereAlbum;
+import org.polypheny.simpleclient.scenario.multimedia.queryBuilder.SelectMultipleProfilePics;
+import org.polypheny.simpleclient.scenario.multimedia.queryBuilder.SelectRandomProfilePic;
 import org.polypheny.simpleclient.scenario.multimedia.queryBuilder.SelectRandomTimeline;
 import org.polypheny.simpleclient.scenario.multimedia.queryBuilder.SelectRandomUser;
 
@@ -74,7 +76,8 @@ public class MultimediaBench extends Scenario {
 
 
     public MultimediaBench( Executor.ExecutorFactory executorFactory, MultimediaConfig config, boolean commitAfterEveryQuery, boolean dumpQueryList ) {
-        super( executorFactory, commitAfterEveryQuery, dumpQueryList );
+        //never dump mm queries, because the dumps can get very large for large binary inserts
+        super( executorFactory, commitAfterEveryQuery, false );
         this.config = config;
 
         measuredTimes = Collections.synchronizedList( new LinkedList<>() );
@@ -121,23 +124,35 @@ public class MultimediaBench extends Scenario {
 
         try {
             executor = executorFactory.createExecutorInstance();
-            executor.executeQuery( (new CreateTable( "CREATE TABLE IF NOT EXISTS \"users\" (\"id\" INTEGER NOT NULL, \"firstName\" VARCHAR(1000) NOT NULL, \"lastName\" VARCHAR(1000) NOT NULL, \"email\" VARCHAR(1000) NOT NULL, \"password\" VARCHAR(1000) NOT NULL, \"profile_pic\" IMAGE NOT NULL, PRIMARY KEY(\"id\"))" )).getNewQuery() );
-            executor.executeQuery( (new CreateTable( "CREATE TABLE IF NOT EXISTS \"album\" (\"id\" INTEGER NOT NULL, \"user_id\" INTEGER NOT NULL, \"name\" VARCHAR(200) NOT NULL, PRIMARY KEY(\"id\"))" )).getNewQuery() );
-            executor.executeQuery( (new CreateTable( "CREATE TABLE IF NOT EXISTS \"media\" (\"id\" INTEGER NOT NULL, \"timestamp\" TIMESTAMP NOT NULL, \"album_id\" INTEGER NOT NULL, \"img\" IMAGE, \"video\" VIDEO, \"sound\" SOUND, PRIMARY KEY(\"id\"))" )).getNewQuery() );
-            executor.executeQuery( (new CreateTable( "CREATE TABLE IF NOT EXISTS \"timeline\" (\"id\" INTEGER NOT NULL, \"timestamp\" TIMESTAMP NOT NULL, \"user_id\" INTEGER NOT NULL, \"message\" VARCHAR(2000), \"img\" IMAGE, \"video\" VIDEO, \"sound\" SOUND, PRIMARY KEY(\"id\"))" )).getNewQuery() );
-            executor.executeQuery( (new CreateTable( "CREATE TABLE IF NOT EXISTS \"followers\" (\"user_id\" INTEGER NOT NULL,\"friend_id\" INTEGER NOT NULL, PRIMARY KEY(\"user_id\", \"friend_id\"))" )).getNewQuery() );
+            String onStore = String.format( " ON STORE \"%s\"", config.dataStore );
+            executor.executeQuery( (new CreateTable( "ALTER CONFIG 'validation/validateMultimediaContentType' SET FALSE" )).getNewQuery() );
+            executor.executeQuery( (new CreateTable( "CREATE TABLE IF NOT EXISTS \"users\" (\"id\" INTEGER NOT NULL, \"firstName\" VARCHAR(1000) NOT NULL, \"lastName\" VARCHAR(1000) NOT NULL, \"email\" VARCHAR(1000) NOT NULL, \"password\" VARCHAR(1000) NOT NULL, \"profile_pic\" IMAGE NOT NULL, PRIMARY KEY(\"id\"))" + onStore )).getNewQuery() );
+            executor.executeQuery( (new CreateTable( "CREATE TABLE IF NOT EXISTS \"album\" (\"id\" INTEGER NOT NULL, \"user_id\" INTEGER NOT NULL, \"name\" VARCHAR(200) NOT NULL, PRIMARY KEY(\"id\"))" + onStore )).getNewQuery() );
+            executor.executeQuery( (new CreateTable( "CREATE TABLE IF NOT EXISTS \"media\" (\"id\" INTEGER NOT NULL, \"timestamp\" TIMESTAMP NOT NULL, \"album_id\" INTEGER NOT NULL, \"img\" IMAGE, \"video\" VIDEO, \"sound\" SOUND, PRIMARY KEY(\"id\"))" + onStore )).getNewQuery() );
+            executor.executeQuery( (new CreateTable( "CREATE TABLE IF NOT EXISTS \"timeline\" (\"id\" INTEGER NOT NULL, \"timestamp\" TIMESTAMP NOT NULL, \"user_id\" INTEGER NOT NULL, \"message\" VARCHAR(2000), \"img\" IMAGE, \"video\" VIDEO, \"sound\" SOUND, PRIMARY KEY(\"id\"))" + onStore )).getNewQuery() );
+            executor.executeQuery( (new CreateTable( "CREATE TABLE IF NOT EXISTS \"followers\" (\"user_id\" INTEGER NOT NULL,\"friend_id\" INTEGER NOT NULL, PRIMARY KEY(\"user_id\", \"friend_id\"))" + onStore )).getNewQuery() );
             executor.executeQuery( (new CreateTable( "TRUNCATE TABLE \"users\"" )).getNewQuery() );
             executor.executeQuery( (new CreateTable( "TRUNCATE TABLE \"album\"" )).getNewQuery() );
             executor.executeQuery( (new CreateTable( "TRUNCATE TABLE \"media\"" )).getNewQuery() );
             executor.executeQuery( (new CreateTable( "TRUNCATE TABLE \"timeline\"" )).getNewQuery() );
             executor.executeQuery( (new CreateTable( "TRUNCATE TABLE \"followers\"" )).getNewQuery() );
 
+            if ( !config.multimediaStore.equals( "same" ) && !config.dataStore.equals( config.multimediaStore ) ) {
+                executor.executeQuery( (new CreateTable( "ALTER TABLE public.\"users\" ADD PLACEMENT (\"profile_pic\") ON STORE \"" + config.multimediaStore + "\"" )).getNewQuery() );
+                executor.executeQuery( (new CreateTable( "ALTER TABLE public.\"media\" ADD PLACEMENT (\"img\", \"video\", \"sound\") ON STORE \"" + config.multimediaStore + "\"" )).getNewQuery() );
+                executor.executeQuery( (new CreateTable( "ALTER TABLE public.\"timeline\" ADD PLACEMENT (\"img\", \"video\", \"sound\") ON STORE \"" + config.multimediaStore + "\"" )).getNewQuery() );
+
+                executor.executeQuery( (new CreateTable( "ALTER TABLE public.\"users\" MODIFY PLACEMENT (\"id\", \"firstName\", \"lastName\", \"email\", \"password\") ON STORE \"" + config.dataStore + "\"" )).getNewQuery() );
+                executor.executeQuery( (new CreateTable( "ALTER TABLE public.\"media\" MODIFY PLACEMENT (\"id\", \"timestamp\", \"album_id\") ON STORE \"" + config.dataStore + "\"" )).getNewQuery() );
+                executor.executeQuery( (new CreateTable( "ALTER TABLE public.\"timeline\" MODIFY PLACEMENT (\"id\", \"timestamp\", \"user_id\", \"message\") ON STORE \"" + config.dataStore + "\"" )).getNewQuery() );
+            }
+
             if ( includingKeys ) {
-                executor.executeQuery( (new CreateTable( "ALTER TABLE public.\"album\" ADD CONSTRAINT \"fk1\" FOREIGN KEY(\"user_id\") REFERENCES \"users\"(\"id\") ON UPDATE CASCADE ON DELETE CASCADE" )).getNewQuery() );
-                executor.executeQuery( (new CreateTable( "ALTER TABLE public.\"media\" ADD CONSTRAINT \"fk2\" FOREIGN KEY(\"album_id\") REFERENCES \"album\"(\"id\") ON UPDATE CASCADE ON DELETE CASCADE" )).getNewQuery() );
-                executor.executeQuery( (new CreateTable( "ALTER TABLE public.\"timeline\" ADD CONSTRAINT \"fk3\" FOREIGN KEY(\"user_id\") REFERENCES \"users\"(\"id\") ON UPDATE CASCADE ON DELETE CASCADE" )).getNewQuery() );
-                executor.executeQuery( (new CreateTable( "ALTER TABLE public.\"followers\" ADD CONSTRAINT \"fk4\" FOREIGN KEY(\"user_id\") REFERENCES \"users\"(\"id\") ON UPDATE CASCADE ON DELETE CASCADE" )).getNewQuery() );
-                executor.executeQuery( (new CreateTable( "ALTER TABLE public.\"followers\" ADD CONSTRAINT \"fk5\" FOREIGN KEY(\"friend_id\") REFERENCES \"users\"(\"id\") ON UPDATE CASCADE ON DELETE CASCADE" )).getNewQuery() );
+                executor.executeQuery( (new CreateTable( "ALTER TABLE public.\"album\" ADD CONSTRAINT \"fk1\" FOREIGN KEY(\"user_id\") REFERENCES \"users\"(\"id\") ON UPDATE RESTRICT ON DELETE RESTRICT" )).getNewQuery() );
+                executor.executeQuery( (new CreateTable( "ALTER TABLE public.\"media\" ADD CONSTRAINT \"fk2\" FOREIGN KEY(\"album_id\") REFERENCES \"album\"(\"id\") ON UPDATE RESTRICT ON DELETE RESTRICT" )).getNewQuery() );
+                executor.executeQuery( (new CreateTable( "ALTER TABLE public.\"timeline\" ADD CONSTRAINT \"fk3\" FOREIGN KEY(\"user_id\") REFERENCES \"users\"(\"id\") ON UPDATE RESTRICT ON DELETE RESTRICT" )).getNewQuery() );
+                executor.executeQuery( (new CreateTable( "ALTER TABLE public.\"followers\" ADD CONSTRAINT \"fk4\" FOREIGN KEY(\"user_id\") REFERENCES \"users\"(\"id\") ON UPDATE RESTRICT ON DELETE RESTRICT" )).getNewQuery() );
+                executor.executeQuery( (new CreateTable( "ALTER TABLE public.\"followers\" ADD CONSTRAINT \"fk5\" FOREIGN KEY(\"friend_id\") REFERENCES \"users\"(\"id\") ON UPDATE RESTRICT ON DELETE RESTRICT" )).getNewQuery() );
             }
         } catch ( ExecutorException e ) {
             throw new RuntimeException( "Exception while creating schema", e );
@@ -154,7 +169,13 @@ public class MultimediaBench extends Scenario {
         DataGenerator dataGenerator = new DataGenerator( executor1, config, progressReporter );
 
         try {
-            dataGenerator.generateUsers();
+            Map<String, List<Long>> executionTimes = dataGenerator.generateUsers();
+            executionTimes.forEach( ( s, l ) -> {
+                measuredTimes.addAll( l );
+                int id = queryTypes.size() + 1;
+                queryTypes.put( id, s );
+                measuredTimePerQueryType.put( id, l );
+            } );
         } catch ( ExecutorException e ) {
             throw new RuntimeException( "Exception while generating data", e );
         } finally {
@@ -168,15 +189,18 @@ public class MultimediaBench extends Scenario {
 
         log.info( "Preparing query list for the benchmark..." );
         List<QueryListEntry> queryList = new Vector<>();
-        addNumberOfTimes( queryList, new SelectRandomUser( config.numberOfUsers ), config.read );
-        addNumberOfTimes( queryList, new SelectRandomAlbum( config.numberOfUsers ), config.read );
-        addNumberOfTimes( queryList, new SelectRandomTimeline( config.numberOfUsers ), config.read );
-        addNumberOfTimes( queryList, new DeleteRandomTimeline( config.numberOfUsers * config.postsPerUser ), config.write );
-        addNumberOfTimes( queryList, new InsertRandomTimeline( config.numberOfUsers, config.imgSize, config.numberOfFrames, config.fileSizeKB ), config.write );
+        addNumberOfTimes( queryList, new SelectRandomUser( config.numberOfUsers ), config.numberOfSelectUserQueries );
+        addNumberOfTimes( queryList, new SelectRandomProfilePic( config.numberOfUsers ), config.numberOfSelectProfilePicQueries );
+        addNumberOfTimes( queryList, new SelectMultipleProfilePics( config.numberOfUsers ), config.numberOfSelectProfilePicsQueries );
+        addNumberOfTimes( queryList, new SelectMediaWhereAlbum( config.numberOfUsers ), config.numberOfSelectMediaQueries );//numberOfAlbums = numberOfUsers (1 album per user)
+        addNumberOfTimes( queryList, new SelectRandomTimeline( config.numberOfUsers * config.postsPerUser ), config.numberOfSelectTimelineQueries );
+        addNumberOfTimes( queryList, new DeleteRandomTimeline( config.numberOfUsers * config.postsPerUser ), config.numberOfDeleteTimelineQueries );
+        addNumberOfTimes( queryList, new InsertRandomTimeline( config.numberOfUsers, config.postsPerUser, config.imgSize, config.numberOfFrames, config.fileSizeKB, false ), config.numberOfInsertTimelineQueries );
 
         Collections.shuffle( queryList );
 
         // This dumps the sql queries independent of the selected interface
+        // always false for the MultimediaBench
         if ( outputDirectory != null && dumpQueryList ) {
             log.info( "Dump query list..." );
             try {
@@ -244,10 +268,12 @@ public class MultimediaBench extends Scenario {
                 executor = executorFactory.createExecutorInstance();
                 if ( config.numberOfUsers > 0 ) {
                     executor.executeQuery( new SelectRandomUser( config.numberOfUsers ).getNewQuery() );
-                    executor.executeQuery( new SelectRandomAlbum( config.numberOfUsers ).getNewQuery() );
-                    executor.executeQuery( new SelectRandomTimeline( config.numberOfUsers ).getNewQuery() );
+                    executor.executeQuery( new SelectRandomProfilePic( config.numberOfUsers ).getNewQuery() );
+                    executor.executeQuery( new SelectMultipleProfilePics( config.numberOfUsers ).getNewQuery() );
+                    executor.executeQuery( new SelectMediaWhereAlbum( config.numberOfUsers ).getNewQuery() );//numberOfAlbums = numberOfUsers (1 album per user)
+                    executor.executeQuery( new SelectRandomTimeline( config.numberOfUsers * config.postsPerUser ).getNewQuery() );
                     executor.executeQuery( new DeleteRandomTimeline( config.numberOfUsers * config.postsPerUser ).getNewQuery() );
-                    executor.executeQuery( new InsertRandomTimeline( config.numberOfUsers, config.imgSize, config.numberOfFrames, config.fileSizeKB ).getNewQuery() );
+                    executor.executeQuery( new InsertRandomTimeline( config.numberOfUsers, config.postsPerUser, config.imgSize, config.numberOfFrames, config.fileSizeKB, true ).getNewQuery() );
                 }
             } catch ( ExecutorException e ) {
                 throw new RuntimeException( "Error while executing warm-up queries", e );
@@ -406,7 +432,9 @@ public class MultimediaBench extends Scenario {
 
     private void addNumberOfTimes( List<QueryListEntry> list, QueryBuilder queryBuilder, int numberOfTimes ) {
         int id = queryTypes.size() + 1;
-        queryTypes.put( id, queryBuilder.getNewQuery().getSql() );
+        String sql = queryBuilder.getNewQuery().getSql();
+        //cut long queries with binary data
+        queryTypes.put( id, sql.substring( 0, Math.min( 500, sql.length() ) ) );
         measuredTimePerQueryType.put( id, Collections.synchronizedList( new LinkedList<>() ) );
         for ( int i = 0; i < numberOfTimes; i++ ) {
             list.add( new QueryListEntry( queryBuilder.getNewQuery(), id ) );

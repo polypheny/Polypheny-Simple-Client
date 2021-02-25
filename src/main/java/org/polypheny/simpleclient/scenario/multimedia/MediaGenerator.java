@@ -101,7 +101,7 @@ public final class MediaGenerator {
         File out = randomFile( "wav" );
         //see https://www.programcreek.com/java-api-examples/?class=javax.sound.sampled.AudioSystem&method=write
         AudioFormat format = new AudioFormat( PCM_SIGNED, 44100, 8, 1, 1, 44100, false );
-        AudioInputStream ais = new AudioInputStream( new RandomInputStream( sizeKB * 1000 ), format, sizeKB * 1000 );
+        AudioInputStream ais = new AudioInputStream( new RandomInputStream( sizeKB * 1000 ), format, sizeKB * 1000L );
         try {
             FileUtils.copyInputStreamToFile( ais, out );
         } catch ( IOException e ) {

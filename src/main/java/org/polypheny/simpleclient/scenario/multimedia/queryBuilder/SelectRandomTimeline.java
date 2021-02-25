@@ -28,8 +28,10 @@ package org.polypheny.simpleclient.scenario.multimedia.queryBuilder;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.StringJoiner;
 import java.util.concurrent.ThreadLocalRandom;
 import kong.unirest.HttpRequest;
+import kong.unirest.Unirest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
@@ -39,72 +41,63 @@ public class SelectRandomTimeline extends QueryBuilder {
 
     private static final boolean EXPECT_RESULT = true;
 
-    private final int numberOfUsers;
+    private final int numberOfTimelineEntries;
 
 
-    public SelectRandomTimeline( int numberOfUsers ) {
-        this.numberOfUsers = numberOfUsers;
+    public SelectRandomTimeline( int numberOfTimelineEntries ) {
+        this.numberOfTimelineEntries = numberOfTimelineEntries;
     }
 
 
     @Override
     public Query getNewQuery() {
-        int userId = ThreadLocalRandom.current().nextInt( 1, numberOfUsers + 1 );
-        return new SelectRandomTimelineQuery( userId );
+        int id = ThreadLocalRandom.current().nextInt( 1, numberOfTimelineEntries + 1 );
+        return new SelectTimelineWhereUserQuery( id );
     }
 
 
-    public static class SelectRandomTimelineQuery extends Query {
+    public static class SelectTimelineWhereUserQuery extends Query {
 
-        private final int userId;
+        private final int id;
 
 
-        public SelectRandomTimelineQuery( int userId ) {
+        public SelectTimelineWhereUserQuery( int id ) {
             super( EXPECT_RESULT );
-            this.userId = userId;
+            this.id = id;
         }
 
 
         @Override
         public String getSql() {
-            //TODO LIMIT
-            return "SELECT friend.firstname, friend.profile_pic, timeline.message, timeline.img, timeline.\"video\", timeline.\"sound\" "
-                    + "FROM public.timeline, "
-                    + "public.\"users\" usr, "
-                    + "public.\"users\" friend, "
-                    + "public.followers "
-                    + "WHERE usr.id = followers.\"user_id\" "
-                    + "AND friend.id = followers.friend_id "
-                    + "AND timeline.user_id = friend.id "
-                    + "AND usr.id=" + userId;
+            return "SELECT \"message\", \"img\", \"video\", \"sound\" FROM \"timeline\" WHERE \"id\" = " + id;
         }
 
 
         @Override
         public String getParameterizedSqlQuery() {
-            return "SELECT friend.firstname, friend.profile_pic, timeline.message, timeline.img, timeline.\"video\", timeline.\"sound\" "
-                    + "FROM public.timeline, "
-                    + "public.\"users\" usr, "
-                    + "public.\"users\" friend, "
-                    + "public.followers "
-                    + "WHERE usr.id = followers.\"user_id\" "
-                    + "AND friend.id = followers.friend_id "
-                    + "AND timeline.user_id = friend.id "
-                    + "AND usr.id=?";
+            return "SELECT \"message\", \"img\", \"video\", \"sound\" FROM \"timeline\" WHERE \"id\" = ?";
         }
 
 
         @Override
         public Map<Integer, ImmutablePair<DataTypes, Object>> getParameterValues() {
             Map<Integer, ImmutablePair<DataTypes, Object>> map = new HashMap<>();
-            map.put( 1, new ImmutablePair<>( DataTypes.INTEGER, userId ) );
+            map.put( 1, new ImmutablePair<>( DataTypes.INTEGER, id ) );
             return map;
         }
 
 
         @Override
         public HttpRequest<?> getRest() {
-            return null;
+            String table = "public.timeline.";
+            StringJoiner joiner = new StringJoiner( "," );
+            joiner.add( table + "message" );
+            joiner.add( table + "img" );
+            joiner.add( table + "video" );
+            joiner.add( table + "sound" );
+            return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.timeline" )
+                    .queryString( "public.timeline.id", "=" + id )
+                    .queryString( "_project", joiner.toString() );
         }
 
     }

@@ -26,9 +26,12 @@
 package org.polypheny.simpleclient.scenario.multimedia;
 
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.executor.Executor;
@@ -52,6 +55,7 @@ public class DataGenerator {
     private final ProgressReporter progressReporter;
 
     private final List<BatchableInsert> batchList;
+    Map<String, List<Long>> queryTimes = new HashMap<>();
 
     private boolean aborted;
 
@@ -66,7 +70,7 @@ public class DataGenerator {
     }
 
 
-    void generateUsers() throws ExecutorException {
+    Map<String, List<Long>> generateUsers() throws ExecutorException {
         int numberOfUsers = config.numberOfUsers;
         int mod = numberOfUsers / progressReporter.base;
         InsertUser insertUser = new InsertUser( config.imgSize );
@@ -116,6 +120,7 @@ public class DataGenerator {
             }
             executeInsertList();
         }
+        return queryTimes;
     }
 
 
@@ -128,8 +133,28 @@ public class DataGenerator {
 
 
     private void executeInsertList() throws ExecutorException {
+        if ( batchList.size() == 0 ) {
+            return;
+        }
+        long startTime = System.nanoTime();
         theExecutor.executeInsertList( batchList, config );
         theExecutor.executeCommit();
+        long executionTime = System.nanoTime() - startTime;
+        ArrayList<Long> executionTimes = new ArrayList<>();
+        //add execution n times to get the right average later on
+        for ( int i = 0; i < batchList.size(); i++ ) {
+            executionTimes.add( executionTime );
+        }
+        //the batchList contains only queries of one type
+        String sql = batchList.get( 0 ).getParameterizedSqlQuery();
+        if ( sql == null ) {
+            sql = batchList.get( 0 ).getSql();
+            sql = sql.substring( 0, Math.min( 500, sql.length() ) );
+        }
+        if ( !queryTimes.containsKey( sql ) ) {
+            queryTimes.put( batchList.get( 0 ).getParameterizedSqlQuery(), new ArrayList<>() );
+        }
+        queryTimes.get( batchList.get( 0 ).getParameterizedSqlQuery() ).addAll( executionTimes );
         batchList.clear();
     }
 
