@@ -5,7 +5,7 @@ This client contains a [Chronos](https://github.com/chronos-eaas) connector. Thi
 
 
 ## Roadmap
-See the [open issues](https://github.com/polypheny/Polypheny-Simple-Client/issues) for a list of proposed features (and known issues).
+See the [open issues](https://github.com/polypheny/Polypheny-DB/labels/A-client) for a list of proposed features (and known issues).
 
 
 ## Contributing
