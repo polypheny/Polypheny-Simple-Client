@@ -41,6 +41,9 @@ import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.apache.commons.lang3.tuple.Triple;
+import org.polypheny.control.client.ClientType;
+import org.polypheny.control.client.LogHandler;
+import org.polypheny.control.client.PolyphenyControlConnector;
 import org.polypheny.simpleclient.cli.ChronosCommand;
 import org.polypheny.simpleclient.executor.CottontaildbExecutor.CottontailExecutorFactory;
 import org.polypheny.simpleclient.executor.CottontaildbExecutor.CottontailInstance;
@@ -61,6 +64,8 @@ import org.polypheny.simpleclient.scenario.knnbench.KnnBench;
 import org.polypheny.simpleclient.scenario.knnbench.KnnBenchConfig;
 import org.polypheny.simpleclient.scenario.multimedia.MultimediaBench;
 import org.polypheny.simpleclient.scenario.multimedia.MultimediaConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 @Slf4j
@@ -83,7 +88,41 @@ public class ChronosAgent extends AbstractChronosAgent {
         this.dumpQueryList = dumpQueryList;
         this.supports = supports;
         try {
-            polyphenyControlConnector = new PolyphenyControlConnector( ChronosCommand.hostname + ":8070" );
+            LogHandler logHandler = new LogHandler() {
+                private final Logger CONTROL_MESSAGES_LOGGER = LoggerFactory.getLogger( "CONTROL_MESSAGES_LOGGER" );
+
+
+                @Override
+                public void handleLogMessage( String message ) {
+                    CONTROL_MESSAGES_LOGGER.info( message );
+                }
+
+
+                @Override
+                public void handleStartupMessage( String message ) {
+                    CONTROL_MESSAGES_LOGGER.info( message );
+                }
+
+
+                @Override
+                public void handleShutdownMessage( String message ) {
+                    CONTROL_MESSAGES_LOGGER.info( message );
+                }
+
+
+                @Override
+                public void handleRestartMessage( String message ) {
+                    CONTROL_MESSAGES_LOGGER.info( message );
+                }
+
+
+                @Override
+                public void handleUpdateMessage( String message ) {
+                    CONTROL_MESSAGES_LOGGER.info( message );
+                }
+
+            };
+            polyphenyControlConnector = new PolyphenyControlConnector( ChronosCommand.hostname + ":8070", ClientType.BENCHMARKER, logHandler );
         } catch ( URISyntaxException e ) {
             log.error( "Exception while connecting to Polypheny Control", e );
         }
