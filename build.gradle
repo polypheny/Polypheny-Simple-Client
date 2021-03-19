@@ -65,12 +65,17 @@ dependencies {
     implementation group: "commons-io", name: "commons-io", version: '2.6'  // Apache 2.0
 
     // Polypheny Control Connector
-    implementation (group: 'org.polypheny', name: 'polypheny-control', version: '1.2') { // License: Apache 2.0
+    implementation (group: 'org.polypheny', name: 'polypheny-control', version: '1.2.1') { // License: Apache 2.0
         exclude group: 'org.gradle', module: 'gradle-tooling-api'
+        exclude group: 'com.github.rvesse', module: 'airline'
+        exclude group: 'io.javalin', module: 'javalin'
     }
 
     // Chronos
     implementation group: 'ch.unibas.dmi.dbis.chronos', name: 'chronos-agent', version: '2.3.2' // License: MIT
+
+    // REST
+    implementation group: 'com.konghq', name: 'unirest-java', version: '3.7.02' // License: MIT
 
     // JDBC Drivers
     implementation group: 'org.polypheny', name: 'polypheny-jdbc-driver', version: '1.4' // License: Apache 2.0
@@ -79,7 +84,7 @@ dependencies {
 
     // Cottontail-DB
     implementation group: 'org.slf4j', name: 'log4j-over-slf4j', version: '1.7.30'
-    implementation (group: 'org.vitrivr', name: 'cottontaildb', version: '0.10') {
+    implementation (group: 'org.vitrivr', name: 'cottontaildb', version: '0.10.5') { // License: MIT
         exclude group: 'org.apache.logging.log4j'
         exclude group: 'org.slf4j'
     }
@@ -101,8 +106,8 @@ dependencies {
 
     // LOGGING
     implementation group: 'org.slf4j', name: 'slf4j-api', version: '1.7.30' // License: MIT
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.13.1' // License: Apache 2.0
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.13.1' // License: Apache 2.0
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.13.3' // License: Apache 2.0
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.13.3' // License: Apache 2.0
 
     // Testing
     testImplementation group: 'junit', name: 'junit', version: '4.13'

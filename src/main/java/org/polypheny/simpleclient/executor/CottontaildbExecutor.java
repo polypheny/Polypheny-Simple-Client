@@ -7,7 +7,6 @@ import io.grpc.StatusRuntimeException;
 import io.grpc.netty.NettyChannelBuilder;
 import io.grpc.stub.StreamObserver;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -23,6 +22,10 @@ import org.polypheny.simpleclient.query.CottontailQuery.QueryType;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.scenario.AbstractConfig;
 import org.vitrivr.cottontail.CottontailKt;
+import org.vitrivr.cottontail.config.Config;
+import org.vitrivr.cottontail.config.ExecutionConfig;
+import org.vitrivr.cottontail.config.MapDBConfig;
+import org.vitrivr.cottontail.config.ServerConfig;
 import org.vitrivr.cottontail.grpc.CottonDDLGrpc;
 import org.vitrivr.cottontail.grpc.CottonDDLGrpc.CottonDDLBlockingStub;
 import org.vitrivr.cottontail.grpc.CottonDDLGrpc.CottonDDLFutureStub;
@@ -386,25 +389,15 @@ public class CottontaildbExecutor implements Executor {
                 }
             }
 
-            File configFile = new File( folder, "config.json" );
-            if ( !configFile.exists() ) {
-                try {
-                    configFile.createNewFile();
-                    File dataFolder = new File( folder, "data" );
-                    FileWriter fileWriter = new FileWriter( configFile );
-                    fileWriter.write( "{" );
-                    fileWriter.write( "\"root\": \"" + dataFolder.getAbsolutePath() + "\"," );
-                    fileWriter.write( "\"mapdb\": {" );
-                    fileWriter.write( "\"enableMmap\": true," );
-                    fileWriter.write( "\"forceUnmap\": true," );
-                    fileWriter.write( "\"pageShift\": 22" );
-                    fileWriter.write( "} }" );
-                    fileWriter.close();
-                } catch ( IOException e ) {
-                    throw new RuntimeException( e );
-                }
-            }
-            this.embeddedServer = CottontailKt.embedded( configFile.getAbsolutePath() );
+            File dataFolder = new File( folder, "data" );
+            Config config = new Config(
+                    dataFolder.toPath(),
+                    false,
+                    new ServerConfig(),
+                    new MapDBConfig(),
+                    new ExecutionConfig()
+            );
+            this.embeddedServer = CottontailKt.embedded( config );
         }
 
 
