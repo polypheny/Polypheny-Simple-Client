@@ -83,7 +83,7 @@ dependencies {
     implementation group: 'monetdb', name: 'monetdb-jdbc', version: '2.29' // License: Mozilla Public License 2.0
 
     // Cottontail-DB
-    implementation group: 'org.slf4j', name: 'log4j-over-slf4j', version: '1.7.30'
+    implementation group: 'org.slf4j', name: 'log4j-over-slf4j', version: '1.7.30' // License: MIT
     implementation (group: 'org.vitrivr', name: 'cottontaildb', version: '0.10.5') { // License: MIT
         exclude group: 'org.apache.logging.log4j'
         exclude group: 'org.slf4j'
@@ -96,10 +96,8 @@ dependencies {
     implementation group: 'com.devskiller', name: 'jfairy', version: '0.6.4' // License: Apache 2.0
 
     // Video processing
-    implementation group: 'io.humble', name: 'humble-video-noarch', version: '0.3.0'
-    implementation group: 'io.humble', name: 'humble-video-arch-x86_64-apple-darwin18', version: '0.3.0'
-    implementation group: 'io.humble', name: 'humble-video-arch-x86_64-w64-mingw32', version: '0.3.0'
-    implementation group: 'io.humble', name: 'humble-video-arch-x86_64-pc-linux-gnu6', version: '0.3.0'
+    implementation group: 'org.jcodec', name: 'jcodec', version: '0.2.5' // License: BSD-2-Clause License
+    implementation group: 'org.jcodec', name: 'jcodec-javase', version: '0.2.5' // License: BSD-2-Clause License
 
     // CSV
     implementation group: 'com.opencsv', name: 'opencsv', version: '5.0' // License: Apache 2.0

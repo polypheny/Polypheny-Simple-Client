@@ -28,11 +28,8 @@ package org.polypheny.simpleclient.scenario.multimedia;
 
 import com.google.common.base.Joiner;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -45,8 +42,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.SystemUtils;
 import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.executor.ExecutorException;
 import org.polypheny.simpleclient.main.ChronosAgent;
@@ -86,34 +81,6 @@ public class MultimediaBench extends Scenario {
 
         //make sure the tmp folder exists
         new File( System.getProperty( "user.home" ), ".polypheny/tmp/" ).mkdirs();
-
-        loadHumbleLibrary();
-    }
-
-
-    private void loadHumbleLibrary() {
-        final String libraryName;
-        if ( SystemUtils.IS_OS_WINDOWS ) {
-            libraryName = "libhumblevideo-0.dll";
-        } else if ( SystemUtils.IS_OS_LINUX ) {
-            libraryName = "libhumblevideo.so";
-        } else if ( SystemUtils.IS_OS_MAC ) {
-            libraryName = "libhumblevideo.dylib";
-        } else {
-            throw new RuntimeException( "Unexpected system" );
-        }
-        File out = new File( libraryName );
-        if ( !out.exists() ) {
-            try (
-                    InputStream is = getClass().getResourceAsStream( "/" + libraryName );
-                    OutputStream os = new FileOutputStream( out )
-            ) {
-                IOUtils.copy( is, os );
-            } catch ( IOException e ) {
-                log.error( "Caught exception while loading humble video lib", e );
-            }
-        }
-        System.load( out.getAbsolutePath() );
     }
 
 

@@ -28,16 +28,6 @@ package org.polypheny.simpleclient.scenario.multimedia;
 
 import static javax.sound.sampled.AudioFormat.Encoding.PCM_SIGNED;
 
-import io.humble.video.Codec;
-import io.humble.video.Encoder;
-import io.humble.video.MediaPacket;
-import io.humble.video.MediaPicture;
-import io.humble.video.Muxer;
-import io.humble.video.MuxerFormat;
-import io.humble.video.PixelFormat;
-import io.humble.video.Rational;
-import io.humble.video.awt.MediaPictureConverter;
-import io.humble.video.awt.MediaPictureConverterFactory;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -53,6 +43,10 @@ import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
+import org.jcodec.api.awt.AWTSequenceEncoder;
+import org.jcodec.common.io.NIOUtils;
+import org.jcodec.common.io.SeekableByteChannel;
+import org.jcodec.common.model.Rational;
 
 @Slf4j
 public final class MediaGenerator {
@@ -134,63 +128,21 @@ public final class MediaGenerator {
 
 
     public static synchronized File generateRandomVideoFile( int numberOfFrames, int width, int height ) {
-        //see https://github.com/artclarke/humble-video/blob/master/humble-video-demos/src/main/java/io/humble/video/demos/RecordAndEncodeVideo.java
-
-        File out = randomFile( "avi" );
-        final Muxer muxer = Muxer.make( out.getAbsolutePath(), null, "avi" );
-        final MuxerFormat format = muxer.getFormat();
-        final Codec codec = Codec.findEncodingCodec( format.getDefaultVideoCodecId() );
-        Encoder encoder = Encoder.make( codec );
-        encoder.setWidth( width );
-        encoder.setHeight( height );
-        // We are going to use 420P as the format because that's what most video formats these days use
-        final PixelFormat.Type pixelformat = PixelFormat.Type.PIX_FMT_YUV420P;
-        encoder.setPixelFormat( pixelformat );
-        final Rational framerate = Rational.make( 1, 2 );//den: frames per second
-        encoder.setTimeBase( framerate );
-        if ( format.getFlag( MuxerFormat.Flag.GLOBAL_HEADER ) ) {
-            encoder.setFlag( Encoder.Flag.FLAG_GLOBAL_HEADER, true );
-        }
-        encoder.open( null, null );
-        muxer.addNewStream( encoder );
+        File out = randomFile( "mp4" );
+        SeekableByteChannel sink = null;
         try {
-            muxer.open( null, null );
-        } catch ( InterruptedException | IOException e ) {
-            log.error( "Exception while generating random vido", e );
-        }
-
-        MediaPictureConverter converter = null;
-        final MediaPicture picture = MediaPicture.make(
-                encoder.getWidth(),
-                encoder.getHeight(),
-                pixelformat );
-        picture.setTimeBase( framerate );
-
-        final MediaPacket packet = MediaPacket.make();
-        for ( int i = 0; i < numberOfFrames; i++ ) {
-            BufferedImage img = convertToType( generateRandomBufferedImg( height, width ), BufferedImage.TYPE_3BYTE_BGR );
-            // This is LIKELY not in YUV420P format, so we're going to convert it using some handy utilities.
-            if ( converter == null ) {
-                converter = MediaPictureConverterFactory.createConverter( img, picture );
+            sink = NIOUtils.writableFileChannel( out.getAbsolutePath() );
+            AWTSequenceEncoder encoder = new AWTSequenceEncoder( sink, Rational.R( 25, 1 ) );
+            for ( int i = 0; i < numberOfFrames; i++ ) {
+                BufferedImage img = convertToType( generateRandomBufferedImg( height, width ), BufferedImage.TYPE_3BYTE_BGR );
+                encoder.encodeImage( img );
             }
-            converter.toPicture( picture, img, i );
-
-            do {
-                encoder.encode( packet, picture );
-                if ( packet.isComplete() ) {
-                    muxer.write( packet, false );
-                }
-            } while ( packet.isComplete() );
+            encoder.finish();
+        } catch ( IOException e ) {
+            log.error( "Exception while generating random video file", e );
+        } finally {
+            NIOUtils.closeQuietly( sink );
         }
-
-        do {
-            encoder.encode( packet, null );
-            if ( packet.isComplete() ) {
-                muxer.write( packet, false );
-            }
-        } while ( packet.isComplete() );
-
-        muxer.close();
         return out;
     }
 
@@ -204,8 +156,7 @@ public final class MediaGenerator {
         }
         // otherwise create a new image of the target type and draw the new image
         else {
-            image = new BufferedImage( sourceImage.getWidth(),
-                    sourceImage.getHeight(), targetType );
+            image = new BufferedImage( sourceImage.getWidth(), sourceImage.getHeight(), targetType );
             image.getGraphics().drawImage( sourceImage, 0, 0, null );
         }
         return image;
