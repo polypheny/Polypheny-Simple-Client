@@ -14,6 +14,7 @@ public abstract class AbstractConfig {
 
     public String pdbBranch;
     public String puiBranch;
+    public boolean buildUi;
     public boolean memoryCatalog;
     public boolean resetCatalog;
 

@@ -65,7 +65,7 @@ dependencies {
     implementation group: "commons-io", name: "commons-io", version: '2.6'  // Apache 2.0
 
     // Polypheny Control Connector
-    implementation (group: 'org.polypheny', name: 'polypheny-control', version: '1.2.1') { // License: Apache 2.0
+    implementation (group: 'org.polypheny', name: 'polypheny-control', version: '1.2.2') { // License: Apache 2.0
         exclude group: 'org.gradle', module: 'gradle-tooling-api'
         exclude group: 'com.github.rvesse', module: 'airline'
         exclude group: 'io.javalin', module: 'javalin'

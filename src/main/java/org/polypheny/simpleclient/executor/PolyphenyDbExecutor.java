@@ -90,7 +90,11 @@ public interface PolyphenyDbExecutor extends Executor {
             conf.put( "pcrtl.pdbms.branch", config.pdbBranch.trim() );
             conf.put( "pcrtl.ui.branch", config.puiBranch.trim() );
             conf.put( "pcrtl.java.heap", "10" );
-            conf.put( "pcrtl.buildmode", "both" );
+            if ( config.buildUi ) {
+                conf.put( "pcrtl.buildmode", "both" );
+            } else {
+                conf.put( "pcrtl.buildmode", "pdb" );
+            }
             conf.put( "pcrtl.clean.mode", "branchChange" );
             String args = "";
             if ( config.resetCatalog ) {

@@ -78,6 +78,7 @@ public class GavelConfig extends AbstractConfig {
 
         pdbBranch = null;
         puiBranch = null;
+        buildUi = false;
         resetCatalog = false;
         memoryCatalog = false;
 
@@ -133,6 +134,7 @@ public class GavelConfig extends AbstractConfig {
 
         pdbBranch = cdl.get( "pdbBranch" );
         puiBranch = cdl.get( "puiBranch" );
+        buildUi = Boolean.parseBoolean( cdl.getOrDefault( "buildUi", "false" ) );
 
         resetCatalog = Boolean.parseBoolean( cdl.get( "resetCatalog" ) );
         memoryCatalog = Boolean.parseBoolean( cdl.get( "memoryCatalog" ) );
