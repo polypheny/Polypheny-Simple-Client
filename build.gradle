@@ -26,15 +26,15 @@ buildscript {
 
 repositories {
     mavenLocal()
-    maven {
-        // DBIS Nexus
-        url "https://dbis-nexus.dmi.unibas.ch/repository/maven2/"
-    }
     mavenCentral()
     maven {
         url "https://clojars.org/repo/"
     }
     jcenter()
+    maven {
+        // DBIS Nexus
+        url "https://dbis-nexus.dmi.unibas.ch/repository/maven2/"
+    }
 }
 
 apply plugin: "java-library"
