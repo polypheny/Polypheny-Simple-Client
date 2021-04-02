@@ -39,6 +39,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
+import kong.unirest.Unirest;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -69,6 +70,10 @@ public class MultimediaBench extends Scenario {
     private final Map<Integer, String> queryTypes;
     private final Map<Integer, List<Long>> measuredTimePerQueryType;
 
+    static {
+        Unirest.config().reset();
+        Unirest.config().socketTimeout( 0 );
+    }
 
     public MultimediaBench( Executor.ExecutorFactory executorFactory, MultimediaConfig config, boolean commitAfterEveryQuery, boolean dumpQueryList ) {
         //never dump mm queries, because the dumps can get very large for large binary inserts
