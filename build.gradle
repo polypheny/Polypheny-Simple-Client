@@ -62,7 +62,7 @@ java {
 
 dependencies {
     implementation group: 'commons-lang', name: 'commons-lang', version: '2.6' // License: Apache 2.0
-    implementation group: "commons-io", name: "commons-io", version: '2.6'  // Apache 2.0
+    implementation group: "commons-io", name: "commons-io", version: '2.6'  // License: Apache 2.0
 
     // Polypheny Control Connector
     implementation (group: 'org.polypheny', name: 'polypheny-control', version: '1.2.2') { // License: Apache 2.0
