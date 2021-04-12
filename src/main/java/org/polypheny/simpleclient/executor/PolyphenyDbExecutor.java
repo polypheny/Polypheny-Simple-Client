@@ -67,7 +67,7 @@ public interface PolyphenyDbExecutor extends Executor {
         deployStore(
                 "cottontail",
                 "org.polypheny.db.adapter.cottontail.CottontailStore",
-                "{\"type\":\"Embedded\",\"host\":\"localhost\",\"port\":\"1865\",\"database\":\"cottontail\"}" );
+                "{\"type\":\"Embedded\",\"host\":\"localhost\",\"port\":\"1865\",\"database\":\"cottontail\",\"engine\":\"MAPDB\"}" );
     }
 
 
