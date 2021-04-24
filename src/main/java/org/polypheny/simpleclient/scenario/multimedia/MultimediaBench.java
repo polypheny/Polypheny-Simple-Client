@@ -214,16 +214,17 @@ public class MultimediaBench extends Scenario {
             }
         }
 
-        if ( threadMonitor.aborted ) {
-            throw new RuntimeException( "Exception while executing benchmark", threadMonitor.exception );
-        }
-
         long runTime = System.nanoTime() - startTime;
-        log.info( "run time: {} s", runTime / 1000000000 );
 
         for ( EvaluationThread thread : threads ) {
             thread.closeExecutor();
         }
+
+        if ( threadMonitor.aborted ) {
+            throw new RuntimeException( "Exception while executing benchmark", threadMonitor.exception );
+        }
+
+        log.info( "run time: {} s", runTime / 1000000000 );
 
         return runTime;
     }

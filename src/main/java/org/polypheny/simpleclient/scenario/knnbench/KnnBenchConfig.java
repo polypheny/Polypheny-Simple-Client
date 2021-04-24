@@ -47,9 +47,9 @@ public class KnnBenchConfig extends AbstractConfig {
         router = "icarus";
         planAndImplementationCaching = "Both";
 
-        dataStoreFeature = "cottontail";
-        dataStoreMetadata = "cottontail";
-        dataStores.add( "cottontail" );
+        dataStoreFeature = null;
+        dataStoreMetadata = null;
+        //dataStores.add( "cottontail" );
 
         progressReportBase = getIntProperty( properties, "progressReportBase" );
         numberOfThreads = getIntProperty( properties, "numberOfThreads" );

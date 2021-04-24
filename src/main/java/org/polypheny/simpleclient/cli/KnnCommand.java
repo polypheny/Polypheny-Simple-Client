@@ -58,16 +58,21 @@ public class KnnCommand implements CliRunnable {
         ExecutorFactory executorFactory;
         executorFactory = new PolyphenyDbJdbcExecutorFactory( polyphenyDbHost, false );
 
-        if ( args.get( 0 ).equalsIgnoreCase( "data" ) ) {
-            Knn.data( executorFactory, multiplier, true );
-        } else if ( args.get( 0 ).equalsIgnoreCase( "workload" ) ) {
-            Knn.workload( executorFactory, multiplier, true, writeCsv, dumpQueryList );
-        } else if ( args.get( 0 ).equalsIgnoreCase( "schema" ) ) {
-            Knn.schema( executorFactory, true );
-        } else if ( args.get( 0 ).equalsIgnoreCase( "warmup" ) ) {
-            Knn.warmup( executorFactory, multiplier, true, dumpQueryList );
-        } else {
-            System.err.println( "Unknown task: " + args.get( 0 ) );
+        try {
+            if ( args.get( 0 ).equalsIgnoreCase( "data" ) ) {
+                Knn.data( executorFactory, multiplier, true );
+            } else if ( args.get( 0 ).equalsIgnoreCase( "workload" ) ) {
+                Knn.workload( executorFactory, multiplier, true, writeCsv, dumpQueryList );
+            } else if ( args.get( 0 ).equalsIgnoreCase( "schema" ) ) {
+                Knn.schema( executorFactory, true );
+            } else if ( args.get( 0 ).equalsIgnoreCase( "warmup" ) ) {
+                Knn.warmup( executorFactory, multiplier, true, dumpQueryList );
+            } else {
+                System.err.println( "Unknown task: " + args.get( 0 ) );
+            }
+        } catch ( Throwable t ) {
+            log.error( "Exception while executing KnnBench!", t );
+            System.exit( 1 );
         }
 
         try {

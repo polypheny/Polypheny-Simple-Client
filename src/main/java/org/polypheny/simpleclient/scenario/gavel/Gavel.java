@@ -163,16 +163,17 @@ public class Gavel extends Scenario {
             }
         }
 
-        if ( threadMonitor.aborted ) {
-            throw new RuntimeException( "Exception while executing benchmark", threadMonitor.exception );
-        }
-
         long runTime = System.nanoTime() - startTime;
-        log.info( "run time: {} s", runTime / 1000000000 );
 
         for ( EvaluationThread thread : threads ) {
             thread.closeExecutor();
         }
+
+        if ( threadMonitor.aborted ) {
+            throw new RuntimeException( "Exception while executing benchmark", threadMonitor.exception );
+        }
+
+        log.info( "run time: {} s", runTime / 1000000000 );
 
         return runTime;
     }
@@ -284,7 +285,7 @@ public class Gavel extends Scenario {
                 try {
                     executor.executeQuery( queryListEntry.query );
                 } catch ( ExecutorException e ) {
-                    log.error( "Caught exception while executing queries", e );
+                    log.error( "Caught exception while executing the following query: {}", queryListEntry.query.getClass().getName(), e );
                     threadMonitor.notifyAboutError( e );
                     try {
                         executor.executeRollback();

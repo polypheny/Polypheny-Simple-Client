@@ -50,7 +50,11 @@ public class CreateIntFeature extends QueryBuilder {
 
         @Override
         public String getSql() {
-            return "CREATE TABLE knn_intfeature (id INTEGER NOT NULL, feature INTEGER ARRAY(1, " + this.dimension + "), PRIMARY KEY(id)) ON STORE \"" + this.store + "\"";
+            String sql = "CREATE TABLE knn_intfeature (id INTEGER NOT NULL, feature INTEGER ARRAY(1, " + this.dimension + "), PRIMARY KEY(id))";
+            if ( this.store != null ) {
+                sql += "ON STORE \"" + this.store + "\"";
+            }
+            return sql;
         }
 
 

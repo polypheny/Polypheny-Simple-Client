@@ -86,16 +86,21 @@ public class EasyCommand implements CliRunnable {
             executorFactory = new PolyphenyDbJdbcExecutorFactory( polyphenyDbHost, true );
         }
 
-        if ( args.get( 0 ).equalsIgnoreCase( "data" ) ) {
-            Easy.data( executorFactory, multiplier, true );
-        } else if ( args.get( 0 ).equalsIgnoreCase( "workload" ) ) {
-            Easy.workload( executorFactory, multiplier, true, writeCsv, dumpQueryList );
-        } else if ( args.get( 0 ).equalsIgnoreCase( "schema" ) ) {
-            Easy.schema( executorFactory, true );
-        } else if ( args.get( 0 ).equalsIgnoreCase( "warmup" ) ) {
-            Easy.warmup( executorFactory, multiplier, true, dumpQueryList );
-        } else {
-            System.err.println( "Unknown task: " + args.get( 0 ) );
+        try {
+            if ( args.get( 0 ).equalsIgnoreCase( "data" ) ) {
+                Easy.data( executorFactory, multiplier, true );
+            } else if ( args.get( 0 ).equalsIgnoreCase( "workload" ) ) {
+                Easy.workload( executorFactory, multiplier, true, writeCsv, dumpQueryList );
+            } else if ( args.get( 0 ).equalsIgnoreCase( "schema" ) ) {
+                Easy.schema( executorFactory, true );
+            } else if ( args.get( 0 ).equalsIgnoreCase( "warmup" ) ) {
+                Easy.warmup( executorFactory, multiplier, true, dumpQueryList );
+            } else {
+                System.err.println( "Unknown task: " + args.get( 0 ) );
+            }
+        } catch ( Throwable t ) {
+            log.error( "Exception while executing Gavel!", t );
+            System.exit( 1 );
         }
 
         try {
