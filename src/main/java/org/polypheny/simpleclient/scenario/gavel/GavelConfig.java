@@ -81,6 +81,7 @@ public class GavelConfig extends AbstractConfig {
         buildUi = false;
         resetCatalog = false;
         memoryCatalog = false;
+        deployStoresUsingDocker = false;
 
         dataStores.add( "hsqldb" );
         router = "icarus";
@@ -135,6 +136,8 @@ public class GavelConfig extends AbstractConfig {
         pdbBranch = cdl.get( "pdbBranch" );
         puiBranch = cdl.get( "puiBranch" );
         buildUi = Boolean.parseBoolean( cdl.getOrDefault( "buildUi", "false" ) );
+
+        deployStoresUsingDocker = Boolean.parseBoolean( cdl.getOrDefault( "deployStoresUsingDocker", "false" ) );
 
         resetCatalog = Boolean.parseBoolean( cdl.get( "resetCatalog" ) );
         memoryCatalog = Boolean.parseBoolean( cdl.get( "memoryCatalog" ) );

@@ -43,6 +43,7 @@ public class KnnBenchConfig extends AbstractConfig {
         buildUi = false;
         resetCatalog = false;
         memoryCatalog = false;
+        deployStoresUsingDocker = false;
 
         router = "icarus";
         planAndImplementationCaching = "Both";
@@ -89,6 +90,8 @@ public class KnnBenchConfig extends AbstractConfig {
         buildUi = Boolean.parseBoolean( cdl.getOrDefault( "buildUi", "false" ) );
         resetCatalog = Boolean.parseBoolean( cdl.get( "resetCatalog" ) );
         memoryCatalog = Boolean.parseBoolean( cdl.get( "memoryCatalog" ) );
+
+        deployStoresUsingDocker = Boolean.parseBoolean( cdl.getOrDefault( "deployStoresUsingDocker", "false" ) );
 
         dataStoreFeature = cdl.get( "dataStoreFeature" );
         dataStoreMetadata = cdl.get( "dataStoreMetadata" );

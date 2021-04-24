@@ -64,6 +64,7 @@ public class MultimediaConfig extends AbstractConfig {
         buildUi = false;
         resetCatalog = false;
         memoryCatalog = false;
+        deployStoresUsingDocker = false;
 
         router = "icarus";
         planAndImplementationCaching = "Both";
@@ -105,6 +106,8 @@ public class MultimediaConfig extends AbstractConfig {
         buildUi = Boolean.parseBoolean( cdl.getOrDefault( "buildUi", "false" ) );
         resetCatalog = Boolean.parseBoolean( cdl.get( "resetCatalog" ) );
         memoryCatalog = Boolean.parseBoolean( cdl.get( "memoryCatalog" ) );
+
+        deployStoresUsingDocker = Boolean.parseBoolean( cdl.getOrDefault( "deployStoresUsingDocker", "false" ) );
 
         router = cdl.get( "router" );
         planAndImplementationCaching = cdl.getOrDefault( "planAndImplementationCaching", "Both" );

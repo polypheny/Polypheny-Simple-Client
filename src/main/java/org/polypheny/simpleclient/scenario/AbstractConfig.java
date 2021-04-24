@@ -27,6 +27,8 @@ public abstract class AbstractConfig {
 
     public int progressReportBase;
 
+    public boolean deployStoresUsingDocker;
+
 
     public AbstractConfig( String scenario, String system ) {
         this.scenario = scenario;
