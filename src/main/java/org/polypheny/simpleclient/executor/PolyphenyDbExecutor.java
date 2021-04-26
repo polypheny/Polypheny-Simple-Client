@@ -34,7 +34,7 @@ public interface PolyphenyDbExecutor extends Executor {
     default void deployMonetDb( boolean deployStoresUsingDocker ) throws ExecutorException {
         String config;
         if ( deployStoresUsingDocker ) {
-            config = "{\"port\":\"3303\",\"maxConnections\":\"25\",\"password\":\"polypheny\",\"mode\":\"docker\",}";
+            config = "{\"port\":\"3303\",\"maxConnections\":\"25\",\"password\":\"polypheny\",\"mode\":\"docker\",\"instanceId\":\"0\"}";
         } else {
             config = "{\"database\":\"test\",\"host\":\"localhost\",\"maxConnections\":\"25\",\"password\":\"monetdb\",\"username\":\"monetdb\",\"port\":\"50000\",\"mode\":\"remote\"}";
         }
@@ -48,7 +48,7 @@ public interface PolyphenyDbExecutor extends Executor {
     default void deployPostgres( boolean deployStoresUsingDocker ) throws ExecutorException {
         String config;
         if ( deployStoresUsingDocker ) {
-            config = "{\"port\":\"3302\",\"maxConnections\":\"25\",\"password\":\"postgres\",\"mode\":\"docker\",}";
+            config = "{\"port\":\"3302\",\"maxConnections\":\"25\",\"password\":\"postgres\",\"mode\":\"docker\",\"instanceId\":\"0\"}";
         } else {
             config = "{\"database\":\"test\",\"host\":\"localhost\",\"maxConnections\":\"25\",\"password\":\"postgres\",\"username\":\"postgres\",\"port\":\"5432\",\"mode\":\"remote\"}";
         }
@@ -62,7 +62,7 @@ public interface PolyphenyDbExecutor extends Executor {
     default void deployCassandra( boolean deployStoresUsingDocker ) throws ExecutorException {
         String config;
         if ( deployStoresUsingDocker ) {
-            config = "{\"port\":\"9043\",\"mode\":\"docker\"}";
+            config = "{\"port\":\"9043\",\"mode\":\"docker\",\"instanceId\":\"0\"}";
         } else {
             config = "{\"mode\":\"embedded\",\"host\":\"localhost\",\"port\":\"9042\",\"keyspace\":\"cassandra\",\"username\":\"cassandra\",\"password\":\"cass\"}";
         }
@@ -156,11 +156,15 @@ public interface PolyphenyDbExecutor extends Executor {
                             executor.deployHsqldb();
                             break;
                         case "postgres":
-                            PostgresInstance.reset();
+                            if ( !config.deployStoresUsingDocker ) {
+                                PostgresInstance.reset();
+                            }
                             executor.deployPostgres( config.deployStoresUsingDocker );
                             break;
                         case "monetdb":
-                            MonetdbInstance.reset();
+                            if ( !config.deployStoresUsingDocker ) {
+                                MonetdbInstance.reset();
+                            }
                             executor.deployMonetDb( config.deployStoresUsingDocker );
                             break;
                         case "cassandra":
@@ -258,10 +262,14 @@ public interface PolyphenyDbExecutor extends Executor {
                     case "hsqldb":
                         break;
                     case "postgres":
-                        PostgresInstance.reset();
+                        if ( !config.deployStoresUsingDocker ) {
+                            PostgresInstance.reset();
+                        }
                         break;
                     case "monetdb":
-                        MonetdbInstance.reset();
+                        if ( !config.deployStoresUsingDocker ) {
+                            MonetdbInstance.reset();
+                        }
                         break;
                     case "cassandra":
                         break;
