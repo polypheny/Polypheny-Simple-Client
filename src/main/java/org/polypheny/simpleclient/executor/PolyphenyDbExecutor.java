@@ -294,6 +294,8 @@ public interface PolyphenyDbExecutor extends Executor {
                         break;
                     case "cottontail":
                         break;
+                    case "mongodb":
+                        break;
                     default:
                         throw new RuntimeException( "Unknown data store: " + store );
                 }
