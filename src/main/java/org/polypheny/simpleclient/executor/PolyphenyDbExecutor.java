@@ -89,6 +89,20 @@ public interface PolyphenyDbExecutor extends Executor {
     }
 
 
+    default void deployMongoDb( boolean deployStoresUsingDocker ) throws ExecutorException {
+        String config;
+        if ( deployStoresUsingDocker ) {
+            config = "{\"mode\":\"docker\",\"instanceId\":\"0\",\"port\":\"27017\",\"persistent\":\"false\"}";
+        } else {
+            throw new RuntimeException( "MongoDB can only be deployed in Docker mode" );
+        }
+        deployStore(
+                "mongodb",
+                "org.polypheny.db.adapter.mongodb.MongoStore",
+                config );
+    }
+
+
     void setConfig( String key, String value );
 
 
@@ -175,6 +189,9 @@ public interface PolyphenyDbExecutor extends Executor {
                             break;
                         case "cottontail":
                             executor.deployCottontail();
+                            break;
+                        case "mongodb":
+                            executor.deployMongoDb( config.deployStoresUsingDocker );
                             break;
                         default:
                             throw new RuntimeException( "Unknown data store: " + store );
