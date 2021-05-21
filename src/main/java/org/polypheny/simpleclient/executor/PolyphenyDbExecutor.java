@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import kong.unirest.HttpResponse;
+import kong.unirest.Unirest;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.control.client.PolyphenyControlConnector;
 import org.polypheny.simpleclient.cli.ChronosCommand;
@@ -143,8 +145,24 @@ public interface PolyphenyDbExecutor extends Executor {
 
             // Start Polypheny
             polyphenyControlConnector.startPolypheny();
+            // Try for 300 seconds (30 times)
+            for ( int i = 0; i <= 30; i++ ) {
+                if ( isReady() ) {
+                    break;
+                }
+                try {
+                    TimeUnit.SECONDS.sleep( 10 );
+                } catch ( InterruptedException e ) {
+                    // ignore
+                }
+                if ( i >= 30 ) {
+                    throw new RuntimeException( "System not ready. Aborting" );
+                }
+            }
+
+            // Wait another five seconds for post-startup process to finish
             try {
-                TimeUnit.SECONDS.sleep( 20 );
+                TimeUnit.SECONDS.sleep( 5 );
             } catch ( InterruptedException e ) {
                 throw new RuntimeException( "Unexpected interrupt", e );
             }
@@ -300,6 +318,19 @@ public interface PolyphenyDbExecutor extends Executor {
                         throw new RuntimeException( "Unknown data store: " + store );
                 }
             }
+        }
+
+
+        private boolean isReady() {
+            try {
+                HttpResponse<String> response = Unirest.get( "http://" + ChronosCommand.hostname + ":8080/getTypeInfo" ).asString();
+                if ( response.isSuccess() ) {
+                    return true;
+                }
+            } catch ( Exception e ) {
+                // ignore
+            }
+            return false;
         }
 
 
