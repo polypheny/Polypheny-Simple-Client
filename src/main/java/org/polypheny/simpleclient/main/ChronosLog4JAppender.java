@@ -23,6 +23,8 @@ import org.apache.logging.log4j.core.layout.PatternLayout;
         elementType = Appender.ELEMENT_TYPE)
 public class ChronosLog4JAppender extends AbstractAppender {
 
+    private static final String ANSI_RESET = "\u001B[0m";
+
     private static volatile ChronosLogHandler chronosLogHandler;
 
 
@@ -65,7 +67,7 @@ public class ChronosLog4JAppender extends AbstractAppender {
             } else if ( event.getLoggerName().startsWith( "ch.unibas.dmi.dbis.chronos.agent" ) ) {
                 prefix = "CHRONOS > ";
             }
-            chronosLogHandler.publish( prefix + event.getLevel().name() + " : " + event.getMessage().getFormattedMessage() + "\n " );
+            chronosLogHandler.publish( ANSI_RESET + prefix + event.getLevel().name() + " : " + event.getMessage().getFormattedMessage() + "\n " );
             if ( event.getThrown() != null ) {
                 StringWriter sw = new StringWriter();
                 event.getThrown().printStackTrace( new PrintWriter( sw ) );
