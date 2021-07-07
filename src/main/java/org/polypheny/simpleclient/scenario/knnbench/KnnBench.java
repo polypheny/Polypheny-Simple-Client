@@ -94,6 +94,19 @@ public class KnnBench extends Scenario {
 
 
     @Override
+    public void createView() {
+        //TODO IG
+    }
+
+
+    @Override
+    public long executeView( ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory, int numberOfThreads, boolean view ) {
+        //TODO IG
+        return 0;
+    }
+
+
+    @Override
     public long execute( ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory, int numberOfThreads ) {
 
         log.info( "Preparing query list for the benchmark..." );

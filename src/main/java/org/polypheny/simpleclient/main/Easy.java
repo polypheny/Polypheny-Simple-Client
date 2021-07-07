@@ -29,6 +29,12 @@ public class Easy {
         gavel.generateData( progressReporter );
     }
 
+    public static void view(ExecutorFactory executorFactory, int multiplier, boolean commitAfterEveryQuery){
+        GavelConfig config = new GavelConfig( getProperties(), multiplier );
+        Gavel gavel = new Gavel( executorFactory, config, commitAfterEveryQuery, false );
+
+        gavel.createView();
+    }
 
     public static void workload( ExecutorFactory executorFactory, int multiplier, boolean commitAfterEveryQuery, boolean writeCsv, boolean dumpQueryList ) {
         GavelConfig config = new GavelConfig( getProperties(), multiplier );
@@ -42,6 +48,21 @@ public class Easy {
         }
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
         gavel.execute( progressReporter, csvWriter, new File( "." ), config.numberOfThreads );
+    }
+
+
+    public static void viewWorkload (ExecutorFactory executorFactory, int multiplier, boolean commitAfterEveryQuery, boolean writeCsv, boolean dumpQueryList, boolean view ) {
+        GavelConfig config = new GavelConfig( getProperties(), multiplier );
+        Gavel gavel = new Gavel( executorFactory, config, commitAfterEveryQuery, dumpQueryList );
+        final CsvWriter csvWriter;
+        if ( writeCsv ) {
+            csvWriter = new CsvWriter( "results.csv" );
+        } else {
+            csvWriter = null;
+        }
+        ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
+        gavel.executeView( progressReporter, csvWriter, new File( "." ), config.numberOfThreads, view );
+
     }
 
 

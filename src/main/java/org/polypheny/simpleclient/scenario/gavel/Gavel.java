@@ -68,9 +68,11 @@ import org.polypheny.simpleclient.scenario.gavel.queryBuilder.SearchAuction;
 import org.polypheny.simpleclient.scenario.gavel.queryBuilder.SelectAllBidsOnRandomAuction;
 import org.polypheny.simpleclient.scenario.gavel.queryBuilder.SelectHighestBidOnRandomAuction;
 import org.polypheny.simpleclient.scenario.gavel.queryBuilder.SelectRandomAuction;
+import org.polypheny.simpleclient.scenario.gavel.queryBuilder.SelectRandomAuctionView;
 import org.polypheny.simpleclient.scenario.gavel.queryBuilder.SelectRandomBid;
 import org.polypheny.simpleclient.scenario.gavel.queryBuilder.SelectRandomUser;
 import org.polypheny.simpleclient.scenario.gavel.queryBuilder.SelectTheHundredNextEndingAuctionsOfRandomCategory;
+import org.polypheny.simpleclient.scenario.gavel.queryBuilder.SelectTheHundredNextEndingAuctionsOfRandomCategoryView;
 import org.polypheny.simpleclient.scenario.gavel.queryBuilder.SelectTopTenCitiesByNumberOfCustomers;
 
 
@@ -91,6 +93,37 @@ public class Gavel extends Scenario {
 
         queryTypes = new HashMap<>();
         measuredTimePerQueryType = new ConcurrentHashMap<>();
+    }
+
+
+    @Override
+    public long executeView(ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory, int numberOfThreads, boolean view){
+        log.info( "Analyzing currently stored data with View or Table..." );
+        Map<String, Integer> numbers = getNumbers();
+
+        log.info( "Preparing query list for the benchmark..." );
+        List<QueryListEntry> queryList = new Vector<>();
+        if(!view){
+            addNumberOfTimes( queryList, new SelectRandomAuction( numbers.get( "auctions" ) ), config.numberOfGetAuctionQueries );
+            addNumberOfTimes( queryList, new SelectTheHundredNextEndingAuctionsOfRandomCategory( numbers.get( "categories" ), config ), config.numberOfGetTheNextHundredEndingAuctionsOfACategoryQueries );
+            /*
+            addNumberOfTimes( queryList, new SearchAuction(), config.numberOfSearchAuctionQueries );
+            addNumberOfTimes( queryList, new CountAuction(), config.numberOfCountAuctionsQueries );
+            addNumberOfTimes( queryList, new SelectTopTenCitiesByNumberOfCustomers(), config.numberOfTopTenCitiesByNumberOfCustomersQueries );
+            addNumberOfTimes( queryList, new CountBid(), config.numberOfCountBidsQueries );
+            addNumberOfTimes( queryList, new SelectRandomBid( numbers.get( "bids" ) ), config.numberOfGetBidQueries );
+            addNumberOfTimes( queryList, new SelectRandomUser( numbers.get( "users" ) ), config.numberOfGetUserQueries );
+            addNumberOfTimes( queryList, new SelectAllBidsOnRandomAuction( numbers.get( "auctions" ) ), config.numberOfGetAllBidsOnAuctionQueries );
+            addNumberOfTimes( queryList, new SelectHighestBidOnRandomAuction( numbers.get( "auctions" ) ), config.numberOfGetCurrentlyHighestBidOnAuctionQueries );
+
+             */
+        }else{
+            addNumberOfTimes( queryList, new SelectRandomAuctionView( numbers.get( "auctions" ) ), config.numberOfGetAuctionQueries );
+            addNumberOfTimes( queryList, new SelectTheHundredNextEndingAuctionsOfRandomCategoryView( numbers.get( "categories" ), config ), config.numberOfGetTheNextHundredEndingAuctionsOfACategoryQueries );
+        }
+        Collections.shuffle( queryList );
+
+        return executeBenchmark( progressReporter, csvWriter, outputDirectory, numberOfThreads, queryList );
     }
 
 
@@ -121,6 +154,11 @@ public class Gavel extends Scenario {
         addNumberOfTimes( queryList, new SelectHighestBidOnRandomAuction( numbers.get( "auctions" ) ), config.numberOfGetCurrentlyHighestBidOnAuctionQueries );
         Collections.shuffle( queryList );
 
+        return executeBenchmark( progressReporter, csvWriter, outputDirectory, numberOfThreads, queryList );
+    }
+
+
+    private long executeBenchmark( ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory, int numberOfThreads, List<QueryListEntry> queryList ) {
         // This dumps the sql queries independent of the selected interface
         if ( outputDirectory != null && dumpQueryList ) {
             log.info( "Dump query list..." );
@@ -514,6 +552,32 @@ public class Gavel extends Scenario {
             throw new RuntimeException( "Exception while generating data", threadMonitor.exception );
         }
     }
+
+
+    @Override
+    public void createView(){
+        log.info( "Creating schema..." );
+
+        Executor executor = null;
+        InputStream file = ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/gavel/view.sql" );
+
+        if ( file == null ) {
+            throw new RuntimeException( "Unable to load schema definition file" );
+        }
+        try ( BufferedReader bf = new BufferedReader( new InputStreamReader( file ) ) ) {
+            executor = executorFactory.createExecutorInstance();
+            String line = bf.readLine();
+            while ( line != null ) {
+                executor.executeQuery( new RawQuery( line, null, false ) );
+                line = bf.readLine();
+            }
+        } catch ( IOException | ExecutorException e ) {
+            throw new RuntimeException( "Exception while creating schema", e );
+        } finally {
+            commitAndCloseExecutor( executor );
+        }
+    }
+
 
 
     static class DataGenerationThreadMonitor {

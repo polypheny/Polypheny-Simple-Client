@@ -59,7 +59,11 @@ public abstract class Scenario {
 
     public abstract void generateData( ProgressReporter progressReporter );
 
+    public abstract void createView();
+
     public abstract long execute( ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory, int numberOfThreads );
+
+    public abstract long executeView( ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory, int numberOfThreads, boolean view);
 
     public abstract void warmUp( ProgressReporter progressReporter, int iterations );
 

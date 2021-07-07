@@ -1,0 +1,5 @@
+CREATE VIEW "user_view" AS SELECT * FROM "user"
+CREATE VIEW "bid_view" AS SELECT * FROM "bid"
+CREATE VIEW "picture_view" AS SELECT * FROM "picture"
+CREATE VIEW "auction_view" AS SELECT * FROM "auction"
+CREATE VIEW "category_view" AS SELECT * FROM "category"
