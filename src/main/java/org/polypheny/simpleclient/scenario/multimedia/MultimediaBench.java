@@ -77,7 +77,7 @@ public class MultimediaBench extends Scenario {
 
     public MultimediaBench( Executor.ExecutorFactory executorFactory, MultimediaConfig config, boolean commitAfterEveryQuery, boolean dumpQueryList ) {
         //never dump mm queries, because the dumps can get very large for large binary inserts
-        super( executorFactory, commitAfterEveryQuery, false );
+        super( executorFactory, commitAfterEveryQuery, false,false );
         this.config = config;
 
         measuredTimes = Collections.synchronizedList( new LinkedList<>() );
@@ -153,19 +153,6 @@ public class MultimediaBench extends Scenario {
         } finally {
             commitAndCloseExecutor( executor1 );
         }
-    }
-
-
-    @Override
-    public void createView(){
-        //TODO IG
-    }
-
-
-    @Override
-    public long executeView( ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory, int numberOfThreads, boolean view ) {
-        //TODO IG
-        return 0;
     }
 
 

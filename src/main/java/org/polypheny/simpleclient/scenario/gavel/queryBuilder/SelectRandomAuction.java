@@ -41,40 +41,49 @@ public class SelectRandomAuction extends QueryBuilder {
     private static final boolean EXPECT_RESULT = true;
 
     private final int numberOfAuctions;
+    private final boolean queryView;
 
 
-    public SelectRandomAuction( int numberOfAuctions ) {
+    public SelectRandomAuction( int numberOfAuctions, boolean queryView ) {
         this.numberOfAuctions = numberOfAuctions;
+        this.queryView = queryView;
     }
 
 
     @Override
     public Query getNewQuery() {
         int auctionId = ThreadLocalRandom.current().nextInt( 1, numberOfAuctions + 1 );
-        return new SelectRandomAuctionQuery( auctionId );
+        return new SelectRandomAuctionQuery( auctionId, queryView );
     }
 
 
     private static class SelectRandomAuctionQuery extends Query {
 
         private final int auctionId;
+        private final String tablename;
 
 
-        public SelectRandomAuctionQuery( int auctionId ) {
+        public SelectRandomAuctionQuery( int auctionId , boolean queryView) {
             super( EXPECT_RESULT );
             this.auctionId = auctionId;
+
+            if(queryView){
+                tablename = "auction_view";
+            }else {
+                tablename = "auction";
+            }
         }
 
 
         @Override
         public String getSql() {
-            return "SELECT * FROM auction a WHERE a.id=" + auctionId;
+            return "SELECT * FROM " + tablename + " a WHERE a.id=" + auctionId;
         }
 
 
         @Override
         public String getParameterizedSqlQuery() {
-            return "SELECT * FROM auction a WHERE a.id=?";
+            return "SELECT * FROM " + tablename + " a WHERE a.id=?";
         }
 
 
@@ -88,8 +97,8 @@ public class SelectRandomAuction extends QueryBuilder {
 
         @Override
         public HttpRequest<?> getRest() {
-            return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.auction" )
-                    .queryString( "public.auction.id", "=" + auctionId );
+            return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public." + tablename )
+                    .queryString( "public." + tablename + ".id", "=" + auctionId );
         }
 
     }

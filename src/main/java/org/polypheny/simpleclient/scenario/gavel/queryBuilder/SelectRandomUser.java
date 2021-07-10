@@ -41,40 +41,48 @@ public class SelectRandomUser extends QueryBuilder {
     private static final boolean EXPECT_RESULT = true;
 
     private final int numberOfUsers;
+    private final boolean queryView;
 
 
-    public SelectRandomUser( int numberOfUsers ) {
+    public SelectRandomUser( int numberOfUsers, boolean queryView ) {
         this.numberOfUsers = numberOfUsers;
+        this.queryView = queryView;
     }
 
 
     @Override
     public Query getNewQuery() {
         int userId = ThreadLocalRandom.current().nextInt( 1, numberOfUsers + 1 );
-        return new SelectRandomUserQuery( userId );
+        return new SelectRandomUserQuery( userId, queryView );
     }
 
 
     private static class SelectRandomUserQuery extends Query {
 
         private final int userId;
+        private final String tablename;
 
-
-        public SelectRandomUserQuery( int userId ) {
+        public SelectRandomUserQuery( int userId, boolean queryView ) {
             super( EXPECT_RESULT );
             this.userId = userId;
+
+            if(queryView){
+                tablename = "user_view";
+            }else {
+                tablename = "\"user\"";
+            }
         }
 
 
         @Override
         public String getSql() {
-            return "SELECT * FROM \"user\" WHERE id=" + userId;
+            return "SELECT * FROM " + tablename + " WHERE id=" + userId;
         }
 
 
         @Override
         public String getParameterizedSqlQuery() {
-            return "SELECT * FROM \"user\" WHERE id=?";
+            return "SELECT * FROM " + tablename + " WHERE id=?";
         }
 
 
@@ -88,8 +96,8 @@ public class SelectRandomUser extends QueryBuilder {
 
         @Override
         public HttpRequest<?> getRest() {
-            return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.user" )
-                    .queryString( "public.user.id", "=" + userId );
+            return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public." + tablename )
+                    .queryString( "public." + tablename + ".id", "=" + userId );
         }
 
     }

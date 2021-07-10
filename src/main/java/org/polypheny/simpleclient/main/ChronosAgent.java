@@ -80,6 +80,7 @@ public class ChronosAgent extends AbstractChronosAgent {
 
     private final boolean writeCsv;
     private final boolean dumpQueryList;
+    private boolean queryViews;
 
 
     public ChronosAgent( InetAddress address, int port, boolean secure, boolean useHostname, String environment, String[] supports, boolean writeCsv, boolean dumpQueryList ) {
@@ -126,6 +127,7 @@ public class ChronosAgent extends AbstractChronosAgent {
         } catch ( URISyntaxException e ) {
             log.error( "Exception while connecting to Polypheny Control", e );
         }
+        queryViews = false;
     }
 
 
@@ -139,6 +141,7 @@ public class ChronosAgent extends AbstractChronosAgent {
     protected Object prepare( ChronosJob chronosJob, final File inputDirectory, final File outputDirectory, Properties properties, Object o ) {
         // Parse CDL
         Map<String, String> parsedConfig = parseConfig( chronosJob );
+        queryViews = parsedConfig.get( "queryViews" ).equals( "Yes" );
 
         // Create Executor Factory
         Executor.ExecutorFactory executorFactory;
@@ -167,7 +170,14 @@ public class ChronosAgent extends AbstractChronosAgent {
         switch ( parsedConfig.get( "scenario" ) ) {
             case "gavel":
                 config = new GavelConfig( parsedConfig );
-                scenario = new Gavel( executorFactory, (GavelConfig) config, true, dumpQueryList );
+                log.info( "inside chronosAgent" );
+                log.info( parsedConfig.get( "queryViews" ) );
+                if(queryViews){
+                    log.info( "inside VIEW" );
+                    scenario = new Gavel( executorFactory, (GavelConfig) config, true, dumpQueryList, true );
+                }else {
+                    scenario = new Gavel( executorFactory, (GavelConfig) config, true, dumpQueryList, false );
+                }
                 break;
             case "knnBench":
                 config = new KnnBenchConfig( parsedConfig );

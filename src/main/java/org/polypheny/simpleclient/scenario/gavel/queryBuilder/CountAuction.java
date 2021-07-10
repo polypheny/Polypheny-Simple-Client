@@ -38,29 +38,38 @@ import org.polypheny.simpleclient.query.QueryBuilder;
 public class CountAuction extends QueryBuilder {
 
     private static final boolean EXPECT_RESULT = true;
+    private final boolean queryView;
 
-
-    public CountAuction() {
-
+    public CountAuction(boolean queryView) {
+        this.queryView = queryView;
     }
 
 
     @Override
     public Query getNewQuery() {
-        return new CountAuctionQuery();
+        return new CountAuctionQuery( queryView);
     }
 
 
     private static class CountAuctionQuery extends Query {
 
-        public CountAuctionQuery() {
+        private final String tablename;
+        private final boolean queryView;
+
+        public CountAuctionQuery(boolean queryView) {
             super( EXPECT_RESULT );
+            this.queryView = queryView;
+            if(queryView){
+                tablename = "auction_view";
+            }else {
+                tablename = "auction";
+            }
         }
 
 
         @Override
         public String getSql() {
-            return "SELECT count(*) as NUMBER FROM auction";
+            return "SELECT count(*) as NUMBER FROM " + tablename ;
         }
 
 
@@ -78,8 +87,8 @@ public class CountAuction extends QueryBuilder {
 
         @Override
         public HttpRequest<?> getRest() {
-            return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.auction" )
-                    .queryString( "_project", "public.auction.id@num(COUNT)" );
+            return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public." + tablename )
+                    .queryString( "_project", "public." + tablename + ".id@num(COUNT)" );
         }
 
     }

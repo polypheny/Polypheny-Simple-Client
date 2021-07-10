@@ -41,40 +41,48 @@ public class SelectHighestBidOnRandomAuction extends QueryBuilder {
     private static final boolean EXPECT_RESULT = true;
 
     private final int numberOfAuctions;
+    private final boolean queryView;
 
 
-    public SelectHighestBidOnRandomAuction( int numberOfAuctions ) {
+    public SelectHighestBidOnRandomAuction( int numberOfAuctions, boolean queryView ) {
         this.numberOfAuctions = numberOfAuctions;
+        this.queryView = queryView;
     }
 
 
     @Override
     public Query getNewQuery() {
         int auctionId = ThreadLocalRandom.current().nextInt( 1, numberOfAuctions + 1 );
-        return new SelectHighestBidOnRandomAuctionQuery( auctionId );
+        return new SelectHighestBidOnRandomAuctionQuery( auctionId, queryView );
     }
 
 
     private static class SelectHighestBidOnRandomAuctionQuery extends Query {
 
         private final int auctionId;
+        private final String tablename;
 
-
-        public SelectHighestBidOnRandomAuctionQuery( int auctionId ) {
+        public SelectHighestBidOnRandomAuctionQuery( int auctionId, boolean queryView ) {
             super( EXPECT_RESULT );
             this.auctionId = auctionId;
+
+            if(queryView){
+                tablename = "bid_view";
+            }else {
+                tablename = "bid";
+            }
         }
 
 
         @Override
         public String getSql() {
-            return "SELECT * FROM bid b WHERE b.auction=" + auctionId + " ORDER BY b.amount desc LIMIT 1";
+            return "SELECT * FROM " + tablename + " b WHERE b.auction=" + auctionId + " ORDER BY b.amount desc LIMIT 1";
         }
 
 
         @Override
         public String getParameterizedSqlQuery() {
-            return "SELECT * FROM bid b WHERE b.auction=? ORDER BY b.amount desc LIMIT 1";
+            return "SELECT * FROM " + tablename + " b WHERE b.auction=? ORDER BY b.amount desc LIMIT 1";
         }
 
 
@@ -88,9 +96,9 @@ public class SelectHighestBidOnRandomAuction extends QueryBuilder {
 
         @Override
         public HttpRequest<?> getRest() {
-            return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.bid" )
-                    .queryString( "public.bid.auction", "=" + auctionId )
-                    .queryString( "_sort", "public.bid.amount@DESC" )
+            return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public." + tablename )
+                    .queryString( "public." + tablename + ".auction", "=" + auctionId )
+                    .queryString( "_sort", "public." + tablename + ".amount@DESC" )
                     .queryString( "_limit", "1" );
         }
 

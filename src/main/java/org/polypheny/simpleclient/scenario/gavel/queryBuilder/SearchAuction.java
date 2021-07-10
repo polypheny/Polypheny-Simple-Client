@@ -42,33 +42,42 @@ public class SearchAuction extends QueryBuilder {
     private static final boolean EXPECT_RESULT = true;
 
     private final TextProducer text;
+    private final boolean queryView;
 
 
-    public SearchAuction() {
+    public SearchAuction(boolean queryView) {
         text = Fairy.create().textProducer();
+        this.queryView = queryView;
     }
 
 
     @Override
     public Query getNewQuery() {
-        return new SearchAuctionQuery( text.latinWord( 2 ) );
+        return new SearchAuctionQuery( text.latinWord( 2 ), queryView );
     }
 
 
     private static class SearchAuctionQuery extends Query {
 
         private final String searchString;
+        private final String tablename;
 
 
-        public SearchAuctionQuery( String searchString ) {
+        public SearchAuctionQuery( String searchString, boolean queryView ) {
             super( EXPECT_RESULT );
             this.searchString = searchString;
+
+            if(queryView){
+                tablename = "auction_view";
+            }else {
+                tablename = "auction";
+            }
         }
 
 
         @Override
         public String getSql() {
-            return "SELECT a.title, a.start_date, a.end_date FROM Auction a "
+            return "SELECT a.title, a.start_date, a.end_date FROM " + tablename + " a "
                     + "WHERE a.title LIKE '%" + searchString + "%' "
                     + "ORDER BY end_date desc "
                     + "LIMIT 100";
@@ -77,7 +86,7 @@ public class SearchAuction extends QueryBuilder {
 
         @Override
         public String getParameterizedSqlQuery() {
-            return "SELECT a.title, a.start_date, a.end_date FROM Auction a "
+            return "SELECT a.title, a.start_date, a.end_date FROM " + tablename + " a "
                     + "WHERE a.title LIKE ? "
                     + "ORDER BY end_date desc "
                     + "LIMIT 100";
@@ -95,9 +104,9 @@ public class SearchAuction extends QueryBuilder {
         @Override
         public HttpRequest<?> getRest() {
             return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.auction" )
-                    .queryString( "_project", "public.auction.title,public.auction.start_date,public.auction.end_date" )
-                    .queryString( "public.auction.title", "%%" + searchString + "%" )
-                    .queryString( "_sort", "public.auction.end_date@DESC" )
+                    .queryString( "_project", "public." + tablename + ".title,public." + tablename + ".start_date,public." + tablename + ".end_date" )
+                    .queryString( "public." + tablename + ".title", "%%" + searchString + "%" )
+                    .queryString( "_sort", "public." + tablename + ".end_date@DESC" )
                     .queryString( "_limit", 100 );
         }
 

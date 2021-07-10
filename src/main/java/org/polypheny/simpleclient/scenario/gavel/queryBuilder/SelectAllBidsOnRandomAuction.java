@@ -41,41 +41,48 @@ public class SelectAllBidsOnRandomAuction extends QueryBuilder {
     private static final boolean EXPECT_RESULT = true;
 
     private final int numberOfAuctions;
+    private final boolean queryView;
 
 
-    public SelectAllBidsOnRandomAuction( int numberOfAuctions ) {
+    public SelectAllBidsOnRandomAuction( int numberOfAuctions,  boolean queryView  ) {
         this.numberOfAuctions = numberOfAuctions;
+        this.queryView = queryView;
     }
 
 
     @Override
     public Query getNewQuery() {
         int auctionId = ThreadLocalRandom.current().nextInt( 1, numberOfAuctions + 1 );
-        return new SelectAllBidsOnRandomAuctionQuery( auctionId );
+        return new SelectAllBidsOnRandomAuctionQuery( auctionId, queryView );
     }
 
 
     private static class SelectAllBidsOnRandomAuctionQuery extends Query {
 
         private final int auctionId;
+        private final String tablename;
 
-
-        public SelectAllBidsOnRandomAuctionQuery( int auctionId ) {
+        public SelectAllBidsOnRandomAuctionQuery( int auctionId, boolean queryView ) {
             super( EXPECT_RESULT );
             this.auctionId = auctionId;
 
+            if(queryView){
+                tablename = "bid_view";
+            }else {
+                tablename = "bid";
+            }
         }
 
 
         @Override
         public String getSql() {
-            return "SELECT * FROM bid b WHERE b.auction=" + auctionId;
+            return "SELECT * FROM " + tablename + " b WHERE b.auction=" + auctionId;
         }
 
 
         @Override
         public String getParameterizedSqlQuery() {
-            return "SELECT * FROM bid b WHERE b.auction=?";
+            return "SELECT * FROM " + tablename + " b WHERE b.auction=?";
         }
 
 
@@ -89,8 +96,8 @@ public class SelectAllBidsOnRandomAuction extends QueryBuilder {
 
         @Override
         public HttpRequest<?> getRest() {
-            return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.bid" )
-                    .queryString( "public.bid.auction", "=" + auctionId );
+            return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public." + tablename )
+                    .queryString( "public." + tablename + ".auction", "=" + auctionId );
         }
 
     }

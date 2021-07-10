@@ -48,7 +48,7 @@ public class KnnBench extends Scenario {
 
 
     public KnnBench( Executor.ExecutorFactory executorFactory, KnnBenchConfig config, boolean commitAfterEveryQuery, boolean dumpQueryList ) {
-        super( executorFactory, commitAfterEveryQuery, dumpQueryList );
+        super( executorFactory, commitAfterEveryQuery, dumpQueryList, false );
         this.config = config;
 
         measuredTimes = Collections.synchronizedList( new LinkedList<>() );
@@ -90,19 +90,6 @@ public class KnnBench extends Scenario {
         } finally {
             commitAndCloseExecutor( executor1 );
         }
-    }
-
-
-    @Override
-    public void createView() {
-        //TODO IG
-    }
-
-
-    @Override
-    public long executeView( ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory, int numberOfThreads, boolean view ) {
-        //TODO IG
-        return 0;
     }
 
 

@@ -41,40 +41,48 @@ public class SelectRandomBid extends QueryBuilder {
     private static final boolean EXPECT_RESULT = true;
 
     private final int numberOfBids;
+    private final boolean queryView;
 
 
-    public SelectRandomBid( int numberOfBids ) {
+    public SelectRandomBid( int numberOfBids, boolean queryView ) {
         this.numberOfBids = numberOfBids;
+        this.queryView = queryView;
     }
 
 
     @Override
     public Query getNewQuery() {
         int bidId = ThreadLocalRandom.current().nextInt( 1, numberOfBids + 1 );
-        return new SelectRandomBidQuery( bidId );
+        return new SelectRandomBidQuery( bidId, queryView );
     }
 
 
     private static class SelectRandomBidQuery extends Query {
 
         private final int bidId;
+        private final String tablename;
 
-
-        public SelectRandomBidQuery( int bidId ) {
+        public SelectRandomBidQuery( int bidId, boolean queryView ) {
             super( EXPECT_RESULT );
             this.bidId = bidId;
+
+            if(queryView){
+                tablename = "bid_view";
+            }else {
+                tablename = "bid";
+            }
         }
 
 
         @Override
         public String getSql() {
-            return "SELECT * FROM bid b WHERE b.id=" + bidId;
+            return "SELECT * FROM " + tablename + " b WHERE b.id=" + bidId;
         }
 
 
         @Override
         public String getParameterizedSqlQuery() {
-            return "SELECT * FROM bid b WHERE b.id=?";
+            return "SELECT * FROM " + tablename + " b WHERE b.id=?";
         }
 
 
@@ -88,8 +96,8 @@ public class SelectRandomBid extends QueryBuilder {
 
         @Override
         public HttpRequest<?> getRest() {
-            return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.bid" )
-                    .queryString( "public.bid.id", "=" + bidId );
+            return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public." + tablename )
+                    .queryString( "public."+ tablename + ".id", "=" + bidId );
         }
 
     }

@@ -38,24 +38,36 @@ import org.polypheny.simpleclient.query.QueryBuilder;
 public class SelectTopTenCitiesByNumberOfCustomers extends QueryBuilder {
 
     private static final boolean EXPECT_RESULT = true;
+    private final boolean queryView;
 
+    public SelectTopTenCitiesByNumberOfCustomers(boolean queryView){
+        this.queryView = queryView;
+    }
 
     @Override
     public Query getNewQuery() {
-        return new SelectTopTenCitiesByNumberOfCustomersQuery();
+        return new SelectTopTenCitiesByNumberOfCustomersQuery(queryView);
     }
 
 
     private static class SelectTopTenCitiesByNumberOfCustomersQuery extends Query {
 
-        public SelectTopTenCitiesByNumberOfCustomersQuery() {
+        private final String tablename;
+
+        public SelectTopTenCitiesByNumberOfCustomersQuery(boolean queryView) {
             super( EXPECT_RESULT );
+
+            if(queryView){
+                tablename = "user_view";
+            }else {
+                tablename = "\"user\"";
+            }
         }
 
 
         @Override
         public String getSql() {
-            return "SELECT city, COUNT(city) as number FROM \"user\" GROUP BY city ORDER BY number desc LIMIT 10";
+            return "SELECT city, COUNT(city) as number FROM " + tablename + " GROUP BY city ORDER BY number desc LIMIT 10";
         }
 
 
@@ -74,7 +86,7 @@ public class SelectTopTenCitiesByNumberOfCustomers extends QueryBuilder {
         @Override
         public HttpRequest<?> getRest() {
             return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.user" )
-                    .queryString( "_project", "public.user.city@city,public.user.city@number(COUNT)" )
+                    .queryString( "_project", "public." + tablename + ".city@city,public." + tablename + ".city@number(COUNT)" )
                     .queryString( "_groupby", "city" )
                     .queryString( "_sort", "number@DESC" )
                     .queryString( "_limit", 10 );

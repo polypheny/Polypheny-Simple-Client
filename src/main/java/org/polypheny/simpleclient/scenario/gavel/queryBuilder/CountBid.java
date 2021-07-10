@@ -38,24 +38,37 @@ import org.polypheny.simpleclient.query.QueryBuilder;
 public class CountBid extends QueryBuilder {
 
     private static final boolean EXPECT_RESULT = true;
+    private final boolean queryView;
 
+    public CountBid(boolean queryView){
+        this.queryView = queryView;
+    }
 
     @Override
     public Query getNewQuery() {
-        return new CountBidQuery();
+        return new CountBidQuery(queryView);
     }
 
 
     private static class CountBidQuery extends Query {
 
-        public CountBidQuery() {
+        private final String tablename;
+
+
+        public CountBidQuery(boolean queryView) {
             super( EXPECT_RESULT );
+
+            if(queryView){
+                tablename = "bid_view";
+            }else {
+                tablename = "bid";
+            }
         }
 
 
         @Override
         public String getSql() {
-            return "SELECT count(*) as NUMBER FROM bid";
+            return "SELECT count(*) as NUMBER FROM " + tablename;
         }
 
 
@@ -73,7 +86,7 @@ public class CountBid extends QueryBuilder {
 
         @Override
         public HttpRequest<?> getRest() {
-            return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.bid" )
+            return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public." + tablename )
                     .queryString( "_project", "public.bid.id@num(COUNT)" );
         }
 
