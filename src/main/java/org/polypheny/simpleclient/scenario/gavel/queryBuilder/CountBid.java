@@ -52,23 +52,23 @@ public class CountBid extends QueryBuilder {
 
     private static class CountBidQuery extends Query {
 
-        private final String tablename;
+        private final boolean queryView;
 
 
         public CountBidQuery(boolean queryView) {
             super( EXPECT_RESULT );
-
-            if(queryView){
-                tablename = "bid_view";
-            }else {
-                tablename = "bid";
-            }
+            this.queryView = queryView;
         }
 
 
         @Override
         public String getSql() {
-            return "SELECT count(*) as NUMBER FROM " + tablename;
+            if(queryView){
+                return "SELECT * FROM countBid";
+            }else{
+                return "SELECT count(*) as NUMBER FROM bid";
+            }
+
         }
 
 
@@ -86,8 +86,14 @@ public class CountBid extends QueryBuilder {
 
         @Override
         public HttpRequest<?> getRest() {
-            return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public." + tablename )
-                    .queryString( "_project", "public.bid.id@num(COUNT)" );
+            if(queryView){
+                return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.countBid" );
+                       // .queryString( "public.countBid", "*");
+            }else {
+                return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.bid" )
+                        .queryString( "_project", "public.bid.id@num(COUNT)" );
+            }
+
         }
 
     }

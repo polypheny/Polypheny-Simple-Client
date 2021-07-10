@@ -77,6 +77,7 @@ public class SearchAuction extends QueryBuilder {
 
         @Override
         public String getSql() {
+
             return "SELECT a.title, a.start_date, a.end_date FROM " + tablename + " a "
                     + "WHERE a.title LIKE '%" + searchString + "%' "
                     + "ORDER BY end_date desc "

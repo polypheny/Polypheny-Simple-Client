@@ -53,23 +53,22 @@ public class CountAuction extends QueryBuilder {
 
     private static class CountAuctionQuery extends Query {
 
-        private final String tablename;
         private final boolean queryView;
 
         public CountAuctionQuery(boolean queryView) {
             super( EXPECT_RESULT );
             this.queryView = queryView;
-            if(queryView){
-                tablename = "auction_view";
-            }else {
-                tablename = "auction";
-            }
         }
 
 
         @Override
         public String getSql() {
-            return "SELECT count(*) as NUMBER FROM " + tablename ;
+            if(queryView){
+                return "SELECT * FROM countAuction";
+            }else{
+                return "SELECT count(*) as NUMBER FROM auction";
+            }
+
         }
 
 
@@ -87,8 +86,13 @@ public class CountAuction extends QueryBuilder {
 
         @Override
         public HttpRequest<?> getRest() {
-            return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public." + tablename )
-                    .queryString( "_project", "public." + tablename + ".id@num(COUNT)" );
+            if(queryView){
+                return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.countAuction" );
+            }else{
+                return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.auction" )
+                        .queryString( "_project", "public.auction.id@num(COUNT)" );
+            }
+
         }
 
     }

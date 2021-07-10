@@ -73,7 +73,7 @@ public class SelectTheHundredNextEndingAuctionsOfRandomCategory extends QueryBui
 
         private final LocalDateTime date;
         private final int categoryId;
-        private final String tablename;
+        private final boolean queryView;
 
 
         public SelectTheHundredNextEndingAuctionsOfRandomCategoryQuery( LocalDateTime date, int categoryId, boolean queryView ) {
@@ -81,26 +81,33 @@ public class SelectTheHundredNextEndingAuctionsOfRandomCategory extends QueryBui
             this.date = date;
             this.categoryId = categoryId;
 
-            if(queryView){
-                tablename = "auction_view";
-            }else {
-                tablename = "auction";
-            }
+            this.queryView = queryView;
 
         }
 
 
         @Override
         public String getSql() {
-            return "SELECT a.id, a.title, a.end_date FROM " + tablename + " a WHERE a.category =" + categoryId + " AND " +
-                    "a.end_date > timestamp '" + date.format( DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss" ) ) + "' ORDER BY end_date desc LIMIT 100";
+
+            if(queryView){
+                return "SELECT * FROM nextEndingAuctions a WHERE a.category =" + categoryId + " AND " +
+                        "a.end_date > timestamp '" + date.format( DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss" ) ) + "' ORDER BY end_date desc LIMIT 100";
+            }else{
+                return "SELECT a.id, a.title, a.end_date FROM auction a WHERE a.category =" + categoryId + " AND " +
+                        "a.end_date > timestamp '" + date.format( DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss" ) ) + "' ORDER BY end_date desc LIMIT 100";
+            }
         }
 
 
         @Override
         public String getParameterizedSqlQuery() {
-            return "SELECT a.id, a.title, a.end_date FROM " + tablename + " a WHERE a.category = ? AND " +
-                    "a.end_date > timestamp '" + date.format( DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss" ) ) + "' ORDER BY end_date desc LIMIT 100";
+            if(queryView){
+                return "SELECT * FROM nextEndingAuctions a WHERE a.category = ? AND " +
+                        "a.end_date > timestamp '" + date.format( DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss" ) ) + "' ORDER BY end_date desc LIMIT 100";
+            }else {
+                return "SELECT a.id, a.title, a.end_date FROM auction a WHERE a.category = ? AND " +
+                        "a.end_date > timestamp '" + date.format( DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss" ) ) + "' ORDER BY end_date desc LIMIT 100";
+            }
         }
 
 
@@ -114,12 +121,22 @@ public class SelectTheHundredNextEndingAuctionsOfRandomCategory extends QueryBui
 
         @Override
         public HttpRequest<?> getRest() {
-            return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.auction" )
-                    .queryString( "_project", "public." + tablename + ".id,public." + tablename + ".title,public." + tablename + ".end_date" )
-                    .queryString( "public." + tablename + ".category", "=" + categoryId )
-                    .queryString( "public." + tablename + ".end_date", ">" + date.format( DateTimeFormatter.ISO_LOCAL_DATE_TIME ) )
-                    .queryString( "_sort", "public." + tablename + ".end_date@DESC" )
-                    .queryString( "_limit", 100 );
+            if(queryView){
+                return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.nextEndingAuctions" )
+                        .queryString( "_project", "public.auction.id,public.auction.title,public.auction.end_date" )
+                        .queryString( "public.nextEndingAuctions.category", "=" + categoryId )
+                        .queryString( "public.nextEndingAuctions.end_date", ">" + date.format( DateTimeFormatter.ISO_LOCAL_DATE_TIME ) )
+                        .queryString( "_sort", "public.nextEndingAuctions.end_date@DESC" )
+                        .queryString( "_limit", 100 );
+            }else{
+                return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.auction" )
+                        .queryString( "_project", "public.auction.id,public.auction.title,public.auction.end_date" )
+                        .queryString( "public.auction.category", "=" + categoryId )
+                        .queryString( "public.auction.end_date", ">" + date.format( DateTimeFormatter.ISO_LOCAL_DATE_TIME ) )
+                        .queryString( "_sort", "public.auction.end_date@DESC" )
+                        .queryString( "_limit", 100 );
+            }
+
         }
 
     }
