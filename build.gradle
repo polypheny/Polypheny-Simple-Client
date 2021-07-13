@@ -78,7 +78,7 @@ dependencies {
     implementation group: 'com.konghq', name: 'unirest-java', version: '3.7.02' // License: MIT
 
     // JDBC Drivers
-    implementation group: 'org.polypheny', name: 'polypheny-jdbc-driver', version: '1.4' // License: Apache 2.0
+    implementation group: 'org.polypheny', name: 'polypheny-jdbc-driver', version: '1.5' // License: Apache 2.0
     implementation group: 'org.postgresql', name: 'postgresql', version: '42.2.1'
     implementation group: 'monetdb', name: 'monetdb-jdbc', version: '2.29' // License: Mozilla Public License 2.0
 
