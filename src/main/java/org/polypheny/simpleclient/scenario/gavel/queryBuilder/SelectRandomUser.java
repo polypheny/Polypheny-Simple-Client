@@ -32,6 +32,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import kong.unirest.HttpRequest;
 import kong.unirest.Unirest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.polypheny.simpleclient.QueryView;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
@@ -41,10 +42,10 @@ public class SelectRandomUser extends QueryBuilder {
     private static final boolean EXPECT_RESULT = true;
 
     private final int numberOfUsers;
-    private final boolean queryView;
+    private final QueryView queryView;
 
 
-    public SelectRandomUser( int numberOfUsers, boolean queryView ) {
+    public SelectRandomUser( int numberOfUsers, QueryView queryView ) {
         this.numberOfUsers = numberOfUsers;
         this.queryView = queryView;
     }
@@ -62,13 +63,16 @@ public class SelectRandomUser extends QueryBuilder {
         private final int userId;
         private final String tablename;
 
-        public SelectRandomUserQuery( int userId, boolean queryView ) {
+
+        public SelectRandomUserQuery( int userId, QueryView queryView ) {
             super( EXPECT_RESULT );
             this.userId = userId;
 
-            if(queryView){
+            if ( queryView.equals( QueryView.VIEW ) ) {
                 tablename = "user_view";
-            }else {
+            } else if ( queryView.equals( QueryView.MATERIALIZED ) ) {
+                tablename = "user_materialized";
+            } else {
                 tablename = "\"user\"";
             }
         }

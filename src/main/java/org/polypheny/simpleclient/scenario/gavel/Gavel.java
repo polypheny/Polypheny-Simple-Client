@@ -45,6 +45,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.polypheny.simpleclient.QueryView;
 import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.executor.ExecutorException;
 import org.polypheny.simpleclient.executor.JdbcExecutor;
@@ -84,8 +85,7 @@ public class Gavel extends Scenario {
     private final Map<Integer, List<Long>> measuredTimePerQueryType;
 
 
-
-    public Gavel( JdbcExecutor.ExecutorFactory executorFactory, GavelConfig config, boolean commitAfterEveryQuery, boolean dumpQueryList, boolean queryView ) {
+    public Gavel( JdbcExecutor.ExecutorFactory executorFactory, GavelConfig config, boolean commitAfterEveryQuery, boolean dumpQueryList, QueryView queryView ) {
         super( executorFactory, commitAfterEveryQuery, dumpQueryList, queryView );
         this.config = config;
         measuredTimes = Collections.synchronizedList( new LinkedList<>() );
@@ -96,11 +96,7 @@ public class Gavel extends Scenario {
 
 
     @Override
-    public long execute( ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory, int numberOfThreads) {
-
-        if(queryViews){
-            createView();
-        }
+    public long execute( ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory, int numberOfThreads ) {
 
         log.info( "Analyzing currently stored data..." );
         Map<String, Integer> numbers = getNumbers();
@@ -115,16 +111,16 @@ public class Gavel extends Scenario {
         addNumberOfTimes( queryList, new InsertRandomAuction( numbers.get( "users" ), numbers.get( "categories" ), config ), config.numberOfAddAuctionQueries );
         addNumberOfTimes( queryList, new InsertRandomBid( numbers.get( "auctions" ), numbers.get( "users" ) ), config.numberOfAddBidQueries );
         addNumberOfTimes( queryList, new ChangeRandomAuction( numbers.get( "auctions" ), config ), config.numberOfChangeAuctionQueries );
-        addNumberOfTimes( queryList, new SelectRandomAuction( numbers.get( "auctions" ), queryViews ), config.numberOfGetAuctionQueries );
-        addNumberOfTimes( queryList, new SelectTheHundredNextEndingAuctionsOfRandomCategory( numbers.get( "categories" ), config, queryViews ), config.numberOfGetTheNextHundredEndingAuctionsOfACategoryQueries );
-        addNumberOfTimes( queryList, new SearchAuction(queryViews), config.numberOfSearchAuctionQueries );
-        addNumberOfTimes( queryList, new CountAuction(queryViews), config.numberOfCountAuctionsQueries );
-        addNumberOfTimes( queryList, new SelectTopTenCitiesByNumberOfCustomers(queryViews), config.numberOfTopTenCitiesByNumberOfCustomersQueries );
-        addNumberOfTimes( queryList, new CountBid(queryViews), config.numberOfCountBidsQueries );
-        addNumberOfTimes( queryList, new SelectRandomBid( numbers.get( "bids" ), queryViews ), config.numberOfGetBidQueries );
-        addNumberOfTimes( queryList, new SelectRandomUser( numbers.get( "users" ), queryViews ), config.numberOfGetUserQueries );
-        addNumberOfTimes( queryList, new SelectAllBidsOnRandomAuction( numbers.get( "auctions" ), queryViews ), config.numberOfGetAllBidsOnAuctionQueries );
-        addNumberOfTimes( queryList, new SelectHighestBidOnRandomAuction( numbers.get( "auctions" ), queryViews ), config.numberOfGetCurrentlyHighestBidOnAuctionQueries );
+        addNumberOfTimes( queryList, new SelectRandomAuction( numbers.get( "auctions" ), queryView ), config.numberOfGetAuctionQueries );
+        addNumberOfTimes( queryList, new SelectTheHundredNextEndingAuctionsOfRandomCategory( numbers.get( "categories" ), config, queryView ), config.numberOfGetTheNextHundredEndingAuctionsOfACategoryQueries );
+        addNumberOfTimes( queryList, new SearchAuction( queryView ), config.numberOfSearchAuctionQueries );
+        addNumberOfTimes( queryList, new CountAuction( queryView ), config.numberOfCountAuctionsQueries );
+        addNumberOfTimes( queryList, new SelectTopTenCitiesByNumberOfCustomers( queryView ), config.numberOfTopTenCitiesByNumberOfCustomersQueries );
+        addNumberOfTimes( queryList, new CountBid( queryView ), config.numberOfCountBidsQueries );
+        addNumberOfTimes( queryList, new SelectRandomBid( numbers.get( "bids" ), queryView ), config.numberOfGetBidQueries );
+        addNumberOfTimes( queryList, new SelectRandomUser( numbers.get( "users" ), queryView ), config.numberOfGetUserQueries );
+        addNumberOfTimes( queryList, new SelectAllBidsOnRandomAuction( numbers.get( "auctions" ), queryView ), config.numberOfGetAllBidsOnAuctionQueries );
+        addNumberOfTimes( queryList, new SelectHighestBidOnRandomAuction( numbers.get( "auctions" ), queryView ), config.numberOfGetCurrentlyHighestBidOnAuctionQueries );
         Collections.shuffle( queryList );
 
         // This dumps the sql queries independent of the selected interface
@@ -185,7 +181,7 @@ public class Gavel extends Scenario {
     }
 
 
-    public void createView(){
+    public void createView() {
         log.info( "Creating Views..." );
 
         Executor executor = null;
@@ -208,6 +204,29 @@ public class Gavel extends Scenario {
         }
     }
 
+
+    public void createMaterialized() {
+        log.info( "Creating Materialized Views..." );
+
+        Executor executor = null;
+        InputStream file = ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/gavel/materialized.sql" );
+
+        if ( file == null ) {
+            throw new RuntimeException( "Unable to load schema definition file" );
+        }
+        try ( BufferedReader bf = new BufferedReader( new InputStreamReader( file ) ) ) {
+            executor = executorFactory.createExecutorInstance();
+            String line = bf.readLine();
+            while ( line != null ) {
+                executor.executeQuery( new RawQuery( line, null, false ) );
+                line = bf.readLine();
+            }
+        } catch ( IOException | ExecutorException e ) {
+            throw new RuntimeException( "Exception while creating schema", e );
+        } finally {
+            commitAndCloseExecutor( executor );
+        }
+    }
 
     @Override
     public void warmUp( ProgressReporter progressReporter, int iterations ) {
@@ -238,34 +257,34 @@ public class Gavel extends Scenario {
                     executor.executeQuery( new ChangeRandomAuction( numbers.get( "auctions" ), config ).getNewQuery() );
                 }
                 if ( config.numberOfGetAuctionQueries > 0 ) {
-                    executor.executeQuery( new SelectRandomAuction( numbers.get( "auctions" ), false ).getNewQuery() );
+                    executor.executeQuery( new SelectRandomAuction( numbers.get( "auctions" ), queryView ).getNewQuery() );
                 }
                 if ( config.numberOfGetTheNextHundredEndingAuctionsOfACategoryQueries > 0 ) {
-                    executor.executeQuery( new SelectTheHundredNextEndingAuctionsOfRandomCategory( numbers.get( "categories" ), config, false ).getNewQuery() );
+                    executor.executeQuery( new SelectTheHundredNextEndingAuctionsOfRandomCategory( numbers.get( "categories" ), config, queryView ).getNewQuery() );
                 }
                 if ( config.numberOfSearchAuctionQueries > 0 ) {
-                    executor.executeQuery( new SearchAuction(false).getNewQuery() );
+                    executor.executeQuery( new SearchAuction( queryView ).getNewQuery() );
                 }
                 if ( config.numberOfCountAuctionsQueries > 0 ) {
-                    executor.executeQuery( new CountAuction(false).getNewQuery() );
+                    executor.executeQuery( new CountAuction( queryView ).getNewQuery() );
                 }
                 if ( config.numberOfTopTenCitiesByNumberOfCustomersQueries > 0 ) {
-                    executor.executeQuery( new SelectTopTenCitiesByNumberOfCustomers(false).getNewQuery() );
+                    executor.executeQuery( new SelectTopTenCitiesByNumberOfCustomers( queryView ).getNewQuery() );
                 }
                 if ( config.numberOfCountBidsQueries > 0 ) {
-                    executor.executeQuery( new CountBid(false).getNewQuery() );
+                    executor.executeQuery( new CountBid( queryView ).getNewQuery() );
                 }
                 if ( config.numberOfGetBidQueries > 0 ) {
-                    executor.executeQuery( new SelectRandomBid( numbers.get( "bids" ), false ).getNewQuery() );
+                    executor.executeQuery( new SelectRandomBid( numbers.get( "bids" ), queryView ).getNewQuery() );
                 }
                 if ( config.numberOfGetUserQueries > 0 ) {
-                    executor.executeQuery( new SelectRandomUser( numbers.get( "users" ), false ).getNewQuery() );
+                    executor.executeQuery( new SelectRandomUser( numbers.get( "users" ), queryView ).getNewQuery() );
                 }
                 if ( config.numberOfGetAllBidsOnAuctionQueries > 0 ) {
-                    executor.executeQuery( new SelectAllBidsOnRandomAuction( numbers.get( "auctions" ), false ).getNewQuery() );
+                    executor.executeQuery( new SelectAllBidsOnRandomAuction( numbers.get( "auctions" ), queryView ).getNewQuery() );
                 }
                 if ( config.numberOfGetCurrentlyHighestBidOnAuctionQueries > 0 ) {
-                    executor.executeQuery( new SelectHighestBidOnRandomAuction( numbers.get( "auctions" ), false ).getNewQuery() );
+                    executor.executeQuery( new SelectHighestBidOnRandomAuction( numbers.get( "auctions" ), queryView ).getNewQuery() );
                 }
             } catch ( ExecutorException e ) {
                 throw new RuntimeException( "Error while executing warm-up queries", e );
@@ -431,6 +450,12 @@ public class Gavel extends Scenario {
             throw new RuntimeException( "Exception while creating schema", e );
         } finally {
             commitAndCloseExecutor( executor );
+        }
+
+        if ( queryView.equals( QueryView.VIEW ) ) {
+            createView();
+        } else if ( queryView.equals( QueryView.MATERIALIZED ) ) {
+            createMaterialized();
         }
 
     }
@@ -617,10 +642,10 @@ public class Gavel extends Scenario {
         Executor executor = null;
         try {
             executor = executorFactory.createExecutorInstance();
-            numbers.put( "auctions", (int) countNumberOfRecords( executor, new CountAuction(false) ) );
+            numbers.put( "auctions", (int) countNumberOfRecords( executor, new CountAuction( QueryView.TABLE ) ) );
             numbers.put( "users", (int) countNumberOfRecords( executor, new CountUser() ) );
             numbers.put( "categories", (int) countNumberOfRecords( executor, new CountCategory() ) );
-            numbers.put( "bids", (int) countNumberOfRecords( executor, new CountBid(false) ) );
+            numbers.put( "bids", (int) countNumberOfRecords( executor, new CountBid( QueryView.TABLE ) ) );
 
             log.debug( "Number of auctions: " + numbers.get( "auctions" ) );
             log.debug( "Number of users: " + numbers.get( "users" ) );

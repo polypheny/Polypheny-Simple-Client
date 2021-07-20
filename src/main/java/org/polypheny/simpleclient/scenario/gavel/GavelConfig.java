@@ -50,6 +50,7 @@ public class GavelConfig extends AbstractConfig {
     public final int numberOfGetUserQueries;
     public final int numberOfGetAllBidsOnAuctionQueries;
     public final int numberOfGetCurrentlyHighestBidOnAuctionQueries;
+    public final int numberOfComplexViewTestQueries;
 
     public final int numberOfUsers;
     public final int numberOfAuctions;
@@ -106,6 +107,7 @@ public class GavelConfig extends AbstractConfig {
         numberOfGetUserQueries = getIntProperty( properties, "numberOfGetUserQueries" ) * multiplier;
         numberOfGetAllBidsOnAuctionQueries = getIntProperty( properties, "numberOfGetAllBidsOnAuctionQueries" ) * multiplier;
         numberOfGetCurrentlyHighestBidOnAuctionQueries = getIntProperty( properties, "numberOfGetCurrentlyHighestBidOnAuctionQueries" ) * multiplier;
+        numberOfComplexViewTestQueries = getIntProperty( properties, "numberOfComplexViewTestQueries" ) * multiplier;
 
         numberOfUsers = getIntProperty( properties, "numberOfUsers" ) * multiplier;
         numberOfAuctions = getIntProperty( properties, "numberOfAuctions" ) * multiplier;
@@ -169,6 +171,8 @@ public class GavelConfig extends AbstractConfig {
         numberOfCountBidsQueries = Integer.parseInt( cdl.get( "numberOfCountBidsQueries" ) );
 
         numberOfTopTenCitiesByNumberOfCustomersQueries = Integer.parseInt( cdl.get( "numberOfTopTenCitiesByNumberOfCustomersQueries" ) );
+
+        numberOfComplexViewTestQueries = Integer.parseInt( cdl.get( "numberOfComplexViewTestQueries" ) );
 
         // Data Generation
         numberOfUsers = Integer.parseInt( cdl.get( "numberOfUsers" ) );

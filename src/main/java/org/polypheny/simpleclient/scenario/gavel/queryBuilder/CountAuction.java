@@ -31,6 +31,7 @@ import java.util.Map;
 import kong.unirest.HttpRequest;
 import kong.unirest.Unirest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.polypheny.simpleclient.QueryView;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
@@ -38,24 +39,26 @@ import org.polypheny.simpleclient.query.QueryBuilder;
 public class CountAuction extends QueryBuilder {
 
     private static final boolean EXPECT_RESULT = true;
-    private final boolean queryView;
+    private final QueryView queryView;
 
-    public CountAuction(boolean queryView) {
+
+    public CountAuction( QueryView queryView ) {
         this.queryView = queryView;
     }
 
 
     @Override
     public Query getNewQuery() {
-        return new CountAuctionQuery( queryView);
+        return new CountAuctionQuery( queryView );
     }
 
 
     private static class CountAuctionQuery extends Query {
 
-        private final boolean queryView;
+        private final QueryView queryView;
 
-        public CountAuctionQuery(boolean queryView) {
+
+        public CountAuctionQuery( QueryView queryView ) {
             super( EXPECT_RESULT );
             this.queryView = queryView;
         }
@@ -63,9 +66,11 @@ public class CountAuction extends QueryBuilder {
 
         @Override
         public String getSql() {
-            if(queryView){
+            if ( queryView.equals( QueryView.VIEW ) ) {
                 return "SELECT * FROM countAuction";
-            }else{
+            } else if ( queryView.equals( QueryView.MATERIALIZED ) ) {
+                return "SELECT * FROM countAuction_materialized";
+            } else {
                 return "SELECT count(*) as NUMBER FROM auction";
             }
 
@@ -86,9 +91,11 @@ public class CountAuction extends QueryBuilder {
 
         @Override
         public HttpRequest<?> getRest() {
-            if(queryView){
+            if ( queryView.equals( QueryView.VIEW ) ) {
                 return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.countAuction" );
-            }else{
+            } else if ( queryView.equals( QueryView.MATERIALIZED ) ) {
+                return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.countAuction_materialized" );
+            } else {
                 return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.auction" )
                         .queryString( "_project", "public.auction.id@num(COUNT)" );
             }

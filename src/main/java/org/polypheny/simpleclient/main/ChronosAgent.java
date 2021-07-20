@@ -44,6 +44,7 @@ import org.apache.commons.lang3.tuple.Triple;
 import org.polypheny.control.client.ClientType;
 import org.polypheny.control.client.LogHandler;
 import org.polypheny.control.client.PolyphenyControlConnector;
+import org.polypheny.simpleclient.QueryView;
 import org.polypheny.simpleclient.cli.ChronosCommand;
 import org.polypheny.simpleclient.executor.CottontaildbExecutor.CottontailExecutorFactory;
 import org.polypheny.simpleclient.executor.CottontaildbExecutor.CottontailInstance;
@@ -80,7 +81,7 @@ public class ChronosAgent extends AbstractChronosAgent {
 
     private final boolean writeCsv;
     private final boolean dumpQueryList;
-    private boolean queryViews;
+    private QueryView queryView;
 
 
     public ChronosAgent( InetAddress address, int port, boolean secure, boolean useHostname, String environment, String[] supports, boolean writeCsv, boolean dumpQueryList ) {
@@ -127,7 +128,7 @@ public class ChronosAgent extends AbstractChronosAgent {
         } catch ( URISyntaxException e ) {
             log.error( "Exception while connecting to Polypheny Control", e );
         }
-        queryViews = false;
+
     }
 
 
@@ -141,7 +142,20 @@ public class ChronosAgent extends AbstractChronosAgent {
     protected Object prepare( ChronosJob chronosJob, final File inputDirectory, final File outputDirectory, Properties properties, Object o ) {
         // Parse CDL
         Map<String, String> parsedConfig = parseConfig( chronosJob );
-        queryViews = parsedConfig.get( "queryViews" ).equals( "Yes" );
+
+        switch ( parsedConfig.get( "queryViews" ) ) {
+            case "Table":
+                queryView = QueryView.TABLE;
+                break;
+            case "View":
+                queryView = QueryView.VIEW;
+                break;
+            case "Materialized":
+                queryView = QueryView.MATERIALIZED;
+                break;
+            default:
+                queryView = QueryView.TABLE;
+        }
 
         // Create Executor Factory
         Executor.ExecutorFactory executorFactory;
@@ -172,12 +186,7 @@ public class ChronosAgent extends AbstractChronosAgent {
                 config = new GavelConfig( parsedConfig );
                 log.info( "inside chronosAgent" );
                 log.info( parsedConfig.get( "queryViews" ) );
-                if(queryViews){
-                    log.info( "inside VIEW" );
-                    scenario = new Gavel( executorFactory, (GavelConfig) config, true, dumpQueryList, true );
-                }else {
-                    scenario = new Gavel( executorFactory, (GavelConfig) config, true, dumpQueryList, false );
-                }
+                scenario = new Gavel( executorFactory, (GavelConfig) config, true, dumpQueryList, queryView );
                 break;
             case "knnBench":
                 config = new KnnBenchConfig( parsedConfig );

@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.Objects;
 import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
+import org.polypheny.simpleclient.QueryView;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
 import org.polypheny.simpleclient.scenario.gavel.Gavel;
 import org.polypheny.simpleclient.scenario.gavel.GavelConfig;
@@ -16,21 +17,21 @@ public class Easy {
 
     public static void schema( ExecutorFactory executorFactory, boolean commitAfterEveryQuery ) {
         GavelConfig config = new GavelConfig( getProperties(), 1 );
-        Gavel gavel = new Gavel( executorFactory, config, commitAfterEveryQuery, false, false );
+        Gavel gavel = new Gavel( executorFactory, config, commitAfterEveryQuery, false, QueryView.TABLE );
         gavel.createSchema( true );
     }
 
 
     public static void data( ExecutorFactory executorFactory, int multiplier, boolean commitAfterEveryQuery ) {
         GavelConfig config = new GavelConfig( getProperties(), multiplier );
-        Gavel gavel = new Gavel( executorFactory, config, commitAfterEveryQuery, false, false );
+        Gavel gavel = new Gavel( executorFactory, config, commitAfterEveryQuery, false, QueryView.TABLE );
 
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
         gavel.generateData( progressReporter );
     }
 
 
-    public static void workload( ExecutorFactory executorFactory, int multiplier, boolean commitAfterEveryQuery, boolean writeCsv, boolean dumpQueryList, boolean queryView ) {
+    public static void workload( ExecutorFactory executorFactory, int multiplier, boolean commitAfterEveryQuery, boolean writeCsv, boolean dumpQueryList, QueryView queryView ) {
         GavelConfig config = new GavelConfig( getProperties(), multiplier );
         Gavel gavel = new Gavel( executorFactory, config, commitAfterEveryQuery, dumpQueryList, queryView );
 
@@ -47,7 +48,7 @@ public class Easy {
 
     public static void warmup( ExecutorFactory executorFactory, int multiplier, boolean commitAfterEveryQuery, boolean dumpQueryList ) {
         GavelConfig config = new GavelConfig( getProperties(), 1 );
-        Gavel gavel = new Gavel( executorFactory, config, commitAfterEveryQuery, dumpQueryList,false );
+        Gavel gavel = new Gavel( executorFactory, config, commitAfterEveryQuery, dumpQueryList, QueryView.TABLE );
 
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
         gavel.warmUp( progressReporter, multiplier );

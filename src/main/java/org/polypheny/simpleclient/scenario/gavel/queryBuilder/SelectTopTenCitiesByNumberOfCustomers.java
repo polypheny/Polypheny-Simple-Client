@@ -31,6 +31,7 @@ import java.util.Map;
 import kong.unirest.HttpRequest;
 import kong.unirest.Unirest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.polypheny.simpleclient.QueryView;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
@@ -38,9 +39,9 @@ import org.polypheny.simpleclient.query.QueryBuilder;
 public class SelectTopTenCitiesByNumberOfCustomers extends QueryBuilder {
 
     private static final boolean EXPECT_RESULT = true;
-    private final boolean queryView;
+    private final QueryView queryView;
 
-    public SelectTopTenCitiesByNumberOfCustomers(boolean queryView){
+    public SelectTopTenCitiesByNumberOfCustomers(QueryView queryView){
         this.queryView = queryView;
     }
 
@@ -54,11 +55,13 @@ public class SelectTopTenCitiesByNumberOfCustomers extends QueryBuilder {
 
         private final String tablename;
 
-        public SelectTopTenCitiesByNumberOfCustomersQuery(boolean queryView) {
+        public SelectTopTenCitiesByNumberOfCustomersQuery(QueryView queryView) {
             super( EXPECT_RESULT );
 
-            if(queryView){
+            if(queryView.equals( QueryView.VIEW )){
                 tablename = "user_view";
+            }else if(queryView.equals( QueryView.MATERIALIZED )){
+                tablename = "user_materialized";
             }else {
                 tablename = "\"user\"";
             }

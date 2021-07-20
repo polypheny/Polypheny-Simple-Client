@@ -32,6 +32,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import kong.unirest.HttpRequest;
 import kong.unirest.Unirest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.polypheny.simpleclient.QueryView;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
@@ -41,10 +42,10 @@ public class SelectAllBidsOnRandomAuction extends QueryBuilder {
     private static final boolean EXPECT_RESULT = true;
 
     private final int numberOfAuctions;
-    private final boolean queryView;
+    private final QueryView queryView;
 
 
-    public SelectAllBidsOnRandomAuction( int numberOfAuctions,  boolean queryView  ) {
+    public SelectAllBidsOnRandomAuction( int numberOfAuctions,  QueryView queryView  ) {
         this.numberOfAuctions = numberOfAuctions;
         this.queryView = queryView;
     }
@@ -62,12 +63,14 @@ public class SelectAllBidsOnRandomAuction extends QueryBuilder {
         private final int auctionId;
         private final String tablename;
 
-        public SelectAllBidsOnRandomAuctionQuery( int auctionId, boolean queryView ) {
+        public SelectAllBidsOnRandomAuctionQuery( int auctionId, QueryView queryView ) {
             super( EXPECT_RESULT );
             this.auctionId = auctionId;
 
-            if(queryView){
+            if(queryView.equals( QueryView.VIEW )){
                 tablename = "bid_view";
+            }else if(queryView.equals( QueryView.MATERIALIZED )){
+                tablename = "bid_materialized";
             }else {
                 tablename = "bid";
             }

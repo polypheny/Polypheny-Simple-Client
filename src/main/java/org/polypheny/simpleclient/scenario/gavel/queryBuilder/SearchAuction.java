@@ -33,6 +33,7 @@ import java.util.Map;
 import kong.unirest.HttpRequest;
 import kong.unirest.Unirest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.polypheny.simpleclient.QueryView;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
@@ -42,10 +43,10 @@ public class SearchAuction extends QueryBuilder {
     private static final boolean EXPECT_RESULT = true;
 
     private final TextProducer text;
-    private final boolean queryView;
+    private final QueryView queryView;
 
 
-    public SearchAuction(boolean queryView) {
+    public SearchAuction(QueryView queryView) {
         text = Fairy.create().textProducer();
         this.queryView = queryView;
     }
@@ -63,13 +64,15 @@ public class SearchAuction extends QueryBuilder {
         private final String tablename;
 
 
-        public SearchAuctionQuery( String searchString, boolean queryView ) {
+        public SearchAuctionQuery( String searchString, QueryView queryView ) {
             super( EXPECT_RESULT );
             this.searchString = searchString;
 
-            if(queryView){
+            if(queryView.equals( QueryView.VIEW )){
                 tablename = "auction_view";
-            }else {
+            }else if(queryView.equals( QueryView.MATERIALIZED )){
+                tablename = "auction_materialized";
+            } else {
                 tablename = "auction";
             }
         }

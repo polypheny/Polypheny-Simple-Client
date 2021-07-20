@@ -32,6 +32,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import kong.unirest.HttpRequest;
 import kong.unirest.Unirest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.polypheny.simpleclient.QueryView;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
@@ -41,10 +42,10 @@ public class SelectRandomBid extends QueryBuilder {
     private static final boolean EXPECT_RESULT = true;
 
     private final int numberOfBids;
-    private final boolean queryView;
+    private final QueryView queryView;
 
 
-    public SelectRandomBid( int numberOfBids, boolean queryView ) {
+    public SelectRandomBid( int numberOfBids, QueryView queryView ) {
         this.numberOfBids = numberOfBids;
         this.queryView = queryView;
     }
@@ -62,13 +63,16 @@ public class SelectRandomBid extends QueryBuilder {
         private final int bidId;
         private final String tablename;
 
-        public SelectRandomBidQuery( int bidId, boolean queryView ) {
+
+        public SelectRandomBidQuery( int bidId, QueryView queryView ) {
             super( EXPECT_RESULT );
             this.bidId = bidId;
 
-            if(queryView){
+            if ( queryView.equals( QueryView.VIEW ) ) {
                 tablename = "bid_view";
-            }else {
+            } else if ( queryView.equals( QueryView.MATERIALIZED ) ) {
+                tablename = "bid_materialized";
+            } else {
                 tablename = "bid";
             }
         }
@@ -97,7 +101,7 @@ public class SelectRandomBid extends QueryBuilder {
         @Override
         public HttpRequest<?> getRest() {
             return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public." + tablename )
-                    .queryString( "public."+ tablename + ".id", "=" + bidId );
+                    .queryString( "public." + tablename + ".id", "=" + bidId );
         }
 
     }

@@ -18,6 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.polypheny.simpleclient.QueryView;
 import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.executor.ExecutorException;
 import org.polypheny.simpleclient.main.ChronosAgent;
@@ -48,7 +49,7 @@ public class KnnBench extends Scenario {
 
 
     public KnnBench( Executor.ExecutorFactory executorFactory, KnnBenchConfig config, boolean commitAfterEveryQuery, boolean dumpQueryList ) {
-        super( executorFactory, commitAfterEveryQuery, dumpQueryList, false );
+        super( executorFactory, commitAfterEveryQuery, dumpQueryList, QueryView.TABLE );
         this.config = config;
 
         measuredTimes = Collections.synchronizedList( new LinkedList<>() );
