@@ -7,12 +7,12 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
-public class SelectComplex extends QueryBuilder {
+public class SelectComplexView extends QueryBuilder {
 
     private static final boolean EXPECT_RESULT = true;
     private final boolean queryView;
 
-    public SelectComplex(boolean queryView){
+    public SelectComplexView(boolean queryView){
         this.queryView = queryView;
     }
 

@@ -93,10 +93,10 @@ public class SelectTheHundredNextEndingAuctionsOfRandomCategory extends QueryBui
         public String getSql() {
 
             if ( queryView.equals( QueryView.VIEW ) ) {
-                return "SELECT a.id, a.title, a.end_date FROM auction_view a WHERE a.category =" + categoryId + " AND " +
+                return "SELECT a.id, a.title, a.end_date FROM auctionCategory_view a WHERE a.category =" + categoryId + " AND " +
                         "a.end_date > timestamp '" + date.format( DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss" ) ) + "' ORDER BY end_date desc LIMIT 100";
             } else if ( queryView.equals( QueryView.MATERIALIZED ) ) {
-                return "SELECT a.id, a.title, a.end_date FROM auction_materialized a WHERE a.category =" + categoryId + " AND " +
+                return "SELECT a.id, a.title, a.end_date FROM auctionCategory_materialized a WHERE a.category =" + categoryId + " AND " +
                         "a.end_date > timestamp '" + date.format( DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss" ) ) + "' ORDER BY end_date desc LIMIT 100";
             } else {
                 return "SELECT a.id, a.title, a.end_date FROM auction a WHERE a.category =" + categoryId + " AND " +
@@ -108,13 +108,13 @@ public class SelectTheHundredNextEndingAuctionsOfRandomCategory extends QueryBui
         @Override
         public String getParameterizedSqlQuery() {
             if ( queryView.equals( QueryView.VIEW ) ) {
-                return "SELECT a.id, a.title, a.end_date FROM auction_view a WHERE a.category = ? AND " +
+                return "SELECT a.id, a.title, a.end_date FROM auctionCategory_view a WHERE a.category=? AND " +
                         "a.end_date > timestamp '" + date.format( DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss" ) ) + "' ORDER BY end_date desc LIMIT 100";
             } else if ( queryView.equals( QueryView.MATERIALIZED )) {
-                return "SELECT a.id, a.title, a.end_date FROM auction_materialized a WHERE a.category = ? AND " +
+                return "SELECT a.id, a.title, a.end_date FROM auctionCategory_materialized a WHERE a.category=? AND " +
                         "a.end_date > timestamp '" + date.format( DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss" ) ) + "' ORDER BY end_date desc LIMIT 100";
             } else {
-                return "SELECT a.id, a.title, a.end_date FROM auction a WHERE a.category = ? AND " +
+                return "SELECT a.id, a.title, a.end_date FROM auction a WHERE a.category=? AND " +
                         "a.end_date > timestamp '" + date.format( DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss" ) ) + "' ORDER BY end_date desc LIMIT 100";
             }
         }
@@ -131,18 +131,18 @@ public class SelectTheHundredNextEndingAuctionsOfRandomCategory extends QueryBui
         @Override
         public HttpRequest<?> getRest() {
             if ( queryView.equals( QueryView.VIEW ) ) {
-                return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.nextEndingAuctions" )
-                        .queryString( "_project", "public.auction_view.id,public.auction_view.title,public.auction_view.end_date" )
-                        .queryString( "public.auction_view.category", "=" + categoryId )
-                        .queryString( "public.auction_view.end_date", ">" + date.format( DateTimeFormatter.ISO_LOCAL_DATE_TIME ) )
-                        .queryString( "_sort", "public.auction_view.end_date@DESC" )
+                return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.auctionCategory_view" )
+                        .queryString( "_project", "public.auctionCategory_view.id,public.auctionCategory_view.title,public.auctionCategory_view.end_date" )
+                        .queryString( "public.auctionCategory_view.category", "=" + categoryId )
+                        .queryString( "public.auctionCategory_view.end_date", ">" + date.format( DateTimeFormatter.ISO_LOCAL_DATE_TIME ) )
+                        .queryString( "_sort", "public.auctionCategory_view.end_date@DESC" )
                         .queryString( "_limit", 100 );
             }else if(queryView.equals( QueryView.MATERIALIZED )){
-                return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.nextEndingAuctions_materialized" )
-                        .queryString( "_project", "public.auction_materialized.id,public.auction_materialized.title,public.auction_materialized.end_date" )
-                        .queryString( "public.auction_materialized.category", "=" + categoryId )
-                        .queryString( "public.auction_materialized.end_date", ">" + date.format( DateTimeFormatter.ISO_LOCAL_DATE_TIME ) )
-                        .queryString( "_sort", "public.auction_materialized.end_date@DESC" )
+                return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.auctionCategory_materialized" )
+                        .queryString( "_project", "public.auctionCategory_materialized.id,public.auctionCategory_materialized.title,public.auctionCategory_materialized.end_date" )
+                        .queryString( "public.auctionCategory_materialized.category", "=" + categoryId )
+                        .queryString( "public.auctionCategory_materialized.end_date", ">" + date.format( DateTimeFormatter.ISO_LOCAL_DATE_TIME ) )
+                        .queryString( "_sort", "public.auctionCategory_materialized.end_date@DESC" )
                         .queryString( "_limit", 100 );
             } else {
                 return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.auction" )
