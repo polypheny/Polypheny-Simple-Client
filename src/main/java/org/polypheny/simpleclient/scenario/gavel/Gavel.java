@@ -68,11 +68,15 @@ import org.polypheny.simpleclient.scenario.gavel.queryBuilder.InsertUser;
 import org.polypheny.simpleclient.scenario.gavel.queryBuilder.SearchAuction;
 import org.polypheny.simpleclient.scenario.gavel.queryBuilder.SelectAllBidsOnRandomAuction;
 import org.polypheny.simpleclient.scenario.gavel.queryBuilder.SelectHighestBidOnRandomAuction;
+import org.polypheny.simpleclient.scenario.gavel.queryBuilder.SelectHighestOverallBid;
+import org.polypheny.simpleclient.scenario.gavel.queryBuilder.SelectPriceBetweenAndNotInCategory;
 import org.polypheny.simpleclient.scenario.gavel.queryBuilder.SelectRandomAuction;
 import org.polypheny.simpleclient.scenario.gavel.queryBuilder.SelectRandomBid;
 import org.polypheny.simpleclient.scenario.gavel.queryBuilder.SelectRandomUser;
 import org.polypheny.simpleclient.scenario.gavel.queryBuilder.SelectTheHundredNextEndingAuctionsOfRandomCategory;
+import org.polypheny.simpleclient.scenario.gavel.queryBuilder.SelectTopHundredSellerByNumberOfAuctions;
 import org.polypheny.simpleclient.scenario.gavel.queryBuilder.SelectTopTenCitiesByNumberOfCustomers;
+import org.polypheny.simpleclient.scenario.multimedia.queryBuilder.CreateTable;
 
 
 @Slf4j
@@ -112,8 +116,8 @@ public class Gavel extends Scenario {
         addNumberOfTimes( queryList, new InsertRandomBid( numbers.get( "auctions" ), numbers.get( "users" ) ), config.numberOfAddBidQueries );
         addNumberOfTimes( queryList, new ChangeRandomAuction( numbers.get( "auctions" ), config ), config.numberOfChangeAuctionQueries );
         addNumberOfTimes( queryList, new SelectRandomAuction( numbers.get( "auctions" ), queryView ), config.numberOfGetAuctionQueries );
-        addNumberOfTimes( queryList, new SelectTheHundredNextEndingAuctionsOfRandomCategory( numbers.get( "categories" ), config, queryView ), config.numberOfGetTheNextHundredEndingAuctionsOfACategoryQueries );
-        addNumberOfTimes( queryList, new SearchAuction( queryView ), config.numberOfSearchAuctionQueries );
+        addNumberOfTimes( queryList, new SelectTheHundredNextEndingAuctionsOfRandomCategory( numbers.get( "categories" ), config, QueryView.TABLE ), config.numberOfGetTheNextHundredEndingAuctionsOfACategoryQueries );
+        addNumberOfTimes( queryList, new SearchAuction( QueryView.TABLE ), config.numberOfSearchAuctionQueries );
         addNumberOfTimes( queryList, new CountAuction( queryView ), config.numberOfCountAuctionsQueries );
         addNumberOfTimes( queryList, new SelectTopTenCitiesByNumberOfCustomers( queryView ), config.numberOfTopTenCitiesByNumberOfCustomersQueries );
         addNumberOfTimes( queryList, new CountBid( queryView ), config.numberOfCountBidsQueries );
@@ -121,6 +125,10 @@ public class Gavel extends Scenario {
         addNumberOfTimes( queryList, new SelectRandomUser( numbers.get( "users" ), queryView ), config.numberOfGetUserQueries );
         addNumberOfTimes( queryList, new SelectAllBidsOnRandomAuction( numbers.get( "auctions" ), queryView ), config.numberOfGetAllBidsOnAuctionQueries );
         addNumberOfTimes( queryList, new SelectHighestBidOnRandomAuction( numbers.get( "auctions" ), queryView ), config.numberOfGetCurrentlyHighestBidOnAuctionQueries );
+        addNumberOfTimes( queryList, new SelectHighestOverallBid( queryView ), config.totalNumOfHighestOverallBidQueries );
+        addNumberOfTimes( queryList, new SelectTopHundredSellerByNumberOfAuctions( queryView ), config.totalNumOfTopHundredSellerByNumberOfAuctionsQueries );
+        addNumberOfTimes( queryList, new SelectPriceBetweenAndNotInCategory( queryView ), config.totalNumOfPriceBetweenAndNotInCategoryQueries );
+
         Collections.shuffle( queryList );
 
         // This dumps the sql queries independent of the selected interface
@@ -130,6 +138,7 @@ public class Gavel extends Scenario {
                 FileWriter fw = new FileWriter( outputDirectory.getPath() + File.separator + "queryList" );
                 queryList.forEach( query -> {
                     try {
+                        System.out.println("show what querys get appended: " + query.query.getSql());
                         fw.append( query.query.getSql() ).append( "\n" );
                     } catch ( IOException e ) {
                         log.error( "Error while dumping query list", e );
@@ -180,53 +189,6 @@ public class Gavel extends Scenario {
         return runTime;
     }
 
-
-    public void createView() {
-        log.info( "Creating Views..." );
-
-        Executor executor = null;
-        InputStream file = ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/gavel/view.sql" );
-
-        if ( file == null ) {
-            throw new RuntimeException( "Unable to load schema definition file" );
-        }
-        try ( BufferedReader bf = new BufferedReader( new InputStreamReader( file ) ) ) {
-            executor = executorFactory.createExecutorInstance();
-            String line = bf.readLine();
-            while ( line != null ) {
-                executor.executeQuery( new RawQuery( line, null, false ) );
-                line = bf.readLine();
-            }
-        } catch ( IOException | ExecutorException e ) {
-            throw new RuntimeException( "Exception while creating schema", e );
-        } finally {
-            commitAndCloseExecutor( executor );
-        }
-    }
-
-
-    public void createMaterialized() {
-        log.info( "Creating Materialized Views..." );
-
-        Executor executor = null;
-        InputStream file = ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/gavel/materialized.sql" );
-
-        if ( file == null ) {
-            throw new RuntimeException( "Unable to load schema definition file" );
-        }
-        try ( BufferedReader bf = new BufferedReader( new InputStreamReader( file ) ) ) {
-            executor = executorFactory.createExecutorInstance();
-            String line = bf.readLine();
-            while ( line != null ) {
-                executor.executeQuery( new RawQuery( line, null, false ) );
-                line = bf.readLine();
-            }
-        } catch ( IOException | ExecutorException e ) {
-            throw new RuntimeException( "Exception while creating schema", e );
-        } finally {
-            commitAndCloseExecutor( executor );
-        }
-    }
 
     @Override
     public void warmUp( ProgressReporter progressReporter, int iterations ) {
@@ -286,6 +248,18 @@ public class Gavel extends Scenario {
                 if ( config.numberOfGetCurrentlyHighestBidOnAuctionQueries > 0 ) {
                     executor.executeQuery( new SelectHighestBidOnRandomAuction( numbers.get( "auctions" ), queryView ).getNewQuery() );
                 }
+
+                /*
+                if ( config.totalNumOfPriceBetweenAndNotInCategoryQueries > 0 ) {
+                    executor.executeQuery( new SelectPriceBetweenAndNotInCategory( queryView ).getNewQuery() );
+                }
+                if ( config.totalNumOfTopHundredSellerByNumberOfAuctionsQueries > 0 ) {
+                    executor.executeQuery( new SelectTopHundredSellerByNumberOfAuctions( queryView ).getNewQuery() );
+                }
+                if ( config.totalNumOfHighestOverallBidQueries > 0 ) {
+                    executor.executeQuery( new SelectHighestOverallBid( queryView ).getNewQuery() );
+                }*/
+
             } catch ( ExecutorException e ) {
                 throw new RuntimeException( "Error while executing warm-up queries", e );
             } finally {
@@ -428,7 +402,6 @@ public class Gavel extends Scenario {
     @Override
     public void createSchema( boolean includingKeys ) {
         log.info( "Creating schema..." );
-        Executor executor = null;
         InputStream file;
         if ( includingKeys ) {
             file = ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/gavel/schema.sql" );
@@ -436,6 +409,28 @@ public class Gavel extends Scenario {
             file = ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/gavel/schema-without-keys-and-constraints.sql" );
         }
         // Check if file != null
+        executeSchema( file );
+
+    }
+
+    @Override
+    public void createView( QueryView queryView) {
+        log.info( "Creating Views..." );
+
+        InputStream file = null;
+        if(queryView == QueryView.VIEW){
+            file = ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/gavel/view.sql" );
+        }else{
+            file = ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/gavel/materialized.sql" );
+        }
+
+        executeSchema( file );
+    }
+
+
+
+    private void executeSchema( InputStream file ) {
+        Executor executor = null;
         if ( file == null ) {
             throw new RuntimeException( "Unable to load schema definition file" );
         }
@@ -451,13 +446,6 @@ public class Gavel extends Scenario {
         } finally {
             commitAndCloseExecutor( executor );
         }
-
-        if ( queryView.equals( QueryView.VIEW ) ) {
-            createView();
-        } else if ( queryView.equals( QueryView.MATERIALIZED ) ) {
-            createMaterialized();
-        }
-
     }
 
 
@@ -566,8 +554,43 @@ public class Gavel extends Scenario {
             }
         }
 
+        System.out.println("BEFORE ALTERING VIEW, INSIDE DATA GENERATION");
+
+        if ( queryView == QueryView.MATERIALIZED ) {
+            updateMaterializedView();
+        }
+
         if ( threadMonitor.aborted ) {
             throw new RuntimeException( "Exception while generating data", threadMonitor.exception );
+        }
+    }
+
+
+    public void updateMaterializedView() {
+        log.info( "Update Materialized View..." );
+        Executor executor = null;
+
+        System.out.println("inside of ALTERING VIEW");
+
+        try {
+            executor = executorFactory.createExecutorInstance();
+
+            executor.executeQuery( (new CreateTable( "ALTER MATERIALIZED VIEW user_materialized FRESHNESS MANUAL" )).getNewQuery() );
+            executor.executeQuery( (new CreateTable( "ALTER MATERIALIZED VIEW bid_materialized FRESHNESS MANUAL" )).getNewQuery() );
+            executor.executeQuery( (new CreateTable( "ALTER MATERIALIZED VIEW picture_materialized FRESHNESS MANUAL" )).getNewQuery() );
+            executor.executeQuery( (new CreateTable( "ALTER MATERIALIZED VIEW auction_materialized FRESHNESS MANUAL" )).getNewQuery() );
+            executor.executeQuery( (new CreateTable( "ALTER MATERIALIZED VIEW category_materialized FRESHNESS MANUAL" )).getNewQuery() );
+            executor.executeQuery( (new CreateTable( "ALTER MATERIALIZED VIEW countAuction_materialized FRESHNESS MANUAL" )).getNewQuery() );
+            executor.executeQuery( (new CreateTable( "ALTER MATERIALIZED VIEW countBid_materialized FRESHNESS MANUAL" )).getNewQuery() );
+            executor.executeQuery( (new CreateTable( "ALTER MATERIALIZED VIEW auctionCategory_materialized FRESHNESS MANUAL" )).getNewQuery() );
+            executor.executeQuery( (new CreateTable( "ALTER MATERIALIZED VIEW topHundredSellerByNumberOfAuctions_materialized FRESHNESS MANUAL" )).getNewQuery() );
+            executor.executeQuery( (new CreateTable( "ALTER MATERIALIZED VIEW highestBid_materialized FRESHNESS MANUAL" )).getNewQuery() );
+            executor.executeQuery( (new CreateTable( "ALTER MATERIALIZED VIEW priceBetween_materialized FRESHNESS MANUAL" )).getNewQuery() );
+
+        } catch ( ExecutorException e ) {
+            throw new RuntimeException( "Exception while updating Materialized View", e );
+        } finally {
+            commitAndCloseExecutor( executor );
         }
     }
 

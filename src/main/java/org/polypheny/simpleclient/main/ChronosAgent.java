@@ -36,6 +36,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URISyntaxException;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
@@ -143,6 +144,12 @@ public class ChronosAgent extends AbstractChronosAgent {
         // Parse CDL
         Map<String, String> parsedConfig = parseConfig( chronosJob );
 
+        for( Entry<String, String> string : parsedConfig.entrySet()){
+            System.out.println("Show this config key: " + string.getKey());
+            System.out.println("Show this config value: " + string.getValue());
+        }
+
+
         switch ( parsedConfig.get( "queryViews" ) ) {
             case "Table":
                 queryView = QueryView.TABLE;
@@ -185,7 +192,6 @@ public class ChronosAgent extends AbstractChronosAgent {
             case "gavel":
                 config = new GavelConfig( parsedConfig );
                 log.info( "inside chronosAgent" );
-                log.info( parsedConfig.get( "queryViews" ) );
                 scenario = new Gavel( executorFactory, (GavelConfig) config, true, dumpQueryList, queryView );
                 break;
             case "knnBench":
@@ -249,6 +255,12 @@ public class ChronosAgent extends AbstractChronosAgent {
                 break;
             default:
                 throw new RuntimeException( "Unknown system: " + config.system );
+        }
+
+        // Create View / MaterializedView
+        log.info( "Creating View / Materialized View..." );
+        if ( queryView.equals( QueryView.VIEW ) || queryView.equals( QueryView.MATERIALIZED )) {
+            scenario.createView(queryView);
         }
 
         // Insert data

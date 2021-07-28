@@ -51,6 +51,9 @@ public class GavelConfig extends AbstractConfig {
     public final int numberOfGetAllBidsOnAuctionQueries;
     public final int numberOfGetCurrentlyHighestBidOnAuctionQueries;
     public final int numberOfComplexViewTestQueries;
+    public final int totalNumOfPriceBetweenAndNotInCategoryQueries;
+    public final int totalNumOfHighestOverallBidQueries;
+    public final int totalNumOfTopHundredSellerByNumberOfAuctionsQueries;
 
     public final int numberOfUsers;
     public final int numberOfAuctions;
@@ -108,6 +111,9 @@ public class GavelConfig extends AbstractConfig {
         numberOfGetAllBidsOnAuctionQueries = getIntProperty( properties, "numberOfGetAllBidsOnAuctionQueries" ) * multiplier;
         numberOfGetCurrentlyHighestBidOnAuctionQueries = getIntProperty( properties, "numberOfGetCurrentlyHighestBidOnAuctionQueries" ) * multiplier;
         numberOfComplexViewTestQueries = getIntProperty( properties, "numberOfComplexViewTestQueries" ) * multiplier;
+        totalNumOfPriceBetweenAndNotInCategoryQueries = getIntProperty( properties, "totalNumOfPriceBetweenAndNotInCategoryQueries" ) * multiplier;
+        totalNumOfHighestOverallBidQueries = getIntProperty( properties, "totalNumOfHighestOverallBidQueries" ) * multiplier;
+        totalNumOfTopHundredSellerByNumberOfAuctionsQueries = getIntProperty( properties, "totalNumOfTopHundredSellerByNumberOfAuctionsQueries" ) * multiplier;
 
         numberOfUsers = getIntProperty( properties, "numberOfUsers" ) * multiplier;
         numberOfAuctions = getIntProperty( properties, "numberOfAuctions" ) * multiplier;
@@ -173,6 +179,9 @@ public class GavelConfig extends AbstractConfig {
         numberOfTopTenCitiesByNumberOfCustomersQueries = Integer.parseInt( cdl.get( "numberOfTopTenCitiesByNumberOfCustomersQueries" ) );
 
         numberOfComplexViewTestQueries = Integer.parseInt( cdl.get( "numberOfComplexViewTestQueries" ) );
+        totalNumOfPriceBetweenAndNotInCategoryQueries = Integer.parseInt( cdl.get( "totalNumOfPriceBetweenAndNotInCategoryQueries" ) );
+        totalNumOfHighestOverallBidQueries = Integer.parseInt( cdl.get( "totalNumOfHighestOverallBidQueries" ) );
+        totalNumOfTopHundredSellerByNumberOfAuctionsQueries = Integer.parseInt( cdl.get( "totalNumOfTopHundredSellerByNumberOfAuctionsQueries" ) );
 
         // Data Generation
         numberOfUsers = Integer.parseInt( cdl.get( "numberOfUsers" ) );

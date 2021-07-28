@@ -71,10 +71,12 @@ public class MultimediaBench extends Scenario {
     private final Map<Integer, String> queryTypes;
     private final Map<Integer, List<Long>> measuredTimePerQueryType;
 
+
     static {
         Unirest.config().reset();
         Unirest.config().socketTimeout( 0 );
     }
+
 
     public MultimediaBench( Executor.ExecutorFactory executorFactory, MultimediaConfig config, boolean commitAfterEveryQuery, boolean dumpQueryList ) {
         //never dump mm queries, because the dumps can get very large for large binary inserts
@@ -154,6 +156,13 @@ public class MultimediaBench extends Scenario {
         } finally {
             commitAndCloseExecutor( executor1 );
         }
+    }
+
+
+    @Override
+    public void createView(QueryView queryView) {
+        log.info( "Not Possible to createViews on the MultimediaBench." );
+        //not possible to use in MultimediaBench
     }
 
 

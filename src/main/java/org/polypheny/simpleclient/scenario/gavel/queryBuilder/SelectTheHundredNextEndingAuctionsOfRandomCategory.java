@@ -81,7 +81,6 @@ public class SelectTheHundredNextEndingAuctionsOfRandomCategory extends QueryBui
             super( EXPECT_RESULT );
             this.date = date;
             this.categoryId = categoryId;
-
             this.queryView = queryView;
 
         }

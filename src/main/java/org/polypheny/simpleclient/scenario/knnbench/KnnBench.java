@@ -95,6 +95,13 @@ public class KnnBench extends Scenario {
 
 
     @Override
+    public void createView(QueryView queryView) {
+        log.info( "Not Possible to createViews on the KnnBench." );
+        //not possible to use in KnnBench
+    }
+
+
+    @Override
     public long execute( ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory, int numberOfThreads ) {
 
         log.info( "Preparing query list for the benchmark..." );
