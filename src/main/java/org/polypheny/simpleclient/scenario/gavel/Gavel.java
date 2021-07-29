@@ -407,23 +407,17 @@ public class Gavel extends Scenario {
         // Check if file != null
         executeSchema( file );
 
-    }
-
-
-    @Override
-    public void createView( QueryMode queryMode ) {
-        log.info( "Creating Views..." );
-
-        InputStream file;
+        // Create Views / Materialized Views
         if ( queryMode == QueryMode.VIEW ) {
+            log.info( "Creating Views ..." );
             file = ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/gavel/view.sql" );
-        } else {
+            executeSchema( file );
+        } else if ( queryMode == QueryMode.MATERIALIZED ) {
+            log.info( "Creating Materialized Views ..." );
             file = ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/gavel/materialized.sql" );
+            executeSchema( file );
         }
-
-        executeSchema( file );
     }
-
 
     private void executeSchema( InputStream file ) {
         Executor executor = null;

@@ -60,9 +60,12 @@ public class KnnBench extends Scenario {
 
     @Override
     public void createSchema( boolean includingKeys ) {
+        if ( queryMode != QueryMode.TABLE ) {
+            throw new UnsupportedOperationException( "Unsupported query mode: " + queryMode.name() );
+        }
+
         log.info( "Creating schema..." );
         Executor executor = null;
-
         try {
             executor = executorFactory.createExecutorInstance();
             executor.executeQuery( (new CreateMetadata( config.dataStoreMetadata )).getNewQuery() );
@@ -91,13 +94,6 @@ public class KnnBench extends Scenario {
         } finally {
             commitAndCloseExecutor( executor1 );
         }
-    }
-
-
-    @Override
-    public void createView( QueryMode queryMode ) {
-        log.info( "Not Possible to createViews on the KnnBench." );
-        //not possible to use in KnnBench
     }
 
 

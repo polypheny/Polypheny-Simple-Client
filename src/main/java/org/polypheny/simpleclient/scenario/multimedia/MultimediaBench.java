@@ -94,9 +94,12 @@ public class MultimediaBench extends Scenario {
 
     @Override
     public void createSchema( boolean includingKeys ) {
+        if ( queryMode != QueryMode.TABLE ) {
+            throw new UnsupportedOperationException( "Unsupported query mode: " + queryMode.name() );
+        }
+
         log.info( "Creating schema..." );
         Executor executor = null;
-
         try {
             executor = executorFactory.createExecutorInstance();
             String onStore = String.format( " ON STORE \"%s\"", config.dataStore );
@@ -156,13 +159,6 @@ public class MultimediaBench extends Scenario {
         } finally {
             commitAndCloseExecutor( executor1 );
         }
-    }
-
-
-    @Override
-    public void createView( QueryMode queryMode ) {
-        log.info( "Not Possible to createViews on the MultimediaBench." );
-        //not possible to use in MultimediaBench
     }
 
 

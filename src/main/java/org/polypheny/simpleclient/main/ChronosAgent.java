@@ -250,12 +250,6 @@ public class ChronosAgent extends AbstractChronosAgent {
                 throw new RuntimeException( "Unknown system: " + config.system );
         }
 
-        // Create View / MaterializedView
-        log.info( "Creating View / Materialized View..." );
-        if ( queryMode.equals( QueryMode.VIEW ) || queryMode.equals( QueryMode.MATERIALIZED ) ) {
-            scenario.createView( queryMode );
-        }
-
         // Insert data
         log.info( "Inserting data..." );
         ProgressReporter progressReporter = new ChronosProgressReporter( chronosJob, this, scenario.getNumberOfInsertThreads(), config.progressReportBase );
