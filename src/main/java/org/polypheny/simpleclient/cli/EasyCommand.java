@@ -48,7 +48,7 @@ public class EasyCommand implements CliRunnable {
     @Inject
     private HelpOption<EasyCommand> help;
 
-    @Arguments(description = "Task { schema | data | workload | workloadView | workloadMaterialized | warmup } and multiplier.")
+    @Arguments(description = "Task { schema | data | workload | warmup } and multiplier.")
     private List<String> args;
 
     @Option(name = { "-pdb", "--polyphenydb" }, title = "IP or Hostname", arity = 1, description = "IP or Hostname of the Polypheny-DB server (default: 127.0.0.1).")
@@ -92,10 +92,6 @@ public class EasyCommand implements CliRunnable {
                 Easy.data( executorFactory, multiplier, true );
             } else if ( args.get( 0 ).equalsIgnoreCase( "workload" ) ) {
                 Easy.workload( executorFactory, multiplier, true, writeCsv, dumpQueryList, QueryView.TABLE );
-            } else if(args.get( 0 ).equalsIgnoreCase( "workloadView" )){
-                Easy.workload( executorFactory, multiplier, true, writeCsv, dumpQueryList, QueryView.VIEW );
-            } else if(args.get( 0 ).equalsIgnoreCase( "workloadMaterialized" )){
-                Easy.workload( executorFactory, multiplier, true, writeCsv, dumpQueryList, QueryView.MATERIALIZED );
             } else if ( args.get( 0 ).equalsIgnoreCase( "schema" ) ) {
                 Easy.schema( executorFactory, true );
             } else if ( args.get( 0 ).equalsIgnoreCase( "warmup" ) ) {
