@@ -71,10 +71,10 @@ public class SelectHighestOverallBid extends QueryBuilder {
             return null;
 
             /*
-            if ( queryView.equals( QueryView.VIEW ) ) {
+            if ( queryMode.equals( QueryMode.VIEW ) ) {
                 return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.highestBid_view" )
                         .queryString( "_limit", 100 );
-            } else if ( queryView.equals( QueryView.MATERIALIZED ) ) {
+            } else if ( queryMode.equals( QueryMode.MATERIALIZED ) ) {
                 return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.highestBid_materialized" )
                         .queryString( "_limit", 100 );
             } else {

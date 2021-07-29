@@ -143,7 +143,7 @@ public class ChronosAgent extends AbstractChronosAgent {
         // Parse CDL
         Map<String, String> parsedConfig = parseConfig( chronosJob );
 
-        switch ( parsedConfig.get( "queryViews" ) ) {
+        switch ( parsedConfig.get( "queryMode" ) ) {
             case "Table":
                 queryMode = QueryMode.TABLE;
                 break;
@@ -154,7 +154,7 @@ public class ChronosAgent extends AbstractChronosAgent {
                 queryMode = QueryMode.MATERIALIZED;
                 break;
             default:
-                queryMode = QueryMode.TABLE;
+                throw new UnsupportedOperationException( "Unknown query mode: " + queryMode.name() );
         }
 
         // Create Executor Factory
