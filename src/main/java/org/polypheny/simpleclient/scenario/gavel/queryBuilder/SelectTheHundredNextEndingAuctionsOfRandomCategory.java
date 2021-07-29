@@ -36,7 +36,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import kong.unirest.HttpRequest;
 import kong.unirest.Unirest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.polypheny.simpleclient.QueryView;
+import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 import org.polypheny.simpleclient.scenario.gavel.GavelConfig;
@@ -50,14 +50,14 @@ public class SelectTheHundredNextEndingAuctionsOfRandomCategory extends QueryBui
     private final int auctionDateMaxYearsInPast;
 
     private final DateProducer dateProducer;
-    private final QueryView queryView;
+    private final QueryMode queryMode;
 
 
-    public SelectTheHundredNextEndingAuctionsOfRandomCategory( int numberOfCategories, GavelConfig config, QueryView queryView ) {
+    public SelectTheHundredNextEndingAuctionsOfRandomCategory( int numberOfCategories, GavelConfig config, QueryMode queryMode ) {
         this.numberOfCategories = numberOfCategories;
         this.auctionDateMaxYearsInPast = config.auctionDateMaxYearsInPast;
         this.dateProducer = Fairy.create().dateProducer();
-        this.queryView = queryView;
+        this.queryMode = queryMode;
     }
 
 
@@ -66,7 +66,7 @@ public class SelectTheHundredNextEndingAuctionsOfRandomCategory extends QueryBui
         LocalDateTime date = dateProducer.randomDateInThePast( auctionDateMaxYearsInPast );
         date = date.withNano( 0 );
         int categoryId = ThreadLocalRandom.current().nextInt( 1, numberOfCategories + 1 );
-        return new SelectTheHundredNextEndingAuctionsOfRandomCategoryQuery( date, categoryId, queryView );
+        return new SelectTheHundredNextEndingAuctionsOfRandomCategoryQuery( date, categoryId, queryMode );
     }
 
 
@@ -74,14 +74,14 @@ public class SelectTheHundredNextEndingAuctionsOfRandomCategory extends QueryBui
 
         private final LocalDateTime date;
         private final int categoryId;
-        private final QueryView queryView;
+        private final QueryMode queryMode;
 
 
-        public SelectTheHundredNextEndingAuctionsOfRandomCategoryQuery( LocalDateTime date, int categoryId, QueryView queryView ) {
+        public SelectTheHundredNextEndingAuctionsOfRandomCategoryQuery( LocalDateTime date, int categoryId, QueryMode queryMode ) {
             super( EXPECT_RESULT );
             this.date = date;
             this.categoryId = categoryId;
-            this.queryView = queryView;
+            this.queryMode = queryMode;
 
         }
 
@@ -89,10 +89,10 @@ public class SelectTheHundredNextEndingAuctionsOfRandomCategory extends QueryBui
         @Override
         public String getSql() {
 
-            if ( queryView.equals( QueryView.VIEW ) ) {
+            if ( queryMode.equals( QueryMode.VIEW ) ) {
                 return "SELECT a.id, a.title, a.end_date FROM auctionCategory_view a WHERE a.category =" + categoryId + " AND " +
                         "a.end_date > timestamp '" + date.format( DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss" ) ) + "' ORDER BY end_date desc LIMIT 100";
-            } else if ( queryView.equals( QueryView.MATERIALIZED ) ) {
+            } else if ( queryMode.equals( QueryMode.MATERIALIZED ) ) {
                 return "SELECT a.id, a.title, a.end_date FROM auctionCategory_materialized a WHERE a.category =" + categoryId + " AND " +
                         "a.end_date > timestamp '" + date.format( DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss" ) ) + "' ORDER BY end_date desc LIMIT 100";
             } else {
@@ -104,10 +104,10 @@ public class SelectTheHundredNextEndingAuctionsOfRandomCategory extends QueryBui
 
         @Override
         public String getParameterizedSqlQuery() {
-            if ( queryView.equals( QueryView.VIEW ) ) {
+            if ( queryMode.equals( QueryMode.VIEW ) ) {
                 return "SELECT a.id, a.title, a.end_date FROM auctionCategory_view a WHERE a.category=? AND " +
                         "a.end_date > timestamp '" + date.format( DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss" ) ) + "' ORDER BY end_date desc LIMIT 100";
-            } else if ( queryView.equals( QueryView.MATERIALIZED ) ) {
+            } else if ( queryMode.equals( QueryMode.MATERIALIZED ) ) {
                 return "SELECT a.id, a.title, a.end_date FROM auctionCategory_materialized a WHERE a.category=? AND " +
                         "a.end_date > timestamp '" + date.format( DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss" ) ) + "' ORDER BY end_date desc LIMIT 100";
             } else {
@@ -127,14 +127,14 @@ public class SelectTheHundredNextEndingAuctionsOfRandomCategory extends QueryBui
 
         @Override
         public HttpRequest<?> getRest() {
-            if ( queryView.equals( QueryView.VIEW ) ) {
+            if ( queryMode.equals( QueryMode.VIEW ) ) {
                 return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.auctionCategory_view" )
                         .queryString( "_project", "public.auctionCategory_view.id,public.auctionCategory_view.title,public.auctionCategory_view.end_date" )
                         .queryString( "public.auctionCategory_view.category", "=" + categoryId )
                         .queryString( "public.auctionCategory_view.end_date", ">" + date.format( DateTimeFormatter.ISO_LOCAL_DATE_TIME ) )
                         .queryString( "_sort", "public.auctionCategory_view.end_date@DESC" )
                         .queryString( "_limit", 100 );
-            } else if ( queryView.equals( QueryView.MATERIALIZED ) ) {
+            } else if ( queryMode.equals( QueryMode.MATERIALIZED ) ) {
                 return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.auctionCategory_materialized" )
                         .queryString( "_project", "public.auctionCategory_materialized.id,public.auctionCategory_materialized.title,public.auctionCategory_materialized.end_date" )
                         .queryString( "public.auctionCategory_materialized.category", "=" + categoryId )

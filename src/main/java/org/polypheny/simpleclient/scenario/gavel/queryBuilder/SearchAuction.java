@@ -33,7 +33,7 @@ import java.util.Map;
 import kong.unirest.HttpRequest;
 import kong.unirest.Unirest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.polypheny.simpleclient.QueryView;
+import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
@@ -43,18 +43,18 @@ public class SearchAuction extends QueryBuilder {
     private static final boolean EXPECT_RESULT = true;
 
     private final TextProducer text;
-    private final QueryView queryView;
+    private final QueryMode queryMode;
 
 
-    public SearchAuction( QueryView queryView ) {
+    public SearchAuction( QueryMode queryMode ) {
         text = Fairy.create().textProducer();
-        this.queryView = queryView;
+        this.queryMode = queryMode;
     }
 
 
     @Override
     public Query getNewQuery() {
-        return new SearchAuctionQuery( text.latinWord( 2 ), queryView );
+        return new SearchAuctionQuery( text.latinWord( 2 ), queryMode );
     }
 
 
@@ -64,13 +64,13 @@ public class SearchAuction extends QueryBuilder {
         private final String tablename;
 
 
-        public SearchAuctionQuery( String searchString, QueryView queryView ) {
+        public SearchAuctionQuery( String searchString, QueryMode queryMode ) {
             super( EXPECT_RESULT );
             this.searchString = searchString;
 
-            if ( queryView.equals( QueryView.VIEW ) ) {
+            if ( queryMode.equals( QueryMode.VIEW ) ) {
                 tablename = "auction_view";
-            } else if ( queryView.equals( QueryView.MATERIALIZED ) ) {
+            } else if ( queryMode.equals( QueryMode.MATERIALIZED ) ) {
                 tablename = "auction_materialized";
             } else {
                 tablename = "auction";

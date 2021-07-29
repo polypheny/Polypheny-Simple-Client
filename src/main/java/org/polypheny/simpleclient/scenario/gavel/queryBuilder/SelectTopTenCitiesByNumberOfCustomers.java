@@ -31,7 +31,7 @@ import java.util.Map;
 import kong.unirest.HttpRequest;
 import kong.unirest.Unirest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.polypheny.simpleclient.QueryView;
+import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
@@ -39,17 +39,17 @@ import org.polypheny.simpleclient.query.QueryBuilder;
 public class SelectTopTenCitiesByNumberOfCustomers extends QueryBuilder {
 
     private static final boolean EXPECT_RESULT = true;
-    private final QueryView queryView;
+    private final QueryMode queryMode;
 
 
-    public SelectTopTenCitiesByNumberOfCustomers( QueryView queryView ) {
-        this.queryView = queryView;
+    public SelectTopTenCitiesByNumberOfCustomers( QueryMode queryMode ) {
+        this.queryMode = queryMode;
     }
 
 
     @Override
     public Query getNewQuery() {
-        return new SelectTopTenCitiesByNumberOfCustomersQuery( queryView );
+        return new SelectTopTenCitiesByNumberOfCustomersQuery( queryMode );
     }
 
 
@@ -58,12 +58,12 @@ public class SelectTopTenCitiesByNumberOfCustomers extends QueryBuilder {
         private final String tablename;
 
 
-        public SelectTopTenCitiesByNumberOfCustomersQuery( QueryView queryView ) {
+        public SelectTopTenCitiesByNumberOfCustomersQuery( QueryMode queryMode ) {
             super( EXPECT_RESULT );
 
-            if ( queryView.equals( QueryView.VIEW ) ) {
+            if ( queryMode.equals( QueryMode.VIEW ) ) {
                 tablename = "user_view";
-            } else if ( queryView.equals( QueryView.MATERIALIZED ) ) {
+            } else if ( queryMode.equals( QueryMode.MATERIALIZED ) ) {
                 tablename = "user_materialized";
             } else {
                 tablename = "\"user\"";

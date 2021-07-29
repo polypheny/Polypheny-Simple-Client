@@ -32,7 +32,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import kong.unirest.HttpRequest;
 import kong.unirest.Unirest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.polypheny.simpleclient.QueryView;
+import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
@@ -42,19 +42,19 @@ public class SelectAllBidsOnRandomAuction extends QueryBuilder {
     private static final boolean EXPECT_RESULT = true;
 
     private final int numberOfAuctions;
-    private final QueryView queryView;
+    private final QueryMode queryMode;
 
 
-    public SelectAllBidsOnRandomAuction( int numberOfAuctions, QueryView queryView ) {
+    public SelectAllBidsOnRandomAuction( int numberOfAuctions, QueryMode queryMode ) {
         this.numberOfAuctions = numberOfAuctions;
-        this.queryView = queryView;
+        this.queryMode = queryMode;
     }
 
 
     @Override
     public Query getNewQuery() {
         int auctionId = ThreadLocalRandom.current().nextInt( 1, numberOfAuctions + 1 );
-        return new SelectAllBidsOnRandomAuctionQuery( auctionId, queryView );
+        return new SelectAllBidsOnRandomAuctionQuery( auctionId, queryMode );
     }
 
 
@@ -64,13 +64,13 @@ public class SelectAllBidsOnRandomAuction extends QueryBuilder {
         private final String tablename;
 
 
-        public SelectAllBidsOnRandomAuctionQuery( int auctionId, QueryView queryView ) {
+        public SelectAllBidsOnRandomAuctionQuery( int auctionId, QueryMode queryMode ) {
             super( EXPECT_RESULT );
             this.auctionId = auctionId;
 
-            if ( queryView.equals( QueryView.VIEW ) ) {
+            if ( queryMode.equals( QueryMode.VIEW ) ) {
                 tablename = "bid_view";
-            } else if ( queryView.equals( QueryView.MATERIALIZED ) ) {
+            } else if ( queryMode.equals( QueryMode.MATERIALIZED ) ) {
                 tablename = "bid_materialized";
             } else {
                 tablename = "bid";

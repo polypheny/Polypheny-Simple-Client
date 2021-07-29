@@ -4,43 +4,43 @@ import java.util.HashMap;
 import java.util.Map;
 import kong.unirest.HttpRequest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.polypheny.simpleclient.QueryView;
+import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
 public class SelectPriceBetweenAndNotInCategory extends QueryBuilder {
 
     public static final boolean EXPECT_RESULT = true;
-    private final QueryView queryView;
+    private final QueryMode queryMode;
 
 
-    public SelectPriceBetweenAndNotInCategory( QueryView queryView ) {
-        this.queryView = queryView;
+    public SelectPriceBetweenAndNotInCategory( QueryMode queryMode ) {
+        this.queryMode = queryMode;
     }
 
 
     @Override
     public Query getNewQuery() {
-        return new SelectPriceBetweenAndNotInCategoryQuery( queryView );
+        return new SelectPriceBetweenAndNotInCategoryQuery( queryMode );
     }
 
 
     private static class SelectPriceBetweenAndNotInCategoryQuery extends Query {
 
-        private final QueryView queryView;
+        private final QueryMode queryMode;
 
 
-        public SelectPriceBetweenAndNotInCategoryQuery( QueryView queryView ) {
+        public SelectPriceBetweenAndNotInCategoryQuery( QueryMode queryMode ) {
             super( EXPECT_RESULT );
-            this.queryView = queryView;
+            this.queryMode = queryMode;
         }
 
 
         @Override
         public String getSql() {
-            if ( queryView.equals( QueryView.MATERIALIZED ) ) {
+            if ( queryMode.equals( QueryMode.MATERIALIZED ) ) {
                 return "SELECT * FROM priceBetween_materialized LIMIT 100";
-            } else if ( queryView.equals( QueryView.VIEW ) ) {
+            } else if ( queryMode.equals( QueryMode.VIEW ) ) {
                 return "SELECT * FROM priceBetween_view LIMIT 100";
             } else {
                 return "SELECT auction.title, bid.amount "

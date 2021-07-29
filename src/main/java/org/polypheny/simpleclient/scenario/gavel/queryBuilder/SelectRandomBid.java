@@ -32,7 +32,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import kong.unirest.HttpRequest;
 import kong.unirest.Unirest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.polypheny.simpleclient.QueryView;
+import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
@@ -42,19 +42,19 @@ public class SelectRandomBid extends QueryBuilder {
     private static final boolean EXPECT_RESULT = true;
 
     private final int numberOfBids;
-    private final QueryView queryView;
+    private final QueryMode queryMode;
 
 
-    public SelectRandomBid( int numberOfBids, QueryView queryView ) {
+    public SelectRandomBid( int numberOfBids, QueryMode queryMode ) {
         this.numberOfBids = numberOfBids;
-        this.queryView = queryView;
+        this.queryMode = queryMode;
     }
 
 
     @Override
     public Query getNewQuery() {
         int bidId = ThreadLocalRandom.current().nextInt( 1, numberOfBids + 1 );
-        return new SelectRandomBidQuery( bidId, queryView );
+        return new SelectRandomBidQuery( bidId, queryMode );
     }
 
 
@@ -64,13 +64,13 @@ public class SelectRandomBid extends QueryBuilder {
         private final String tablename;
 
 
-        public SelectRandomBidQuery( int bidId, QueryView queryView ) {
+        public SelectRandomBidQuery( int bidId, QueryMode queryMode ) {
             super( EXPECT_RESULT );
             this.bidId = bidId;
 
-            if ( queryView.equals( QueryView.VIEW ) ) {
+            if ( queryMode.equals( QueryMode.VIEW ) ) {
                 tablename = "bid_view";
-            } else if ( queryView.equals( QueryView.MATERIALIZED ) ) {
+            } else if ( queryMode.equals( QueryMode.MATERIALIZED ) ) {
                 tablename = "bid_materialized";
             } else {
                 tablename = "bid";

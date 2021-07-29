@@ -32,7 +32,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import kong.unirest.HttpRequest;
 import kong.unirest.Unirest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.polypheny.simpleclient.QueryView;
+import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
@@ -42,19 +42,19 @@ public class SelectRandomUser extends QueryBuilder {
     private static final boolean EXPECT_RESULT = true;
 
     private final int numberOfUsers;
-    private final QueryView queryView;
+    private final QueryMode queryMode;
 
 
-    public SelectRandomUser( int numberOfUsers, QueryView queryView ) {
+    public SelectRandomUser( int numberOfUsers, QueryMode queryMode ) {
         this.numberOfUsers = numberOfUsers;
-        this.queryView = queryView;
+        this.queryMode = queryMode;
     }
 
 
     @Override
     public Query getNewQuery() {
         int userId = ThreadLocalRandom.current().nextInt( 1, numberOfUsers + 1 );
-        return new SelectRandomUserQuery( userId, queryView );
+        return new SelectRandomUserQuery( userId, queryMode );
     }
 
 
@@ -64,13 +64,13 @@ public class SelectRandomUser extends QueryBuilder {
         private final String tablename;
 
 
-        public SelectRandomUserQuery( int userId, QueryView queryView ) {
+        public SelectRandomUserQuery( int userId, QueryMode queryMode ) {
             super( EXPECT_RESULT );
             this.userId = userId;
 
-            if ( queryView.equals( QueryView.VIEW ) ) {
+            if ( queryMode.equals( QueryMode.VIEW ) ) {
                 tablename = "user_view";
-            } else if ( queryView.equals( QueryView.MATERIALIZED ) ) {
+            } else if ( queryMode.equals( QueryMode.MATERIALIZED ) ) {
                 tablename = "user_materialized";
             } else {
                 tablename = "\"user\"";

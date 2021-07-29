@@ -1,5 +1,5 @@
 package org.polypheny.simpleclient;
 
-public enum QueryView {
+public enum QueryMode {
     TABLE, VIEW, MATERIALIZED
 }

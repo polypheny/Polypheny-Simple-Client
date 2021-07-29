@@ -30,7 +30,7 @@ import java.util.HashMap;
 import java.util.Map;
 import kong.unirest.HttpRequest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.polypheny.simpleclient.QueryView;
+import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
@@ -39,37 +39,37 @@ public class SelectTopHundredSellerByNumberOfAuctions extends QueryBuilder {
 
 
     private static final boolean EXPECT_RESULT = true;
-    private final QueryView queryView;
+    private final QueryMode queryMode;
 
 
-    public SelectTopHundredSellerByNumberOfAuctions( QueryView queryView ) {
-        this.queryView = queryView;
+    public SelectTopHundredSellerByNumberOfAuctions( QueryMode queryMode ) {
+        this.queryMode = queryMode;
     }
 
 
     @Override
     public Query getNewQuery() {
-        return new SelectTopHundredSellerByNumberOfAuctionsQuery( queryView );
+        return new SelectTopHundredSellerByNumberOfAuctionsQuery( queryMode );
     }
 
 
     private static class SelectTopHundredSellerByNumberOfAuctionsQuery extends Query {
 
-        private final QueryView queryView;
+        private final QueryMode queryMode;
 
 
-        public SelectTopHundredSellerByNumberOfAuctionsQuery( QueryView queryView ) {
+        public SelectTopHundredSellerByNumberOfAuctionsQuery( QueryMode queryMode ) {
             super( EXPECT_RESULT );
-            this.queryView = queryView;
+            this.queryMode = queryMode;
         }
 
 
         @Override
         public String getSql() {
 
-            if ( queryView.equals( QueryView.MATERIALIZED ) ) {
+            if ( queryMode.equals( QueryMode.MATERIALIZED ) ) {
                 return "SELECT * FROM topHundredSellerByNumberOfAuctions_materialized LIMIT 100";
-            } else if ( queryView.equals( QueryView.VIEW ) ) {
+            } else if ( queryMode.equals( QueryMode.VIEW ) ) {
                 return "SELECT * FROM topHundredSellerByNumberOfAuctions_view LIMIT 100";
             } else {
                 return "SELECT u.last_name, u.first_name, count(a.id) as number "

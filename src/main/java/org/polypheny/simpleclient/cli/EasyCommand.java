@@ -33,7 +33,7 @@ import com.github.rvesse.airline.annotations.Option;
 import java.util.List;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
-import org.polypheny.simpleclient.QueryView;
+import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
 import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory;
 import org.polypheny.simpleclient.executor.PolyphenyDbRestExecutor.PolyphenyDbRestExecutorFactory;
@@ -91,7 +91,7 @@ public class EasyCommand implements CliRunnable {
             if ( args.get( 0 ).equalsIgnoreCase( "data" ) ) {
                 Easy.data( executorFactory, multiplier, true );
             } else if ( args.get( 0 ).equalsIgnoreCase( "workload" ) ) {
-                Easy.workload( executorFactory, multiplier, true, writeCsv, dumpQueryList, QueryView.TABLE );
+                Easy.workload( executorFactory, multiplier, true, writeCsv, dumpQueryList, QueryMode.TABLE );
             } else if ( args.get( 0 ).equalsIgnoreCase( "schema" ) ) {
                 Easy.schema( executorFactory, true );
             } else if ( args.get( 0 ).equalsIgnoreCase( "warmup" ) ) {

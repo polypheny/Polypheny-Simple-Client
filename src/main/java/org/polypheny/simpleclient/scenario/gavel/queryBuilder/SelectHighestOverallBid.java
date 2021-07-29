@@ -4,44 +4,44 @@ import java.util.HashMap;
 import java.util.Map;
 import kong.unirest.HttpRequest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.polypheny.simpleclient.QueryView;
+import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
 public class SelectHighestOverallBid extends QueryBuilder {
 
     private static final boolean EXPECT_RESULT = true;
-    private final QueryView queryView;
+    private final QueryMode queryMode;
 
 
-    public SelectHighestOverallBid( QueryView queryView ) {
-        this.queryView = queryView;
+    public SelectHighestOverallBid( QueryMode queryMode ) {
+        this.queryMode = queryMode;
     }
 
 
     @Override
     public Query getNewQuery() {
-        return new SelectHighestOverallBidQuery( queryView );
+        return new SelectHighestOverallBidQuery( queryMode );
     }
 
 
     private static class SelectHighestOverallBidQuery extends Query {
 
-        private final QueryView queryView;
+        private final QueryMode queryMode;
 
 
-        public SelectHighestOverallBidQuery( QueryView queryView ) {
+        public SelectHighestOverallBidQuery( QueryMode queryMode ) {
             super( EXPECT_RESULT );
-            this.queryView = queryView;
+            this.queryMode = queryMode;
         }
 
 
         @Override
         public String getSql() {
 
-            if ( queryView.equals( QueryView.MATERIALIZED ) ) {
+            if ( queryMode.equals( QueryMode.MATERIALIZED ) ) {
                 return "SELECT * FROM highestBid_materialized LIMIT 1";
-            } else if ( queryView.equals( QueryView.VIEW ) ) {
+            } else if ( queryMode.equals( QueryMode.VIEW ) ) {
                 return "SELECT * FROM highestBid_view LIMIT 1";
             } else {
                 return "SELECT last_name, first_name "

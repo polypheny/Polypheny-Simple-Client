@@ -43,7 +43,7 @@ import kong.unirest.Unirest;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.polypheny.simpleclient.QueryView;
+import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.executor.ExecutorException;
 import org.polypheny.simpleclient.main.ChronosAgent;
@@ -80,7 +80,7 @@ public class MultimediaBench extends Scenario {
 
     public MultimediaBench( Executor.ExecutorFactory executorFactory, MultimediaConfig config, boolean commitAfterEveryQuery, boolean dumpQueryList ) {
         //never dump mm queries, because the dumps can get very large for large binary inserts
-        super( executorFactory, commitAfterEveryQuery, false, QueryView.TABLE );
+        super( executorFactory, commitAfterEveryQuery, false, QueryMode.TABLE );
         this.config = config;
 
         measuredTimes = Collections.synchronizedList( new LinkedList<>() );
@@ -160,7 +160,7 @@ public class MultimediaBench extends Scenario {
 
 
     @Override
-    public void createView( QueryView queryView ) {
+    public void createView( QueryMode queryMode ) {
         log.info( "Not Possible to createViews on the MultimediaBench." );
         //not possible to use in MultimediaBench
     }

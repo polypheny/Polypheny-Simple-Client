@@ -31,7 +31,7 @@ import java.util.Map;
 import kong.unirest.HttpRequest;
 import kong.unirest.Unirest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.polypheny.simpleclient.QueryView;
+import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
@@ -39,36 +39,36 @@ import org.polypheny.simpleclient.query.QueryBuilder;
 public class CountBid extends QueryBuilder {
 
     private static final boolean EXPECT_RESULT = true;
-    private final QueryView queryView;
+    private final QueryMode queryMode;
 
 
-    public CountBid( QueryView queryView ) {
-        this.queryView = queryView;
+    public CountBid( QueryMode queryMode ) {
+        this.queryMode = queryMode;
     }
 
 
     @Override
     public Query getNewQuery() {
-        return new CountBidQuery( queryView );
+        return new CountBidQuery( queryMode );
     }
 
 
     private static class CountBidQuery extends Query {
 
-        private final QueryView queryView;
+        private final QueryMode queryMode;
 
 
-        public CountBidQuery( QueryView queryView ) {
+        public CountBidQuery( QueryMode queryMode ) {
             super( EXPECT_RESULT );
-            this.queryView = queryView;
+            this.queryMode = queryMode;
         }
 
 
         @Override
         public String getSql() {
-            if ( queryView.equals( QueryView.VIEW ) ) {
+            if ( queryMode.equals( QueryMode.VIEW ) ) {
                 return "SELECT * FROM countBid";
-            } else if ( queryView.equals( QueryView.MATERIALIZED ) ) {
+            } else if ( queryMode.equals( QueryMode.MATERIALIZED ) ) {
                 return "SELECT * FROM countBid_materialized";
             } else {
                 return "SELECT count(*) as NUMBER FROM bid";
@@ -91,10 +91,10 @@ public class CountBid extends QueryBuilder {
 
         @Override
         public HttpRequest<?> getRest() {
-            if ( queryView.equals( QueryView.VIEW ) ) {
+            if ( queryMode.equals( QueryMode.VIEW ) ) {
                 return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.countBid" );
                 // .queryString( "public.countBid", "*");
-            } else if ( queryView.equals( QueryView.MATERIALIZED ) ) {
+            } else if ( queryMode.equals( QueryMode.MATERIALIZED ) ) {
                 return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.countBid_materialized" );
             } else {
                 return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.bid" )

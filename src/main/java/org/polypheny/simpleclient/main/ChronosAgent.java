@@ -44,7 +44,7 @@ import org.apache.commons.lang3.tuple.Triple;
 import org.polypheny.control.client.ClientType;
 import org.polypheny.control.client.LogHandler;
 import org.polypheny.control.client.PolyphenyControlConnector;
-import org.polypheny.simpleclient.QueryView;
+import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.cli.ChronosCommand;
 import org.polypheny.simpleclient.executor.CottontaildbExecutor.CottontailExecutorFactory;
 import org.polypheny.simpleclient.executor.CottontaildbExecutor.CottontailInstance;
@@ -81,7 +81,7 @@ public class ChronosAgent extends AbstractChronosAgent {
 
     private final boolean writeCsv;
     private final boolean dumpQueryList;
-    private QueryView queryView;
+    private QueryMode queryMode;
 
 
     public ChronosAgent( InetAddress address, int port, boolean secure, boolean useHostname, String environment, String[] supports, boolean writeCsv, boolean dumpQueryList ) {
@@ -145,16 +145,16 @@ public class ChronosAgent extends AbstractChronosAgent {
 
         switch ( parsedConfig.get( "queryViews" ) ) {
             case "Table":
-                queryView = QueryView.TABLE;
+                queryMode = QueryMode.TABLE;
                 break;
             case "View":
-                queryView = QueryView.VIEW;
+                queryMode = QueryMode.VIEW;
                 break;
             case "Materialized":
-                queryView = QueryView.MATERIALIZED;
+                queryMode = QueryMode.MATERIALIZED;
                 break;
             default:
-                queryView = QueryView.TABLE;
+                queryMode = QueryMode.TABLE;
         }
 
         // Create Executor Factory
@@ -185,7 +185,7 @@ public class ChronosAgent extends AbstractChronosAgent {
             case "gavel":
                 config = new GavelConfig( parsedConfig );
                 log.info( "inside chronosAgent" );
-                scenario = new Gavel( executorFactory, (GavelConfig) config, true, dumpQueryList, queryView );
+                scenario = new Gavel( executorFactory, (GavelConfig) config, true, dumpQueryList, queryMode );
                 break;
             case "knnBench":
                 config = new KnnBenchConfig( parsedConfig );
@@ -252,8 +252,8 @@ public class ChronosAgent extends AbstractChronosAgent {
 
         // Create View / MaterializedView
         log.info( "Creating View / Materialized View..." );
-        if ( queryView.equals( QueryView.VIEW ) || queryView.equals( QueryView.MATERIALIZED ) ) {
-            scenario.createView( queryView );
+        if ( queryMode.equals( QueryMode.VIEW ) || queryMode.equals( QueryMode.MATERIALIZED ) ) {
+            scenario.createView( queryMode );
         }
 
         // Insert data
