@@ -128,7 +128,6 @@ public class ChronosAgent extends AbstractChronosAgent {
         } catch ( URISyntaxException e ) {
             log.error( "Exception while connecting to Polypheny Control", e );
         }
-
     }
 
 

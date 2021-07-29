@@ -61,7 +61,7 @@ public class SelectRandomUser extends QueryBuilder {
     private static class SelectRandomUserQuery extends Query {
 
         private final int userId;
-        private final String tablename;
+        private final String tableName;
 
 
         public SelectRandomUserQuery( int userId, QueryMode queryMode ) {
@@ -69,24 +69,24 @@ public class SelectRandomUser extends QueryBuilder {
             this.userId = userId;
 
             if ( queryMode.equals( QueryMode.VIEW ) ) {
-                tablename = "user_view";
+                tableName = "user_view";
             } else if ( queryMode.equals( QueryMode.MATERIALIZED ) ) {
-                tablename = "user_materialized";
+                tableName = "user_materialized";
             } else {
-                tablename = "\"user\"";
+                tableName = "\"user\"";
             }
         }
 
 
         @Override
         public String getSql() {
-            return "SELECT * FROM " + tablename + " WHERE id=" + userId;
+            return "SELECT * FROM " + tableName + " WHERE id=" + userId;
         }
 
 
         @Override
         public String getParameterizedSqlQuery() {
-            return "SELECT * FROM " + tablename + " WHERE id=?";
+            return "SELECT * FROM " + tableName + " WHERE id=?";
         }
 
 
@@ -100,8 +100,8 @@ public class SelectRandomUser extends QueryBuilder {
 
         @Override
         public HttpRequest<?> getRest() {
-            return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public." + tablename )
-                    .queryString( "public." + tablename + ".id", "=" + userId );
+            return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public." + tableName )
+                    .queryString( "public." + tableName + ".id", "=" + userId );
         }
 
     }

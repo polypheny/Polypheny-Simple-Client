@@ -61,7 +61,7 @@ public class SearchAuction extends QueryBuilder {
     private static class SearchAuctionQuery extends Query {
 
         private final String searchString;
-        private final String tablename;
+        private final String tableName;
 
 
         public SearchAuctionQuery( String searchString, QueryMode queryMode ) {
@@ -69,19 +69,18 @@ public class SearchAuction extends QueryBuilder {
             this.searchString = searchString;
 
             if ( queryMode.equals( QueryMode.VIEW ) ) {
-                tablename = "auction_view";
+                tableName = "auction_view";
             } else if ( queryMode.equals( QueryMode.MATERIALIZED ) ) {
-                tablename = "auction_materialized";
+                tableName = "auction_materialized";
             } else {
-                tablename = "auction";
+                tableName = "auction";
             }
         }
 
 
         @Override
         public String getSql() {
-
-            return "SELECT a.title, a.start_date, a.end_date FROM " + tablename + " a "
+            return "SELECT a.title, a.start_date, a.end_date FROM " + tableName + " a "
                     + "WHERE a.title LIKE '%" + searchString + "%' "
                     + "ORDER BY end_date desc "
                     + "LIMIT 100";
@@ -90,7 +89,7 @@ public class SearchAuction extends QueryBuilder {
 
         @Override
         public String getParameterizedSqlQuery() {
-            return "SELECT a.title, a.start_date, a.end_date FROM " + tablename + " a "
+            return "SELECT a.title, a.start_date, a.end_date FROM " + tableName + " a "
                     + "WHERE a.title LIKE ? "
                     + "ORDER BY end_date desc "
                     + "LIMIT 100";
@@ -108,9 +107,9 @@ public class SearchAuction extends QueryBuilder {
         @Override
         public HttpRequest<?> getRest() {
             return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.auction" )
-                    .queryString( "_project", "public." + tablename + ".title,public." + tablename + ".start_date,public." + tablename + ".end_date" )
-                    .queryString( "public." + tablename + ".title", "%%" + searchString + "%" )
-                    .queryString( "_sort", "public." + tablename + ".end_date@DESC" )
+                    .queryString( "_project", "public." + tableName + ".title,public." + tableName + ".start_date,public." + tableName + ".end_date" )
+                    .queryString( "public." + tableName + ".title", "%%" + searchString + "%" )
+                    .queryString( "_sort", "public." + tableName + ".end_date@DESC" )
                     .queryString( "_limit", 100 );
         }
 

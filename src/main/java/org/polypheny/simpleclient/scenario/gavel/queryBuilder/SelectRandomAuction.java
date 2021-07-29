@@ -61,7 +61,7 @@ public class SelectRandomAuction extends QueryBuilder {
     private static class SelectRandomAuctionQuery extends Query {
 
         private final int auctionId;
-        private final String tablename;
+        private final String tableName;
 
 
         public SelectRandomAuctionQuery( int auctionId, QueryMode queryMode ) {
@@ -69,24 +69,24 @@ public class SelectRandomAuction extends QueryBuilder {
             this.auctionId = auctionId;
 
             if ( queryMode.equals( QueryMode.VIEW ) ) {
-                tablename = "auction_view";
+                tableName = "auction_view";
             } else if ( queryMode.equals( QueryMode.MATERIALIZED ) ) {
-                tablename = "auction_materialized";
+                tableName = "auction_materialized";
             } else {
-                tablename = "auction";
+                tableName = "auction";
             }
         }
 
 
         @Override
         public String getSql() {
-            return "SELECT * FROM " + tablename + " a WHERE a.id=" + auctionId;
+            return "SELECT * FROM " + tableName + " a WHERE a.id=" + auctionId;
         }
 
 
         @Override
         public String getParameterizedSqlQuery() {
-            return "SELECT * FROM " + tablename + " a WHERE a.id=?";
+            return "SELECT * FROM " + tableName + " a WHERE a.id=?";
         }
 
 
@@ -100,8 +100,8 @@ public class SelectRandomAuction extends QueryBuilder {
 
         @Override
         public HttpRequest<?> getRest() {
-            return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public." + tablename )
-                    .queryString( "public." + tablename + ".id", "=" + auctionId );
+            return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public." + tableName )
+                    .queryString( "public." + tableName + ".id", "=" + auctionId );
         }
 
     }

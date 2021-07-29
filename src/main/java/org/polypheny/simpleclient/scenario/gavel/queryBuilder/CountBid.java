@@ -73,7 +73,6 @@ public class CountBid extends QueryBuilder {
             } else {
                 return "SELECT count(*) as NUMBER FROM bid";
             }
-
         }
 
 
@@ -100,7 +99,6 @@ public class CountBid extends QueryBuilder {
                 return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.bid" )
                         .queryString( "_project", "public.bid.id@num(COUNT)" );
             }
-
         }
 
     }

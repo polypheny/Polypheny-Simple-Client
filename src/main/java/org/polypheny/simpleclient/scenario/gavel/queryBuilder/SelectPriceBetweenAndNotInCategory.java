@@ -72,7 +72,6 @@ public class SelectPriceBetweenAndNotInCategory extends QueryBuilder {
             return null;
         }
 
-
     }
 
 }

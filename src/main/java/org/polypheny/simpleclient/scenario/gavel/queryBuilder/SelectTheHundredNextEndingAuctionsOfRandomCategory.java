@@ -82,13 +82,11 @@ public class SelectTheHundredNextEndingAuctionsOfRandomCategory extends QueryBui
             this.date = date;
             this.categoryId = categoryId;
             this.queryMode = queryMode;
-
         }
 
 
         @Override
         public String getSql() {
-
             if ( queryMode.equals( QueryMode.VIEW ) ) {
                 return "SELECT a.id, a.title, a.end_date FROM auctionCategory_view a WHERE a.category =" + categoryId + " AND " +
                         "a.end_date > timestamp '" + date.format( DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss" ) ) + "' ORDER BY end_date desc LIMIT 100";

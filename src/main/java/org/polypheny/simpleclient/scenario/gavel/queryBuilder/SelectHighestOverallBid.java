@@ -38,7 +38,6 @@ public class SelectHighestOverallBid extends QueryBuilder {
 
         @Override
         public String getSql() {
-
             if ( queryMode.equals( QueryMode.MATERIALIZED ) ) {
                 return "SELECT * FROM highestBid_materialized LIMIT 1";
             } else if ( queryMode.equals( QueryMode.VIEW ) ) {
@@ -87,8 +86,6 @@ public class SelectHighestOverallBid extends QueryBuilder {
                         .queryString( "public.auction.category", "=" + "public.category.id" )
                         .queryString( "_limit", 100 );
             }
-
-
              */
         }
 

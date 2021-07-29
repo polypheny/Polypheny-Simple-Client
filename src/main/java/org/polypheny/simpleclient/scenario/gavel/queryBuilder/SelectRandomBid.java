@@ -61,7 +61,7 @@ public class SelectRandomBid extends QueryBuilder {
     private static class SelectRandomBidQuery extends Query {
 
         private final int bidId;
-        private final String tablename;
+        private final String tableName;
 
 
         public SelectRandomBidQuery( int bidId, QueryMode queryMode ) {
@@ -69,24 +69,24 @@ public class SelectRandomBid extends QueryBuilder {
             this.bidId = bidId;
 
             if ( queryMode.equals( QueryMode.VIEW ) ) {
-                tablename = "bid_view";
+                tableName = "bid_view";
             } else if ( queryMode.equals( QueryMode.MATERIALIZED ) ) {
-                tablename = "bid_materialized";
+                tableName = "bid_materialized";
             } else {
-                tablename = "bid";
+                tableName = "bid";
             }
         }
 
 
         @Override
         public String getSql() {
-            return "SELECT * FROM " + tablename + " b WHERE b.id=" + bidId;
+            return "SELECT * FROM " + tableName + " b WHERE b.id=" + bidId;
         }
 
 
         @Override
         public String getParameterizedSqlQuery() {
-            return "SELECT * FROM " + tablename + " b WHERE b.id=?";
+            return "SELECT * FROM " + tableName + " b WHERE b.id=?";
         }
 
 
@@ -100,8 +100,8 @@ public class SelectRandomBid extends QueryBuilder {
 
         @Override
         public HttpRequest<?> getRest() {
-            return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public." + tablename )
-                    .queryString( "public." + tablename + ".id", "=" + bidId );
+            return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public." + tableName )
+                    .queryString( "public." + tableName + ".id", "=" + bidId );
         }
 
     }

@@ -61,7 +61,7 @@ public class SelectHighestBidOnRandomAuction extends QueryBuilder {
     private static class SelectHighestBidOnRandomAuctionQuery extends Query {
 
         private final int auctionId;
-        private final String tablename;
+        private final String tableName;
 
 
         public SelectHighestBidOnRandomAuctionQuery( int auctionId, QueryMode queryMode ) {
@@ -69,24 +69,24 @@ public class SelectHighestBidOnRandomAuction extends QueryBuilder {
             this.auctionId = auctionId;
 
             if ( queryMode.equals( QueryMode.VIEW ) ) {
-                tablename = "bid_view";
+                tableName = "bid_view";
             } else if ( queryMode.equals( QueryMode.MATERIALIZED ) ) {
-                tablename = "bid_materialized";
+                tableName = "bid_materialized";
             } else {
-                tablename = "bid";
+                tableName = "bid";
             }
         }
 
 
         @Override
         public String getSql() {
-            return "SELECT * FROM " + tablename + " b WHERE b.auction=" + auctionId + " ORDER BY b.amount desc LIMIT 1";
+            return "SELECT * FROM " + tableName + " b WHERE b.auction=" + auctionId + " ORDER BY b.amount desc LIMIT 1";
         }
 
 
         @Override
         public String getParameterizedSqlQuery() {
-            return "SELECT * FROM " + tablename + " b WHERE b.auction=? ORDER BY b.amount desc LIMIT 1";
+            return "SELECT * FROM " + tableName + " b WHERE b.auction=? ORDER BY b.amount desc LIMIT 1";
         }
 
 
@@ -100,9 +100,9 @@ public class SelectHighestBidOnRandomAuction extends QueryBuilder {
 
         @Override
         public HttpRequest<?> getRest() {
-            return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public." + tablename )
-                    .queryString( "public." + tablename + ".auction", "=" + auctionId )
-                    .queryString( "_sort", "public." + tablename + ".amount@DESC" )
+            return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public." + tableName )
+                    .queryString( "public." + tableName + ".auction", "=" + auctionId )
+                    .queryString( "_sort", "public." + tableName + ".amount@DESC" )
                     .queryString( "_limit", "1" );
         }
 

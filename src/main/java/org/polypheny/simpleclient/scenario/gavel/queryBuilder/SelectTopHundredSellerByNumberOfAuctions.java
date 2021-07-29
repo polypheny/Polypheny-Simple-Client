@@ -66,7 +66,6 @@ public class SelectTopHundredSellerByNumberOfAuctions extends QueryBuilder {
 
         @Override
         public String getSql() {
-
             if ( queryMode.equals( QueryMode.MATERIALIZED ) ) {
                 return "SELECT * FROM topHundredSellerByNumberOfAuctions_materialized LIMIT 100";
             } else if ( queryMode.equals( QueryMode.VIEW ) ) {
@@ -77,7 +76,6 @@ public class SelectTopHundredSellerByNumberOfAuctions extends QueryBuilder {
                         + "GROUP BY a.\"user\", u.last_name, u.first_name "
                         + "ORDER BY number desc LIMIT 100";
             }
-
         }
 
 

@@ -55,25 +55,25 @@ public class SelectTopTenCitiesByNumberOfCustomers extends QueryBuilder {
 
     private static class SelectTopTenCitiesByNumberOfCustomersQuery extends Query {
 
-        private final String tablename;
+        private final String tableName;
 
 
         public SelectTopTenCitiesByNumberOfCustomersQuery( QueryMode queryMode ) {
             super( EXPECT_RESULT );
 
             if ( queryMode.equals( QueryMode.VIEW ) ) {
-                tablename = "user_view";
+                tableName = "user_view";
             } else if ( queryMode.equals( QueryMode.MATERIALIZED ) ) {
-                tablename = "user_materialized";
+                tableName = "user_materialized";
             } else {
-                tablename = "\"user\"";
+                tableName = "\"user\"";
             }
         }
 
 
         @Override
         public String getSql() {
-            return "SELECT city, COUNT(city) as number FROM " + tablename + " GROUP BY city ORDER BY number desc LIMIT 10";
+            return "SELECT city, COUNT(city) as number FROM " + tableName + " GROUP BY city ORDER BY number desc LIMIT 10";
         }
 
 
@@ -92,7 +92,7 @@ public class SelectTopTenCitiesByNumberOfCustomers extends QueryBuilder {
         @Override
         public HttpRequest<?> getRest() {
             return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.user" )
-                    .queryString( "_project", "public." + tablename + ".city@city,public." + tablename + ".city@number(COUNT)" )
+                    .queryString( "_project", "public." + tableName + ".city@city,public." + tableName + ".city@number(COUNT)" )
                     .queryString( "_groupby", "city" )
                     .queryString( "_sort", "number@DESC" )
                     .queryString( "_limit", 10 );
