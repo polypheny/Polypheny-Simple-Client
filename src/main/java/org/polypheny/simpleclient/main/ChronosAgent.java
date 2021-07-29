@@ -44,6 +44,7 @@ import org.apache.commons.lang3.tuple.Triple;
 import org.polypheny.control.client.ClientType;
 import org.polypheny.control.client.LogHandler;
 import org.polypheny.control.client.PolyphenyControlConnector;
+import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.cli.ChronosCommand;
 import org.polypheny.simpleclient.executor.CottontaildbExecutor.CottontailExecutorFactory;
 import org.polypheny.simpleclient.executor.CottontaildbExecutor.CottontailInstance;
@@ -80,6 +81,7 @@ public class ChronosAgent extends AbstractChronosAgent {
 
     private final boolean writeCsv;
     private final boolean dumpQueryList;
+    private QueryMode queryMode;
 
 
     public ChronosAgent( InetAddress address, int port, boolean secure, boolean useHostname, String environment, String[] supports, boolean writeCsv, boolean dumpQueryList ) {
@@ -140,6 +142,20 @@ public class ChronosAgent extends AbstractChronosAgent {
         // Parse CDL
         Map<String, String> parsedConfig = parseConfig( chronosJob );
 
+        switch ( parsedConfig.get( "queryMode" ) ) {
+            case "Table":
+                queryMode = QueryMode.TABLE;
+                break;
+            case "View":
+                queryMode = QueryMode.VIEW;
+                break;
+            case "Materialized":
+                queryMode = QueryMode.MATERIALIZED;
+                break;
+            default:
+                throw new UnsupportedOperationException( "Unknown query mode: " + queryMode.name() );
+        }
+
         // Create Executor Factory
         Executor.ExecutorFactory executorFactory;
         switch ( parsedConfig.get( "store" ) ) {
@@ -167,7 +183,8 @@ public class ChronosAgent extends AbstractChronosAgent {
         switch ( parsedConfig.get( "scenario" ) ) {
             case "gavel":
                 config = new GavelConfig( parsedConfig );
-                scenario = new Gavel( executorFactory, (GavelConfig) config, true, dumpQueryList );
+                log.info( "inside chronosAgent" );
+                scenario = new Gavel( executorFactory, (GavelConfig) config, true, dumpQueryList, queryMode );
                 break;
             case "knnBench":
                 config = new KnnBenchConfig( parsedConfig );

@@ -32,6 +32,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import kong.unirest.HttpRequest;
 import kong.unirest.Unirest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
@@ -41,40 +42,51 @@ public class SelectRandomBid extends QueryBuilder {
     private static final boolean EXPECT_RESULT = true;
 
     private final int numberOfBids;
+    private final QueryMode queryMode;
 
 
-    public SelectRandomBid( int numberOfBids ) {
+    public SelectRandomBid( int numberOfBids, QueryMode queryMode ) {
         this.numberOfBids = numberOfBids;
+        this.queryMode = queryMode;
     }
 
 
     @Override
     public Query getNewQuery() {
         int bidId = ThreadLocalRandom.current().nextInt( 1, numberOfBids + 1 );
-        return new SelectRandomBidQuery( bidId );
+        return new SelectRandomBidQuery( bidId, queryMode );
     }
 
 
     private static class SelectRandomBidQuery extends Query {
 
         private final int bidId;
+        private final String tableName;
 
 
-        public SelectRandomBidQuery( int bidId ) {
+        public SelectRandomBidQuery( int bidId, QueryMode queryMode ) {
             super( EXPECT_RESULT );
             this.bidId = bidId;
+
+            if ( queryMode.equals( QueryMode.VIEW ) ) {
+                tableName = "bid_view";
+            } else if ( queryMode.equals( QueryMode.MATERIALIZED ) ) {
+                tableName = "bid_materialized";
+            } else {
+                tableName = "bid";
+            }
         }
 
 
         @Override
         public String getSql() {
-            return "SELECT * FROM bid b WHERE b.id=" + bidId;
+            return "SELECT * FROM " + tableName + " b WHERE b.id=" + bidId;
         }
 
 
         @Override
         public String getParameterizedSqlQuery() {
-            return "SELECT * FROM bid b WHERE b.id=?";
+            return "SELECT * FROM " + tableName + " b WHERE b.id=?";
         }
 
 
@@ -88,8 +100,8 @@ public class SelectRandomBid extends QueryBuilder {
 
         @Override
         public HttpRequest<?> getRest() {
-            return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.bid" )
-                    .queryString( "public.bid.id", "=" + bidId );
+            return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public." + tableName )
+                    .queryString( "public." + tableName + ".id", "=" + bidId );
         }
 
     }

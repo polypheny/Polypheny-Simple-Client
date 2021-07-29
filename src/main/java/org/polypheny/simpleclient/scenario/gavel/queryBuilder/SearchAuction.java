@@ -33,6 +33,7 @@ import java.util.Map;
 import kong.unirest.HttpRequest;
 import kong.unirest.Unirest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
@@ -42,33 +43,44 @@ public class SearchAuction extends QueryBuilder {
     private static final boolean EXPECT_RESULT = true;
 
     private final TextProducer text;
+    private final QueryMode queryMode;
 
 
-    public SearchAuction() {
+    public SearchAuction( QueryMode queryMode ) {
         text = Fairy.create().textProducer();
+        this.queryMode = queryMode;
     }
 
 
     @Override
     public Query getNewQuery() {
-        return new SearchAuctionQuery( text.latinWord( 2 ) );
+        return new SearchAuctionQuery( text.latinWord( 2 ), queryMode );
     }
 
 
     private static class SearchAuctionQuery extends Query {
 
         private final String searchString;
+        private final String tableName;
 
 
-        public SearchAuctionQuery( String searchString ) {
+        public SearchAuctionQuery( String searchString, QueryMode queryMode ) {
             super( EXPECT_RESULT );
             this.searchString = searchString;
+
+            if ( queryMode.equals( QueryMode.VIEW ) ) {
+                tableName = "auction_view";
+            } else if ( queryMode.equals( QueryMode.MATERIALIZED ) ) {
+                tableName = "auction_materialized";
+            } else {
+                tableName = "auction";
+            }
         }
 
 
         @Override
         public String getSql() {
-            return "SELECT a.title, a.start_date, a.end_date FROM Auction a "
+            return "SELECT a.title, a.start_date, a.end_date FROM " + tableName + " a "
                     + "WHERE a.title LIKE '%" + searchString + "%' "
                     + "ORDER BY end_date desc "
                     + "LIMIT 100";
@@ -77,7 +89,7 @@ public class SearchAuction extends QueryBuilder {
 
         @Override
         public String getParameterizedSqlQuery() {
-            return "SELECT a.title, a.start_date, a.end_date FROM Auction a "
+            return "SELECT a.title, a.start_date, a.end_date FROM " + tableName + " a "
                     + "WHERE a.title LIKE ? "
                     + "ORDER BY end_date desc "
                     + "LIMIT 100";
@@ -95,9 +107,9 @@ public class SearchAuction extends QueryBuilder {
         @Override
         public HttpRequest<?> getRest() {
             return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.auction" )
-                    .queryString( "_project", "public.auction.title,public.auction.start_date,public.auction.end_date" )
-                    .queryString( "public.auction.title", "%%" + searchString + "%" )
-                    .queryString( "_sort", "public.auction.end_date@DESC" )
+                    .queryString( "_project", "public." + tableName + ".title,public." + tableName + ".start_date,public." + tableName + ".end_date" )
+                    .queryString( "public." + tableName + ".title", "%%" + searchString + "%" )
+                    .queryString( "_sort", "public." + tableName + ".end_date@DESC" )
                     .queryString( "_limit", 100 );
         }
 

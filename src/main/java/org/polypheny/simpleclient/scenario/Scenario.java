@@ -34,6 +34,7 @@ import java.util.OptionalDouble;
 import java.util.Properties;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.main.ProgressReporter;
@@ -46,12 +47,14 @@ public abstract class Scenario {
     protected final ExecutorFactory executorFactory;
     protected final boolean commitAfterEveryQuery;
     protected final boolean dumpQueryList;
+    protected final QueryMode queryMode;
 
 
-    protected Scenario( ExecutorFactory executorFactory, boolean commitAfterEveryQuery, boolean dumpQueryList ) {
+    protected Scenario( ExecutorFactory executorFactory, boolean commitAfterEveryQuery, boolean dumpQueryList, QueryMode queryMode ) {
         this.executorFactory = executorFactory;
         this.commitAfterEveryQuery = commitAfterEveryQuery;
         this.dumpQueryList = dumpQueryList;
+        this.queryMode = queryMode;
     }
 
 

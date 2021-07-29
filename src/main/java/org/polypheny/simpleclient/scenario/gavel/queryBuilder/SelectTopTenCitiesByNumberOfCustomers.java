@@ -31,6 +31,7 @@ import java.util.Map;
 import kong.unirest.HttpRequest;
 import kong.unirest.Unirest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
@@ -38,24 +39,41 @@ import org.polypheny.simpleclient.query.QueryBuilder;
 public class SelectTopTenCitiesByNumberOfCustomers extends QueryBuilder {
 
     private static final boolean EXPECT_RESULT = true;
+    private final QueryMode queryMode;
+
+
+    public SelectTopTenCitiesByNumberOfCustomers( QueryMode queryMode ) {
+        this.queryMode = queryMode;
+    }
 
 
     @Override
     public Query getNewQuery() {
-        return new SelectTopTenCitiesByNumberOfCustomersQuery();
+        return new SelectTopTenCitiesByNumberOfCustomersQuery( queryMode );
     }
 
 
     private static class SelectTopTenCitiesByNumberOfCustomersQuery extends Query {
 
-        public SelectTopTenCitiesByNumberOfCustomersQuery() {
+        private final String tableName;
+
+
+        public SelectTopTenCitiesByNumberOfCustomersQuery( QueryMode queryMode ) {
             super( EXPECT_RESULT );
+
+            if ( queryMode.equals( QueryMode.VIEW ) ) {
+                tableName = "user_view";
+            } else if ( queryMode.equals( QueryMode.MATERIALIZED ) ) {
+                tableName = "user_materialized";
+            } else {
+                tableName = "\"user\"";
+            }
         }
 
 
         @Override
         public String getSql() {
-            return "SELECT city, COUNT(city) as number FROM \"user\" GROUP BY city ORDER BY number desc LIMIT 10";
+            return "SELECT city, COUNT(city) as number FROM " + tableName + " GROUP BY city ORDER BY number desc LIMIT 10";
         }
 
 
@@ -74,7 +92,7 @@ public class SelectTopTenCitiesByNumberOfCustomers extends QueryBuilder {
         @Override
         public HttpRequest<?> getRest() {
             return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.user" )
-                    .queryString( "_project", "public.user.city@city,public.user.city@number(COUNT)" )
+                    .queryString( "_project", "public." + tableName + ".city@city,public." + tableName + ".city@number(COUNT)" )
                     .queryString( "_groupby", "city" )
                     .queryString( "_sort", "number@DESC" )
                     .queryString( "_limit", 10 );

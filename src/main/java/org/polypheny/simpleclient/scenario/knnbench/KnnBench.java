@@ -18,6 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.executor.ExecutorException;
 import org.polypheny.simpleclient.main.ChronosAgent;
@@ -48,7 +49,7 @@ public class KnnBench extends Scenario {
 
 
     public KnnBench( Executor.ExecutorFactory executorFactory, KnnBenchConfig config, boolean commitAfterEveryQuery, boolean dumpQueryList ) {
-        super( executorFactory, commitAfterEveryQuery, dumpQueryList );
+        super( executorFactory, commitAfterEveryQuery, dumpQueryList, QueryMode.TABLE );
         this.config = config;
 
         measuredTimes = Collections.synchronizedList( new LinkedList<>() );
@@ -59,9 +60,12 @@ public class KnnBench extends Scenario {
 
     @Override
     public void createSchema( boolean includingKeys ) {
+        if ( queryMode != QueryMode.TABLE ) {
+            throw new UnsupportedOperationException( "Unsupported query mode: " + queryMode.name() );
+        }
+
         log.info( "Creating schema..." );
         Executor executor = null;
-
         try {
             executor = executorFactory.createExecutorInstance();
             executor.executeQuery( (new CreateMetadata( config.dataStoreMetadata )).getNewQuery() );

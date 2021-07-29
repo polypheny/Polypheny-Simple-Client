@@ -32,6 +32,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import kong.unirest.HttpRequest;
 import kong.unirest.Unirest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
@@ -41,40 +42,51 @@ public class SelectRandomAuction extends QueryBuilder {
     private static final boolean EXPECT_RESULT = true;
 
     private final int numberOfAuctions;
+    private final QueryMode queryMode;
 
 
-    public SelectRandomAuction( int numberOfAuctions ) {
+    public SelectRandomAuction( int numberOfAuctions, QueryMode queryMode ) {
         this.numberOfAuctions = numberOfAuctions;
+        this.queryMode = queryMode;
     }
 
 
     @Override
     public Query getNewQuery() {
         int auctionId = ThreadLocalRandom.current().nextInt( 1, numberOfAuctions + 1 );
-        return new SelectRandomAuctionQuery( auctionId );
+        return new SelectRandomAuctionQuery( auctionId, queryMode );
     }
 
 
     private static class SelectRandomAuctionQuery extends Query {
 
         private final int auctionId;
+        private final String tableName;
 
 
-        public SelectRandomAuctionQuery( int auctionId ) {
+        public SelectRandomAuctionQuery( int auctionId, QueryMode queryMode ) {
             super( EXPECT_RESULT );
             this.auctionId = auctionId;
+
+            if ( queryMode.equals( QueryMode.VIEW ) ) {
+                tableName = "auction_view";
+            } else if ( queryMode.equals( QueryMode.MATERIALIZED ) ) {
+                tableName = "auction_materialized";
+            } else {
+                tableName = "auction";
+            }
         }
 
 
         @Override
         public String getSql() {
-            return "SELECT * FROM auction a WHERE a.id=" + auctionId;
+            return "SELECT * FROM " + tableName + " a WHERE a.id=" + auctionId;
         }
 
 
         @Override
         public String getParameterizedSqlQuery() {
-            return "SELECT * FROM auction a WHERE a.id=?";
+            return "SELECT * FROM " + tableName + " a WHERE a.id=?";
         }
 
 
@@ -88,8 +100,8 @@ public class SelectRandomAuction extends QueryBuilder {
 
         @Override
         public HttpRequest<?> getRest() {
-            return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.auction" )
-                    .queryString( "public.auction.id", "=" + auctionId );
+            return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public." + tableName )
+                    .queryString( "public." + tableName + ".id", "=" + auctionId );
         }
 
     }

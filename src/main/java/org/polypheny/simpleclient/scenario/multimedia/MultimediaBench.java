@@ -43,6 +43,7 @@ import kong.unirest.Unirest;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.executor.ExecutorException;
 import org.polypheny.simpleclient.main.ChronosAgent;
@@ -70,14 +71,16 @@ public class MultimediaBench extends Scenario {
     private final Map<Integer, String> queryTypes;
     private final Map<Integer, List<Long>> measuredTimePerQueryType;
 
+
     static {
         Unirest.config().reset();
         Unirest.config().socketTimeout( 0 );
     }
 
+
     public MultimediaBench( Executor.ExecutorFactory executorFactory, MultimediaConfig config, boolean commitAfterEveryQuery, boolean dumpQueryList ) {
         //never dump mm queries, because the dumps can get very large for large binary inserts
-        super( executorFactory, commitAfterEveryQuery, false );
+        super( executorFactory, commitAfterEveryQuery, false, QueryMode.TABLE );
         this.config = config;
 
         measuredTimes = Collections.synchronizedList( new LinkedList<>() );
@@ -91,9 +94,12 @@ public class MultimediaBench extends Scenario {
 
     @Override
     public void createSchema( boolean includingKeys ) {
+        if ( queryMode != QueryMode.TABLE ) {
+            throw new UnsupportedOperationException( "Unsupported query mode: " + queryMode.name() );
+        }
+
         log.info( "Creating schema..." );
         Executor executor = null;
-
         try {
             executor = executorFactory.createExecutorInstance();
             String onStore = String.format( " ON STORE \"%s\"", config.dataStore );

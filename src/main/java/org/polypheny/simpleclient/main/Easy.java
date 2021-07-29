@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.Objects;
 import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
+import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
 import org.polypheny.simpleclient.scenario.gavel.Gavel;
 import org.polypheny.simpleclient.scenario.gavel.GavelConfig;
@@ -16,23 +17,23 @@ public class Easy {
 
     public static void schema( ExecutorFactory executorFactory, boolean commitAfterEveryQuery ) {
         GavelConfig config = new GavelConfig( getProperties(), 1 );
-        Gavel gavel = new Gavel( executorFactory, config, commitAfterEveryQuery, false );
+        Gavel gavel = new Gavel( executorFactory, config, commitAfterEveryQuery, false, QueryMode.TABLE );
         gavel.createSchema( true );
     }
 
 
     public static void data( ExecutorFactory executorFactory, int multiplier, boolean commitAfterEveryQuery ) {
         GavelConfig config = new GavelConfig( getProperties(), multiplier );
-        Gavel gavel = new Gavel( executorFactory, config, commitAfterEveryQuery, false );
+        Gavel gavel = new Gavel( executorFactory, config, commitAfterEveryQuery, false, QueryMode.TABLE );
 
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
         gavel.generateData( progressReporter );
     }
 
 
-    public static void workload( ExecutorFactory executorFactory, int multiplier, boolean commitAfterEveryQuery, boolean writeCsv, boolean dumpQueryList ) {
+    public static void workload( ExecutorFactory executorFactory, int multiplier, boolean commitAfterEveryQuery, boolean writeCsv, boolean dumpQueryList, QueryMode queryMode ) {
         GavelConfig config = new GavelConfig( getProperties(), multiplier );
-        Gavel gavel = new Gavel( executorFactory, config, commitAfterEveryQuery, dumpQueryList );
+        Gavel gavel = new Gavel( executorFactory, config, commitAfterEveryQuery, dumpQueryList, queryMode );
 
         final CsvWriter csvWriter;
         if ( writeCsv ) {
@@ -47,7 +48,7 @@ public class Easy {
 
     public static void warmup( ExecutorFactory executorFactory, int multiplier, boolean commitAfterEveryQuery, boolean dumpQueryList ) {
         GavelConfig config = new GavelConfig( getProperties(), 1 );
-        Gavel gavel = new Gavel( executorFactory, config, commitAfterEveryQuery, dumpQueryList );
+        Gavel gavel = new Gavel( executorFactory, config, commitAfterEveryQuery, dumpQueryList, QueryMode.TABLE );
 
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
         gavel.warmUp( progressReporter, multiplier );

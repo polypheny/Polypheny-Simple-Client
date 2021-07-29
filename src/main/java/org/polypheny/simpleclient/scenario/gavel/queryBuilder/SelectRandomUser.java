@@ -32,6 +32,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import kong.unirest.HttpRequest;
 import kong.unirest.Unirest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
@@ -41,40 +42,51 @@ public class SelectRandomUser extends QueryBuilder {
     private static final boolean EXPECT_RESULT = true;
 
     private final int numberOfUsers;
+    private final QueryMode queryMode;
 
 
-    public SelectRandomUser( int numberOfUsers ) {
+    public SelectRandomUser( int numberOfUsers, QueryMode queryMode ) {
         this.numberOfUsers = numberOfUsers;
+        this.queryMode = queryMode;
     }
 
 
     @Override
     public Query getNewQuery() {
         int userId = ThreadLocalRandom.current().nextInt( 1, numberOfUsers + 1 );
-        return new SelectRandomUserQuery( userId );
+        return new SelectRandomUserQuery( userId, queryMode );
     }
 
 
     private static class SelectRandomUserQuery extends Query {
 
         private final int userId;
+        private final String tableName;
 
 
-        public SelectRandomUserQuery( int userId ) {
+        public SelectRandomUserQuery( int userId, QueryMode queryMode ) {
             super( EXPECT_RESULT );
             this.userId = userId;
+
+            if ( queryMode.equals( QueryMode.VIEW ) ) {
+                tableName = "user_view";
+            } else if ( queryMode.equals( QueryMode.MATERIALIZED ) ) {
+                tableName = "user_materialized";
+            } else {
+                tableName = "\"user\"";
+            }
         }
 
 
         @Override
         public String getSql() {
-            return "SELECT * FROM \"user\" WHERE id=" + userId;
+            return "SELECT * FROM " + tableName + " WHERE id=" + userId;
         }
 
 
         @Override
         public String getParameterizedSqlQuery() {
-            return "SELECT * FROM \"user\" WHERE id=?";
+            return "SELECT * FROM " + tableName + " WHERE id=?";
         }
 
 
@@ -88,8 +100,8 @@ public class SelectRandomUser extends QueryBuilder {
 
         @Override
         public HttpRequest<?> getRest() {
-            return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.user" )
-                    .queryString( "public.user.id", "=" + userId );
+            return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public." + tableName )
+                    .queryString( "public." + tableName + ".id", "=" + userId );
         }
 
     }

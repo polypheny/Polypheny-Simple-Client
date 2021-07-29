@@ -23,38 +23,59 @@
  *
  */
 
-package org.polypheny.simpleclient.scenario.gavel.queryBuilder.not_used;
+package org.polypheny.simpleclient.scenario.gavel.queryBuilder;
 
 
 import java.util.HashMap;
 import java.util.Map;
 import kong.unirest.HttpRequest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
 
 public class SelectTopHundredSellerByNumberOfAuctions extends QueryBuilder {
 
+
     private static final boolean EXPECT_RESULT = true;
+    private final QueryMode queryMode;
+
+
+    public SelectTopHundredSellerByNumberOfAuctions( QueryMode queryMode ) {
+        this.queryMode = queryMode;
+    }
 
 
     @Override
     public Query getNewQuery() {
-        return new SelectTopHundredSellerByNumberOfAuctionsQuery();
+        return new SelectTopHundredSellerByNumberOfAuctionsQuery( queryMode );
     }
 
 
     private static class SelectTopHundredSellerByNumberOfAuctionsQuery extends Query {
 
-        public SelectTopHundredSellerByNumberOfAuctionsQuery() {
+        private final QueryMode queryMode;
+
+
+        public SelectTopHundredSellerByNumberOfAuctionsQuery( QueryMode queryMode ) {
             super( EXPECT_RESULT );
+            this.queryMode = queryMode;
         }
 
 
         @Override
         public String getSql() {
-            return "SELECT u.last_name, u.first_name, count(a.id) as number FROM auction a INNER JOIN user u ON a.user = u.id GROUP BY a.user, u.last_name, u.first_name ORDER BY number desc LIMIT 100";
+            if ( queryMode.equals( QueryMode.MATERIALIZED ) ) {
+                return "SELECT * FROM topHundredSellerByNumberOfAuctions_materialized LIMIT 100";
+            } else if ( queryMode.equals( QueryMode.VIEW ) ) {
+                return "SELECT * FROM topHundredSellerByNumberOfAuctions_view LIMIT 100";
+            } else {
+                return "SELECT u.last_name, u.first_name, count(a.id) as number "
+                        + "FROM auction a INNER JOIN \"user\" u ON a.\"user\" = u.id "
+                        + "GROUP BY a.\"user\", u.last_name, u.first_name "
+                        + "ORDER BY number desc LIMIT 100";
+            }
         }
 
 

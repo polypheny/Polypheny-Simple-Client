@@ -32,6 +32,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import kong.unirest.HttpRequest;
 import kong.unirest.Unirest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
@@ -41,40 +42,51 @@ public class SelectHighestBidOnRandomAuction extends QueryBuilder {
     private static final boolean EXPECT_RESULT = true;
 
     private final int numberOfAuctions;
+    private final QueryMode queryMode;
 
 
-    public SelectHighestBidOnRandomAuction( int numberOfAuctions ) {
+    public SelectHighestBidOnRandomAuction( int numberOfAuctions, QueryMode queryMode ) {
         this.numberOfAuctions = numberOfAuctions;
+        this.queryMode = queryMode;
     }
 
 
     @Override
     public Query getNewQuery() {
         int auctionId = ThreadLocalRandom.current().nextInt( 1, numberOfAuctions + 1 );
-        return new SelectHighestBidOnRandomAuctionQuery( auctionId );
+        return new SelectHighestBidOnRandomAuctionQuery( auctionId, queryMode );
     }
 
 
     private static class SelectHighestBidOnRandomAuctionQuery extends Query {
 
         private final int auctionId;
+        private final String tableName;
 
 
-        public SelectHighestBidOnRandomAuctionQuery( int auctionId ) {
+        public SelectHighestBidOnRandomAuctionQuery( int auctionId, QueryMode queryMode ) {
             super( EXPECT_RESULT );
             this.auctionId = auctionId;
+
+            if ( queryMode.equals( QueryMode.VIEW ) ) {
+                tableName = "bid_view";
+            } else if ( queryMode.equals( QueryMode.MATERIALIZED ) ) {
+                tableName = "bid_materialized";
+            } else {
+                tableName = "bid";
+            }
         }
 
 
         @Override
         public String getSql() {
-            return "SELECT * FROM bid b WHERE b.auction=" + auctionId + " ORDER BY b.amount desc LIMIT 1";
+            return "SELECT * FROM " + tableName + " b WHERE b.auction=" + auctionId + " ORDER BY b.amount desc LIMIT 1";
         }
 
 
         @Override
         public String getParameterizedSqlQuery() {
-            return "SELECT * FROM bid b WHERE b.auction=? ORDER BY b.amount desc LIMIT 1";
+            return "SELECT * FROM " + tableName + " b WHERE b.auction=? ORDER BY b.amount desc LIMIT 1";
         }
 
 
@@ -88,9 +100,9 @@ public class SelectHighestBidOnRandomAuction extends QueryBuilder {
 
         @Override
         public HttpRequest<?> getRest() {
-            return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.bid" )
-                    .queryString( "public.bid.auction", "=" + auctionId )
-                    .queryString( "_sort", "public.bid.amount@DESC" )
+            return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public." + tableName )
+                    .queryString( "public." + tableName + ".auction", "=" + auctionId )
+                    .queryString( "_sort", "public." + tableName + ".amount@DESC" )
                     .queryString( "_limit", "1" );
         }
 
