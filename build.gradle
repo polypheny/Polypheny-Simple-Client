@@ -10,7 +10,6 @@ version = versionMajor + "." + versionMinor + versionQualifier
 buildscript {
     repositories {
         mavenCentral()
-        jcenter()
         maven {
             url "https://plugins.gradle.org/m2/"
         }
@@ -30,7 +29,6 @@ repositories {
     maven {
         url "https://clojars.org/repo/"
     }
-    jcenter()
     maven {
         // DBIS Nexus
         url "https://dbis-nexus.dmi.unibas.ch/repository/maven2/"
