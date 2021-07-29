@@ -1,8 +1,8 @@
 package org.polypheny.simpleclient.scenario.gavel.queryBuilder;
 
+import java.util.HashMap;
 import java.util.Map;
 import kong.unirest.HttpRequest;
-import kong.unirest.Unirest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.QueryView;
 import org.polypheny.simpleclient.query.Query;
@@ -40,16 +40,16 @@ public class SelectHighestOverallBid extends QueryBuilder {
         public String getSql() {
 
             if ( queryView.equals( QueryView.MATERIALIZED ) ) {
-                return "SELECT * FROM highestBid_materialized";
+                return "SELECT * FROM highestBid_materialized LIMIT 1";
             } else if ( queryView.equals( QueryView.VIEW ) ) {
-                return "SELECT * FROM highestBid_view";
+                return "SELECT * FROM highestBid_view LIMIT 1";
             } else {
                 return "SELECT last_name, first_name "
                         + "FROM \"user\" "
                         + "WHERE \"user\".id = (SELECT highest.highestUser FROM (SELECT bid.\"user\" as highestUser, MAX( bid.amount) "
                         + "FROM public.bid "
                         + "GROUP BY bid.\"user\" "
-                        + "ORDER BY MAX( bid.amount) DESC) as highest Limit 1)";
+                        + "ORDER BY MAX( bid.amount) DESC) as highest Limit 1) LIMIT 1";
             }
         }
 
@@ -62,7 +62,7 @@ public class SelectHighestOverallBid extends QueryBuilder {
 
         @Override
         public Map<Integer, ImmutablePair<DataTypes, Object>> getParameterValues() {
-            return null;
+            return new HashMap<>();
         }
 
 

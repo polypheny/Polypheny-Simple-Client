@@ -1,5 +1,6 @@
 package org.polypheny.simpleclient.scenario.gavel.queryBuilder;
 
+import java.util.HashMap;
 import java.util.Map;
 import kong.unirest.HttpRequest;
 import kong.unirest.Unirest;
@@ -39,9 +40,9 @@ public class SelectPriceBetweenAndNotInCategory extends QueryBuilder {
         @Override
         public String getSql() {
             if ( queryView.equals( QueryView.MATERIALIZED ) ) {
-                return "SELECT * FROM priceBetween_materialized";
+                return "SELECT * FROM priceBetween_materialized LIMIT 100";
             } else if ( queryView.equals( QueryView.VIEW ) ) {
-                return "SELECT * FROM priceBetween_view";
+                return "SELECT * FROM priceBetween_view LIMIT 100";
             } else {
                 return "SELECT auction.title, bid.amount "
                         + "FROM auction, category, bid "
@@ -50,7 +51,7 @@ public class SelectPriceBetweenAndNotInCategory extends QueryBuilder {
                         + "AND bid.amount > 1000 AND bid.amount < 1000000 "
                         + "AND not exists ( SELECT category.name "
                         + "FROM category WHERE category.name in ('Travel', 'Stamps', 'Motors')) "
-                        + "ORDER BY bid.amount DESC";
+                        + "ORDER BY bid.amount DESC LIMIT 100";
             }
         }
 
@@ -63,7 +64,7 @@ public class SelectPriceBetweenAndNotInCategory extends QueryBuilder {
 
         @Override
         public Map<Integer, ImmutablePair<DataTypes, Object>> getParameterValues() {
-            return null;
+            return new HashMap<>();
         }
 
 

@@ -116,8 +116,8 @@ public class Gavel extends Scenario {
         addNumberOfTimes( queryList, new InsertRandomBid( numbers.get( "auctions" ), numbers.get( "users" ) ), config.numberOfAddBidQueries );
         addNumberOfTimes( queryList, new ChangeRandomAuction( numbers.get( "auctions" ), config ), config.numberOfChangeAuctionQueries );
         addNumberOfTimes( queryList, new SelectRandomAuction( numbers.get( "auctions" ), queryView ), config.numberOfGetAuctionQueries );
-        addNumberOfTimes( queryList, new SelectTheHundredNextEndingAuctionsOfRandomCategory( numbers.get( "categories" ), config, QueryView.TABLE ), config.numberOfGetTheNextHundredEndingAuctionsOfACategoryQueries );
-        addNumberOfTimes( queryList, new SearchAuction( QueryView.TABLE ), config.numberOfSearchAuctionQueries );
+        addNumberOfTimes( queryList, new SelectTheHundredNextEndingAuctionsOfRandomCategory( numbers.get( "categories" ), config, queryView ), config.numberOfGetTheNextHundredEndingAuctionsOfACategoryQueries );
+        addNumberOfTimes( queryList, new SearchAuction( queryView ), config.numberOfSearchAuctionQueries );
         addNumberOfTimes( queryList, new CountAuction( queryView ), config.numberOfCountAuctionsQueries );
         addNumberOfTimes( queryList, new SelectTopTenCitiesByNumberOfCustomers( queryView ), config.numberOfTopTenCitiesByNumberOfCustomersQueries );
         addNumberOfTimes( queryList, new CountBid( queryView ), config.numberOfCountBidsQueries );
@@ -138,7 +138,6 @@ public class Gavel extends Scenario {
                 FileWriter fw = new FileWriter( outputDirectory.getPath() + File.separator + "queryList" );
                 queryList.forEach( query -> {
                     try {
-                        System.out.println("show what querys get appended: " + query.query.getSql());
                         fw.append( query.query.getSql() ).append( "\n" );
                     } catch ( IOException e ) {
                         log.error( "Error while dumping query list", e );
@@ -248,8 +247,6 @@ public class Gavel extends Scenario {
                 if ( config.numberOfGetCurrentlyHighestBidOnAuctionQueries > 0 ) {
                     executor.executeQuery( new SelectHighestBidOnRandomAuction( numbers.get( "auctions" ), queryView ).getNewQuery() );
                 }
-
-                /*
                 if ( config.totalNumOfPriceBetweenAndNotInCategoryQueries > 0 ) {
                     executor.executeQuery( new SelectPriceBetweenAndNotInCategory( queryView ).getNewQuery() );
                 }
@@ -258,8 +255,7 @@ public class Gavel extends Scenario {
                 }
                 if ( config.totalNumOfHighestOverallBidQueries > 0 ) {
                     executor.executeQuery( new SelectHighestOverallBid( queryView ).getNewQuery() );
-                }*/
-
+                }
             } catch ( ExecutorException e ) {
                 throw new RuntimeException( "Error while executing warm-up queries", e );
             } finally {
@@ -554,7 +550,6 @@ public class Gavel extends Scenario {
             }
         }
 
-        System.out.println("BEFORE ALTERING VIEW, INSIDE DATA GENERATION");
 
         if ( queryView == QueryView.MATERIALIZED ) {
             updateMaterializedView();
@@ -569,8 +564,6 @@ public class Gavel extends Scenario {
     public void updateMaterializedView() {
         log.info( "Update Materialized View..." );
         Executor executor = null;
-
-        System.out.println("inside of ALTERING VIEW");
 
         try {
             executor = executorFactory.createExecutorInstance();

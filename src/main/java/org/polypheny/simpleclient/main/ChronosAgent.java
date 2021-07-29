@@ -144,12 +144,6 @@ public class ChronosAgent extends AbstractChronosAgent {
         // Parse CDL
         Map<String, String> parsedConfig = parseConfig( chronosJob );
 
-        for( Entry<String, String> string : parsedConfig.entrySet()){
-            System.out.println("Show this config key: " + string.getKey());
-            System.out.println("Show this config value: " + string.getValue());
-        }
-
-
         switch ( parsedConfig.get( "queryViews" ) ) {
             case "Table":
                 queryView = QueryView.TABLE;
