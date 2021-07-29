@@ -41,13 +41,15 @@ public class SelectTopTenCitiesByNumberOfCustomers extends QueryBuilder {
     private static final boolean EXPECT_RESULT = true;
     private final QueryView queryView;
 
-    public SelectTopTenCitiesByNumberOfCustomers(QueryView queryView){
+
+    public SelectTopTenCitiesByNumberOfCustomers( QueryView queryView ) {
         this.queryView = queryView;
     }
 
+
     @Override
     public Query getNewQuery() {
-        return new SelectTopTenCitiesByNumberOfCustomersQuery(queryView);
+        return new SelectTopTenCitiesByNumberOfCustomersQuery( queryView );
     }
 
 
@@ -55,14 +57,15 @@ public class SelectTopTenCitiesByNumberOfCustomers extends QueryBuilder {
 
         private final String tablename;
 
-        public SelectTopTenCitiesByNumberOfCustomersQuery(QueryView queryView) {
+
+        public SelectTopTenCitiesByNumberOfCustomersQuery( QueryView queryView ) {
             super( EXPECT_RESULT );
 
-            if(queryView.equals( QueryView.VIEW )){
+            if ( queryView.equals( QueryView.VIEW ) ) {
                 tablename = "user_view";
-            }else if(queryView.equals( QueryView.MATERIALIZED )){
+            } else if ( queryView.equals( QueryView.MATERIALIZED ) ) {
                 tablename = "user_materialized";
-            }else {
+            } else {
                 tablename = "\"user\"";
             }
         }

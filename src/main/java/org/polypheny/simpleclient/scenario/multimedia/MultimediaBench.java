@@ -160,7 +160,7 @@ public class MultimediaBench extends Scenario {
 
 
     @Override
-    public void createView(QueryView queryView) {
+    public void createView( QueryView queryView ) {
         log.info( "Not Possible to createViews on the MultimediaBench." );
         //not possible to use in MultimediaBench
     }

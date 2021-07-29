@@ -409,20 +409,20 @@ public class Gavel extends Scenario {
 
     }
 
+
     @Override
-    public void createView( QueryView queryView) {
+    public void createView( QueryView queryView ) {
         log.info( "Creating Views..." );
 
         InputStream file = null;
-        if(queryView == QueryView.VIEW){
+        if ( queryView == QueryView.VIEW ) {
             file = ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/gavel/view.sql" );
-        }else{
+        } else {
             file = ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/gavel/materialized.sql" );
         }
 
         executeSchema( file );
     }
-
 
 
     private void executeSchema( InputStream file ) {
@@ -549,7 +549,6 @@ public class Gavel extends Scenario {
                 throw new RuntimeException( "Unexpected interrupt", e );
             }
         }
-
 
         if ( queryView == QueryView.MATERIALIZED ) {
             updateMaterializedView();

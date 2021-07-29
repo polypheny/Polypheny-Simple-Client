@@ -3,7 +3,6 @@ package org.polypheny.simpleclient.scenario.gavel.queryBuilder;
 import java.util.HashMap;
 import java.util.Map;
 import kong.unirest.HttpRequest;
-import kong.unirest.Unirest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.QueryView;
 import org.polypheny.simpleclient.query.Query;

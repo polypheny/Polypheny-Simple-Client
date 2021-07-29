@@ -63,15 +63,16 @@ public class SelectHighestBidOnRandomAuction extends QueryBuilder {
         private final int auctionId;
         private final String tablename;
 
+
         public SelectHighestBidOnRandomAuctionQuery( int auctionId, QueryView queryView ) {
             super( EXPECT_RESULT );
             this.auctionId = auctionId;
 
-            if(queryView.equals( QueryView.VIEW )){
+            if ( queryView.equals( QueryView.VIEW ) ) {
                 tablename = "bid_view";
-            }else if(queryView.equals( QueryView.MATERIALIZED )){
+            } else if ( queryView.equals( QueryView.MATERIALIZED ) ) {
                 tablename = "bid_materialized";
-            }else {
+            } else {
                 tablename = "bid";
             }
         }

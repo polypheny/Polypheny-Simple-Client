@@ -36,7 +36,6 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URISyntaxException;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
@@ -253,8 +252,8 @@ public class ChronosAgent extends AbstractChronosAgent {
 
         // Create View / MaterializedView
         log.info( "Creating View / Materialized View..." );
-        if ( queryView.equals( QueryView.VIEW ) || queryView.equals( QueryView.MATERIALIZED )) {
-            scenario.createView(queryView);
+        if ( queryView.equals( QueryView.VIEW ) || queryView.equals( QueryView.MATERIALIZED ) ) {
+            scenario.createView( queryView );
         }
 
         // Insert data

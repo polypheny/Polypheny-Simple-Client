@@ -45,7 +45,7 @@ public class SelectAllBidsOnRandomAuction extends QueryBuilder {
     private final QueryView queryView;
 
 
-    public SelectAllBidsOnRandomAuction( int numberOfAuctions,  QueryView queryView  ) {
+    public SelectAllBidsOnRandomAuction( int numberOfAuctions, QueryView queryView ) {
         this.numberOfAuctions = numberOfAuctions;
         this.queryView = queryView;
     }
@@ -63,15 +63,16 @@ public class SelectAllBidsOnRandomAuction extends QueryBuilder {
         private final int auctionId;
         private final String tablename;
 
+
         public SelectAllBidsOnRandomAuctionQuery( int auctionId, QueryView queryView ) {
             super( EXPECT_RESULT );
             this.auctionId = auctionId;
 
-            if(queryView.equals( QueryView.VIEW )){
+            if ( queryView.equals( QueryView.VIEW ) ) {
                 tablename = "bid_view";
-            }else if(queryView.equals( QueryView.MATERIALIZED )){
+            } else if ( queryView.equals( QueryView.MATERIALIZED ) ) {
                 tablename = "bid_materialized";
-            }else {
+            } else {
                 tablename = "bid";
             }
         }

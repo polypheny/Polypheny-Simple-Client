@@ -64,13 +64,13 @@ public class SelectRandomAuction extends QueryBuilder {
         private final String tablename;
 
 
-        public SelectRandomAuctionQuery( int auctionId , QueryView queryView) {
+        public SelectRandomAuctionQuery( int auctionId, QueryView queryView ) {
             super( EXPECT_RESULT );
             this.auctionId = auctionId;
 
-            if(queryView.equals( QueryView.VIEW )){
+            if ( queryView.equals( QueryView.VIEW ) ) {
                 tablename = "auction_view";
-            }else if(queryView.equals( QueryView.MATERIALIZED )){
+            } else if ( queryView.equals( QueryView.MATERIALIZED ) ) {
                 tablename = "auction_materialized";
             } else {
                 tablename = "auction";

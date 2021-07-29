@@ -46,7 +46,7 @@ public class SearchAuction extends QueryBuilder {
     private final QueryView queryView;
 
 
-    public SearchAuction(QueryView queryView) {
+    public SearchAuction( QueryView queryView ) {
         text = Fairy.create().textProducer();
         this.queryView = queryView;
     }
@@ -68,9 +68,9 @@ public class SearchAuction extends QueryBuilder {
             super( EXPECT_RESULT );
             this.searchString = searchString;
 
-            if(queryView.equals( QueryView.VIEW )){
+            if ( queryView.equals( QueryView.VIEW ) ) {
                 tablename = "auction_view";
-            }else if(queryView.equals( QueryView.MATERIALIZED )){
+            } else if ( queryView.equals( QueryView.MATERIALIZED ) ) {
                 tablename = "auction_materialized";
             } else {
                 tablename = "auction";

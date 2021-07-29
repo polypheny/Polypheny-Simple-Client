@@ -95,7 +95,7 @@ public class KnnBench extends Scenario {
 
 
     @Override
-    public void createView(QueryView queryView) {
+    public void createView( QueryView queryView ) {
         log.info( "Not Possible to createViews on the KnnBench." );
         //not possible to use in KnnBench
     }

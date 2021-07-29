@@ -41,13 +41,15 @@ public class CountBid extends QueryBuilder {
     private static final boolean EXPECT_RESULT = true;
     private final QueryView queryView;
 
-    public CountBid(QueryView queryView){
+
+    public CountBid( QueryView queryView ) {
         this.queryView = queryView;
     }
 
+
     @Override
     public Query getNewQuery() {
-        return new CountBidQuery(queryView);
+        return new CountBidQuery( queryView );
     }
 
 
@@ -56,7 +58,7 @@ public class CountBid extends QueryBuilder {
         private final QueryView queryView;
 
 
-        public CountBidQuery(QueryView queryView) {
+        public CountBidQuery( QueryView queryView ) {
             super( EXPECT_RESULT );
             this.queryView = queryView;
         }
@@ -64,11 +66,11 @@ public class CountBid extends QueryBuilder {
 
         @Override
         public String getSql() {
-            if(queryView.equals( QueryView.VIEW )){
+            if ( queryView.equals( QueryView.VIEW ) ) {
                 return "SELECT * FROM countBid";
-            } else if(queryView.equals( QueryView.MATERIALIZED )){
+            } else if ( queryView.equals( QueryView.MATERIALIZED ) ) {
                 return "SELECT * FROM countBid_materialized";
-            } else{
+            } else {
                 return "SELECT count(*) as NUMBER FROM bid";
             }
 
@@ -89,12 +91,12 @@ public class CountBid extends QueryBuilder {
 
         @Override
         public HttpRequest<?> getRest() {
-            if(queryView.equals( QueryView.VIEW )){
+            if ( queryView.equals( QueryView.VIEW ) ) {
                 return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.countBid" );
-                       // .queryString( "public.countBid", "*");
-            } else if(queryView.equals( QueryView.MATERIALIZED )){
+                // .queryString( "public.countBid", "*");
+            } else if ( queryView.equals( QueryView.MATERIALIZED ) ) {
                 return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.countBid_materialized" );
-            }else {
+            } else {
                 return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.bid" )
                         .queryString( "_project", "public.bid.id@num(COUNT)" );
             }

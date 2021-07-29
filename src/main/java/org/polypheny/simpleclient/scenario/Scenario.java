@@ -62,7 +62,7 @@ public abstract class Scenario {
 
     public abstract void generateData( ProgressReporter progressReporter );
 
-    public abstract void createView(QueryView queryView);
+    public abstract void createView( QueryView queryView );
 
     public abstract long execute( ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory, int numberOfThread );
 
