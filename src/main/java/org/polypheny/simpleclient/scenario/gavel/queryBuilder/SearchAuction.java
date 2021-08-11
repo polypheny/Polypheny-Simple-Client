@@ -116,7 +116,10 @@ public class SearchAuction extends QueryBuilder {
 
         @Override
         public String getMongoQl() {
-            return "db." + tableName + ".aggregate([{\"$match\":{\"title\":/$" + searchString + "$/},{\"$sort\":{end_data: -1}},{\"$limit\": 100}}])";
+            return "db." + tableName + ".aggregate(["
+                    + "{\"$match\":{\"title\":{\"$regex\": \"/$" + searchString + "$/\"}}},"
+                    + "{\"$sort\":{\"end_data\": -1}},"
+                    + "{\"$limit\": 100}])";
         }
 
     }

@@ -114,7 +114,9 @@ public class ChangePasswordOfRandomUser extends QueryBuilder {
 
         @Override
         public String getMongoQl() {
-            return "db.user.update({\"id\":" + userId + "},{\"$set\":{\"$password\":" + password + "}})";
+            // document model on non-document stores is not yet supported
+            //return "db.user.update({\"id\":" + userId + "},{\"$set\":{\"password\":" + maybeQuote( password ) + "}})";
+            return "db.user.count({\"id\":" + userId + "})";
         }
 
     }

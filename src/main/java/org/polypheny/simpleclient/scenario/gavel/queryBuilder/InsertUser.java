@@ -185,16 +185,16 @@ public class InsertUser extends QueryBuilder {
 
         @Override
         public String getMongoQl() {
-            return "db.user.insert({\"id\":" + userId
-                    + ",\"email\":" + email
-                    + ",\"password\":" + password
-                    + ",\"last_name\":" + lastName
-                    + ",\"first_name\":" + firstName
-                    + ",\"gender\":" + gender
+            return "db.user.insert({\"id\":" + maybeQuote( userId )
+                    + ",\"email\":" + maybeQuote( email )
+                    + ",\"password\":" + maybeQuote( password )
+                    + ",\"last_name\":" + maybeQuote( lastName )
+                    + ",\"first_name\":" + maybeQuote( firstName )
+                    + ",\"gender\":" + maybeQuote( gender )
                     + ",\"birthday\":" + birthday.toEpochDay()
-                    + ",\"city\":" + city
-                    + ",\"zip_code\":" + zipCode
-                    + ",\"country\":" + country + "})";
+                    + ",\"city\":" + maybeQuote( city )
+                    + ",\"zip_code\":" + maybeQuote( zipCode )
+                    + ",\"country\":" + maybeQuote( country ) + "})";
         }
 
 

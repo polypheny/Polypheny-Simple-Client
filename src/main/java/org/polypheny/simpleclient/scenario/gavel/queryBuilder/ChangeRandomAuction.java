@@ -130,7 +130,9 @@ public class ChangeRandomAuction extends QueryBuilder {
 
         @Override
         public String getMongoQl() {
-            return "db.auction.update({\"id\":" + auctionId + "},{\"$set\":{ \"description\":"+description + ", \"title\":" + title + "}})";
+            // document model on non-document stores is not yet supported
+            // return "db.auction.update({\"id\":" + auctionId + "},{\"$set\":{ \"description\":" + maybeQuote( description ) + ", \"title\":" + maybeQuote( title ) + "}})";
+            return "db.auction.count({\"id\":" + auctionId + "})";
         }
 
     }

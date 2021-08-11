@@ -81,7 +81,7 @@ public class CountCategory extends QueryBuilder {
 
         @Override
         public String getMongoQl() {
-            return "db.country.count({})";
+            return "db.category.count({})";
 
         }
 

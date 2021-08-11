@@ -136,11 +136,11 @@ public class InsertBid extends QueryBuilder {
 
         @Override
         public String getMongoQl() {
-            return "db.bid.insert({\"id\":" + bidId
-                    + ",\"amount\":" + amount
+            return "db.bid.insert({\"id\":" + maybeQuote( bidId )
+                    + ",\"amount\":" + maybeQuote( amount )
                     + ",\"timestamp\":" + date.toLocalDate().toEpochDay()
-                    + ",\"user\":" + userId
-                    + ",\"auction\":" + auctionId + "})";
+                    + ",\"user\":" + maybeQuote( userId )
+                    + ",\"auction\":" + maybeQuote( auctionId ) + "})";
         }
 
 

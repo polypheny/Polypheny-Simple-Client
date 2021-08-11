@@ -101,7 +101,7 @@ public class SelectTopTenCitiesByNumberOfCustomers extends QueryBuilder {
 
         @Override
         public String getMongoQl() {
-            return "db." + tableName+".aggregate(["
+            return "db." + tableName.replace( "\"", "" ) + ".aggregate(["
                     + "{\"$group\":{\"_id\":\"city\",\"number\": {\"$sum\": 1 }}},"
                     + "{\"$project\":{\"number\":1,\"city\":\"$_id\"}},"
                     + "{\"$sort\":{\"number\": -1 }},"

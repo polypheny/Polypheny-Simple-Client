@@ -116,15 +116,12 @@ public class PolyphenyDbMongoQlExecutor implements PolyphenyDbExecutor {
                 csvWriter.appendToCsv( request.getUrl(), System.nanoTime() - start );
             }
             // Get result of a count query
-            JSONArray res = result.getBody().getObject().getJSONArray( "result" );
+            JSONArray res = result.getBody().getObject().getJSONArray( "data" );
             if ( res.length() != 1 ) {
                 throw new ExecutorException( "Invalid result: " + res.toString() );
             }
-            Set<String> names = res.getJSONObject( 0 ).keySet();
-            if ( names.size() != 1 ) {
-                throw new ExecutorException( "Invalid result: " + res.toString() );
-            }
-            return res.getJSONObject( 0 ).getLong( names.iterator().next() );
+
+            return res.getJSONArray( 0 ).getLong( 0 );
         } catch ( UnirestException e ) {
             throw new ExecutorException( e );
         }

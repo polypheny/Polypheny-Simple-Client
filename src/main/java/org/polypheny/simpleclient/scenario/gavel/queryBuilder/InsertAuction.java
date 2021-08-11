@@ -150,13 +150,13 @@ public class InsertAuction extends QueryBuilder {
 
         @Override
         public String getMongoQl() {
-            return "db.auction.insert({\"id\":" + auctionId
-                    + ",\"title\":" + title
-                    + ",\"description\":" + description
+            return "db.auction.insert({\"id\":" + maybeQuote( auctionId )
+                    + ",\"title\":" + maybeQuote( title )
+                    + ",\"description\":" + maybeQuote( description )
                     + ",\"start_date\":" + startDate.toLocalDate().toEpochDay()
                     + ",\"end_date\":" + endDate.toLocalDate().toEpochDay()
-                    + ",\"category\":" + categoryId
-                    + ",\"user\":" + userId + "})";
+                    + ",\"category\":" + maybeQuote( categoryId )
+                    + ",\"user\":" + maybeQuote( userId ) + "})";
         }
 
 

@@ -129,7 +129,7 @@ public abstract class Query {
     }
 
 
-    private static String maybeQuote( Object o ) {
+    protected static String maybeQuote( Object o ) {
         if ( o instanceof String ) {
             return "\"" + o.toString() + "\"";
         }
