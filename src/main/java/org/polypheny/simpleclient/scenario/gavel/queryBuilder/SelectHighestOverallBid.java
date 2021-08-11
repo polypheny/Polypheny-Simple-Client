@@ -89,6 +89,18 @@ public class SelectHighestOverallBid extends QueryBuilder {
              */
         }
 
+
+        @Override
+        public String getMongoQl() {
+            // $lookup is not supported // substitute query
+
+            return "db.bid.aggregate(["
+                    + "{\"$group\":{\"_id\": user, \"max_amount\":{\"$max\": \"amount\"}}},"
+                    + "{\"$sort\":{\"max_amount\": -1 }},"
+                    + "{\"$project\":{\"highestUser\": \"$user\", \"max_amount\": 1}},"
+                    + "{\"$limit\": 1}])";
+        }
+
     }
 
 }

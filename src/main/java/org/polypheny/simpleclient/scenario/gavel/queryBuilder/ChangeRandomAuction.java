@@ -127,6 +127,12 @@ public class ChangeRandomAuction extends QueryBuilder {
             return buildRestUpdate( "public.auction", set, where );
         }
 
+
+        @Override
+        public String getMongoQl() {
+            return "db.auction.update({\"id\":" + auctionId + "},{\"$set\":{ \"description\":"+description + ", \"title\":" + title + "}})";
+        }
+
     }
 
 }

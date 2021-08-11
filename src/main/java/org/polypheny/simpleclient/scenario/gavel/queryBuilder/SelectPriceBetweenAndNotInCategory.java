@@ -72,6 +72,17 @@ public class SelectPriceBetweenAndNotInCategory extends QueryBuilder {
             return null;
         }
 
+
+        @Override
+        public String getMongoQl() {
+            // $lookup is not supported // substitute query
+            return "db.bid.aggregate(["
+                    + "{\"$match\":{\"$or\":[{\"amount\":{\"$gt\": 1000}}, {\"amount\":{\"$lt\": 1000000}}]}}, "
+                    + "{\"$sort\":{\"amount\": -1 }}, "
+                    + "{\"$limit\":100}"
+                    + "])";
+        }
+
     }
 
 }

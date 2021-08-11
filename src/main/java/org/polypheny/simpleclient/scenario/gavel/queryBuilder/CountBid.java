@@ -101,6 +101,18 @@ public class CountBid extends QueryBuilder {
             }
         }
 
+
+        @Override
+        public String getMongoQl() {
+            if ( queryMode.equals( QueryMode.VIEW ) ) {
+                return "db.countBid.find({})";
+            } else if ( queryMode.equals( QueryMode.MATERIALIZED ) ) {
+                return "db.countBid_materialized.find({})";
+            } else {
+                return "db.bid.count({})";
+            }
+        }
+
     }
 
 }

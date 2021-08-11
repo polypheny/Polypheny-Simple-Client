@@ -74,6 +74,12 @@ public class TruncateAuction extends QueryBuilder {
             return null;
         }
 
+
+        @Override
+        public String getMongoQl() {
+            return "db.auction.deleteMany({})";
+        }
+
     }
 
 }

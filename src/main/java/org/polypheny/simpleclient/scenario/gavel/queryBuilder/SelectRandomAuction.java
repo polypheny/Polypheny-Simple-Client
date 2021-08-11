@@ -104,6 +104,12 @@ public class SelectRandomAuction extends QueryBuilder {
                     .queryString( "public." + tableName + ".id", "=" + auctionId );
         }
 
+
+        @Override
+        public String getMongoQl() {
+            return "db." + tableName + ".find({\"id\":" + auctionId + "})";
+        }
+
     }
 
 }

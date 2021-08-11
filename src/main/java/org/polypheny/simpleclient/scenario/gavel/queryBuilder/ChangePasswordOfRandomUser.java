@@ -111,6 +111,12 @@ public class ChangePasswordOfRandomUser extends QueryBuilder {
             return buildRestUpdate( "public.user", set, where );
         }
 
+
+        @Override
+        public String getMongoQl() {
+            return "db.user.update({\"id\":" + userId + "},{\"$set\":{\"$password\":" + password + "}})";
+        }
+
     }
 
 }

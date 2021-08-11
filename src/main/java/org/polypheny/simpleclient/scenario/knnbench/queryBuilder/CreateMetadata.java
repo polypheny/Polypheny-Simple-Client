@@ -73,6 +73,12 @@ public class CreateMetadata extends QueryBuilder {
 
 
         @Override
+        public String getMongoQl() {
+            return null;
+        }
+
+
+        @Override
         public CottontailQuery getCottontail() {
             List<ColumnDefinition> columns = new ArrayList<>();
             columns.add( ColumnDefinition.newBuilder().setName( "id" ).setType( Type.INTEGER ).build() );

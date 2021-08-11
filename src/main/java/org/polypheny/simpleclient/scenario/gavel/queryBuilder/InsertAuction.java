@@ -149,6 +149,18 @@ public class InsertAuction extends QueryBuilder {
 
 
         @Override
+        public String getMongoQl() {
+            return "db.auction.insert({\"id\":" + auctionId
+                    + ",\"title\":" + title
+                    + ",\"description\":" + description
+                    + ",\"start_date\":" + startDate.toLocalDate().toEpochDay()
+                    + ",\"end_date\":" + endDate.toLocalDate().toEpochDay()
+                    + ",\"category\":" + categoryId
+                    + ",\"user\":" + userId + "})";
+        }
+
+
+        @Override
         public JsonObject getRestRowExpression() {
             JsonObject row = new JsonObject();
             row.add( "public.auction.id", new JsonPrimitive( auctionId ) );

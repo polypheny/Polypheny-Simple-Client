@@ -109,6 +109,12 @@ public class InsertFriends extends QueryBuilder {
 
 
         @Override
+        public String getMongoQl() {
+            return buildMongoQlInsert( "followers", ImmutableList.of( "user_id", "friend_id" ), ImmutableList.of( user, friend ) );
+        }
+
+
+        @Override
         public JsonObject getRestRowExpression() {
             JsonObject row = new JsonObject();
             row.add( "public.followers.user_id", new JsonPrimitive( user ) );

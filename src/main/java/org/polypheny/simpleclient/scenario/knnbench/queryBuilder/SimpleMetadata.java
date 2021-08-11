@@ -77,6 +77,12 @@ public class SimpleMetadata extends QueryBuilder {
             return null;
         }
 
+
+        @Override
+        public String getMongoQl() {
+            return null;
+        }
+
     }
 
 }

@@ -109,6 +109,12 @@ public class SimpleKnnRealFeature extends QueryBuilder {
 
 
         @Override
+        public String getMongoQl() {
+            return null;
+        }
+
+
+        @Override
         public CottontailQuery getCottontail() {
             CottontailGrpc.Query query = CottontailGrpc.Query.newBuilder()
                     .setFrom( From.newBuilder().setEntity( Entity.newBuilder().setSchema( Schema.newBuilder().setName( "public" ).build() ).setName( "knn_realfeature" ).build() ) )

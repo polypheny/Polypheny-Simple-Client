@@ -107,6 +107,12 @@ public class SelectTenMostPopularAuctionsOfCategoryByNumberOfBids extends QueryB
             return null;
         }
 
+
+        @Override
+        public String getMongoQl() {
+            return null;
+        }
+
     }
 
 }

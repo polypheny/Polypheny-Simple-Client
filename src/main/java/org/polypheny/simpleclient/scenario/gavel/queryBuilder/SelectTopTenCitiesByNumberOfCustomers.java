@@ -98,6 +98,16 @@ public class SelectTopTenCitiesByNumberOfCustomers extends QueryBuilder {
                     .queryString( "_limit", 10 );
         }
 
+
+        @Override
+        public String getMongoQl() {
+            return "db." + tableName+".aggregate(["
+                    + "{\"$group\":{\"_id\":\"city\",\"number\": {\"$sum\": 1 }}},"
+                    + "{\"$project\":{\"number\":1,\"city\":\"$_id\"}},"
+                    + "{\"$sort\":{\"number\": -1 }},"
+                    + "{\"$limit\":10}])";
+        }
+
     }
 
 }

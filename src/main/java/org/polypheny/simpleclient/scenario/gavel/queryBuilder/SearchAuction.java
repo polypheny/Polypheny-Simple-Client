@@ -113,6 +113,12 @@ public class SearchAuction extends QueryBuilder {
                     .queryString( "_limit", 100 );
         }
 
+
+        @Override
+        public String getMongoQl() {
+            return "db." + tableName + ".aggregate([{\"$match\":{\"title\":/$" + searchString + "$/},{\"$sort\":{end_data: -1}},{\"$limit\": 100}}])";
+        }
+
     }
 
 }

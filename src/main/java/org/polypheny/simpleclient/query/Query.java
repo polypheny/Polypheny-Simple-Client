@@ -30,6 +30,8 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import kong.unirest.HttpRequest;
 import kong.unirest.RequestBodyEntity;
 import kong.unirest.Unirest;
@@ -60,6 +62,8 @@ public abstract class Query {
     public abstract Map<Integer, ImmutablePair<DataTypes, Object>> getParameterValues();
 
     public abstract HttpRequest<?> getRest();
+
+    public abstract String getMongoQl();
 
 
     public CottontailQuery getCottontail() {
@@ -96,6 +100,7 @@ public abstract class Query {
         return request;
     }
 
+
     public void debug() {
         String parametrizedQuery = getParameterizedSqlQuery();
         if ( parametrizedQuery != null ) {
@@ -106,6 +111,29 @@ public abstract class Query {
                 log.debug( sql.substring( 0, Math.min( 500, sql.length() ) ) );
             }
         }
+    }
+
+
+    public static String buildMongoQlManyInsert( String collection, List<String> rows ) {
+        String[] splits = collection.split( "\\." );
+        return "db." + splits[splits.length - 1] + ".insertMany([" + String.join( ",", rows ) + "])";
+    }
+
+
+    public static String buildMongoQlInsert( String collection, List<String> fieldNames, List<Object> objects ) {
+        String[] splits = collection.split( "\\." );
+        return "db." + splits[splits.length - 1] + ".insert({" + IntStream
+                .range( 0, Math.min( fieldNames.size(), objects.size() ) )
+                .mapToObj( i -> fieldNames.get( i ) + ":" + maybeQuote( objects.get( i ) ) )
+                .collect( Collectors.joining( "," ) ) + "})";
+    }
+
+
+    private static String maybeQuote( Object o ) {
+        if ( o instanceof String ) {
+            return "\"" + o.toString() + "\"";
+        }
+        return o.toString();
     }
 
 }

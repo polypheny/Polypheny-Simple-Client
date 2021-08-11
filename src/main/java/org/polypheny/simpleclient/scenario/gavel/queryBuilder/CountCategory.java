@@ -31,6 +31,7 @@ import java.util.Map;
 import kong.unirest.HttpRequest;
 import kong.unirest.Unirest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
@@ -75,6 +76,13 @@ public class CountCategory extends QueryBuilder {
         public HttpRequest<?> getRest() {
             return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.category" )
                     .queryString( "_project", "public.category.id@num(COUNT)" );
+        }
+
+
+        @Override
+        public String getMongoQl() {
+            return "db.country.count({})";
+
         }
 
     }

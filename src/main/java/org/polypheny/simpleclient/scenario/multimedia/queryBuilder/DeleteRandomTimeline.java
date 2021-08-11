@@ -99,6 +99,12 @@ public class DeleteRandomTimeline extends QueryBuilder {
                     .queryString( "public.timeline.id", "=" + userId );
         }
 
+
+        @Override
+        public String getMongoQl() {
+            return null;
+        }
+
     }
 
 }

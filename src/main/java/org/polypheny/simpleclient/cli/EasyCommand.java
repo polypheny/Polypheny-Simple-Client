@@ -36,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
 import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory;
+import org.polypheny.simpleclient.executor.PolyphenyDbMongoQlExecutor.PolyphenyDbMongoQlExecutorFactory;
 import org.polypheny.simpleclient.executor.PolyphenyDbRestExecutor.PolyphenyDbRestExecutorFactory;
 import org.polypheny.simpleclient.main.Easy;
 
@@ -56,6 +57,9 @@ public class EasyCommand implements CliRunnable {
 
     @Option(name = { "--rest" }, arity = 0, description = "Use Polypheny-DB REST interface instead of the JDBC interface (default: false).")
     public static boolean restInterface = false;
+
+    @Option(name = { "--mongoql" }, arity = 0, description = "Use Polypheny-DB REST interface instead of the JDBC interface (default: false).")
+    public static boolean mongoQlInterface = false;
 
     @Option(name = { "--writeCSV" }, arity = 0, description = "Write a CSV file containing execution times for all executed queries (default: false).")
     public boolean writeCsv = false;
@@ -81,7 +85,12 @@ public class EasyCommand implements CliRunnable {
         }
 
         ExecutorFactory executorFactory;
-        if ( restInterface ) {
+        if ( mongoQlInterface && restInterface ) {
+            throw new RuntimeException( "Only one interface can be used at the time." );
+        }
+        if ( mongoQlInterface ) {
+            executorFactory = new PolyphenyDbMongoQlExecutorFactory( polyphenyDbHost );
+        } else if ( restInterface ) {
             executorFactory = new PolyphenyDbRestExecutorFactory( polyphenyDbHost );
         } else {
             executorFactory = new PolyphenyDbJdbcExecutorFactory( polyphenyDbHost, true );

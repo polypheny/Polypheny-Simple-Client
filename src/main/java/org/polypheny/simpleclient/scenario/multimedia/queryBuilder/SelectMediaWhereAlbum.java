@@ -102,6 +102,12 @@ public class SelectMediaWhereAlbum extends QueryBuilder {
                     .queryString( "_limit", LIMIT );
         }
 
+
+        @Override
+        public String getMongoQl() {
+            return null;
+        }
+
     }
 
 }

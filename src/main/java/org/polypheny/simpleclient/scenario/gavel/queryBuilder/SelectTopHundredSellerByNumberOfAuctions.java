@@ -96,6 +96,13 @@ public class SelectTopHundredSellerByNumberOfAuctions extends QueryBuilder {
             return null;
         }
 
+
+        @Override
+        public String getMongoQl() {
+            // $lookup not yet supported
+            return null;
+        }
+
     }
 
 }
