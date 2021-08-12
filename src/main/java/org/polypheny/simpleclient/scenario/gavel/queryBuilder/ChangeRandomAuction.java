@@ -127,6 +127,14 @@ public class ChangeRandomAuction extends QueryBuilder {
             return buildRestUpdate( "public.auction", set, where );
         }
 
+
+        @Override
+        public String getMongoQl() {
+            // document model on non-document stores is not yet supported
+            // return "db.auction.update({\"id\":" + auctionId + "},{\"$set\":{ \"description\":" + maybeQuote( description ) + ", \"title\":" + maybeQuote( title ) + "}})";
+            return "db.auction.count({\"id\":" + auctionId + "})";
+        }
+
     }
 
 }

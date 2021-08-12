@@ -77,6 +77,13 @@ public class CountUser extends QueryBuilder {
                     .queryString( "_project", "public.user.id@num(COUNT)" );
         }
 
+
+        @Override
+        public String getMongoQl() {
+            return "db.user.count({})";
+        }
+
+
     }
 
 }

@@ -242,7 +242,7 @@ public class PolyphenyDbRestExecutor implements PolyphenyDbExecutor {
     }
 
 
-    private void commitAndCloseJdbcExecutor( JdbcExecutor executor ) throws ExecutorException {
+    public static void commitAndCloseJdbcExecutor( JdbcExecutor executor ) throws ExecutorException {
         if ( executor != null ) {
             try {
                 executor.executeCommit();

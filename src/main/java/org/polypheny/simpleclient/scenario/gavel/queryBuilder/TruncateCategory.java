@@ -74,6 +74,12 @@ public class TruncateCategory extends QueryBuilder {
             return null;
         }
 
+
+        @Override
+        public String getMongoQl() {
+            return "db.category.deleteMany({})";
+        }
+
     }
 
 }

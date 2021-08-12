@@ -111,6 +111,12 @@ public class SimpleKnnIdIntFeature extends QueryBuilder {
 
 
         @Override
+        public String getMongoQl() {
+            return null;
+        }
+
+
+        @Override
         public CottontailQuery getCottontail() {
             Map<String, String> projection = new HashMap<>();
             projection.put( "id", "id" );

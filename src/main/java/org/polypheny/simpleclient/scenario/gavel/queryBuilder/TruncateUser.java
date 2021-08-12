@@ -74,6 +74,12 @@ public class TruncateUser extends QueryBuilder {
             return null;
         }
 
+
+        @Override
+        public String getMongoQl() {
+            return "db.user.deleteMany({})";
+        }
+
     }
 
 }

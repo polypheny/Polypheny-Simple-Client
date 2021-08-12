@@ -77,6 +77,13 @@ public class CountCategory extends QueryBuilder {
                     .queryString( "_project", "public.category.id@num(COUNT)" );
         }
 
+
+        @Override
+        public String getMongoQl() {
+            return "db.category.count({})";
+
+        }
+
     }
 
 }

@@ -79,6 +79,12 @@ public class SelectTopHundredSellerByRevenue extends QueryBuilder {
             return null;
         }
 
+
+        @Override
+        public String getMongoQl() {
+            return null;
+        }
+
     }
 
 }

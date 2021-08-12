@@ -46,10 +46,7 @@ public class SelectPriceBetweenAndNotInCategory extends QueryBuilder {
                 return "SELECT auction.title, bid.amount "
                         + "FROM auction, category, bid "
                         + "WHERE bid.auction = auction.id "
-                        + "AND auction.category = category.id "
                         + "AND bid.amount > 1000 AND bid.amount < 1000000 "
-                        + "AND not exists ( SELECT category.name "
-                        + "FROM category WHERE category.name in ('Travel', 'Stamps', 'Motors')) "
                         + "ORDER BY bid.amount DESC LIMIT 100";
             }
         }
@@ -70,6 +67,17 @@ public class SelectPriceBetweenAndNotInCategory extends QueryBuilder {
         @Override
         public HttpRequest<?> getRest() {
             return null;
+        }
+
+
+        @Override
+        public String getMongoQl() {
+            // $lookup is not supported // substitute query
+            return "db.bid.aggregate(["
+                    + "{\"$match\":{\"$or\":[{\"amount\":{\"$gt\": 1000}}, {\"amount\":{\"$lt\": 1000000}}]}}, "
+                    + "{\"$sort\":{\"amount\": -1 }}, "
+                    + "{\"$limit\":100}"
+                    + "])";
         }
 
     }

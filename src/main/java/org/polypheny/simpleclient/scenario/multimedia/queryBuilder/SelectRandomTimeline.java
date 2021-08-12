@@ -100,6 +100,12 @@ public class SelectRandomTimeline extends QueryBuilder {
                     .queryString( "_project", joiner.toString() );
         }
 
+
+        @Override
+        public String getMongoQl() {
+            return null;
+        }
+
     }
 
 }

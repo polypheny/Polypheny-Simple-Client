@@ -145,6 +145,12 @@ public class InsertMedia extends QueryBuilder {
 
 
         @Override
+        public String getMongoQl() {
+            return null;
+        }
+
+
+        @Override
         public JsonObject getRestRowExpression() {
             JsonObject set = new JsonObject();
             String table = getTable() + ".";
@@ -168,6 +174,7 @@ public class InsertMedia extends QueryBuilder {
         public Map<String, String> getRestParameters() {
             return null;
         }
+
     }
 
 }

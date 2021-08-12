@@ -123,6 +123,15 @@ public class InsertPicture extends QueryBuilder {
 
 
         @Override
+        public String getMongoQl() {
+            return "db.picture.insert({\"filename\":" + fileName
+                    + ",\"type\":" + fileType
+                    + ",\"size\":" + size
+                    + ",\"auction\":" + auctionId + "})";
+        }
+
+
+        @Override
         public JsonObject getRestRowExpression() {
             JsonObject row = new JsonObject();
             row.add( "public.picture.filename", new JsonPrimitive( fileName ) );

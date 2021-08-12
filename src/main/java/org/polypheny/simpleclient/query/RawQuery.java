@@ -13,11 +13,20 @@ public class RawQuery extends Query {
     @Getter
     private final HttpRequest<?> rest;
 
+    @Getter
+    private final String mongoQl;
+
 
     public RawQuery( String sql, HttpRequest<?> rest, boolean expectResultSet ) {
+        this( sql, rest, null, expectResultSet );
+    }
+
+
+    public RawQuery( String sql, HttpRequest<?> rest, String mongoQl, boolean expectResultSet ) {
         super( expectResultSet );
         this.sql = sql;
         this.rest = rest;
+        this.mongoQl = mongoQl;
     }
 
 

@@ -130,6 +130,12 @@ public class InsertAlbum extends QueryBuilder {
 
 
         @Override
+        public String getMongoQl() {
+            return buildMongoQlInsert( "album", ImmutableList.of( "id", "user_id", "name" ), ImmutableList.of( album_id, user_id, name ) );
+        }
+
+
+        @Override
         public JsonObject getRestRowExpression() {
             JsonObject row = new JsonObject();
             row.add( "public.album.id", new JsonPrimitive( album_id ) );

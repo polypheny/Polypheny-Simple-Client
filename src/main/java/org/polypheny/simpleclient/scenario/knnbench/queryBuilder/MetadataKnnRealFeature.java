@@ -101,6 +101,12 @@ public class MetadataKnnRealFeature extends QueryBuilder {
 
 
         @Override
+        public String getMongoQl() {
+            return null;
+        }
+
+
+        @Override
         public CottontailQuery getCottontail() {
             throw new RuntimeException( "This query is unsupported by cottontail." );
         }

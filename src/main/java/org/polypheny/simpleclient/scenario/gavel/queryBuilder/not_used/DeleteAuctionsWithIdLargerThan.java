@@ -88,6 +88,13 @@ public class DeleteAuctionsWithIdLargerThan extends QueryBuilder {
             return null;
         }
 
+
+        @Override
+        public String getMongoQl() {
+            // dml not supported for non document stores // substitute query
+            return "db.auction.count({\"id\":{\"$gt\":" + larger + "}})";
+        }
+
     }
 
 }

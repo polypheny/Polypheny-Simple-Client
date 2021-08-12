@@ -88,6 +88,13 @@ public class DeleteBidsWithIdLargerThan extends QueryBuilder {
             return null;
         }
 
+
+        @Override
+        public String getMongoQl() {
+            // dml not supported for non document stores // substitute query
+            return "db.bid.count({\"id\":{\"$gt\":" + larger + "}})";
+        }
+
     }
 
 }

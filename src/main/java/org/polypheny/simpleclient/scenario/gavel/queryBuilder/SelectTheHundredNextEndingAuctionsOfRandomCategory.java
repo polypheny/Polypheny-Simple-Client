@@ -150,6 +150,17 @@ public class SelectTheHundredNextEndingAuctionsOfRandomCategory extends QueryBui
 
         }
 
+
+        @Override
+        public String getMongoQl() {
+            return "db.auction.aggregate(["
+                    + "{\"$match\":{\"category\":" + categoryId + ",\"end_date\":{\"$gt\":" + date.toLocalDate().toEpochDay() + "}}},"
+                    + "{\"$sort\":{\"end_date\": -1}},"
+                    + "{\"$project\":{\"id\":1,\"title\":1,\"end_date\":1}},"
+                    + "{\"limit\": 100}"
+                    + "])";
+        }
+
     }
 
 }

@@ -106,6 +106,16 @@ public class SelectHighestBidOnRandomAuction extends QueryBuilder {
                     .queryString( "_limit", "1" );
         }
 
+
+        @Override
+        public String getMongoQl() {
+            return "db." + tableName + ".aggregate(["
+                    + "{\"$match\":{ \"auction\":" + auctionId + "}}, "
+                    + "{\"$sort\":{\"amount\": -1}},"
+                    + "{\"$limit\":1}"
+                    + "])";
+        }
+
     }
 
 }

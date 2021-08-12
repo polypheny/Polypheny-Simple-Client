@@ -104,6 +104,12 @@ public class SelectRandomUser extends QueryBuilder {
                     .queryString( "public." + tableName + ".id", "=" + userId );
         }
 
+
+        @Override
+        public String getMongoQl() {
+            return "db." + tableName.replace( "\"", "" ) + ".find({\"id\":" + userId + "})";
+        }
+
     }
 
 }
