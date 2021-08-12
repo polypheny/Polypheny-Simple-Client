@@ -234,6 +234,7 @@ public class ChronosAgent extends AbstractChronosAgent {
         switch ( config.system ) {
             case "polypheny":
             case "polypheny-rest":
+            case "polypheny-mongoql":
                 databaseInstance = new PolyphenyDbInstance( polyphenyControlConnector, executorFactory, outputDirectory, config );
                 scenario.createSchema( true );
                 break;
