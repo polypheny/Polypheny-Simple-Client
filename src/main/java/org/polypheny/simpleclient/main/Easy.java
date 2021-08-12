@@ -15,16 +15,16 @@ import org.polypheny.simpleclient.scenario.gavel.GavelConfig;
 @Slf4j
 public class Easy {
 
-    public static void schema( ExecutorFactory executorFactory, boolean commitAfterEveryQuery ) {
+    public static void schema( ExecutorFactory executorFactory, boolean commitAfterEveryQuery, QueryMode queryMode ) {
         GavelConfig config = new GavelConfig( getProperties(), 1 );
-        Gavel gavel = new Gavel( executorFactory, config, commitAfterEveryQuery, false, QueryMode.TABLE );
+        Gavel gavel = new Gavel( executorFactory, config, commitAfterEveryQuery, false, queryMode );
         gavel.createSchema( true );
     }
 
 
-    public static void data( ExecutorFactory executorFactory, int multiplier, boolean commitAfterEveryQuery ) {
+    public static void data( ExecutorFactory executorFactory, int multiplier, boolean commitAfterEveryQuery, QueryMode queryMode ) {
         GavelConfig config = new GavelConfig( getProperties(), multiplier );
-        Gavel gavel = new Gavel( executorFactory, config, commitAfterEveryQuery, false, QueryMode.TABLE );
+        Gavel gavel = new Gavel( executorFactory, config, commitAfterEveryQuery, false, queryMode );
 
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
         gavel.generateData( progressReporter );
@@ -46,9 +46,9 @@ public class Easy {
     }
 
 
-    public static void warmup( ExecutorFactory executorFactory, int multiplier, boolean commitAfterEveryQuery, boolean dumpQueryList ) {
+    public static void warmup( ExecutorFactory executorFactory, int multiplier, boolean commitAfterEveryQuery, boolean dumpQueryList, QueryMode queryMode ) {
         GavelConfig config = new GavelConfig( getProperties(), 1 );
-        Gavel gavel = new Gavel( executorFactory, config, commitAfterEveryQuery, dumpQueryList, QueryMode.TABLE );
+        Gavel gavel = new Gavel( executorFactory, config, commitAfterEveryQuery, dumpQueryList, queryMode );
 
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
         gavel.warmUp( progressReporter, multiplier );

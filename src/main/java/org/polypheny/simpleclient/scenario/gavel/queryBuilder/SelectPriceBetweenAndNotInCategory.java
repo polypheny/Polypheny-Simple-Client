@@ -46,10 +46,7 @@ public class SelectPriceBetweenAndNotInCategory extends QueryBuilder {
                 return "SELECT auction.title, bid.amount "
                         + "FROM auction, category, bid "
                         + "WHERE bid.auction = auction.id "
-                        + "AND auction.category = category.id "
                         + "AND bid.amount > 1000 AND bid.amount < 1000000 "
-                        + "AND not exists ( SELECT category.name "
-                        + "FROM category WHERE category.name in ('Travel', 'Stamps', 'Motors')) "
                         + "ORDER BY bid.amount DESC LIMIT 100";
             }
         }

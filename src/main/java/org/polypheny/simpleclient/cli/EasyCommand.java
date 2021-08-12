@@ -48,7 +48,7 @@ public class EasyCommand implements CliRunnable {
     @Inject
     private HelpOption<EasyCommand> help;
 
-    @Arguments(description = "Task { schema | data | workload | warmup } and multiplier.")
+    @Arguments(description = "Task { schema | data | workload | warmup } and multiplier and { view | materialized }.")
     private List<String> args;
 
     @Option(name = { "-pdb", "--polyphenydb" }, title = "IP or Hostname", arity = 1, description = "IP or Hostname of the Polypheny-DB server (default: 127.0.0.1).")
@@ -71,12 +71,21 @@ public class EasyCommand implements CliRunnable {
             System.exit( 1 );
         }
 
+        QueryMode queryMode = QueryMode.TABLE;
+
         int multiplier = 1;
         if ( args.size() > 1 ) {
             multiplier = Integer.parseInt( args.get( 1 ) );
             if ( multiplier < 1 ) {
                 System.err.println( "Multiplier needs to be a integer > 0!" );
                 System.exit( 1 );
+            }
+            if(args.size() > 2 ){
+                if(args.get( 2 ).equalsIgnoreCase( "view" )){
+                    queryMode = QueryMode.VIEW;
+                }else if (args.get( 2 ).equalsIgnoreCase( "materialized" )){
+                    queryMode = QueryMode.MATERIALIZED;
+                }
             }
         }
 
@@ -89,13 +98,13 @@ public class EasyCommand implements CliRunnable {
 
         try {
             if ( args.get( 0 ).equalsIgnoreCase( "data" ) ) {
-                Easy.data( executorFactory, multiplier, true );
+                Easy.data( executorFactory, multiplier, true, queryMode );
             } else if ( args.get( 0 ).equalsIgnoreCase( "workload" ) ) {
-                Easy.workload( executorFactory, multiplier, true, writeCsv, dumpQueryList, QueryMode.TABLE );
+                Easy.workload( executorFactory, multiplier, true, writeCsv, dumpQueryList, queryMode );
             } else if ( args.get( 0 ).equalsIgnoreCase( "schema" ) ) {
-                Easy.schema( executorFactory, true );
+                Easy.schema( executorFactory, true, queryMode );
             } else if ( args.get( 0 ).equalsIgnoreCase( "warmup" ) ) {
-                Easy.warmup( executorFactory, multiplier, true, dumpQueryList );
+                Easy.warmup( executorFactory, multiplier, true, dumpQueryList, queryMode );
             } else {
                 System.err.println( "Unknown task: " + args.get( 0 ) );
             }
