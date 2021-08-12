@@ -166,7 +166,7 @@ public class ChronosAgent extends AbstractChronosAgent {
             case "polypheny-rest":
                 executorFactory = new PolyphenyDbRestExecutorFactory( ChronosCommand.hostname );
                 break;
-            case "mongoql":
+            case "polypheny-mongoql":
                 executorFactory = new PolyphenyDbMongoQlExecutorFactory( ChronosCommand.hostname );
                 break;
             case "postgres":
