@@ -84,10 +84,10 @@ public class EasyCommand implements CliRunnable {
                 System.err.println( "Multiplier needs to be a integer > 0!" );
                 System.exit( 1 );
             }
-            if(args.size() > 2 ){
-                if(args.get( 2 ).equalsIgnoreCase( "view" )){
+            if ( args.size() > 2 ) {
+                if ( args.get( 2 ).equalsIgnoreCase( "view" ) ) {
                     queryMode = QueryMode.VIEW;
-                }else if (args.get( 2 ).equalsIgnoreCase( "materialized" )){
+                } else if ( args.get( 2 ).equalsIgnoreCase( "materialized" ) ) {
                     queryMode = QueryMode.MATERIALIZED;
                 }
             }

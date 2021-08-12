@@ -172,10 +172,12 @@ public class InsertUser extends QueryBuilder {
             return "public.users";
         }
 
+
         @Override
         public Map<String, String> getRestParameters() {
             return null;
         }
+
     }
 
 }

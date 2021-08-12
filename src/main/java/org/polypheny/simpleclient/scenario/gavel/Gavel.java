@@ -585,7 +585,7 @@ public class Gavel extends Scenario {
     public void updateMaterializedView() {
         log.info( "Update Materialized View..." );
         Executor executor = null;
-        System.out.println("Testing");
+        System.out.println( "Testing" );
 
         try {
             executor = executorFactory.createExecutorInstance();

@@ -107,7 +107,7 @@ public class SelectRandomUser extends QueryBuilder {
 
         @Override
         public String getMongoQl() {
-            return "db." + tableName.replace("\"", "") + ".find({\"id\":" + userId + "})";
+            return "db." + tableName.replace( "\"", "" ) + ".find({\"id\":" + userId + "})";
         }
 
     }

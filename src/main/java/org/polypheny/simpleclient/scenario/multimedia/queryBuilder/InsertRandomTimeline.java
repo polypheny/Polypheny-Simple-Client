@@ -188,10 +188,12 @@ public class InsertRandomTimeline extends QueryBuilder {
             return "public.timeline";
         }
 
+
         @Override
         public Map<String, String> getRestParameters() {
             return null;
         }
+
     }
 
 }

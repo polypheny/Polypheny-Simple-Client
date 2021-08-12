@@ -92,7 +92,7 @@ public class DeleteCategoriesWithIdLargerThan extends QueryBuilder {
         @Override
         public String getMongoQl() {
             // dml not supported for non document stores // substitute query
-            return "db.category.count({\"id\":{\"$gt\":"+ larger +"}})";
+            return "db.category.count({\"id\":{\"$gt\":" + larger + "}})";
         }
 
     }
