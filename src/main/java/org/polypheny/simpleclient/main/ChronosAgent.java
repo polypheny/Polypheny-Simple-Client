@@ -54,6 +54,7 @@ import org.polypheny.simpleclient.executor.MonetdbExecutor.MonetdbExecutorFactor
 import org.polypheny.simpleclient.executor.MonetdbExecutor.MonetdbInstance;
 import org.polypheny.simpleclient.executor.PolyphenyDbExecutor.PolyphenyDbInstance;
 import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory;
+import org.polypheny.simpleclient.executor.PolyphenyDbMongoQlExecutor.PolyphenyDbMongoQlExecutorFactory;
 import org.polypheny.simpleclient.executor.PolyphenyDbRestExecutor.PolyphenyDbRestExecutorFactory;
 import org.polypheny.simpleclient.executor.PostgresExecutor.PostgresExecutorFactory;
 import org.polypheny.simpleclient.executor.PostgresExecutor.PostgresInstance;
@@ -164,6 +165,9 @@ public class ChronosAgent extends AbstractChronosAgent {
                 break;
             case "polypheny-rest":
                 executorFactory = new PolyphenyDbRestExecutorFactory( ChronosCommand.hostname );
+                break;
+            case "mongoql":
+                executorFactory = new PolyphenyDbMongoQlExecutorFactory( ChronosCommand.hostname );
                 break;
             case "postgres":
                 executorFactory = new PostgresExecutorFactory( ChronosCommand.hostname, Boolean.parseBoolean( parsedConfig.get( "prepareStatements" ) ) );
