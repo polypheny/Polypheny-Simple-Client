@@ -174,6 +174,7 @@ public class InsertMedia extends QueryBuilder {
         public Map<String, String> getRestParameters() {
             return null;
         }
+
     }
 
 }

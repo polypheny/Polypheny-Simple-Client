@@ -5,7 +5,6 @@ import com.google.gson.JsonObject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.stream.Collectors;
 
 
 public abstract class BatchableInsert extends Query {

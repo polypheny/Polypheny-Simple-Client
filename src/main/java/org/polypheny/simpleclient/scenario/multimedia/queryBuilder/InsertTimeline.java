@@ -176,10 +176,12 @@ public class InsertTimeline extends QueryBuilder {
             return "public.timeline";
         }
 
+
         @Override
         public Map<String, String> getRestParameters() {
             return null;
         }
+
     }
 
 }
