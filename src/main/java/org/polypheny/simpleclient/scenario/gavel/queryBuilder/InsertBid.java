@@ -135,6 +135,16 @@ public class InsertBid extends QueryBuilder {
 
 
         @Override
+        public String getMongoQl() {
+            return "db.bid.insert({\"id\":" + maybeQuote( bidId )
+                    + ",\"amount\":" + maybeQuote( amount )
+                    + ",\"timestamp\":" + date.toLocalDate().toEpochDay()
+                    + ",\"user\":" + maybeQuote( userId )
+                    + ",\"auction\":" + maybeQuote( auctionId ) + "})";
+        }
+
+
+        @Override
         public JsonObject getRestRowExpression() {
             JsonObject row = new JsonObject();
             row.add( "public.bid.id", new JsonPrimitive( bidId ) );

@@ -104,6 +104,12 @@ public class CountRunningAuctionsPerCategory extends QueryBuilder {
             return null;
         }
 
+
+        @Override
+        public String getMongoQl() {
+            return "db.auction.find({\"end_date\":{\"$gt\":" + date.toLocalDate().toEpochDay() + "}}, {\"id\":1})";
+        }
+
     }
 
 }

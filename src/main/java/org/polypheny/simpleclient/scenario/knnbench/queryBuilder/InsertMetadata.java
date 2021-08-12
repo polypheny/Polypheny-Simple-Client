@@ -93,6 +93,12 @@ public class InsertMetadata extends QueryBuilder {
 
 
         @Override
+        public String getMongoQl() {
+            return null;
+        }
+
+
+        @Override
         public CottontailQuery getCottontail() {
             Map<String, Data> dataMap = new HashMap<>();
             dataMap.put( "id", Data.newBuilder().setIntData( (int) id ).build() );

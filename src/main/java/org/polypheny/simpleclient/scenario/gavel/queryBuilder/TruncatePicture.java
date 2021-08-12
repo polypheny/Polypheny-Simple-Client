@@ -74,6 +74,12 @@ public class TruncatePicture extends QueryBuilder {
             return null;
         }
 
+
+        @Override
+        public String getMongoQl() {
+            return "db.picture.deleteMany({})";
+        }
+
     }
 
 }

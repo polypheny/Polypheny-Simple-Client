@@ -184,6 +184,21 @@ public class InsertUser extends QueryBuilder {
 
 
         @Override
+        public String getMongoQl() {
+            return "db.user.insert({\"id\":" + maybeQuote( userId )
+                    + ",\"email\":" + maybeQuote( email )
+                    + ",\"password\":" + maybeQuote( password )
+                    + ",\"last_name\":" + maybeQuote( lastName )
+                    + ",\"first_name\":" + maybeQuote( firstName )
+                    + ",\"gender\":" + maybeQuote( gender )
+                    + ",\"birthday\":" + birthday.toEpochDay()
+                    + ",\"city\":" + maybeQuote( city )
+                    + ",\"zip_code\":" + maybeQuote( zipCode )
+                    + ",\"country\":" + maybeQuote( country ) + "})";
+        }
+
+
+        @Override
         public JsonObject getRestRowExpression() {
             JsonObject row = new JsonObject();
             row.add( "public.user.id", new JsonPrimitive( userId ) );

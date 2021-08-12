@@ -104,6 +104,12 @@ public class SelectMultipleProfilePics extends QueryBuilder {
                     .queryString( "_offset", offset );
         }
 
+
+        @Override
+        public String getMongoQl() {
+            return null;
+        }
+
     }
 
 }

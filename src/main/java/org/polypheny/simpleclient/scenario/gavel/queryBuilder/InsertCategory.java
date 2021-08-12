@@ -134,6 +134,12 @@ public class InsertCategory extends QueryBuilder {
 
 
         @Override
+        public String getMongoQl() {
+            return buildMongoQlInsert( "category", ImmutableList.of( "id", "name" ), ImmutableList.of( categoryId, category ) );
+        }
+
+
+        @Override
         public JsonObject getRestRowExpression() {
             JsonObject row = new JsonObject();
             row.add( "public.category.id", new JsonPrimitive( categoryId ) );

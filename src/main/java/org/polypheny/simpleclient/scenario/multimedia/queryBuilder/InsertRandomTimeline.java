@@ -163,6 +163,12 @@ public class InsertRandomTimeline extends QueryBuilder {
 
 
         @Override
+        public String getMongoQl() {
+            return null;
+        }
+
+
+        @Override
         public JsonObject getRestRowExpression() {
             JsonObject set = new JsonObject();
             String table = getTable() + ".";

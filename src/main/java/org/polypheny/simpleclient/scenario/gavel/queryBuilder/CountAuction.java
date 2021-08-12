@@ -100,6 +100,18 @@ public class CountAuction extends QueryBuilder {
             }
         }
 
+
+        @Override
+        public String getMongoQl() {
+            if ( queryMode.equals( QueryMode.VIEW ) ) {
+                return "db.countAuction.find({})";
+            } else if ( queryMode.equals( QueryMode.MATERIALIZED ) ) {
+                return "db.countAuction_materialized.find({})";
+            } else {
+                return "db.auction.count({})";
+            }
+        }
+
     }
 
 }

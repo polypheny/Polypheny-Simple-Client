@@ -83,6 +83,12 @@ public class CreateTable extends QueryBuilder {
             return null;
         }
 
+
+        @Override
+        public String getMongoQl() {
+            return null;
+        }
+
     }
 
 }

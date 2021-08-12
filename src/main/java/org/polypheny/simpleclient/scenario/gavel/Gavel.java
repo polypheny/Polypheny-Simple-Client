@@ -49,6 +49,7 @@ import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.executor.ExecutorException;
 import org.polypheny.simpleclient.executor.JdbcExecutor;
+import org.polypheny.simpleclient.executor.PolyphenyDbMongoQlExecutor.PolyphenyDbMongoQlExecutorFactory;
 import org.polypheny.simpleclient.main.ChronosAgent;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.main.ProgressReporter;
@@ -399,6 +400,11 @@ public class Gavel extends Scenario {
     public void createSchema( boolean includingKeys ) {
         log.info( "Creating schema..." );
         InputStream file;
+        if ( executorFactory instanceof PolyphenyDbMongoQlExecutorFactory ) {
+            file = ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/gavel/schema.mongoql" );
+            executeMongoQlSchema( file );
+            return;
+        }
         if ( includingKeys ) {
             file = ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/gavel/schema.sql" );
         } else {
@@ -418,6 +424,28 @@ public class Gavel extends Scenario {
             executeSchema( file );
         }
     }
+
+
+    private void executeMongoQlSchema( InputStream file ) {
+        Executor executor = null;
+        if ( file == null ) {
+            throw new RuntimeException( "Unable to load schema definition file" );
+        }
+        try ( BufferedReader bf = new BufferedReader( new InputStreamReader( file ) ) ) {
+            executor = executorFactory.createExecutorInstance();
+            String line = bf.readLine();
+            executor.executeQuery( new RawQuery( null, null, "use test", false ) );
+            while ( line != null ) {
+                executor.executeQuery( new RawQuery( null, null, "db.createCollection(" + line + ")", false ) );
+                line = bf.readLine();
+            }
+        } catch ( IOException | ExecutorException e ) {
+            throw new RuntimeException( "Exception while creating schema", e );
+        } finally {
+            commitAndCloseExecutor( executor );
+        }
+    }
+
 
     private void executeSchema( InputStream file ) {
         Executor executor = null;

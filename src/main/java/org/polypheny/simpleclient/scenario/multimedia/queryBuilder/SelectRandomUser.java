@@ -92,6 +92,12 @@ public class SelectRandomUser extends QueryBuilder {
                     .queryString( "public.users.id", "=" + userId );
         }
 
+
+        @Override
+        public String getMongoQl() {
+            return null;
+        }
+
     }
 
 }

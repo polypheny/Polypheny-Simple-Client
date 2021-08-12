@@ -104,6 +104,12 @@ public class SelectRandomBid extends QueryBuilder {
                     .queryString( "public." + tableName + ".id", "=" + bidId );
         }
 
+
+        @Override
+        public String getMongoQl() {
+            return "db." + tableName + ".find({\"id\":" + bidId + "})";
+        }
+
     }
 
 }

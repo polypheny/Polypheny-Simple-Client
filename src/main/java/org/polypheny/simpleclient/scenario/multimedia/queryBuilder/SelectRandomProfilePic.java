@@ -93,6 +93,12 @@ public class SelectRandomProfilePic extends QueryBuilder {
                     .queryString( "_project", "public.users.profile_pic" );
         }
 
+
+        @Override
+        public String getMongoQl() {
+            return null;
+        }
+
     }
 
 }
