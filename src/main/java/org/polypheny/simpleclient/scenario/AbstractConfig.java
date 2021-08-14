@@ -3,6 +3,7 @@ package org.polypheny.simpleclient.scenario;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
 
@@ -19,7 +20,6 @@ public abstract class AbstractConfig {
     public boolean resetCatalog;
 
     public List<String> dataStores = new ArrayList<>();
-    public String router;
     public String planAndImplementationCaching;
 
     public int numberOfThreads;
@@ -28,6 +28,18 @@ public abstract class AbstractConfig {
     public int progressReportBase;
 
     public boolean deployStoresUsingDocker;
+
+    public String router;  // For old routing, to be removed
+    public String[] routers;
+    public String newTablePlacementStrategy;
+    public String planSelectionStrategy;
+    public int preCostRatio;
+    public int postCostRatio;
+    public boolean routingCache;
+    public boolean postCostAggregation;
+
+    public String workloadMonitoringProcessingInterval;
+    public int workloadMonitoringElementsPerInterval;
 
 
     public AbstractConfig( String scenario, String system ) {
@@ -84,6 +96,16 @@ public abstract class AbstractConfig {
             default:
                 log.error( "Value for config property '{}' is unknown. Supported values are 'true' and 'false'. Current value is: {}", name, str );
                 throw new RuntimeException( "Value for config property '" + name + "' is unknown. " + "Supported values are 'true' and 'false'. Current value is: " + str );
+        }
+    }
+
+
+    protected String cdlGetOrDefault( Map<String, String> cdl, String key, String defaultValue ) {
+        if ( cdl.containsKey( key ) ) {
+            return cdl.get( key );
+        } else {
+            log.warn( "The job definition does not contain a value for '" + key + "' using default value '" + defaultValue + "' instead!" );
+            return defaultValue;
         }
     }
 

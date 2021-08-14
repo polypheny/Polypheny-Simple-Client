@@ -689,7 +689,7 @@ public class Gavel extends Scenario {
             log.debug( "Number of categories: " + numbers.get( "categories" ) );
             log.debug( "Number of bids: " + numbers.get( "bids" ) );
         } catch ( ExecutorException e ) {
-            throw new RuntimeException( "Exception while analyzing currently stored data" );
+            throw new RuntimeException( "Exception while analyzing currently stored data: " + e.getMessage(), e );
         } finally {
             commitAndCloseExecutor( executor );
         }

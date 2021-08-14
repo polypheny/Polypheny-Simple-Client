@@ -87,8 +87,20 @@ public class GavelConfig extends AbstractConfig {
         deployStoresUsingDocker = false;
 
         dataStores.add( "hsqldb" );
-        router = "icarus";
         planAndImplementationCaching = "Both";
+
+        router = "icarus"; // For old routing, to be removed
+
+        routers = new String[]{ "Simple", "Icarus", "FullPlacement" };
+        newTablePlacementStrategy = "Single";
+        planSelectionStrategy = "Best";
+        preCostRatio = 50;
+        postCostRatio = 50;
+        routingCache = true;
+        postCostAggregation = true;
+
+        workloadMonitoringProcessingInterval = "5s";
+        workloadMonitoringElementsPerInterval = 50;
 
         progressReportBase = getIntProperty( properties, "progressReportBase" );
         numberOfThreads = getIntProperty( properties, "numberOfThreads" );
@@ -141,19 +153,32 @@ public class GavelConfig extends AbstractConfig {
 
         pdbBranch = cdl.get( "pdbBranch" );
         puiBranch = cdl.get( "puiBranch" );
-        buildUi = Boolean.parseBoolean( cdl.getOrDefault( "buildUi", "false" ) );
+        buildUi = Boolean.parseBoolean( cdlGetOrDefault( cdl, "buildUi", "false" ) );
 
-        deployStoresUsingDocker = Boolean.parseBoolean( cdl.getOrDefault( "deployStoresUsingDocker", "false" ) );
+        deployStoresUsingDocker = Boolean.parseBoolean( cdlGetOrDefault( cdl, "deployStoresUsingDocker", "false" ) );
 
         resetCatalog = Boolean.parseBoolean( cdl.get( "resetCatalog" ) );
         memoryCatalog = Boolean.parseBoolean( cdl.get( "memoryCatalog" ) );
 
         numberOfThreads = Integer.parseInt( cdl.get( "numberOfThreads" ) );
-        numberOfWarmUpIterations = Integer.parseInt( cdl.getOrDefault( "numberOfWarmUpIterations", "4" ) );
+        numberOfWarmUpIterations = Integer.parseInt( cdlGetOrDefault( cdl, "numberOfWarmUpIterations", "4" ) );
 
         dataStores.add( cdl.get( "dataStore" ) );
-        router = cdl.get( "router" );
-        planAndImplementationCaching = cdl.getOrDefault( "planAndImplementationCaching", "Both" );
+        planAndImplementationCaching = cdlGetOrDefault( cdl, "planAndImplementationCaching", "Both" );
+
+        router = cdl.get( "router" ); // For old routing, to be removed
+
+        routers = cdlGetOrDefault( cdl, "routers", "Simple_Icarus_FullPlacement" ).split( "_" );
+        newTablePlacementStrategy = cdlGetOrDefault( cdl, "newTablePlacementStrategy", "Single" );
+        planSelectionStrategy = cdlGetOrDefault( cdl, "planSelectionStrategy", "Best" );
+
+        preCostRatio = Integer.parseInt( cdlGetOrDefault( cdl, "preCostRatio", "50%" ).replace( "%", "" ).trim() );
+        postCostRatio = Integer.parseInt( cdlGetOrDefault( cdl, "postCostRatio", "50%" ).replace( "%", "" ).trim() );
+        routingCache = Boolean.parseBoolean( cdlGetOrDefault( cdl, "routingCache", "true" ) );
+        postCostAggregation = Boolean.parseBoolean( cdlGetOrDefault( cdl, "postCostAggregation", "true" ) );
+
+        workloadMonitoringProcessingInterval = cdlGetOrDefault( cdl, "workloadMonitoringProcessingInterval", "5s" );
+        workloadMonitoringElementsPerInterval = Integer.parseInt( cdlGetOrDefault( cdl, "workloadMonitoringElementsPerInterval", "50" ) );
 
         // Benchmark
         numberOfGetAuctionQueries = Integer.parseInt( cdl.get( "numberOfGetAuctionQueries" ) );

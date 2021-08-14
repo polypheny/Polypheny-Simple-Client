@@ -1,9 +1,12 @@
 package org.polypheny.simpleclient.executor;
 
+import com.google.gson.Gson;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import kong.unirest.HttpResponse;
@@ -232,16 +235,89 @@ public interface PolyphenyDbExecutor extends Executor {
                 // disable active tracking (dynamic querying)
                 executor.setConfig( "statistics/activeTracking", "false" );
                 // Set router
-                switch ( config.router ) {
-                    case "simple":
-                        executor.setConfig( "routing/router", "org.polypheny.db.router.SimpleRouter$SimpleRouterFactory" );
-                        break;
-                    case "icarus":
-                        executor.setConfig( "routing/router", "org.polypheny.db.router.IcarusRouter$IcarusRouterFactory" );
-                        setIcarusRoutingTraining( false );
-                        break;
-                    default:
-                        throw new RuntimeException( "Unknown configuration value for router: " + config.router );
+                if ( !config.pdbBranch.equalsIgnoreCase( "universal-routing" ) ) { // Old routing, to be removed
+                    switch ( config.router ) {
+                        case "simple":
+                            executor.setConfig( "routing/router", "org.polypheny.db.router.SimpleRouter$SimpleRouterFactory" );
+                            break;
+                        case "icarus":
+                            executor.setConfig( "routing/router", "org.polypheny.db.router.IcarusRouter$IcarusRouterFactory" );
+                            setIcarusRoutingTraining( false );
+                            break;
+                        default:
+                            throw new RuntimeException( "Unknown configuration value for router: " + config.router );
+                    }
+                } else {
+                    // Set Routers
+                    List<String> routers = new ArrayList<>();
+                    for ( String router : config.routers ) {
+                        switch ( router ) {
+                            case "Simple":
+                                routers.add( "org.polypheny.db.routing.routers.SimpleRouter$SimpleRouterFactory" );
+                                break;
+                            case "Icarus":
+                                routers.add( "org.polypheny.db.routing.routers.IcarusRouter$IcarusRouterFactory" );
+                                break;
+                            case "FullPlacement":
+                                routers.add( "org.polypheny.db.routing.routers.FullPlacementQueryRouter$FullPlacementQueryRouterFactory" );
+                                break;
+                            default:
+                                throw new RuntimeException( "Unknown configuration value for 'routers': " + router );
+                        }
+                    }
+                    Gson gson = new Gson();
+                    executor.setConfig( "routing/routers", gson.toJson( routers ) );
+                    // Configure placement strategy for new tables
+                    switch ( config.newTablePlacementStrategy ) {
+                        case "Single":
+                            executor.setConfig( "routing/createPlacementStrategy", "org.polypheny.db.routing.strategies.CreateSinglePlacementStrategy" );
+                            break;
+                        case "All":
+                            executor.setConfig( "routing/createPlacementStrategy", "org.polypheny.db.routing.strategies.CreateAllPlacementStrategy" );
+                            break;
+                        default:
+                            throw new RuntimeException( "Unknown configuration value for 'newTablePlacementStrategy': " + config.newTablePlacementStrategy );
+                    }
+                    // Configure placement strategy for new tables
+                    executor.setConfig( "routing/planSelectionStrategy", config.planSelectionStrategy.toUpperCase() );
+                    // Set cost ratio
+                    double ratio = config.preCostRatio / 100.0;
+                    executor.setConfig( "routing/preCostPostCostRatio", ratio + "" );
+                    // Set post cost aggregation
+                    executor.setConfig( "routing/postCostAggregationActive", config.postCostAggregation ? "true" : "false" );
+                    // Set routing cache
+                    executor.setConfig( "runtime/routingPlanCaching", config.routingCache ? "true" : "false" );
+                    // Set workload monitoring processing interval
+                    switch ( config.workloadMonitoringProcessingInterval ) {
+                        case "1s":
+                            executor.setConfig( "runtime/queueProcessingInterval", "EVERY_SECOND" );
+                            break;
+                        case "5s":
+                            executor.setConfig( "runtime/queueProcessingInterval", "EVERY_FIVE_SECONDS" );
+                            break;
+                        case "10s":
+                            executor.setConfig( "runtime/queueProcessingInterval", "EVERY_TEN_SECONDS" );
+                            break;
+                        case "30s":
+                            executor.setConfig( "runtime/queueProcessingInterval", "EVERY_THIRTY_SECONDS" );
+                            break;
+                        case "1min":
+                            executor.setConfig( "runtime/queueProcessingInterval", "EVERY_MINUTE" );
+                            break;
+                        case "10min":
+                            executor.setConfig( "runtime/queueProcessingInterval", "EVERY_TEN_MINUTES" );
+                            break;
+                        case "15min":
+                            executor.setConfig( "runtime/queueProcessingInterval", "EVERY_FIFTEEN_MINUTES" );
+                            break;
+                        case "30min":
+                            executor.setConfig( "runtime/queueProcessingInterval", "EVERY_THIRTY_MINUTES" );
+                            break;
+                        default:
+                            throw new RuntimeException( "Unknown configuration value for 'workloadMonitoringProcessingInterval': " + config.workloadMonitoringProcessingInterval );
+                    }
+                    // Set workload monitoring processing elements per interval
+                    executor.setConfig( "runtime/queueProcessingElements", config.workloadMonitoringElementsPerInterval + "" );
                 }
                 // Set Plan & Implementation Caching
                 switch ( config.planAndImplementationCaching ) {
@@ -338,8 +414,10 @@ public interface PolyphenyDbExecutor extends Executor {
             PolyphenyDbExecutor executor = (PolyphenyDbExecutor) new PolyphenyDbJdbcExecutorFactory( ChronosCommand.hostname, false ).createExecutorInstance();
             try {
                 // disable icarus training
-                executor.setConfig( "icarusRouting/training", b ? "true" : "false" );
-                executor.executeCommit();
+                if ( !config.pdbBranch.equalsIgnoreCase( "universal-routing" ) ) {
+                    executor.setConfig( "icarusRouting/training", b ? "true" : "false" );
+                    executor.executeCommit();
+                }
             } catch ( ExecutorException e ) {
                 throw new RuntimeException( "Exception while updating polypheny config", e );
             } finally {

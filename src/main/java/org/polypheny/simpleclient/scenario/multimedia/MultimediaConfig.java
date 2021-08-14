@@ -66,7 +66,19 @@ public class MultimediaConfig extends AbstractConfig {
         memoryCatalog = false;
         deployStoresUsingDocker = false;
 
-        router = "icarus";
+        router = "icarus"; // For old routing, to be removed
+
+        routers = new String[]{ "Simple", "Icarus", "FullPlacement" };
+        newTablePlacementStrategy = "Single";
+        planSelectionStrategy = "Best";
+        preCostRatio = 50;
+        postCostRatio = 50;
+        routingCache = true;
+        postCostAggregation = true;
+
+        workloadMonitoringProcessingInterval = "5s";
+        workloadMonitoringElementsPerInterval = 50;
+
         planAndImplementationCaching = "Both";
 
         progressReportBase = getIntProperty( properties, "progressReportBase" );
@@ -103,13 +115,26 @@ public class MultimediaConfig extends AbstractConfig {
 
         pdbBranch = cdl.get( "pdbBranch" );
         puiBranch = cdl.get( "puiBranch" );
-        buildUi = Boolean.parseBoolean( cdl.getOrDefault( "buildUi", "false" ) );
+        buildUi = Boolean.parseBoolean( cdlGetOrDefault( cdl, "buildUi", "false" ) );
         resetCatalog = Boolean.parseBoolean( cdl.get( "resetCatalog" ) );
         memoryCatalog = Boolean.parseBoolean( cdl.get( "memoryCatalog" ) );
 
-        deployStoresUsingDocker = Boolean.parseBoolean( cdl.getOrDefault( "deployStoresUsingDocker", "false" ) );
+        deployStoresUsingDocker = Boolean.parseBoolean( cdlGetOrDefault( cdl, "deployStoresUsingDocker", "false" ) );
 
-        router = cdl.get( "router" );
+        router = cdl.get( "router" ); // For old routing, to be removed
+
+        routers = cdlGetOrDefault( cdl, "routers", "Simple_Icarus_FullPlacement" ).split( "_" );
+        newTablePlacementStrategy = cdlGetOrDefault( cdl, "newTablePlacementStrategy", "Single" );
+        planSelectionStrategy = cdlGetOrDefault( cdl, "planSelectionStrategy", "Best" );
+
+        preCostRatio = Integer.parseInt( cdlGetOrDefault( cdl, "preCostRatio", "50%" ).replace( "%", "" ).trim() );
+        postCostRatio = Integer.parseInt( cdlGetOrDefault( cdl, "postCostRatio", "50%" ).replace( "%", "" ).trim() );
+        routingCache = Boolean.parseBoolean( cdlGetOrDefault( cdl, "routingCache", "true" ) );
+        postCostAggregation = Boolean.parseBoolean( cdlGetOrDefault( cdl, "postCostAggregation", "true" ) );
+
+        workloadMonitoringProcessingInterval = cdlGetOrDefault( cdl, "workloadMonitoringProcessingInterval", "5s" );
+        workloadMonitoringElementsPerInterval = Integer.parseInt( cdlGetOrDefault( cdl, "workloadMonitoringElementsPerInterval", "50" ) );
+
         planAndImplementationCaching = cdl.getOrDefault( "planAndImplementationCaching", "Both" );
 
         progressReportBase = 100;
