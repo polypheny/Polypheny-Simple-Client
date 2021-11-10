@@ -24,7 +24,6 @@ buildscript {
 
 
 repositories {
-    mavenLocal()
     mavenCentral()
     maven {
         url "https://clojars.org/repo/"
@@ -46,10 +45,10 @@ tasks.withType(JavaCompile) {
 }
 
 
-configurations.all {
-    // check for updates every build
-    resolutionStrategy.cacheChangingModulesFor 0, "seconds"
-}
+//configurations.all {
+//    // check for updates every build
+//    resolutionStrategy.cacheChangingModulesFor 0, "seconds"
+//}
 
 
 java {
@@ -70,7 +69,7 @@ dependencies {
     }
 
     // Chronos
-    implementation group: 'ch.unibas.dmi.dbis.chronos', name: 'chronos-agent', version: '2.3.2' // License: MIT
+    implementation group: 'org.chronos-eaas', name: 'chronos-agent', version: '2.3.3' // License: MIT
 
     // REST
     implementation group: 'com.konghq', name: 'unirest-java', version: '3.7.02' // License: MIT
