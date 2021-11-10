@@ -16,9 +16,9 @@ buildscript {
     }
     dependencies {
         // Shadowing; used to make a fat jar (https://github.com/johnrengelman/shadow)
-        classpath group: "com.github.jengelman.gradle.plugins", name: "shadow", version: "6.1.0"
+        classpath group: "gradle.plugin.com.github.johnrengelman", name: "shadow", version: "7.1.0"
         // Lombok (https://plugins.gradle.org/plugin/io.freefair.lombok)
-        classpath group: "io.freefair.gradle", name: "lombok-plugin", version: "5.3.0"
+        classpath group: "io.freefair.gradle", name: "lombok-plugin", version: "6.2.0"
     }
 }
 
