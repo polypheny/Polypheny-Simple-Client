@@ -28,10 +28,6 @@ repositories {
     maven {
         url "https://clojars.org/repo/"
     }
-    maven {
-        // DBIS Nexus
-        url "https://dbis-nexus.dmi.unibas.ch/repository/maven2/"
-    }
 }
 
 apply plugin: "java-library"
@@ -59,14 +55,10 @@ java {
 
 dependencies {
     implementation group: 'commons-lang', name: 'commons-lang', version: '2.6' // License: Apache 2.0
-    implementation group: "commons-io", name: "commons-io", version: '2.6'  // License: Apache 2.0
+    implementation group: 'commons-io', name: "commons-io", version: '2.6'  // License: Apache 2.0
 
     // Polypheny Control Connector
-    implementation (group: 'org.polypheny', name: 'polypheny-control', version: '1.2.2') { // License: Apache 2.0
-        exclude group: 'org.gradle', module: 'gradle-tooling-api'
-        exclude group: 'com.github.rvesse', module: 'airline'
-        exclude group: 'io.javalin', module: 'javalin'
-    }
+    implementation group: 'org.polypheny', name: 'control-connector', version: '1.2.4'  // License: Apache 2.0
 
     // Chronos
     implementation group: 'org.chronos-eaas', name: 'chronos-agent', version: '2.3.3' // License: MIT
