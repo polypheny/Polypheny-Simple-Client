@@ -18,7 +18,7 @@ buildscript {
         // Shadowing; used to make a fat jar (https://github.com/johnrengelman/shadow)
         classpath group: "gradle.plugin.com.github.johnrengelman", name: "shadow", version: "7.1.0"
         // Lombok (https://plugins.gradle.org/plugin/io.freefair.lombok)
-        classpath group: "io.freefair.gradle", name: "lombok-plugin", version: "6.2.0"
+        classpath group: "io.freefair.gradle", name: "lombok-plugin", version: "6.3.0"
     }
 }
 
@@ -138,7 +138,7 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
 }
 shadowJar {
     zip64 true
-    classifier = ""
+    classifier ""
     mergeServiceFiles {
         setPath("META-INF/services")
         include("io.grpc.*")
