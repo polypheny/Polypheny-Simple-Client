@@ -274,16 +274,26 @@ public class ChronosAgent extends AbstractChronosAgent {
         @SuppressWarnings("unchecked") AbstractConfig config = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getMiddle();
         @SuppressWarnings("unchecked") DatabaseInstance databaseInstance = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getRight();
         try {
-            // enable icarus training
-            if ( config.system.equals( "polypheny" ) && config.router.equals( "icarus" ) ) {
+            // Enable icarus training -- to be removed
+            if ( config.system.equals( "polypheny" ) && config.router.equals( "icarus" ) && !config.pdbBranch.equalsIgnoreCase( "universal-routing" ) ) {
                 ((PolyphenyDbInstance) databaseInstance).setIcarusRoutingTraining( true );
+            }
+
+            // Enable Post Cost Aggregation
+            if ( config.system.equals( "polypheny" ) && config.postCostAggregation.equals( "onWarmup" ) && config.pdbBranch.equalsIgnoreCase( "universal-routing" ) ) {
+                ((PolyphenyDbInstance) databaseInstance).setPostCostAggregation( true );
             }
 
             ProgressReporter progressReporter = new ChronosProgressReporter( chronosJob, this, 1, config.progressReportBase );
             scenario.warmUp( progressReporter, config.numberOfWarmUpIterations );
 
-            // disable icarus training
-            if ( config.system.equals( "polypheny" ) && config.router.equals( "icarus" ) ) {
+            // Disable Post Cost Aggregation
+            if ( config.system.equals( "polypheny" ) && config.postCostAggregation.equals( "onWarmup" ) && config.pdbBranch.equalsIgnoreCase( "universal-routing" ) ) {
+                ((PolyphenyDbInstance) databaseInstance).setPostCostAggregation( false );
+            }
+
+            // Disable icarus training  -- to be removed
+            if ( config.system.equals( "polypheny" ) && config.router.equals( "icarus" ) && !config.pdbBranch.equalsIgnoreCase( "universal-routing" ) ) {
                 ((PolyphenyDbInstance) databaseInstance).setIcarusRoutingTraining( false );
             }
         } catch ( Exception e ) {

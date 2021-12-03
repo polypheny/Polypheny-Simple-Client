@@ -26,6 +26,7 @@
 package org.polypheny.simpleclient.scenario.gavel;
 
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
@@ -97,10 +98,10 @@ public class GavelConfig extends AbstractConfig {
         preCostRatio = 50;
         postCostRatio = 50;
         routingCache = true;
-        postCostAggregation = true;
+        postCostAggregation = "onWarmup";
 
-        workloadMonitoringProcessingInterval = "5s";
-        workloadMonitoringElementsPerInterval = 50;
+        workloadMonitoringProcessingInterval = "1s";
+        workloadMonitoringElementsPerInterval = 5000;
 
         progressReportBase = getIntProperty( properties, "progressReportBase" );
         numberOfThreads = getIntProperty( properties, "numberOfThreads" );
@@ -163,7 +164,7 @@ public class GavelConfig extends AbstractConfig {
         numberOfThreads = Integer.parseInt( cdl.get( "numberOfThreads" ) );
         numberOfWarmUpIterations = Integer.parseInt( cdlGetOrDefault( cdl, "numberOfWarmUpIterations", "4" ) );
 
-        dataStores.add( cdl.get( "dataStore" ) );
+        dataStores.addAll( Arrays.asList( cdl.get( "dataStore" ).split( "_" ) ) );
         planAndImplementationCaching = cdlGetOrDefault( cdl, "planAndImplementationCaching", "Both" );
 
         router = cdl.get( "router" ); // For old routing, to be removed
@@ -175,10 +176,10 @@ public class GavelConfig extends AbstractConfig {
         preCostRatio = Integer.parseInt( cdlGetOrDefault( cdl, "preCostRatio", "50%" ).replace( "%", "" ).trim() );
         postCostRatio = Integer.parseInt( cdlGetOrDefault( cdl, "postCostRatio", "50%" ).replace( "%", "" ).trim() );
         routingCache = Boolean.parseBoolean( cdlGetOrDefault( cdl, "routingCache", "true" ) );
-        postCostAggregation = Boolean.parseBoolean( cdlGetOrDefault( cdl, "postCostAggregation", "true" ) );
+        postCostAggregation = cdlGetOrDefault( cdl, "postCostAggregation", "onWarmup" );
 
-        workloadMonitoringProcessingInterval = cdlGetOrDefault( cdl, "workloadMonitoringProcessingInterval", "5s" );
-        workloadMonitoringElementsPerInterval = Integer.parseInt( cdlGetOrDefault( cdl, "workloadMonitoringElementsPerInterval", "50" ) );
+        workloadMonitoringProcessingInterval = cdlGetOrDefault( cdl, "workloadMonitoringProcessingInterval", "1s" );
+        workloadMonitoringElementsPerInterval = Integer.parseInt( cdlGetOrDefault( cdl, "workloadMonitoringElementsPerInterval", "5000" ) );
 
         // Benchmark
         numberOfGetAuctionQueries = Integer.parseInt( cdl.get( "numberOfGetAuctionQueries" ) );

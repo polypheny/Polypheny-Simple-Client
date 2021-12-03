@@ -309,7 +309,7 @@ public interface PolyphenyDbExecutor extends Executor {
                     double ratio = config.preCostRatio / 100.0;
                     executor.setConfig( "routing/preCostPostCostRatio", ratio + "" );
                     // Set post cost aggregation
-                    executor.setConfig( "routing/postCostAggregationActive", config.postCostAggregation ? "true" : "false" );
+                    executor.setConfig( "routing/postCostAggregationActive", config.postCostAggregation.equals( "always" ) ? "true" : "false" );
                     // Set routing cache
                     executor.setConfig( "runtime/routingPlanCaching", config.routingCache ? "true" : "false" );
                     // Set workload monitoring processing interval
@@ -435,14 +435,35 @@ public interface PolyphenyDbExecutor extends Executor {
         }
 
 
+        // to be removed
         public void setIcarusRoutingTraining( boolean b ) {
             PolyphenyDbExecutor executor = (PolyphenyDbExecutor) new PolyphenyDbJdbcExecutorFactory( ChronosCommand.hostname, false ).createExecutorInstance();
             try {
-                // disable icarus training
+                // Disable icarus training
                 if ( !config.pdbBranch.equalsIgnoreCase( "universal-routing" ) ) {
                     executor.setConfig( "icarusRouting/training", b ? "true" : "false" );
                     executor.executeCommit();
+                } else {
+                    executor.setConfig( "routing/postCostAggregationActive", b ? "true" : "false" );
+                    executor.executeCommit();
                 }
+            } catch ( ExecutorException e ) {
+                throw new RuntimeException( "Exception while updating polypheny config", e );
+            } finally {
+                try {
+                    executor.closeConnection();
+                } catch ( ExecutorException e ) {
+                    log.error( "Exception while closing connection", e );
+                }
+            }
+        }
+
+
+        public void setPostCostAggregation( boolean b ) {
+            PolyphenyDbExecutor executor = (PolyphenyDbExecutor) new PolyphenyDbJdbcExecutorFactory( ChronosCommand.hostname, false ).createExecutorInstance();
+            try {
+                executor.setConfig( "routing/postCostAggregationActive", b ? "true" : "false" );
+                executor.executeCommit();
             } catch ( ExecutorException e ) {
                 throw new RuntimeException( "Exception while updating polypheny config", e );
             } finally {

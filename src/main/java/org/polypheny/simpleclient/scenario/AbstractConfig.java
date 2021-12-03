@@ -61,7 +61,7 @@ public abstract class AbstractConfig {
     public int preCostRatio;
     public int postCostRatio;
     public boolean routingCache;
-    public boolean postCostAggregation;
+    public String postCostAggregation;
 
     public String workloadMonitoringProcessingInterval;
     public int workloadMonitoringElementsPerInterval;

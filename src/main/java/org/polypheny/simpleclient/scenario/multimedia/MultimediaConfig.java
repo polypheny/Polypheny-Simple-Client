@@ -74,7 +74,7 @@ public class MultimediaConfig extends AbstractConfig {
         preCostRatio = 50;
         postCostRatio = 50;
         routingCache = true;
-        postCostAggregation = true;
+        postCostAggregation = "onWarmup";
 
         workloadMonitoringProcessingInterval = "5s";
         workloadMonitoringElementsPerInterval = 50;
@@ -130,7 +130,7 @@ public class MultimediaConfig extends AbstractConfig {
         preCostRatio = Integer.parseInt( cdlGetOrDefault( cdl, "preCostRatio", "50%" ).replace( "%", "" ).trim() );
         postCostRatio = Integer.parseInt( cdlGetOrDefault( cdl, "postCostRatio", "50%" ).replace( "%", "" ).trim() );
         routingCache = Boolean.parseBoolean( cdlGetOrDefault( cdl, "routingCache", "true" ) );
-        postCostAggregation = Boolean.parseBoolean( cdlGetOrDefault( cdl, "postCostAggregation", "true" ) );
+        postCostAggregation = cdlGetOrDefault( cdl, "postCostAggregation", "onWarmup" );
 
         workloadMonitoringProcessingInterval = cdlGetOrDefault( cdl, "workloadMonitoringProcessingInterval", "5s" );
         workloadMonitoringElementsPerInterval = Integer.parseInt( cdlGetOrDefault( cdl, "workloadMonitoringElementsPerInterval", "50" ) );
