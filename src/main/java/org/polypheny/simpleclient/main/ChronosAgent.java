@@ -275,12 +275,12 @@ public class ChronosAgent extends AbstractChronosAgent {
         @SuppressWarnings("unchecked") DatabaseInstance databaseInstance = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getRight();
         try {
             // Enable icarus training -- to be removed
-            if ( config.system.equals( "polypheny" ) && config.router.equals( "icarus" ) && !config.pdbBranch.equalsIgnoreCase( "universal-routing" ) ) {
+            if ( config.system.equals( "polypheny" ) && config.router.equals( "icarus" ) && config.pdbBranch.equalsIgnoreCase( "old-routing" ) ) {
                 ((PolyphenyDbInstance) databaseInstance).setIcarusRoutingTraining( true );
             }
 
             // Enable Post Cost Aggregation
-            if ( config.system.equals( "polypheny" ) && config.postCostAggregation.equals( "onWarmup" ) && config.pdbBranch.equalsIgnoreCase( "universal-routing" ) ) {
+            if ( config.system.equals( "polypheny" ) && config.postCostAggregation.equals( "onWarmup" ) && !config.pdbBranch.equalsIgnoreCase( "old-routing" ) ) {
                 ((PolyphenyDbInstance) databaseInstance).setPostCostAggregation( true );
             }
 
@@ -288,12 +288,12 @@ public class ChronosAgent extends AbstractChronosAgent {
             scenario.warmUp( progressReporter, config.numberOfWarmUpIterations );
 
             // Disable Post Cost Aggregation
-            if ( config.system.equals( "polypheny" ) && config.postCostAggregation.equals( "onWarmup" ) && config.pdbBranch.equalsIgnoreCase( "universal-routing" ) ) {
+            if ( config.system.equals( "polypheny" ) && config.postCostAggregation.equals( "onWarmup" ) && !config.pdbBranch.equalsIgnoreCase( "old-routing" ) ) {
                 ((PolyphenyDbInstance) databaseInstance).setPostCostAggregation( false );
             }
 
             // Disable icarus training  -- to be removed
-            if ( config.system.equals( "polypheny" ) && config.router.equals( "icarus" ) && !config.pdbBranch.equalsIgnoreCase( "universal-routing" ) ) {
+            if ( config.system.equals( "polypheny" ) && config.router.equals( "icarus" ) && config.pdbBranch.equalsIgnoreCase( "old-routing" ) ) {
                 ((PolyphenyDbInstance) databaseInstance).setIcarusRoutingTraining( false );
             }
         } catch ( Exception e ) {

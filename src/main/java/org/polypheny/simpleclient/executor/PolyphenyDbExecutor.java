@@ -260,7 +260,7 @@ public interface PolyphenyDbExecutor extends Executor {
                 // disable active tracking (dynamic querying)
                 executor.setConfig( "statistics/activeTracking", "false" );
                 // Set router
-                if ( !config.pdbBranch.equalsIgnoreCase( "universal-routing" ) ) { // Old routing, to be removed
+                if ( config.pdbBranch.equalsIgnoreCase( "old-routing" ) ) { // Old routing, to be removed
                     switch ( config.router ) {
                         case "simple":
                             executor.setConfig( "routing/router", "org.polypheny.db.router.SimpleRouter$SimpleRouterFactory" );
@@ -440,7 +440,7 @@ public interface PolyphenyDbExecutor extends Executor {
             PolyphenyDbExecutor executor = (PolyphenyDbExecutor) new PolyphenyDbJdbcExecutorFactory( ChronosCommand.hostname, false ).createExecutorInstance();
             try {
                 // Disable icarus training
-                if ( !config.pdbBranch.equalsIgnoreCase( "universal-routing" ) ) {
+                if ( config.pdbBranch.equalsIgnoreCase( "old-routing" ) ) {  // Old routing -- to be removed
                     executor.setConfig( "icarusRouting/training", b ? "true" : "false" );
                     executor.executeCommit();
                 } else {
