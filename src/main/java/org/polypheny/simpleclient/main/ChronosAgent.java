@@ -281,6 +281,12 @@ public class ChronosAgent extends AbstractChronosAgent {
 
             // Enable Post Cost Aggregation
             if ( config.system.equals( "polypheny" ) && config.postCostAggregation.equals( "onWarmup" ) && !config.pdbBranch.equalsIgnoreCase( "old-routing" ) ) {
+                // Wait a few seconds to give Polypheny-DB the chance to process all data points from data insertion
+                try {
+                    TimeUnit.MINUTES.sleep( 2 );
+                } catch ( InterruptedException e ) {
+                    throw new RuntimeException( "Unexpected interrupt", e );
+                }
                 ((PolyphenyDbInstance) databaseInstance).setPostCostAggregation( true );
             }
 
@@ -291,7 +297,7 @@ public class ChronosAgent extends AbstractChronosAgent {
             if ( config.system.equals( "polypheny" ) && config.postCostAggregation.equals( "onWarmup" ) && !config.pdbBranch.equalsIgnoreCase( "old-routing" ) ) {
                 // Wait a few seconds to give Polypheny-DB the chance to process the data points
                 try {
-                    TimeUnit.SECONDS.sleep( 3 );
+                    TimeUnit.SECONDS.sleep( 10 );
                 } catch ( InterruptedException e ) {
                     throw new RuntimeException( "Unexpected interrupt", e );
                 }
