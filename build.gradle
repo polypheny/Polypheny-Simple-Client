@@ -79,7 +79,7 @@ dependencies {
     }
 
     // CLI library
-    implementation group: 'com.github.rvesse', name: 'airline', version: '2.8.0' // License: Apache 2.0
+    implementation group: 'com.github.rvesse', name: 'airline', version: '2.8.3' // License: Apache 2.0
 
     // Fake data generator
     implementation group: 'com.devskiller', name: 'jfairy', version: '0.6.4' // License: Apache 2.0
@@ -91,7 +91,7 @@ dependencies {
     // CSV
     implementation group: 'com.opencsv', name: 'opencsv', version: '5.0' // License: Apache 2.0
 
-    // LOGGING
+    // Logging
     implementation group: 'org.slf4j', name: 'slf4j-api', version: '1.7.30' // License: MIT
     implementation group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.13.3' // License: Apache 2.0
     implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.13.3' // License: Apache 2.0

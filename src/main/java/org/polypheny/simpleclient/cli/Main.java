@@ -41,7 +41,7 @@ public class Main {
 
         // define top level commands
         builder.withCommands( ChronosCommand.class );
-        builder.withCommands( EasyCommand.class );
+        builder.withCommands( GavelCommand.class );
         builder.withCommands( KnnCommand.class );
         builder.withCommands( MultimediaCommand.class );
         builder.withCommands( HelpCommand.class );

@@ -54,10 +54,10 @@ public class ChronosCommand implements CliRunnable {
     private String environment = "default";
 
     @Required
-    @Option(name = { "-s", "--supports" }, description = "Identifier of the supported system(s) in Chronos.")
+    @Option(name = { "-s", "--supports" }, description = "Comma-separated list of system identifiers supported by this client. Depends on the Chronos instance.")
     private String supports = "";
 
-    @Option(name = { "--host" }, title = "IP or Port", description = "Hostname or IP of the system to benchmark (default: 127.0.0.1).")
+    @Option(name = { "--host" }, title = "IP or Port", description = "Hostname or IP address of the host running the system(s) to be benchmarked (default: 127.0.0.1).")
     public static String hostname = "127.0.0.1";
 
     @Option(name = { "--writeCSV" }, arity = 0, description = "Write a CSV file containing execution times for all executed queries (default: false).")

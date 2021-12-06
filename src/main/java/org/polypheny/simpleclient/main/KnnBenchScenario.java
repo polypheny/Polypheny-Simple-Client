@@ -25,39 +25,38 @@
 
 package org.polypheny.simpleclient.main;
 
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
-import org.polypheny.simpleclient.scenario.multimedia.MultimediaBench;
-import org.polypheny.simpleclient.scenario.multimedia.MultimediaConfig;
+import org.polypheny.simpleclient.scenario.knnbench.KnnBench;
+import org.polypheny.simpleclient.scenario.knnbench.KnnBenchConfig;
 
 
 @Slf4j
-public class Multimedia {
+public class KnnBenchScenario {
 
     public static void schema( ExecutorFactory executorFactory, boolean commitAfterEveryQuery ) {
-        MultimediaConfig config = new MultimediaConfig( getProperties(), 1 );
-        MultimediaBench multimediaBench = new MultimediaBench( executorFactory, config, commitAfterEveryQuery, false );
-        multimediaBench.createSchema( true );
+        KnnBenchConfig config = new KnnBenchConfig( getProperties(), 1 );
+        KnnBench knnBench = new KnnBench( executorFactory, config, commitAfterEveryQuery, false );
+        knnBench.createSchema( true );
     }
 
 
     public static void data( ExecutorFactory executorFactory, int multiplier, boolean commitAfterEveryQuery ) {
-        MultimediaConfig config = new MultimediaConfig( getProperties(), multiplier );
-        MultimediaBench multimediaBench = new MultimediaBench( executorFactory, config, commitAfterEveryQuery, false );
+        KnnBenchConfig config = new KnnBenchConfig( getProperties(), multiplier );
+        KnnBench knnBench = new KnnBench( executorFactory, config, commitAfterEveryQuery, false );
 
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
-        multimediaBench.generateData( progressReporter );
+        knnBench.generateData( progressReporter );
     }
 
 
     public static void workload( ExecutorFactory executorFactory, int multiplier, boolean commitAfterEveryQuery, boolean writeCsv, boolean dumpQueryList ) {
-        MultimediaConfig config = new MultimediaConfig( getProperties(), multiplier );
-        MultimediaBench multimediaBench = new MultimediaBench( executorFactory, config, commitAfterEveryQuery, dumpQueryList );
+        KnnBenchConfig config = new KnnBenchConfig( getProperties(), multiplier );
+        KnnBench knnBench = new KnnBench( executorFactory, config, commitAfterEveryQuery, dumpQueryList );
 
         final CsvWriter csvWriter;
         if ( writeCsv ) {
@@ -67,23 +66,23 @@ public class Multimedia {
         }
 
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
-        multimediaBench.execute( progressReporter, csvWriter, new File( "." ), config.numberOfThreads );
+        knnBench.execute( progressReporter, csvWriter, new File( "." ), config.numberOfThreads );
     }
 
 
     public static void warmup( ExecutorFactory executorFactory, int multiplier, boolean commitAfterEveryQuery, boolean dumpQueryList ) {
-        MultimediaConfig config = new MultimediaConfig( getProperties(), multiplier );
-        MultimediaBench multimediaBench = new MultimediaBench( executorFactory, config, commitAfterEveryQuery, dumpQueryList );
+        KnnBenchConfig config = new KnnBenchConfig( getProperties(), multiplier );
+        KnnBench knnBench = new KnnBench( executorFactory, config, commitAfterEveryQuery, dumpQueryList );
 
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
-        multimediaBench.warmUp( progressReporter, multiplier );
+        knnBench.warmUp( progressReporter, multiplier );
     }
 
 
     private static Properties getProperties() {
         Properties props = new Properties();
         try {
-            props.load( Objects.requireNonNull( ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/multimedia/multimedia.properties" ) ) );
+            props.load( Objects.requireNonNull( ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/knnbench/knn.properties" ) ) );
         } catch ( IOException e ) {
             log.error( "Exception while reading properties file", e );
         }

@@ -36,7 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
 import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory;
 import org.polypheny.simpleclient.executor.PolyphenyDbRestExecutor.PolyphenyDbRestExecutorFactory;
-import org.polypheny.simpleclient.main.Multimedia;
+import org.polypheny.simpleclient.main.MultimediaScenario;
 
 
 @Slf4j
@@ -88,13 +88,13 @@ public class MultimediaCommand implements CliRunnable {
 
         try {
             if ( args.get( 0 ).equalsIgnoreCase( "data" ) ) {
-                Multimedia.data( executorFactory, multiplier, true );
+                MultimediaScenario.data( executorFactory, multiplier, true );
             } else if ( args.get( 0 ).equalsIgnoreCase( "workload" ) ) {
-                Multimedia.workload( executorFactory, multiplier, true, writeCsv, dumpQueryList );
+                MultimediaScenario.workload( executorFactory, multiplier, true, writeCsv, dumpQueryList );
             } else if ( args.get( 0 ).equalsIgnoreCase( "schema" ) ) {
-                Multimedia.schema( executorFactory, true );
+                MultimediaScenario.schema( executorFactory, true );
             } else if ( args.get( 0 ).equalsIgnoreCase( "warmup" ) ) {
-                Multimedia.warmup( executorFactory, multiplier, true, dumpQueryList );
+                MultimediaScenario.warmup( executorFactory, multiplier, true, dumpQueryList );
             } else {
                 System.err.println( "Unknown task: " + args.get( 0 ) );
             }

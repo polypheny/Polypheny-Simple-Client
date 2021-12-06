@@ -30,33 +30,34 @@ import java.io.IOException;
 import java.util.Objects;
 import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
+import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
-import org.polypheny.simpleclient.scenario.knnbench.KnnBench;
-import org.polypheny.simpleclient.scenario.knnbench.KnnBenchConfig;
+import org.polypheny.simpleclient.scenario.gavel.Gavel;
+import org.polypheny.simpleclient.scenario.gavel.GavelConfig;
 
 
 @Slf4j
-public class Knn {
+public class GavelScenario {
 
-    public static void schema( ExecutorFactory executorFactory, boolean commitAfterEveryQuery ) {
-        KnnBenchConfig config = new KnnBenchConfig( getProperties(), 1 );
-        KnnBench knnBench = new KnnBench( executorFactory, config, commitAfterEveryQuery, false );
-        knnBench.createSchema( true );
+    public static void schema( ExecutorFactory executorFactory, boolean commitAfterEveryQuery, QueryMode queryMode ) {
+        GavelConfig config = new GavelConfig( getProperties(), 1 );
+        Gavel gavel = new Gavel( executorFactory, config, commitAfterEveryQuery, false, queryMode );
+        gavel.createSchema( true );
     }
 
 
-    public static void data( ExecutorFactory executorFactory, int multiplier, boolean commitAfterEveryQuery ) {
-        KnnBenchConfig config = new KnnBenchConfig( getProperties(), multiplier );
-        KnnBench knnBench = new KnnBench( executorFactory, config, commitAfterEveryQuery, false );
+    public static void data( ExecutorFactory executorFactory, int multiplier, boolean commitAfterEveryQuery, QueryMode queryMode ) {
+        GavelConfig config = new GavelConfig( getProperties(), multiplier );
+        Gavel gavel = new Gavel( executorFactory, config, commitAfterEveryQuery, false, queryMode );
 
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
-        knnBench.generateData( progressReporter );
+        gavel.generateData( progressReporter );
     }
 
 
-    public static void workload( ExecutorFactory executorFactory, int multiplier, boolean commitAfterEveryQuery, boolean writeCsv, boolean dumpQueryList ) {
-        KnnBenchConfig config = new KnnBenchConfig( getProperties(), multiplier );
-        KnnBench knnBench = new KnnBench( executorFactory, config, commitAfterEveryQuery, dumpQueryList );
+    public static void workload( ExecutorFactory executorFactory, int multiplier, boolean commitAfterEveryQuery, boolean writeCsv, boolean dumpQueryList, QueryMode queryMode ) {
+        GavelConfig config = new GavelConfig( getProperties(), multiplier );
+        Gavel gavel = new Gavel( executorFactory, config, commitAfterEveryQuery, dumpQueryList, queryMode );
 
         final CsvWriter csvWriter;
         if ( writeCsv ) {
@@ -64,25 +65,24 @@ public class Knn {
         } else {
             csvWriter = null;
         }
-
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
-        knnBench.execute( progressReporter, csvWriter, new File( "." ), config.numberOfThreads );
+        gavel.execute( progressReporter, csvWriter, new File( "." ), config.numberOfThreads );
     }
 
 
-    public static void warmup( ExecutorFactory executorFactory, int multiplier, boolean commitAfterEveryQuery, boolean dumpQueryList ) {
-        KnnBenchConfig config = new KnnBenchConfig( getProperties(), multiplier );
-        KnnBench knnBench = new KnnBench( executorFactory, config, commitAfterEveryQuery, dumpQueryList );
+    public static void warmup( ExecutorFactory executorFactory, int multiplier, boolean commitAfterEveryQuery, boolean dumpQueryList, QueryMode queryMode ) {
+        GavelConfig config = new GavelConfig( getProperties(), 1 );
+        Gavel gavel = new Gavel( executorFactory, config, commitAfterEveryQuery, dumpQueryList, queryMode );
 
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
-        knnBench.warmUp( progressReporter, multiplier );
+        gavel.warmUp( progressReporter, multiplier );
     }
 
 
     private static Properties getProperties() {
         Properties props = new Properties();
         try {
-            props.load( Objects.requireNonNull( ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/knnbench/knn.properties" ) ) );
+            props.load( Objects.requireNonNull( ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/gavel/gavel.properties" ) ) );
         } catch ( IOException e ) {
             log.error( "Exception while reading properties file", e );
         }

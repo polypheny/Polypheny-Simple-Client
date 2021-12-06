@@ -38,27 +38,27 @@ import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
 import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory;
 import org.polypheny.simpleclient.executor.PolyphenyDbMongoQlExecutor.PolyphenyDbMongoQlExecutorFactory;
 import org.polypheny.simpleclient.executor.PolyphenyDbRestExecutor.PolyphenyDbRestExecutorFactory;
-import org.polypheny.simpleclient.main.Easy;
+import org.polypheny.simpleclient.main.GavelScenario;
 
 
 @Slf4j
-@Command(name = "easy", description = "Mode for quick testing of Polypheny-DB using the Gavel benchmark.")
-public class EasyCommand implements CliRunnable {
+@Command(name = "gavel", description = "Mode for quick testing of Polypheny-DB using the Gavel benchmark.")
+public class GavelCommand implements CliRunnable {
 
     @SuppressWarnings("SpringAutowiredFieldsWarningInspection")
     @Inject
-    private HelpOption<EasyCommand> help;
+    private HelpOption<GavelCommand> help;
 
     @Arguments(description = "Task { schema | data | workload | warmup } and multiplier and { view | materialized }.")
     private List<String> args;
 
-    @Option(name = { "-pdb", "--polyphenydb" }, title = "IP or Hostname", arity = 1, description = "IP or Hostname of the Polypheny-DB server (default: 127.0.0.1).")
+    @Option(name = { "-pdb", "--polyphenydb" }, title = "IP or Hostname", arity = 1, description = "IP or Hostname of  Polypheny-DB (default: 127.0.0.1).")
     public static String polyphenyDbHost = "127.0.0.1";
 
     @Option(name = { "--rest" }, arity = 0, description = "Use Polypheny-DB REST interface instead of the JDBC interface (default: false).")
     public static boolean restInterface = false;
 
-    @Option(name = { "--mongoql" }, arity = 0, description = "Use Polypheny-DB MongoQL interface, which queries a document model, instead of the JDBC interface (default: false).")
+    @Option(name = { "--mongoql" }, arity = 0, description = "Use MongoQL instead of SQL (default: false).")
     public static boolean mongoQlInterface = false;
 
     @Option(name = { "--writeCSV" }, arity = 0, description = "Write a CSV file containing execution times for all executed queries (default: false).")
@@ -107,13 +107,13 @@ public class EasyCommand implements CliRunnable {
 
         try {
             if ( args.get( 0 ).equalsIgnoreCase( "data" ) ) {
-                Easy.data( executorFactory, multiplier, true, queryMode );
+                GavelScenario.data( executorFactory, multiplier, true, queryMode );
             } else if ( args.get( 0 ).equalsIgnoreCase( "workload" ) ) {
-                Easy.workload( executorFactory, multiplier, true, writeCsv, dumpQueryList, queryMode );
+                GavelScenario.workload( executorFactory, multiplier, true, writeCsv, dumpQueryList, queryMode );
             } else if ( args.get( 0 ).equalsIgnoreCase( "schema" ) ) {
-                Easy.schema( executorFactory, true, queryMode );
+                GavelScenario.schema( executorFactory, true, queryMode );
             } else if ( args.get( 0 ).equalsIgnoreCase( "warmup" ) ) {
-                Easy.warmup( executorFactory, multiplier, true, dumpQueryList, queryMode );
+                GavelScenario.warmup( executorFactory, multiplier, true, dumpQueryList, queryMode );
             } else {
                 System.err.println( "Unknown task: " + args.get( 0 ) );
             }

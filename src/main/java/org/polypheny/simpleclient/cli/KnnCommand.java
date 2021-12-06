@@ -35,7 +35,7 @@ import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
 import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory;
-import org.polypheny.simpleclient.main.Knn;
+import org.polypheny.simpleclient.main.KnnBenchScenario;
 
 
 @Slf4j
@@ -44,7 +44,7 @@ public class KnnCommand implements CliRunnable {
 
     @SuppressWarnings("SpringAutowiredFieldsWarningInspection")
     @Inject
-    private HelpOption<EasyCommand> help;
+    private HelpOption<KnnCommand> help;
 
     @Arguments(description = "Task { schema | data | workload } and multiplier.")
     private List<String> args;
@@ -84,13 +84,13 @@ public class KnnCommand implements CliRunnable {
 
         try {
             if ( args.get( 0 ).equalsIgnoreCase( "data" ) ) {
-                Knn.data( executorFactory, multiplier, true );
+                KnnBenchScenario.data( executorFactory, multiplier, true );
             } else if ( args.get( 0 ).equalsIgnoreCase( "workload" ) ) {
-                Knn.workload( executorFactory, multiplier, true, writeCsv, dumpQueryList );
+                KnnBenchScenario.workload( executorFactory, multiplier, true, writeCsv, dumpQueryList );
             } else if ( args.get( 0 ).equalsIgnoreCase( "schema" ) ) {
-                Knn.schema( executorFactory, true );
+                KnnBenchScenario.schema( executorFactory, true );
             } else if ( args.get( 0 ).equalsIgnoreCase( "warmup" ) ) {
-                Knn.warmup( executorFactory, multiplier, true, dumpQueryList );
+                KnnBenchScenario.warmup( executorFactory, multiplier, true, dumpQueryList );
             } else {
                 System.err.println( "Unknown task: " + args.get( 0 ) );
             }
