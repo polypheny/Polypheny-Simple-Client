@@ -75,7 +75,7 @@ public class GavelScenario {
         Gavel gavel = new Gavel( executorFactory, config, commitAfterEveryQuery, dumpQueryList, queryMode );
 
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
-        gavel.warmUp( progressReporter, multiplier );
+        gavel.warmUp( progressReporter, config.numberOfWarmUpIterations );
     }
 
 

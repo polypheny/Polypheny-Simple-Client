@@ -75,7 +75,7 @@ public class KnnBenchScenario {
         KnnBench knnBench = new KnnBench( executorFactory, config, commitAfterEveryQuery, dumpQueryList );
 
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
-        knnBench.warmUp( progressReporter, multiplier );
+        knnBench.warmUp( progressReporter, config.numberOfWarmUpIterations );
     }
 
 

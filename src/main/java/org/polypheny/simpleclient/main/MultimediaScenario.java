@@ -76,7 +76,7 @@ public class MultimediaScenario {
         MultimediaBench multimediaBench = new MultimediaBench( executorFactory, config, commitAfterEveryQuery, dumpQueryList );
 
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
-        multimediaBench.warmUp( progressReporter, multiplier );
+        multimediaBench.warmUp( progressReporter, config.numberOfWarmUpIterations );
     }
 
 

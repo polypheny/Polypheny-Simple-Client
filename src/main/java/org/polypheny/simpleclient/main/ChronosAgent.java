@@ -187,7 +187,6 @@ public class ChronosAgent extends AbstractChronosAgent {
         switch ( parsedConfig.get( "scenario" ) ) {
             case "gavel":
                 config = new GavelConfig( parsedConfig );
-                log.info( "inside chronosAgent" );
                 scenario = new Gavel( executorFactory, (GavelConfig) config, true, dumpQueryList, queryMode );
                 break;
             case "knnBench":
