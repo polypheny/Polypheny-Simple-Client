@@ -1,7 +1,72 @@
 # Polypheny Simple Client
-A simple benchmarking and testing client for Polypheny-DB.
 
-This client contains a [Chronos](https://chronos-eaas.org/) connector. This allows to easily execute evaluation campaigns.
+A simple benchmarking and testing client for Polypheny-DB. It includes support for three benchmarks:
+
+* **Gavel**: The Gavel benchmark simulates the workload of a fictional auction house.
+* **kNN-Bench**: A benchmark tailored towards typical workloads of multimedia retrieval applications and especially k-Nearest-Neighbor search.
+* **Multimedia**: This benchmarks produces workload containing or requesting randomly generated BLOBs.
+
+This benchmarking client contains a [Chronos](https://chronos-eaas.org/) connector. This allows to easily execute evaluation campaigns.
+
+## Getting Started
+
+This client can either be started in a stand-alone mode for quick testing or in a chronos mode for automated benchmarking using [Chronos](https://chronos-eaas.org/).
+
+### Chronos
+
+```
+SYNOPSIS
+        polypheny-simple-client.jar chronos [ {-cc | --chronos} <chronos> ]
+                [ {-e | --environment} <environment> ] [ --host <IP or Port> ] 
+                [ {-p | --port} <port> ] [ --queryList ] {-s | --supports} <supports> 
+                [ --writeCSV ]
+
+OPTIONS
+        -cc <chronos>, --chronos <chronos>
+            Hostname or IP address of the Chronos Control.
+
+        -e <environment>, --environment <environment>
+            Identifier of the Chronos evaluation environment this client
+            belongs to (default: "default").
+
+        --host <IP or Port>
+            Hostname or IP address of the host running the system(s) to be
+            benchmarked (default: 127.0.0.1).
+
+        -p <port>, --port <port>
+            Port of the REST API of the Chronos Control server (default: 443).
+
+        --queryList
+            Dump all Gavel queries as SQL into a file (default: false).
+
+        -s <supports>, --supports <supports>
+            Comma-separated list of system identifiers supported by this
+            client. Depends on the Chronos instance.
+
+        --writeCSV
+            Write a CSV file containing execution times for all executed
+            queries (default: false).
+```
+
+### Stand-alone
+
+This client can be used by specifying the name of the benchmark as first parameter (`gavel`, `knnbench`, `multimedia`). Use the `help` command to get an overview on all available parameters for this benchmark. For example:
+
+```
+java -jar polypheny-simple-client.jar help gavel  
+```
+
+The general syntax is identical for all three benchmarks:
+
+```
+java -jar polypheny-simple-client.jar  BENCHMARK  TASK  [ MULTIPLIER ] 
+```
+
+_BENCHMARK_: `{ gavel | knnbench | multimedia }`
+
+_TASK_: `{ schema | data | workload | warmup }`
+
+_MULTIPLIER_: Optional parameter taking an integer for multiplying the number of data and queries. Defaults to 1.
 
 ## Roadmap
 
@@ -12,6 +77,7 @@ See the [open issues](https://github.com/polypheny/Polypheny-DB/labels/A-client)
 We highly welcome your contributions to _Polypheny Simple Client_. If you would like to contribute, please fork the repository and submit your changes as a pull request. Please consult our [Admin Repository](https://github.com/polypheny/Admin) and our [Website](https://polypheny.org) for guidelines and additional information.
 
 Please note that we have a [code of conduct](https://github.com/polypheny/Admin/blob/master/CODE_OF_CONDUCT.md). Please follow it in all your interactions with the project.
+
 
 ## Credits
 
@@ -25,6 +91,7 @@ _Polypheny Simple Client_ builds upon the great work of several other open sourc
 * [Log4j](https://logging.apache.org/log4j/2.x/): Fast and flexible logging framework for Java.
 * [Opencsv](http://opencsv.sourceforge.net/): Library for parsing CSV (comma-separated values) data.
 * [Project Lombok](https://projectlombok.org/): A library providing compiler annotations for tedious tasks.
+* [Shadow](https://imperceptiblethoughts.com/shadow/): Gradle plugin for creating fat JARs.
 * [SLF4J](http://www.slf4j.org/): Provides a logging API by means of a facade pattern.
 * [Unirest](http://kong.github.io/unirest-java/): A lightweight HTTP client library.
 
