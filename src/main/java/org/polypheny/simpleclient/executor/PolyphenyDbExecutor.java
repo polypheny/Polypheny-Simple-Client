@@ -34,6 +34,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import kong.unirest.HttpResponse;
 import kong.unirest.Unirest;
 import lombok.extern.slf4j.Slf4j;
@@ -47,6 +48,8 @@ import org.polypheny.simpleclient.scenario.AbstractConfig;
 
 public interface PolyphenyDbExecutor extends Executor {
 
+    AtomicInteger storeCounter = new AtomicInteger();
+
     void dropStore( String name ) throws ExecutorException;
 
 
@@ -55,7 +58,7 @@ public interface PolyphenyDbExecutor extends Executor {
 
     default void deployHsqldb() throws ExecutorException {
         deployStore(
-                "hsqldb",
+                "hsqldb" + storeCounter.getAndIncrement(),
                 "org.polypheny.db.adapter.jdbc.stores.HsqldbStore",
                 "{maxConnections:\"25\",trxControlMode:locks,trxIsolationLevel:read_committed,type:Memory,tableType:Memory,mode:embedded}" );
     }
@@ -63,13 +66,16 @@ public interface PolyphenyDbExecutor extends Executor {
 
     default void deployMonetDb( boolean deployStoresUsingDocker ) throws ExecutorException {
         String config;
+        String name;
         if ( deployStoresUsingDocker ) {
+            name = "monetdb" + storeCounter.getAndIncrement();
             config = "{\"port\":\"3303\",\"maxConnections\":\"25\",\"password\":\"polypheny\",\"mode\":\"docker\",\"instanceId\":\"0\"}";
         } else {
+            name = "monetdb";
             config = "{\"database\":\"test\",\"host\":\"localhost\",\"maxConnections\":\"25\",\"password\":\"monetdb\",\"username\":\"monetdb\",\"port\":\"50000\",\"mode\":\"remote\"}";
         }
         deployStore(
-                "monetdb",
+                name,
                 "org.polypheny.db.adapter.jdbc.stores.MonetdbStore",
                 config );
     }
@@ -77,13 +83,16 @@ public interface PolyphenyDbExecutor extends Executor {
 
     default void deployPostgres( boolean deployStoresUsingDocker ) throws ExecutorException {
         String config;
+        String name;
         if ( deployStoresUsingDocker ) {
+            name = "postgres" + storeCounter.getAndIncrement();
             config = "{\"port\":\"3302\",\"maxConnections\":\"25\",\"password\":\"postgres\",\"mode\":\"docker\",\"instanceId\":\"0\"}";
         } else {
+            name = "postgres";
             config = "{\"database\":\"test\",\"host\":\"localhost\",\"maxConnections\":\"25\",\"password\":\"postgres\",\"username\":\"postgres\",\"port\":\"5432\",\"mode\":\"remote\"}";
         }
         deployStore(
-                "postgres",
+                name,
                 "org.polypheny.db.adapter.jdbc.stores.PostgresqlStore",
                 config );
     }
@@ -91,13 +100,16 @@ public interface PolyphenyDbExecutor extends Executor {
 
     default void deployCassandra( boolean deployStoresUsingDocker ) throws ExecutorException {
         String config;
+        String name;
         if ( deployStoresUsingDocker ) {
+            name = "cassandra" + storeCounter.getAndIncrement();
             config = "{\"port\":\"9043\",\"mode\":\"docker\",\"instanceId\":\"0\"}";
         } else {
+            name = "cassandra";
             config = "{\"mode\":\"embedded\",\"host\":\"localhost\",\"port\":\"9042\",\"keyspace\":\"cassandra\",\"username\":\"cassandra\",\"password\":\"cass\"}";
         }
         deployStore(
-                "cassandra",
+                name,
                 "org.polypheny.db.adapter.cassandra.CassandraStore",
                 config );
     }
@@ -105,7 +117,7 @@ public interface PolyphenyDbExecutor extends Executor {
 
     default void deployFileStore() throws ExecutorException {
         deployStore(
-                "file",
+                "file" + storeCounter.getAndIncrement(),
                 "org.polypheny.db.adapter.file.FileStore",
                 "{\"mode\":\"embedded\"}" );
     }
@@ -113,7 +125,7 @@ public interface PolyphenyDbExecutor extends Executor {
 
     default void deployCottontail() throws ExecutorException {
         deployStore(
-                "cottontail",
+                "cottontail" + storeCounter.getAndIncrement(),
                 "org.polypheny.db.adapter.cottontail.CottontailStore",
                 "{\"type\":\"Embedded\",\"host\":\"localhost\",\"port\":\"1865\",\"database\":\"cottontail\",\"engine\":\"MAPDB\",\"mode\":\"embedded\"}" );
     }
@@ -122,12 +134,12 @@ public interface PolyphenyDbExecutor extends Executor {
     default void deployMongoDb( boolean deployStoresUsingDocker ) throws ExecutorException {
         String config;
         if ( deployStoresUsingDocker ) {
-            config = "{\"mode\":\"docker\",\"instanceId\":\"0\",\"port\":\"27017\",\"persistent\":\"false\", \"trxLifetimeLimit\":\"1209600\"}";
+            config = "{\"mode\":\"docker\",\"instanceId\":\"0\",\"port\":\"27017\",\"persistent\":\"false\",\"trxLifetimeLimit\":\"1209600\"}";
         } else {
             throw new RuntimeException( "MongoDB can only be deployed in Docker mode" );
         }
         deployStore(
-                "mongodb",
+                "mongodb" + storeCounter.getAndIncrement(),
                 "org.polypheny.db.adapter.mongodb.MongoStore",
                 config );
     }
