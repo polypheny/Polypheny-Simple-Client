@@ -49,6 +49,7 @@ import org.polypheny.simpleclient.scenario.AbstractConfig;
 public interface PolyphenyDbExecutor extends Executor {
 
     AtomicInteger storeCounter = new AtomicInteger();
+    AtomicInteger nextPort = new AtomicInteger( 3300 );
 
     void dropStore( String name ) throws ExecutorException;
 
@@ -69,7 +70,7 @@ public interface PolyphenyDbExecutor extends Executor {
         String name;
         if ( deployStoresUsingDocker ) {
             name = "monetdb" + storeCounter.getAndIncrement();
-            config = "{\"port\":\"3303\",\"maxConnections\":\"25\",\"password\":\"polypheny\",\"mode\":\"docker\",\"instanceId\":\"0\"}";
+            config = "{\"port\":\"" + nextPort.getAndIncrement() + "\",\"maxConnections\":\"25\",\"password\":\"polypheny\",\"mode\":\"docker\",\"instanceId\":\"0\"}";
         } else {
             name = "monetdb";
             config = "{\"database\":\"test\",\"host\":\"localhost\",\"maxConnections\":\"25\",\"password\":\"monetdb\",\"username\":\"monetdb\",\"port\":\"50000\",\"mode\":\"remote\"}";
@@ -86,7 +87,7 @@ public interface PolyphenyDbExecutor extends Executor {
         String name;
         if ( deployStoresUsingDocker ) {
             name = "postgres" + storeCounter.getAndIncrement();
-            config = "{\"port\":\"3302\",\"maxConnections\":\"25\",\"password\":\"postgres\",\"mode\":\"docker\",\"instanceId\":\"0\"}";
+            config = "{\"port\":\"" + nextPort.getAndIncrement() + "\",\"maxConnections\":\"25\",\"password\":\"postgres\",\"mode\":\"docker\",\"instanceId\":\"0\"}";
         } else {
             name = "postgres";
             config = "{\"database\":\"test\",\"host\":\"localhost\",\"maxConnections\":\"25\",\"password\":\"postgres\",\"username\":\"postgres\",\"port\":\"5432\",\"mode\":\"remote\"}";
@@ -103,7 +104,7 @@ public interface PolyphenyDbExecutor extends Executor {
         String name;
         if ( deployStoresUsingDocker ) {
             name = "cassandra" + storeCounter.getAndIncrement();
-            config = "{\"port\":\"9043\",\"mode\":\"docker\",\"instanceId\":\"0\"}";
+            config = "{\"port\":\"" + nextPort.getAndIncrement() + "\",\"mode\":\"docker\",\"instanceId\":\"0\"}";
         } else {
             name = "cassandra";
             config = "{\"mode\":\"embedded\",\"host\":\"localhost\",\"port\":\"9042\",\"keyspace\":\"cassandra\",\"username\":\"cassandra\",\"password\":\"cass\"}";
@@ -127,17 +128,12 @@ public interface PolyphenyDbExecutor extends Executor {
         deployStore(
                 "cottontail" + storeCounter.getAndIncrement(),
                 "org.polypheny.db.adapter.cottontail.CottontailStore",
-                "{\"type\":\"Embedded\",\"host\":\"localhost\",\"port\":\"1865\",\"database\":\"cottontail\",\"engine\":\"MAPDB\",\"mode\":\"embedded\"}" );
+                "{\"type\":\"Embedded\",\"host\":\"localhost\",\"port\":\"" + nextPort.getAndIncrement() + "\",\"database\":\"cottontail\",\"engine\":\"MAPDB\",\"mode\":\"embedded\"}" );
     }
 
 
-    default void deployMongoDb( boolean deployStoresUsingDocker ) throws ExecutorException {
-        String config;
-        if ( deployStoresUsingDocker ) {
-            config = "{\"mode\":\"docker\",\"instanceId\":\"0\",\"port\":\"27017\",\"persistent\":\"false\",\"trxLifetimeLimit\":\"1209600\"}";
-        } else {
-            throw new RuntimeException( "MongoDB can only be deployed in Docker mode" );
-        }
+    default void deployMongoDb() throws ExecutorException {
+        String config = "{\"mode\":\"docker\",\"instanceId\":\"0\",\"port\":\"" + nextPort.getAndIncrement() + "\",\"persistent\":\"false\",\"trxLifetimeLimit\":\"1209600\"}";
         deployStore(
                 "mongodb" + storeCounter.getAndIncrement(),
                 "org.polypheny.db.adapter.mongodb.MongoStore",
@@ -249,7 +245,7 @@ public interface PolyphenyDbExecutor extends Executor {
                             executor.deployCottontail();
                             break;
                         case "mongodb":
-                            executor.deployMongoDb( config.deployStoresUsingDocker );
+                            executor.deployMongoDb();
                             break;
                         default:
                             throw new RuntimeException( "Unknown data store: " + store );
