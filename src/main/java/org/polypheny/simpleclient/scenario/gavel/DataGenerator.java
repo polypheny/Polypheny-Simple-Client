@@ -34,6 +34,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicInteger;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.executor.Executor;
@@ -55,6 +56,8 @@ import org.polypheny.simpleclient.scenario.gavel.queryBuilder.TruncateUser;
 
 @Slf4j
 class DataGenerator {
+
+    private static final AtomicInteger nextAuctionId = new AtomicInteger( 1 );
 
     private final Executor theExecutor;
     private final GavelConfig config;
@@ -159,7 +162,8 @@ class DataGenerator {
             category = ThreadLocalRandom.current().nextInt( 1, numberOfCategories + 1 );
             title = text.latinWord( ThreadLocalRandom.current().nextInt( auctionTitleMinLength, auctionTitleMaxLength + 1 ) );
             description = text.paragraph( ThreadLocalRandom.current().nextInt( auctionDescriptionMinLength, auctionDescriptionMaxLength + 1 ) );
-            addToInsertList( (new InsertAuction( user, category, startDate, endDate, title, description )).getNewQuery() );
+            int auctionId = nextAuctionId.getAndIncrement();
+            addToInsertList( new InsertAuction( auctionId, user, category, startDate, endDate, title, description ).getNewQuery() );
             executeInsertList();
 
             // create bids for that auction
@@ -190,13 +194,13 @@ class DataGenerator {
                 dt = dateProducer.randomDateBetweenTwoDates( dtLast, endDate.minusSeconds( offset * (numberOfBids - (j + 1)) ) );
                 lastBid = amount;
                 amount = amount * 100;
-                addToInsertList( new InsertBid( i, u, amount, dt ).getNewQuery() );
+                addToInsertList( new InsertBid( auctionId, u, amount, dt ).getNewQuery() );
                 dtLast = dt;
             }
             executeInsertList();
 
             // create pictures
-            InsertPicture pictureBuilder = new InsertPicture( i );
+            InsertPicture pictureBuilder = new InsertPicture( auctionId );
             numberOfPictures = ThreadLocalRandom.current().nextInt( minNumberOfPicturesPerAuction, maxNumberOfPicturesPerAuction );
             for ( int j = 0; j < numberOfPictures; j++ ) {
                 addToInsertList( pictureBuilder.getNewQuery() );

@@ -36,6 +36,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import kong.unirest.HttpRequest;
+import lombok.Getter;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.BatchableInsert;
 import org.polypheny.simpleclient.query.QueryBuilder;
@@ -52,9 +53,11 @@ public class InsertAuction extends QueryBuilder {
     private final String title;
     private final String description;
     private static final AtomicInteger nextAuctionId = new AtomicInteger( 1 );
+    private final int auctionId;
 
 
-    public InsertAuction( int userId, int categoryId, LocalDateTime startDate, LocalDateTime endDate, String title, String description ) {
+    public InsertAuction( int auctionId, int userId, int categoryId, LocalDateTime startDate, LocalDateTime endDate, String title, String description ) {
+        this.auctionId = auctionId;
         this.userId = userId;
         this.categoryId = categoryId;
         this.startDate = startDate;
@@ -77,7 +80,8 @@ public class InsertAuction extends QueryBuilder {
     }
 
 
-    static class InsertAuctionQuery extends BatchableInsert {
+    @Getter
+    public static class InsertAuctionQuery extends BatchableInsert {
 
         private static final String SQL = "INSERT INTO auction(id, title, description, start_date, end_date, category, \"user\") VALUES ";
 
