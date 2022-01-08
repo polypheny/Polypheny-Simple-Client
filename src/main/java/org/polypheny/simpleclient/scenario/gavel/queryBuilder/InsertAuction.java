@@ -52,7 +52,6 @@ public class InsertAuction extends QueryBuilder {
     private final LocalDateTime endDate;
     private final String title;
     private final String description;
-    private static final AtomicInteger nextAuctionId = new AtomicInteger( 1 );
     private final int auctionId;
 
 
@@ -70,7 +69,7 @@ public class InsertAuction extends QueryBuilder {
     @Override
     public BatchableInsert getNewQuery() {
         return new InsertAuctionQuery(
-                nextAuctionId.getAndIncrement(),
+                auctionId,
                 userId,
                 categoryId,
                 startDate,
