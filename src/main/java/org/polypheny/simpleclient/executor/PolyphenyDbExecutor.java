@@ -265,7 +265,7 @@ public interface PolyphenyDbExecutor extends Executor {
             // Update polypheny config
             executor = (PolyphenyDbExecutor) executorFactory.createExecutorInstance();
             try {
-                // disable active tracking (dynamic querying)
+                // Disable active tracking (dynamic querying)
                 executor.setConfig( "statistics/activeTracking", "false" );
                 // Set router
                 if ( config.pdbBranch.equalsIgnoreCase( "old-routing" ) ) { // Old routing, to be removed
