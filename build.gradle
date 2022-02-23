@@ -16,9 +16,9 @@ buildscript {
     }
     dependencies {
         // Shadowing; used to make a fat jar (https://github.com/johnrengelman/shadow)
-        classpath group: "gradle.plugin.com.github.johnrengelman", name: "shadow", version: "7.1.0"
+        classpath group: "gradle.plugin.com.github.johnrengelman", name: "shadow", version: "7.1.2"
         // Lombok (https://plugins.gradle.org/plugin/io.freefair.lombok)
-        classpath group: "io.freefair.gradle", name: "lombok-plugin", version: "6.3.0"
+        classpath group: "io.freefair.gradle", name: "lombok-plugin", version: "6.4.1"
     }
 }
 
@@ -55,7 +55,7 @@ java {
 
 dependencies {
     implementation group: 'commons-lang', name: 'commons-lang', version: '2.6' // License: Apache 2.0
-    implementation group: 'commons-io', name: 'commons-io', version: '2.6'  // License: Apache 2.0
+    implementation group: 'commons-io', name: 'commons-io', version: '2.11.0'  // License: Apache 2.0
 
     // Polypheny Control Connector
     implementation group: 'org.polypheny', name: 'control-connector', version: '1.2.4'  // License: Apache 2.0
@@ -64,7 +64,7 @@ dependencies {
     implementation group: 'org.chronos-eaas', name: 'chronos-agent', version: '2.3.3' // License: MIT
 
     // REST
-    implementation group: 'com.konghq', name: 'unirest-java', version: '3.7.02' // License: MIT
+    implementation group: 'com.konghq', name: 'unirest-java', version: '3.13.6' // License: MIT
 
     // JDBC Drivers
     implementation group: 'org.polypheny', name: 'polypheny-jdbc-driver', version: '1.5.2' // License: Apache 2.0
@@ -73,13 +73,13 @@ dependencies {
 
     // Cottontail-DB
     implementation group: 'org.slf4j', name: 'log4j-over-slf4j', version: '1.7.30' // License: MIT
-    implementation (group: 'org.vitrivr', name: 'cottontaildb', version: '0.10.5') { // License: MIT
+    implementation(group: 'org.vitrivr', name: 'cottontaildb', version: '0.10.5') { // License: MIT
         exclude group: 'org.apache.logging.log4j'
         exclude group: 'org.slf4j'
     }
 
     // CLI library
-    implementation group: 'com.github.rvesse', name: 'airline', version: '2.8.3' // License: Apache 2.0
+    implementation group: 'com.github.rvesse', name: 'airline', version: '2.8.4' // License: Apache 2.0
 
     // Fake data generator
     implementation group: 'com.devskiller', name: 'jfairy', version: '0.6.4' // License: Apache 2.0
@@ -92,9 +92,9 @@ dependencies {
     implementation group: 'com.opencsv', name: 'opencsv', version: '5.0' // License: Apache 2.0
 
     // Logging
-    implementation group: 'org.slf4j', name: 'slf4j-api', version: '1.7.30' // License: MIT
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.15.0' // License: Apache 2.0
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.15.0' // License: Apache 2.0
+    implementation group: 'org.slf4j', name: 'slf4j-api', version: '1.7.36' // License: MIT
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.17.1' // License: Apache 2.0
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.17.1' // License: Apache 2.0
 
     // Testing
     testImplementation group: 'junit', name: 'junit', version: '4.13'
