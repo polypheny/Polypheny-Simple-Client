@@ -100,9 +100,6 @@ public class GavelConfig extends AbstractConfig {
         routingCache = true;
         postCostAggregation = "onWarmup";
 
-        workloadMonitoringProcessingInterval = "1s";
-        workloadMonitoringElementsPerInterval = 5000;
-
         progressReportBase = getIntProperty( properties, "progressReportBase" );
         numberOfThreads = getIntProperty( properties, "numberOfThreads" );
         numberOfWarmUpIterations = getIntProperty( properties, "numberOfWarmUpIterations" );
@@ -177,9 +174,6 @@ public class GavelConfig extends AbstractConfig {
         postCostRatio = Integer.parseInt( cdlGetOrDefault( cdl, "postCostRatio", "50%" ).replace( "%", "" ).trim() );
         routingCache = Boolean.parseBoolean( cdlGetOrDefault( cdl, "routingCache", "true" ) );
         postCostAggregation = cdlGetOrDefault( cdl, "postCostAggregation", "onWarmup" );
-
-        workloadMonitoringProcessingInterval = cdlGetOrDefault( cdl, "workloadMonitoringProcessingInterval", "1s" );
-        workloadMonitoringElementsPerInterval = Integer.parseInt( cdlGetOrDefault( cdl, "workloadMonitoringElementsPerInterval", "5000" ) );
 
         // Benchmark
         numberOfGetAuctionQueries = Integer.parseInt( cdl.get( "numberOfGetAuctionQueries" ) );

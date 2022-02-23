@@ -52,7 +52,6 @@ public class MultimediaConfig extends AbstractConfig {
     public final int numberOfDeleteTimelineQueries;
     public final int numberOfInsertTimelineQueries;
 
-
     public final int maxBatchSize;
 
 
@@ -75,9 +74,6 @@ public class MultimediaConfig extends AbstractConfig {
         postCostRatio = 50;
         routingCache = true;
         postCostAggregation = "onWarmup";
-
-        workloadMonitoringProcessingInterval = "5s";
-        workloadMonitoringElementsPerInterval = 50;
 
         planAndImplementationCaching = "Both";
 
@@ -131,9 +127,6 @@ public class MultimediaConfig extends AbstractConfig {
         postCostRatio = Integer.parseInt( cdlGetOrDefault( cdl, "postCostRatio", "50%" ).replace( "%", "" ).trim() );
         routingCache = Boolean.parseBoolean( cdlGetOrDefault( cdl, "routingCache", "true" ) );
         postCostAggregation = cdlGetOrDefault( cdl, "postCostAggregation", "onWarmup" );
-
-        workloadMonitoringProcessingInterval = cdlGetOrDefault( cdl, "workloadMonitoringProcessingInterval", "5s" );
-        workloadMonitoringElementsPerInterval = Integer.parseInt( cdlGetOrDefault( cdl, "workloadMonitoringElementsPerInterval", "50" ) );
 
         planAndImplementationCaching = cdl.getOrDefault( "planAndImplementationCaching", "Both" );
 

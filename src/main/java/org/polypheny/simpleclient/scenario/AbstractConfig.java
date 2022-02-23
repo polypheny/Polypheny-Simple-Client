@@ -63,9 +63,6 @@ public abstract class AbstractConfig {
     public boolean routingCache;
     public String postCostAggregation;
 
-    public String workloadMonitoringProcessingInterval;
-    public int workloadMonitoringElementsPerInterval;
-
 
     public AbstractConfig( String scenario, String system ) {
         this.scenario = scenario;

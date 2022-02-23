@@ -79,9 +79,6 @@ public class KnnBenchConfig extends AbstractConfig {
         routingCache = true;
         postCostAggregation = "onWarmup";
 
-        workloadMonitoringProcessingInterval = "5s";
-        workloadMonitoringElementsPerInterval = 50;
-
         planAndImplementationCaching = "Both";
 
         dataStoreFeature = null;
@@ -148,9 +145,6 @@ public class KnnBenchConfig extends AbstractConfig {
         postCostRatio = Integer.parseInt( cdlGetOrDefault( cdl, "postCostRatio", "50%" ).replace( "%", "" ).trim() );
         routingCache = Boolean.parseBoolean( cdlGetOrDefault( cdl, "routingCache", "true" ) );
         postCostAggregation = cdlGetOrDefault( cdl, "postCostAggregation", "onWarmup" );
-
-        workloadMonitoringProcessingInterval = cdlGetOrDefault( cdl, "workloadMonitoringProcessingInterval", "5s" );
-        workloadMonitoringElementsPerInterval = Integer.parseInt( cdlGetOrDefault( cdl, "workloadMonitoringElementsPerInterval", "50" ) );
 
         planAndImplementationCaching = cdlGetOrDefault( cdl, "planAndImplementationCaching", "Both" );
 

@@ -320,37 +320,6 @@ public interface PolyphenyDbExecutor extends Executor {
                     executor.setConfig( "routing/postCostAggregationActive", config.postCostAggregation.equals( "always" ) ? "true" : "false" );
                     // Set routing cache
                     executor.setConfig( "runtime/routingPlanCaching", config.routingCache ? "true" : "false" );
-                    // Set workload monitoring processing interval
-                    switch ( config.workloadMonitoringProcessingInterval ) {
-                        case "1s":
-                            executor.setConfig( "runtime/queueProcessingInterval", "EVERY_SECOND" );
-                            break;
-                        case "5s":
-                            executor.setConfig( "runtime/queueProcessingInterval", "EVERY_FIVE_SECONDS" );
-                            break;
-                        case "10s":
-                            executor.setConfig( "runtime/queueProcessingInterval", "EVERY_TEN_SECONDS" );
-                            break;
-                        case "30s":
-                            executor.setConfig( "runtime/queueProcessingInterval", "EVERY_THIRTY_SECONDS" );
-                            break;
-                        case "1min":
-                            executor.setConfig( "runtime/queueProcessingInterval", "EVERY_MINUTE" );
-                            break;
-                        case "10min":
-                            executor.setConfig( "runtime/queueProcessingInterval", "EVERY_TEN_MINUTES" );
-                            break;
-                        case "15min":
-                            executor.setConfig( "runtime/queueProcessingInterval", "EVERY_FIFTEEN_MINUTES" );
-                            break;
-                        case "30min":
-                            executor.setConfig( "runtime/queueProcessingInterval", "EVERY_THIRTY_MINUTES" );
-                            break;
-                        default:
-                            throw new RuntimeException( "Unknown configuration value for 'workloadMonitoringProcessingInterval': " + config.workloadMonitoringProcessingInterval );
-                    }
-                    // Set workload monitoring processing elements per interval
-                    executor.setConfig( "runtime/queueProcessingElements", config.workloadMonitoringElementsPerInterval + "" );
                 }
                 // Set Plan & Implementation Caching
                 switch ( config.planAndImplementationCaching ) {
