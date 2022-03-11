@@ -38,6 +38,7 @@ import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.main.ProgressReporter;
+import org.polypheny.simpleclient.scenario.gavelEx.GavelExProfile;
 
 
 @Slf4j
@@ -62,7 +63,7 @@ public abstract class Scenario {
 
     public abstract void generateData( ProgressReporter progressReporter );
 
-    public abstract long execute( ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory, int numberOfThreads );
+    public abstract long execute( ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory, int numberOfThreads, GavelExProfile profile );
 
     public abstract void warmUp( ProgressReporter progressReporter, int iterations );
 

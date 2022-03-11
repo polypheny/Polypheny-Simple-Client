@@ -336,7 +336,7 @@ public class ChronosAgent extends AbstractChronosAgent {
         }
         try {
             ProgressReporter progressReporter = new ChronosProgressReporter( chronosJob, this, numberOfThreads, config.progressReportBase );
-            long runtime = scenario.execute( progressReporter, csvWriter, outputDirectory, numberOfThreads );
+            long runtime = scenario.execute( progressReporter, csvWriter, outputDirectory, numberOfThreads, null );
             properties.put( "runtime", runtime );
         } catch ( Exception e ) {
             databaseInstance.tearDown();

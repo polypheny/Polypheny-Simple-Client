@@ -52,6 +52,7 @@ import org.polypheny.simpleclient.main.ProgressReporter;
 import org.polypheny.simpleclient.query.QueryBuilder;
 import org.polypheny.simpleclient.query.QueryListEntry;
 import org.polypheny.simpleclient.scenario.Scenario;
+import org.polypheny.simpleclient.scenario.gavelEx.GavelExProfile;
 import org.polypheny.simpleclient.scenario.multimedia.queryBuilder.CreateTable;
 import org.polypheny.simpleclient.scenario.multimedia.queryBuilder.DeleteRandomTimeline;
 import org.polypheny.simpleclient.scenario.multimedia.queryBuilder.InsertRandomTimeline;
@@ -163,7 +164,7 @@ public class MultimediaBench extends Scenario {
 
 
     @Override
-    public long execute( ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory, int numberOfThreads ) {
+    public long execute( ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory, int numberOfThreads, GavelExProfile gavelExProfile ) {
 
         log.info( "Preparing query list for the benchmark..." );
         List<QueryListEntry> queryList = new Vector<>();

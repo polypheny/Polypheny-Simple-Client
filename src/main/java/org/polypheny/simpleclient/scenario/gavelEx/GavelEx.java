@@ -23,10 +23,11 @@
  *
  */
 
-package org.polypheny.simpleclient.scenario.gavel;
+package org.polypheny.simpleclient.scenario.gavelEx;
 
 
 import com.google.common.base.Joiner;
+import com.sun.tools.javac.util.Pair;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
@@ -57,41 +58,28 @@ import org.polypheny.simpleclient.query.QueryBuilder;
 import org.polypheny.simpleclient.query.QueryListEntry;
 import org.polypheny.simpleclient.query.RawQuery;
 import org.polypheny.simpleclient.scenario.Scenario;
-import org.polypheny.simpleclient.scenario.gavel.queryBuilder.ChangePasswordOfRandomUser;
-import org.polypheny.simpleclient.scenario.gavel.queryBuilder.ChangeRandomAuction;
-import org.polypheny.simpleclient.scenario.gavel.queryBuilder.CountAuction;
-import org.polypheny.simpleclient.scenario.gavel.queryBuilder.CountBid;
-import org.polypheny.simpleclient.scenario.gavel.queryBuilder.CountCategory;
-import org.polypheny.simpleclient.scenario.gavel.queryBuilder.CountUser;
-import org.polypheny.simpleclient.scenario.gavel.queryBuilder.InsertRandomAuction;
-import org.polypheny.simpleclient.scenario.gavel.queryBuilder.InsertRandomBid;
-import org.polypheny.simpleclient.scenario.gavel.queryBuilder.InsertUser;
-import org.polypheny.simpleclient.scenario.gavel.queryBuilder.SearchAuction;
-import org.polypheny.simpleclient.scenario.gavel.queryBuilder.SelectAllBidsOnRandomAuction;
-import org.polypheny.simpleclient.scenario.gavel.queryBuilder.SelectHighestBidOnRandomAuction;
-import org.polypheny.simpleclient.scenario.gavel.queryBuilder.SelectHighestOverallBid;
-import org.polypheny.simpleclient.scenario.gavel.queryBuilder.SelectPriceBetweenAndNotInCategory;
-import org.polypheny.simpleclient.scenario.gavel.queryBuilder.SelectRandomAuction;
-import org.polypheny.simpleclient.scenario.gavel.queryBuilder.SelectRandomBid;
-import org.polypheny.simpleclient.scenario.gavel.queryBuilder.SelectRandomUser;
-import org.polypheny.simpleclient.scenario.gavel.queryBuilder.SelectTheHundredNextEndingAuctionsOfRandomCategory;
-import org.polypheny.simpleclient.scenario.gavel.queryBuilder.SelectTopHundredSellerByNumberOfAuctions;
-import org.polypheny.simpleclient.scenario.gavel.queryBuilder.SelectTopTenCitiesByNumberOfCustomers;
-import org.polypheny.simpleclient.scenario.gavelEx.GavelExProfile;
+import org.polypheny.simpleclient.scenario.gavelEx.GavelExProfile.QueryPossibility;
+import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.CountAuction;
+import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.CountBid;
+import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.CountCategory;
+import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.CountUser;
+import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.InsertRandomAuction;
+import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.InsertRandomBid;
+import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.InsertUser;
 import org.polypheny.simpleclient.scenario.multimedia.queryBuilder.CreateTable;
 
 
 @Slf4j
-public class Gavel extends Scenario {
+public class GavelEx extends Scenario {
 
-    private final GavelConfig config;
+    private final GavelExConfig config;
 
     private final List<Long> measuredTimes;
     private final Map<Integer, String> queryTypes;
     private final Map<Integer, List<Long>> measuredTimePerQueryType;
 
 
-    public Gavel( JdbcExecutor.ExecutorFactory executorFactory, GavelConfig config, boolean commitAfterEveryQuery, boolean dumpQueryList, QueryMode queryMode ) {
+    public GavelEx( JdbcExecutor.ExecutorFactory executorFactory, GavelExConfig config, boolean commitAfterEveryQuery, boolean dumpQueryList, QueryMode queryMode ) {
         super( executorFactory, commitAfterEveryQuery, dumpQueryList, queryMode );
         this.config = config;
         measuredTimes = Collections.synchronizedList( new LinkedList<>() );
@@ -111,7 +99,26 @@ public class Gavel extends Scenario {
         InsertRandomBid.setNextId( numbers.get( "bids" ) + 1 );
 
         log.info( "Preparing query list for the benchmark..." );
+
         List<QueryListEntry> queryList = new Vector<>();
+
+        for ( Pair<Pair<QueryPossibility, Integer>, Integer> part : profile.timeline ) {
+            Pair<QueryPossibility, Integer> queryInfo = part.fst;
+            QueryPossibility query = queryInfo.fst;
+            List<Class> possibleQueries = query.getPossibleClasses();
+
+            int delay = part.snd;
+
+            try {
+                Thread.sleep( delay * 60L );
+            } catch ( InterruptedException e ) {
+                e.printStackTrace();
+            }
+        }
+
+        addNumberOfTimes( queryList, new InsertUser(), 2 );
+
+        /*
         addNumberOfTimes( queryList, new InsertUser(), config.numberOfAddUserQueries );
         addNumberOfTimes( queryList, new ChangePasswordOfRandomUser( numbers.get( "users" ) ), config.numberOfChangePasswordQueries );
         addNumberOfTimes( queryList, new InsertRandomAuction( numbers.get( "users" ), numbers.get( "categories" ), config ), config.numberOfAddAuctionQueries );
@@ -133,6 +140,8 @@ public class Gavel extends Scenario {
 
         Collections.shuffle( queryList );
 
+
+         */
         // This dumps the sql queries independent of the selected interface
         if ( outputDirectory != null && dumpQueryList ) {
             log.info( "Dump query list..." );
@@ -204,6 +213,8 @@ public class Gavel extends Scenario {
         for ( int i = 0; i < iterations; i++ ) {
             try {
                 executor = executorFactory.createExecutorInstance();
+                executor.executeQuery( new InsertUser().getNewQuery() );
+                /*
                 if ( config.numberOfAddUserQueries > 0 ) {
                     executor.executeQuery( new InsertUser().getNewQuery() );
                 }
@@ -258,6 +269,8 @@ public class Gavel extends Scenario {
                 if ( config.totalNumOfHighestOverallBidQueries > 0 ) {
                     executor.executeQuery( new SelectHighestOverallBid( queryMode ).getNewQuery() );
                 }
+
+                 */
             } catch ( ExecutorException e ) {
                 throw new RuntimeException( "Error while executing warm-up queries", e );
             } finally {
@@ -475,10 +488,10 @@ public class Gavel extends Scenario {
         DataGenerationThreadMonitor threadMonitor = new DataGenerationThreadMonitor();
 
         Executor executor1 = executorFactory.createExecutorInstance();
-        DataGenerator dataGenerator = new DataGenerator( executor1, config, progressReporter, threadMonitor );
+        DataGeneratorEx dataGeneratorEx = new DataGeneratorEx( executor1, config, progressReporter, threadMonitor );
         try {
             //dataGenerator.truncateTables();
-            dataGenerator.generateCategories();
+            dataGeneratorEx.generateCategories();
         } catch ( ExecutorException e ) {
             throw new RuntimeException( "Exception while generating data", e );
         } finally {
@@ -497,7 +510,7 @@ public class Gavel extends Scenario {
             Runnable task = () -> {
                 Executor executor = executorFactory.createExecutorInstance();
                 try {
-                    DataGenerator dg = new DataGenerator( executor, config, progressReporter, threadMonitor );
+                    DataGeneratorEx dg = new DataGeneratorEx( executor, config, progressReporter, threadMonitor );
                     dg.generateUsers( config.numberOfUsers / numberOfUserGenerationThreads );
                 } catch ( ExecutorException e ) {
                     threadMonitor.notifyAboutError( e );
@@ -542,7 +555,7 @@ public class Gavel extends Scenario {
             Runnable task = () -> {
                 Executor executor = executorFactory.createExecutorInstance();
                 try {
-                    DataGenerator dg = new DataGenerator( executor, config, progressReporter, threadMonitor );
+                    DataGeneratorEx dg = new DataGeneratorEx( executor, config, progressReporter, threadMonitor );
                     dg.generateAuctions( start, end );
                 } catch ( ExecutorException e ) {
                     threadMonitor.notifyAboutError( e );
@@ -612,7 +625,7 @@ public class Gavel extends Scenario {
 
     static class DataGenerationThreadMonitor {
 
-        private final List<DataGenerator> dataGenerators;
+        private final List<DataGeneratorEx> dataGeneratorExes;
         @Getter
         private boolean aborted;
         @Getter
@@ -620,19 +633,19 @@ public class Gavel extends Scenario {
 
 
         DataGenerationThreadMonitor() {
-            this.dataGenerators = new LinkedList<>();
+            this.dataGeneratorExes = new LinkedList<>();
             aborted = false;
         }
 
 
-        void registerDataGenerator( DataGenerator instance ) {
-            dataGenerators.add( instance );
+        void registerDataGenerator( DataGeneratorEx instance ) {
+            dataGeneratorExes.add( instance );
         }
 
 
         public void abortAll() {
             this.aborted = true;
-            dataGenerators.forEach( DataGenerator::abort );
+            dataGeneratorExes.forEach( DataGeneratorEx::abort );
         }
 
 

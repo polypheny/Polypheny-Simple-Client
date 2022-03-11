@@ -66,7 +66,7 @@ public class KnnBenchScenario {
         }
 
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
-        knnBench.execute( progressReporter, csvWriter, new File( "." ), config.numberOfThreads );
+        knnBench.execute( progressReporter, csvWriter, new File( "." ), config.numberOfThreads, null );
     }
 
 

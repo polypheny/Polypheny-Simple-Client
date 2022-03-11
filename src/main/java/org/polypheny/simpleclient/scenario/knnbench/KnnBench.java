@@ -42,6 +42,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.polypheny.simpleclient.ProfileSelector;
 import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.executor.ExecutorException;
@@ -51,6 +52,7 @@ import org.polypheny.simpleclient.main.ProgressReporter;
 import org.polypheny.simpleclient.query.QueryBuilder;
 import org.polypheny.simpleclient.query.QueryListEntry;
 import org.polypheny.simpleclient.scenario.Scenario;
+import org.polypheny.simpleclient.scenario.gavelEx.GavelExProfile;
 import org.polypheny.simpleclient.scenario.knnbench.queryBuilder.CreateIntFeature;
 import org.polypheny.simpleclient.scenario.knnbench.queryBuilder.CreateMetadata;
 import org.polypheny.simpleclient.scenario.knnbench.queryBuilder.CreateRealFeature;
@@ -122,7 +124,7 @@ public class KnnBench extends Scenario {
 
 
     @Override
-    public long execute( ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory, int numberOfThreads ) {
+    public long execute( ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory, int numberOfThreads, GavelExProfile gavelExProfile ) {
 
         log.info( "Preparing query list for the benchmark..." );
         List<QueryListEntry> queryList = new Vector<>();

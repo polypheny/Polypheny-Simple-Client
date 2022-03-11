@@ -23,34 +23,63 @@
  *
  */
 
-package org.polypheny.simpleclient.cli;
+package org.polypheny.simpleclient.scenario.gavelEx.queryBuilder;
 
 
-import com.github.rvesse.airline.Cli;
-import com.github.rvesse.airline.builder.CliBuilder;
-import java.sql.SQLException;
+import java.util.Map;
+import kong.unirest.HttpRequest;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.polypheny.simpleclient.query.Query;
+import org.polypheny.simpleclient.query.QueryBuilder;
 
 
-@SuppressWarnings("unchecked")
-public class Main {
+public class TruncateBid extends QueryBuilder {
+
+    private static final boolean EXPECT_RESULT = false;
 
 
-    public static void main( String[] args ) throws SQLException {
-        CliBuilder<CliRunnable> builder = Cli.builder( "polypheny-simple-client.jar" );
-        builder.withDescription( "Polypheny Simple Client" );
+    @Override
+    public Query getNewQuery() {
+        return new TruncateBidQuery();
+    }
 
-        // define top level commands
-        builder.withCommands( ChronosCommand.class );
-        builder.withCommands( GavelCommand.class );
-        builder.withCommands( KnnCommand.class );
-        builder.withCommands( MultimediaCommand.class );
-        builder.withCommands( DumpCommand.class );
-        builder.withCommands( HelpCommand.class );
-        builder.withCommands( GavelExCommand.class );
-        builder.withDefaultCommand( HelpCommand.class );
 
-        CliRunnable cmd = builder.build().parse( args );
-        cmd.run();
+    private static class TruncateBidQuery extends Query {
+
+        public TruncateBidQuery() {
+            super( EXPECT_RESULT );
+        }
+
+
+        @Override
+        public String getSql() {
+            return "TRUNCATE TABLE bid";
+        }
+
+
+        @Override
+        public String getParameterizedSqlQuery() {
+            return null;
+        }
+
+
+        @Override
+        public Map<Integer, ImmutablePair<DataTypes, Object>> getParameterValues() {
+            return null;
+        }
+
+
+        @Override
+        public HttpRequest<?> getRest() {
+            return null;
+        }
+
+
+        @Override
+        public String getMongoQl() {
+            return "db.bid.deleteMany({})";
+        }
+
     }
 
 }

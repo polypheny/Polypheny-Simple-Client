@@ -67,7 +67,7 @@ public class MultimediaScenario {
         }
 
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
-        multimediaBench.execute( progressReporter, csvWriter, new File( "." ), config.numberOfThreads );
+        multimediaBench.execute( progressReporter, csvWriter, new File( "." ), config.numberOfThreads, null );
     }
 
 

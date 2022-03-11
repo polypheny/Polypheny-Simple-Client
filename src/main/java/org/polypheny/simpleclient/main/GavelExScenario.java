@@ -30,34 +30,36 @@ import java.io.IOException;
 import java.util.Objects;
 import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
+import org.polypheny.simpleclient.ProfileSelector;
 import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
-import org.polypheny.simpleclient.scenario.gavel.Gavel;
-import org.polypheny.simpleclient.scenario.gavel.GavelConfig;
+import org.polypheny.simpleclient.scenario.gavelEx.GavelEx;
+import org.polypheny.simpleclient.scenario.gavelEx.GavelExConfig;
+import org.polypheny.simpleclient.scenario.gavelEx.GavelExProfile;
 
 
 @Slf4j
-public class GavelScenario {
+public class GavelExScenario {
 
     public static void schema( ExecutorFactory executorFactory, boolean commitAfterEveryQuery, QueryMode queryMode ) {
-        GavelConfig config = new GavelConfig( getProperties(), 1 );
-        Gavel gavel = new Gavel( executorFactory, config, commitAfterEveryQuery, false, queryMode );
-        gavel.createSchema( true );
+        GavelExConfig config = new GavelExConfig( getProperties(), 1 );
+        GavelEx gavelEx = new GavelEx( executorFactory, config, commitAfterEveryQuery, false, queryMode );
+        gavelEx.createSchema( true );
     }
 
 
     public static void data( ExecutorFactory executorFactory, int multiplier, boolean commitAfterEveryQuery, QueryMode queryMode ) {
-        GavelConfig config = new GavelConfig( getProperties(), multiplier );
-        Gavel gavel = new Gavel( executorFactory, config, commitAfterEveryQuery, false, queryMode );
+        GavelExConfig config = new GavelExConfig( getProperties(), multiplier );
+        GavelEx gavelEx = new GavelEx( executorFactory, config, commitAfterEveryQuery, false, queryMode );
 
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
-        gavel.generateData( progressReporter );
+        gavelEx.generateData( progressReporter );
     }
 
 
-    public static void workload( ExecutorFactory executorFactory, int multiplier, boolean commitAfterEveryQuery, boolean writeCsv, boolean dumpQueryList, QueryMode queryMode ) {
-        GavelConfig config = new GavelConfig( getProperties(), multiplier );
-        Gavel gavel = new Gavel( executorFactory, config, commitAfterEveryQuery, dumpQueryList, queryMode );
+    public static void workload( ExecutorFactory executorFactory, int multiplier, boolean commitAfterEveryQuery, boolean writeCsv, boolean dumpQueryList, QueryMode queryMode, ProfileSelector profileSelector ) {
+        GavelExConfig config = new GavelExConfig( getProperties(), multiplier );
+        GavelEx gavelEx = new GavelEx( executorFactory, config, commitAfterEveryQuery, dumpQueryList, queryMode );
 
         final CsvWriter csvWriter;
         if ( writeCsv ) {
@@ -66,24 +68,36 @@ public class GavelScenario {
             csvWriter = null;
         }
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
-        gavel.execute( progressReporter, csvWriter, new File( "." ), config.numberOfThreads, null );
+        GavelExProfile profile = new GavelExProfile( getProfileProperties() );
+        gavelEx.execute( progressReporter, csvWriter, new File( "." ), config.numberOfThreads, profile );
     }
 
 
     public static void warmup( ExecutorFactory executorFactory, int multiplier, boolean commitAfterEveryQuery, boolean dumpQueryList, QueryMode queryMode ) {
-        GavelConfig config = new GavelConfig( getProperties(), 1 );
-        Gavel gavel = new Gavel( executorFactory, config, commitAfterEveryQuery, dumpQueryList, queryMode );
+        GavelExConfig config = new GavelExConfig( getProperties(), 1 );
+        GavelEx gavelEx = new GavelEx( executorFactory, config, commitAfterEveryQuery, dumpQueryList, queryMode );
 
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
-        gavel.warmUp( progressReporter, config.numberOfWarmUpIterations );
+        gavelEx.warmUp( progressReporter, config.numberOfWarmUpIterations );
     }
 
 
     private static Properties getProperties() {
         Properties props = new Properties();
         try {
-            props.load( Objects.requireNonNull( ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/gavel/gavel.properties" ) ) );
+            props.load( Objects.requireNonNull( ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/gavelEx/gavelEx.properties" ) ) );
         } catch ( IOException e ) {
+            log.error( "Exception while reading properties file", e );
+        }
+        return props;
+    }
+
+
+    private static Properties getProfileProperties(){
+        Properties props = new Properties();
+        try{
+            props.load( Objects.requireNonNull( ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/gavelEx/gavelExProfile1.properties" ) ) );
+        }catch ( IOException e ){
             log.error( "Exception while reading properties file", e );
         }
         return props;
