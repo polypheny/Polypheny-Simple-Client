@@ -93,11 +93,11 @@ public class GavelExScenario {
     }
 
 
-    private static Properties getProfileProperties(){
+    private static Properties getProfileProperties() {
         Properties props = new Properties();
-        try{
+        try {
             props.load( Objects.requireNonNull( ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/gavelEx/gavelExProfile1.properties" ) ) );
-        }catch ( IOException e ){
+        } catch ( IOException e ) {
             log.error( "Exception while reading properties file", e );
         }
         return props;

@@ -35,12 +35,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Random;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import lombok.Getter;
@@ -59,6 +61,8 @@ import org.polypheny.simpleclient.query.QueryListEntry;
 import org.polypheny.simpleclient.query.RawQuery;
 import org.polypheny.simpleclient.scenario.Scenario;
 import org.polypheny.simpleclient.scenario.gavelEx.GavelExProfile.QueryPossibility;
+import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.ChangePasswordOfRandomUser;
+import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.ChangeRandomAuction;
 import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.CountAuction;
 import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.CountBid;
 import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.CountCategory;
@@ -66,6 +70,22 @@ import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.CountUser;
 import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.InsertRandomAuction;
 import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.InsertRandomBid;
 import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.InsertUser;
+import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.SearchAuction;
+import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.SelectAllBidsOnRandomAuction;
+import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.SelectHighestBidOnRandomAuction;
+import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.SelectHighestOverallBid;
+import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.SelectPriceBetweenAndNotInCategory;
+import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.SelectRandomAuction;
+import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.SelectRandomBid;
+import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.SelectRandomUser;
+import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.SelectTheHundredNextEndingAuctionsOfRandomCategory;
+import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.SelectTopHundredSellerByNumberOfAuctions;
+import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.SelectTopTenCitiesByNumberOfCustomers;
+import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.TruncateAuction;
+import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.TruncateBid;
+import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.TruncateCategory;
+import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.TruncatePicture;
+import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.TruncateUser;
 import org.polypheny.simpleclient.scenario.multimedia.queryBuilder.CreateTable;
 
 
@@ -89,6 +109,59 @@ public class GavelEx extends Scenario {
     }
 
 
+    public List<QueryBuilder> getPossibleClasses( QueryPossibility query, Map<String, Integer> numbers ) {
+
+        final List<QueryBuilder> insertQueries = Arrays.asList(
+                new InsertRandomAuction( numbers.get( "users" ), numbers.get( "categories" ), config ),
+                new InsertRandomBid( numbers.get( "auctions" ), numbers.get( "users" ) ) );
+        final List<QueryBuilder> updateQueries = Arrays.asList(
+                new ChangePasswordOfRandomUser( numbers.get( "users" ) ),
+                new ChangeRandomAuction( numbers.get( "auctions" ), config ) );
+        final List<QueryBuilder> simpleSelectQueries = Arrays.asList(
+                new SearchAuction( queryMode ),
+                new SelectAllBidsOnRandomAuction( numbers.get( "auctions" ), queryMode ),
+                new SelectHighestBidOnRandomAuction( numbers.get( "auctions" ), queryMode ),
+                new SelectHighestOverallBid( queryMode ),
+                new SelectPriceBetweenAndNotInCategory( queryMode ),
+                new SelectRandomAuction( numbers.get( "auctions" ), queryMode ),
+                new SelectRandomBid( numbers.get( "bids" ), queryMode ),
+                new SelectRandomUser( numbers.get( "users" ), queryMode ) );
+        final List<QueryBuilder> complexSelectQueries = Arrays.asList(
+                new SelectTheHundredNextEndingAuctionsOfRandomCategory( numbers.get( "categories" ), config, queryMode ),
+                new SelectTopHundredSellerByNumberOfAuctions( queryMode ),
+                new SelectTopTenCitiesByNumberOfCustomers( queryMode ) );
+        final List<QueryBuilder> truncateQueries = Arrays.asList(
+                new TruncateAuction(),
+                new TruncateBid(),
+                new TruncateCategory(),
+                new TruncatePicture(),
+                new TruncateUser()
+        );
+        final List<QueryBuilder> deleteQueries = Arrays.asList(
+
+        );
+
+
+
+        switch ( query ) {
+            case INSERT:
+                return insertQueries;
+            case UPDATE:
+                return updateQueries;
+            case SIMPLE_SELECT:
+                return simpleSelectQueries;
+            case COMPLEX_SELECT:
+                return complexSelectQueries;
+            case TRUNCATE:
+                return truncateQueries;
+            case DELETE:
+                return deleteQueries;
+            default:
+                throw new RuntimeException( "This QueryPossibility has no saved Queries. Please add a List of Classes with suitable queries." );
+        }
+    }
+
+
     @Override
     public long execute( ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory, int numberOfThreads, GavelExProfile profile ) {
 
@@ -105,43 +178,30 @@ public class GavelEx extends Scenario {
         for ( Pair<Pair<QueryPossibility, Integer>, Integer> part : profile.timeline ) {
             Pair<QueryPossibility, Integer> queryInfo = part.fst;
             QueryPossibility query = queryInfo.fst;
-            List<Class> possibleQueries = query.getPossibleClasses();
 
-            int delay = part.snd;
+            List<QueryBuilder> possibleQueries = getPossibleClasses( query, numbers );
 
-            try {
-                Thread.sleep( delay * 60L );
-            } catch ( InterruptedException e ) {
-                e.printStackTrace();
+            if ( possibleQueries.size() > 0 ) {
+                Random rand = new Random();
+                for ( int i = 0; i < queryInfo.snd; i++ ) {
+
+                    addNumberOfTimes( queryList, possibleQueries.get( rand.nextInt( possibleQueries.size() ) ), 1 );
+                }
+                /*
+                int delay = part.snd;
+
+                try {
+                    Thread.sleep( delay * 60L );
+                } catch ( InterruptedException e ) {
+                    e.printStackTrace();
+                }
+                
+                 */
             }
+
         }
 
-        addNumberOfTimes( queryList, new InsertUser(), 2 );
 
-        /*
-        addNumberOfTimes( queryList, new InsertUser(), config.numberOfAddUserQueries );
-        addNumberOfTimes( queryList, new ChangePasswordOfRandomUser( numbers.get( "users" ) ), config.numberOfChangePasswordQueries );
-        addNumberOfTimes( queryList, new InsertRandomAuction( numbers.get( "users" ), numbers.get( "categories" ), config ), config.numberOfAddAuctionQueries );
-        addNumberOfTimes( queryList, new InsertRandomBid( numbers.get( "auctions" ), numbers.get( "users" ) ), config.numberOfAddBidQueries );
-        addNumberOfTimes( queryList, new ChangeRandomAuction( numbers.get( "auctions" ), config ), config.numberOfChangeAuctionQueries );
-        addNumberOfTimes( queryList, new SelectRandomAuction( numbers.get( "auctions" ), queryMode ), config.numberOfGetAuctionQueries );
-        addNumberOfTimes( queryList, new SelectTheHundredNextEndingAuctionsOfRandomCategory( numbers.get( "categories" ), config, queryMode ), config.numberOfGetTheNextHundredEndingAuctionsOfACategoryQueries );
-        addNumberOfTimes( queryList, new SearchAuction( queryMode ), config.numberOfSearchAuctionQueries );
-        addNumberOfTimes( queryList, new CountAuction( queryMode ), config.numberOfCountAuctionsQueries );
-        addNumberOfTimes( queryList, new SelectTopTenCitiesByNumberOfCustomers( queryMode ), config.numberOfTopTenCitiesByNumberOfCustomersQueries );
-        addNumberOfTimes( queryList, new CountBid( queryMode ), config.numberOfCountBidsQueries );
-        addNumberOfTimes( queryList, new SelectRandomBid( numbers.get( "bids" ), queryMode ), config.numberOfGetBidQueries );
-        addNumberOfTimes( queryList, new SelectRandomUser( numbers.get( "users" ), queryMode ), config.numberOfGetUserQueries );
-        addNumberOfTimes( queryList, new SelectAllBidsOnRandomAuction( numbers.get( "auctions" ), queryMode ), config.numberOfGetAllBidsOnAuctionQueries );
-        addNumberOfTimes( queryList, new SelectHighestBidOnRandomAuction( numbers.get( "auctions" ), queryMode ), config.numberOfGetCurrentlyHighestBidOnAuctionQueries );
-        addNumberOfTimes( queryList, new SelectHighestOverallBid( queryMode ), config.totalNumOfHighestOverallBidQueries );
-        addNumberOfTimes( queryList, new SelectTopHundredSellerByNumberOfAuctions( queryMode ), config.totalNumOfTopHundredSellerByNumberOfAuctionsQueries );
-        addNumberOfTimes( queryList, new SelectPriceBetweenAndNotInCategory( queryMode ), config.totalNumOfPriceBetweenAndNotInCategoryQueries );
-
-        Collections.shuffle( queryList );
-
-
-         */
         // This dumps the sql queries independent of the selected interface
         if ( outputDirectory != null && dumpQueryList ) {
             log.info( "Dump query list..." );
