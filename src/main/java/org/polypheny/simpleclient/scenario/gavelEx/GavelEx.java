@@ -50,9 +50,10 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.executor.Executor;
+import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
 import org.polypheny.simpleclient.executor.ExecutorException;
 import org.polypheny.simpleclient.executor.JdbcExecutor;
-import org.polypheny.simpleclient.executor.PolyphenyDbMongoQlExecutor.PolyphenyDbMongoQlExecutorFactory;
+import org.polypheny.simpleclient.executor.PolyphenyDbMongoQlExecutor;
 import org.polypheny.simpleclient.main.ChronosAgent;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.main.ProgressReporter;
@@ -76,7 +77,6 @@ import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.SelectHighestBid
 import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.SelectHighestOverallBid;
 import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.SelectPriceBetweenAndNotInCategory;
 import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.SelectRandomAuction;
-import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.SelectRandomBid;
 import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.SelectRandomUser;
 import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.SelectTheHundredNextEndingAuctionsOfRandomCategory;
 import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.SelectTopHundredSellerByNumberOfAuctions;
@@ -99,8 +99,8 @@ public class GavelEx extends Scenario {
     private final Map<Integer, List<Long>> measuredTimePerQueryType;
 
 
-    public GavelEx( JdbcExecutor.ExecutorFactory executorFactory, GavelExConfig config, boolean commitAfterEveryQuery, boolean dumpQueryList, QueryMode queryMode ) {
-        super( executorFactory, commitAfterEveryQuery, dumpQueryList, queryMode );
+    public GavelEx( JdbcExecutor.ExecutorFactory executorFactoryHSQLDB, PolyphenyDbMongoQlExecutor.ExecutorFactory executorFactoryMONGODB, GavelExConfig config, boolean commitAfterEveryQuery, boolean dumpQueryList, QueryMode queryMode ) {
+        super( executorFactoryHSQLDB, executorFactoryMONGODB, commitAfterEveryQuery, dumpQueryList, queryMode );
         this.config = config;
         measuredTimes = Collections.synchronizedList( new LinkedList<>() );
 
@@ -109,8 +109,13 @@ public class GavelEx extends Scenario {
     }
 
 
-    public List<QueryBuilder> getPossibleClasses( QueryPossibility query, Map<String, Integer> numbers ) {
+    public enum QueryLanguage {
+        SQL, MQL
+    }
 
+
+    public Pair<List<QueryBuilder>, QueryLanguage> getPossibleClasses( QueryPossibility query, Map<String, Integer> numbers ) {
+/*
         final List<QueryBuilder> insertQueries = Arrays.asList(
                 new InsertRandomAuction( numbers.get( "users" ), numbers.get( "categories" ), config ),
                 new InsertRandomBid( numbers.get( "auctions" ), numbers.get( "users" ) ) );
@@ -136,26 +141,70 @@ public class GavelEx extends Scenario {
                 new TruncateCategory(),
                 new TruncatePicture(),
                 new TruncateUser()
+
         );
         final List<QueryBuilder> deleteQueries = Arrays.asList(
 
         );
 
+ */
+        final List<QueryBuilder> insertQueries = Arrays.asList(
+                new InsertRandomAuction( config.numberOfUsers, config.numberOfCategories, config ),
+                new InsertRandomBid( config.numberOfAuctions, config.numberOfUsers ) );
+        final List<QueryBuilder> updateQueries = Arrays.asList(
+                new ChangePasswordOfRandomUser( config.numberOfUsers ),
+                new ChangeRandomAuction( config.numberOfUsers, config ) );
+        final List<QueryBuilder> simpleSelectQueries = Arrays.asList(
+                new SearchAuction( queryMode ),
+                new SelectAllBidsOnRandomAuction( config.numberOfAuctions, queryMode ),
+                new SelectHighestBidOnRandomAuction( config.numberOfAuctions, queryMode ),
+                new SelectHighestOverallBid( queryMode ),
+                new SelectPriceBetweenAndNotInCategory( queryMode ),
+                new SelectRandomAuction( config.numberOfAuctions, queryMode ),
+                //new SelectRandomBid( confi, queryMode ),
+                new SelectRandomUser( config.numberOfUsers, queryMode ) );
+        final List<QueryBuilder> complexSelectQueries = Arrays.asList(
+                new SelectTheHundredNextEndingAuctionsOfRandomCategory( config.numberOfCategories, config, queryMode ),
+                new SelectTopHundredSellerByNumberOfAuctions( queryMode ),
+                new SelectTopTenCitiesByNumberOfCustomers( queryMode ) );
+        final List<QueryBuilder> truncateQueries = Arrays.asList(
+                new TruncateAuction(),
+                new TruncateBid(),
+                new TruncateCategory(),
+                new TruncatePicture(),
+                new TruncateUser()
 
+        );
+        final List<QueryBuilder> deleteQueries = Arrays.asList(
+
+        );
 
         switch ( query ) {
-            case INSERT:
-                return insertQueries;
-            case UPDATE:
-                return updateQueries;
-            case SIMPLE_SELECT:
-                return simpleSelectQueries;
-            case COMPLEX_SELECT:
-                return complexSelectQueries;
-            case TRUNCATE:
-                return truncateQueries;
-            case DELETE:
-                return deleteQueries;
+            case INSERT_SQL:
+                return new Pair<>( insertQueries, QueryLanguage.SQL );
+            case INSERT_MQL:
+                return new Pair<>( insertQueries, QueryLanguage.MQL );
+            case UPDATE_SQL:
+                return new Pair<>( updateQueries, QueryLanguage.SQL );
+            case UPDATE_MQL:
+                return new Pair<>( updateQueries, QueryLanguage.MQL );
+            case SIMPLE_SELECT_SQL:
+                return new Pair<>( simpleSelectQueries, QueryLanguage.SQL );
+            case SIMPLE_SELECT_MQL:
+                return new Pair<>( simpleSelectQueries, QueryLanguage.MQL );
+            case COMPLEX_SELECT_SQL:
+                return new Pair<>( complexSelectQueries, QueryLanguage.SQL );
+            case COMPLEX_SELECT_MQL:
+                return new Pair<>( complexSelectQueries, QueryLanguage.MQL );
+            case TRUNCATE_SQL:
+                return new Pair<>( truncateQueries, QueryLanguage.SQL );
+            case TRUNCATE_MQL:
+                return new Pair<>( truncateQueries, QueryLanguage.MQL );
+            case DELETE_SQL:
+                return new Pair<>( deleteQueries, QueryLanguage.SQL );
+            case DELETE_MQL:
+                return new Pair<>( deleteQueries, QueryLanguage.MQL );
+
             default:
                 throw new RuntimeException( "This QueryPossibility has no saved Queries. Please add a List of Classes with suitable queries." );
         }
@@ -179,28 +228,16 @@ public class GavelEx extends Scenario {
             Pair<QueryPossibility, Integer> queryInfo = part.fst;
             QueryPossibility query = queryInfo.fst;
 
-            List<QueryBuilder> possibleQueries = getPossibleClasses( query, numbers );
+            Pair<List<QueryBuilder>, QueryLanguage> possibleQueries = getPossibleClasses( query, numbers );
 
-            if ( possibleQueries.size() > 0 ) {
+            if ( possibleQueries.fst.size() > 0 ) {
                 Random rand = new Random();
                 for ( int i = 0; i < queryInfo.snd; i++ ) {
-
-                    addNumberOfTimes( queryList, possibleQueries.get( rand.nextInt( possibleQueries.size() ) ), 1 );
+                    addNumberOfTimes( queryList, possibleQueries.fst.get( rand.nextInt( possibleQueries.fst.size() ) ), 1, part.snd, possibleQueries.snd );
                 }
-                /*
-                int delay = part.snd;
-
-                try {
-                    Thread.sleep( delay * 60L );
-                } catch ( InterruptedException e ) {
-                    e.printStackTrace();
-                }
-                
-                 */
             }
 
         }
-
 
         // This dumps the sql queries independent of the selected interface
         if ( outputDirectory != null && dumpQueryList ) {
@@ -209,7 +246,15 @@ public class GavelEx extends Scenario {
                 FileWriter fw = new FileWriter( outputDirectory.getPath() + File.separator + "queryList" );
                 queryList.forEach( query -> {
                     try {
-                        fw.append( query.query.getSql() ).append( "\n" );
+                        if(query.queryLanguage == QueryLanguage.SQL){
+                            fw.append( query.query.getSql() ).append( "\n" );
+                        }else if(query.queryLanguage == QueryLanguage.MQL){
+                            fw.append( query.query.getMongoQl() ).append( "\n" );
+                        }else {
+                            throw new RuntimeException("Querylanguag is not implemented yet.");
+                        }
+
+
                     } catch ( IOException e ) {
                         log.error( "Error while dumping query list", e );
                     }
@@ -226,7 +271,7 @@ public class GavelEx extends Scenario {
 
         ArrayList<EvaluationThread> threads = new ArrayList<>();
         for ( int i = 0; i < numberOfThreads; i++ ) {
-            threads.add( new EvaluationThread( queryList, executorFactory.createExecutorInstance( csvWriter ) ) );
+            threads.add( new EvaluationThread( queryList, executorFactory.createExecutorInstance( csvWriter ), executorFactoryMONGODB.createExecutorInstance(csvWriter) ) );
         }
 
         EvaluationThreadMonitor threadMonitor = new EvaluationThreadMonitor( threads );
@@ -347,16 +392,18 @@ public class GavelEx extends Scenario {
 
     private class EvaluationThread extends Thread {
 
-        private final Executor executor;
+        private final Executor executorSQL;
+        private final Executor executorMQL;
         private final List<QueryListEntry> theQueryList;
         private boolean abort = false;
         @Setter
         private EvaluationThreadMonitor threadMonitor;
 
 
-        EvaluationThread( List<QueryListEntry> queryList, Executor executor ) {
+        EvaluationThread( List<QueryListEntry> queryList, Executor executorSQL, Executor  executorMQL) {
             super( "EvaluationThread" );
-            this.executor = executor;
+            this.executorSQL = executorSQL;
+            this.executorMQL = executorMQL;
             theQueryList = queryList;
         }
 
@@ -377,12 +424,23 @@ public class GavelEx extends Scenario {
                     break;
                 }
                 try {
-                    executor.executeQuery( queryListEntry.query );
+                    if(queryListEntry.queryLanguage == QueryLanguage.SQL){
+                        executorSQL.executeQuery( queryListEntry.query );
+                    }else if(queryListEntry.queryLanguage == QueryLanguage.MQL){
+                        executorMQL.executeQuery( queryListEntry.query );
+                    }else{
+                        throw new RuntimeException("Query language is not implemented yet.");
+                    }
+
                 } catch ( ExecutorException e ) {
                     log.error( "Caught exception while executing the following query: {}", queryListEntry.query.getClass().getName(), e );
                     threadMonitor.notifyAboutError( e );
                     try {
-                        executor.executeRollback();
+                        if(queryListEntry.queryLanguage == QueryLanguage.SQL){
+                            executorSQL.executeRollback();
+                        }else if(queryListEntry.queryLanguage == QueryLanguage.MQL){
+                            executorMQL.executeRollback();
+                        }
                     } catch ( ExecutorException ex ) {
                         log.error( "Error while rollback", e );
                     }
@@ -393,12 +451,20 @@ public class GavelEx extends Scenario {
                 measuredTimePerQueryType.get( queryListEntry.templateId ).add( measuredTime );
                 if ( commitAfterEveryQuery ) {
                     try {
-                        executor.executeCommit();
+                        if(queryListEntry.queryLanguage == QueryLanguage.SQL){
+                            executorSQL.executeCommit();
+                        }else if(queryListEntry.queryLanguage == QueryLanguage.MQL){
+                            executorMQL.executeCommit();
+                        }
                     } catch ( ExecutorException e ) {
                         log.error( "Caught exception while committing", e );
                         threadMonitor.notifyAboutError( e );
                         try {
-                            executor.executeRollback();
+                            if(queryListEntry.queryLanguage == QueryLanguage.SQL){
+                                executorSQL.executeRollback();
+                            }else if(queryListEntry.queryLanguage == QueryLanguage.MQL){
+                                executorMQL.executeRollback();
+                            }
                         } catch ( ExecutorException ex ) {
                             log.error( "Error while rollback", e );
                         }
@@ -408,19 +474,21 @@ public class GavelEx extends Scenario {
             }
 
             try {
-                executor.executeCommit();
+                executorSQL.executeCommit();
+                executorMQL.executeCommit();
             } catch ( ExecutorException e ) {
                 log.error( "Caught exception while committing", e );
                 threadMonitor.notifyAboutError( e );
                 try {
-                    executor.executeRollback();
+                    executorSQL.executeRollback();
+                    executorMQL.executeRollback();
                 } catch ( ExecutorException ex ) {
                     log.error( "Error while rollback", e );
                 }
                 throw new RuntimeException( e );
             }
-
-            executor.flushCsvWriter();
+            executorSQL.flushCsvWriter();
+            executorMQL.flushCsvWriter();
         }
 
 
@@ -430,7 +498,8 @@ public class GavelEx extends Scenario {
 
 
         public void closeExecutor() {
-            commitAndCloseExecutor( executor );
+            commitAndCloseExecutor( executorSQL );
+            commitAndCloseExecutor( executorMQL );
         }
 
     }
@@ -474,18 +543,12 @@ public class GavelEx extends Scenario {
     public void createSchema( boolean includingKeys ) {
         log.info( "Creating schema..." );
         InputStream file;
-        if ( executorFactory instanceof PolyphenyDbMongoQlExecutorFactory ) {
-            file = ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/gavel/schema.mongoql" );
-            executeMongoQlSchema( file );
-            return;
-        }
-        if ( includingKeys ) {
-            file = ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/gavel/schema.sql" );
-        } else {
-            file = ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/gavel/schema-without-keys-and-constraints.sql" );
-        }
-        // Check if file != null
+
+        file = ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/gavelEx/schema.sql" );
         executeSchema( file );
+
+        file = ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/gavelEx/schema.mongoql" );
+        executeMongoQlSchema( file );
 
         // Create Views / Materialized Views
         if ( queryMode == QueryMode.VIEW ) {
@@ -506,7 +569,7 @@ public class GavelEx extends Scenario {
             throw new RuntimeException( "Unable to load schema definition file" );
         }
         try ( BufferedReader bf = new BufferedReader( new InputStreamReader( file ) ) ) {
-            executor = executorFactory.createExecutorInstance();
+            executor = executorFactoryMONGODB.createExecutorInstance();
             String line = bf.readLine();
             executor.executeQuery( new RawQuery( null, null, "use test", false ) );
             while ( line != null ) {
@@ -549,12 +612,17 @@ public class GavelEx extends Scenario {
 
         Executor executor1 = executorFactory.createExecutorInstance();
         DataGeneratorEx dataGeneratorEx = new DataGeneratorEx( executor1, config, progressReporter, threadMonitor );
+
+        Executor executor1Mongo = executorFactoryMONGODB.createExecutorInstance();
+        DataGeneratorEx dataGeneratorExMongo = new DataGeneratorEx( executor1Mongo, config, progressReporter, threadMonitor );
         try {
             //dataGenerator.truncateTables();
             dataGeneratorEx.generateCategories();
+            dataGeneratorExMongo.generateCategories();
         } catch ( ExecutorException e ) {
             throw new RuntimeException( "Exception while generating data", e );
         } finally {
+            commitAndCloseExecutor( executor1Mongo );
             commitAndCloseExecutor( executor1 );
         }
 
@@ -569,13 +637,18 @@ public class GavelEx extends Scenario {
         for ( int i = 0; i < numberOfUserGenerationThreads; i++ ) {
             Runnable task = () -> {
                 Executor executor = executorFactory.createExecutorInstance();
+                Executor executor2Mongo = executorFactoryMONGODB.createExecutorInstance();
                 try {
                     DataGeneratorEx dg = new DataGeneratorEx( executor, config, progressReporter, threadMonitor );
                     dg.generateUsers( config.numberOfUsers / numberOfUserGenerationThreads );
+
+                    DataGeneratorEx dgMongo = new DataGeneratorEx( executor2Mongo, config, progressReporter, threadMonitor );
+                    dgMongo.generateUsers( config.numberOfUsers / numberOfUserGenerationThreads );
                 } catch ( ExecutorException e ) {
                     threadMonitor.notifyAboutError( e );
                     try {
                         executor.executeRollback();
+                        executor2Mongo.executeRollback();
                     } catch ( ExecutorException ex ) {
                         log.error( "Error while rollback", e );
                     }
@@ -583,6 +656,7 @@ public class GavelEx extends Scenario {
                 } finally {
                     try {
                         executor.closeConnection();
+                        executor2Mongo.closeConnection();
                     } catch ( ExecutorException e ) {
                         log.error( "Error while closing connection", e );
                     }
@@ -614,13 +688,18 @@ public class GavelEx extends Scenario {
             final int end = rangeSize * i;
             Runnable task = () -> {
                 Executor executor = executorFactory.createExecutorInstance();
+                Executor executor3Mongo = executorFactoryMONGODB.createExecutorInstance();
                 try {
                     DataGeneratorEx dg = new DataGeneratorEx( executor, config, progressReporter, threadMonitor );
                     dg.generateAuctions( start, end );
+
+                    DataGeneratorEx dgMongo = new DataGeneratorEx( executor3Mongo, config, progressReporter, threadMonitor );
+                    dgMongo.generateAuctions( start, end );
                 } catch ( ExecutorException e ) {
                     threadMonitor.notifyAboutError( e );
                     try {
                         executor.executeRollback();
+                        executor3Mongo.executeRollback();
                     } catch ( ExecutorException ex ) {
                         log.error( "Error while rollback", e );
                     }
@@ -628,6 +707,7 @@ public class GavelEx extends Scenario {
                 } finally {
                     try {
                         executor.closeConnection();
+                        executor3Mongo.closeConnection();
                     } catch ( ExecutorException e ) {
                         log.error( "Error while closing connection", e );
                     }
@@ -738,12 +818,12 @@ public class GavelEx extends Scenario {
     }
 
 
-    private void addNumberOfTimes( List<QueryListEntry> list, QueryBuilder queryBuilder, int numberOfTimes ) {
+    private void addNumberOfTimes( List<QueryListEntry> list, QueryBuilder queryBuilder, int numberOfTimes, int delay, QueryLanguage queryLanguage ) {
         int id = queryTypes.size() + 1;
         queryTypes.put( id, queryBuilder.getNewQuery().getSql() );
         measuredTimePerQueryType.put( id, Collections.synchronizedList( new LinkedList<>() ) );
         for ( int i = 0; i < numberOfTimes; i++ ) {
-            list.add( new QueryListEntry( queryBuilder.getNewQuery(), id ) );
+            list.add( new QueryListEntry( queryBuilder.getNewQuery(), id, delay, queryLanguage ) );
         }
     }
 

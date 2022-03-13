@@ -26,15 +26,32 @@
 package org.polypheny.simpleclient.query;
 
 
+import lombok.Getter;
+import org.polypheny.simpleclient.scenario.gavelEx.GavelEx.QueryLanguage;
+
 public class QueryListEntry {
 
     public final Query query;
     public final int templateId;
+    public final int delay;
+    @Getter
+    public final QueryLanguage queryLanguage;
 
 
     public QueryListEntry( Query query, int templateId ) {
         this.query = query;
         this.templateId = templateId;
+        this.delay = 0;
+        this.queryLanguage = QueryLanguage.SQL;
     }
+
+
+    public QueryListEntry( Query query, int templateId, int delay, QueryLanguage queryLanguage ) {
+        this.query = query;
+        this.templateId = templateId;
+        this.delay = delay;
+        this.queryLanguage = queryLanguage;
+    }
+
 
 }

@@ -88,7 +88,9 @@ public class PolyphenyDbMongoQlExecutor implements PolyphenyDbExecutor {
             }
             time = System.nanoTime() - start;
             if ( csvWriter != null ) {
-                csvWriter.appendToCsv( request.getUrl(), time );
+
+                log.warn( query.getMongoQl());
+                csvWriter.appendToCsv( query.getMongoQl(), time );
             }
         } catch ( UnirestException e ) {
             throw new ExecutorException( e );
@@ -115,7 +117,7 @@ public class PolyphenyDbMongoQlExecutor implements PolyphenyDbExecutor {
         request.basicAuth( "pa", "" );
         request.routeParam( "protocol", "http" );
         request.routeParam( "host", "127.0.0.1" );
-        request.routeParam( "port", "2717" );
+        request.routeParam( "port", "13137" );
         return request;
     }
 
@@ -136,7 +138,7 @@ public class PolyphenyDbMongoQlExecutor implements PolyphenyDbExecutor {
                 throw new ExecutorException( "Error while executing MongoQl query. Message: " + result.getStatusText() + "  |  URL: " + request.getUrl() );
             }
             if ( csvWriter != null ) {
-                csvWriter.appendToCsv( request.getUrl(), System.nanoTime() - start );
+                csvWriter.appendToCsv( query.getMongoQl(), System.nanoTime() - start );
             }
             // Get result of a count query
             JSONArray res = result.getBody().getObject().getJSONArray( "data" );

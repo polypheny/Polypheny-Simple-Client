@@ -97,27 +97,19 @@ public class GavelExCommand implements CliRunnable {
             }
         }
 
-        ExecutorFactory executorFactory;
-        if ( mongoQlInterface && restInterface ) {
-            throw new RuntimeException( "Only one interface can be used at the time." );
-        }
-        if ( mongoQlInterface ) {
-            executorFactory = new PolyphenyDbMongoQlExecutorFactory( polyphenyDbHost );
-        } else if ( restInterface ) {
-            executorFactory = new PolyphenyDbRestExecutorFactory( polyphenyDbHost );
-        } else {
-            executorFactory = new PolyphenyDbJdbcExecutorFactory( polyphenyDbHost, true );
-        }
+        ExecutorFactory executorFactoryMONGODB = new PolyphenyDbMongoQlExecutorFactory( polyphenyDbHost );
+        ExecutorFactory executorFactoryHSQLDB = new PolyphenyDbJdbcExecutorFactory( polyphenyDbHost, true );
+        ExecutorFactory executorFactoryREST = new PolyphenyDbRestExecutorFactory( polyphenyDbHost );
 
         try {
             if ( args.get( 0 ).equalsIgnoreCase( "data" ) ) {
-                GavelExScenario.data( executorFactory, multiplier, true, queryMode );
+                GavelExScenario.data( executorFactoryHSQLDB, executorFactoryMONGODB , multiplier, true, queryMode );
             } else if ( args.get( 0 ).equalsIgnoreCase( "workload" ) ) {
-                GavelExScenario.workload( executorFactory, multiplier, true, writeCsv, dumpQueryList, queryMode, profileSelector );
+                GavelExScenario.workload( executorFactoryHSQLDB, executorFactoryMONGODB , multiplier, true, writeCsv, dumpQueryList, queryMode, profileSelector );
             } else if ( args.get( 0 ).equalsIgnoreCase( "schema" ) ) {
-                GavelExScenario.schema( executorFactory, true, queryMode );
+                GavelExScenario.schema( executorFactoryHSQLDB, executorFactoryMONGODB, true, queryMode );
             } else if ( args.get( 0 ).equalsIgnoreCase( "warmup" ) ) {
-                GavelExScenario.warmup( executorFactory, multiplier, true, dumpQueryList, queryMode );
+                GavelExScenario.warmup( executorFactoryHSQLDB, executorFactoryMONGODB, multiplier, true, dumpQueryList, queryMode );
             } else {
                 System.err.println( "Unknown task: " + args.get( 0 ) );
             }

@@ -33,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.ProfileSelector;
 import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
+import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory;
 import org.polypheny.simpleclient.scenario.gavelEx.GavelEx;
 import org.polypheny.simpleclient.scenario.gavelEx.GavelExConfig;
 import org.polypheny.simpleclient.scenario.gavelEx.GavelExProfile;
@@ -41,25 +42,25 @@ import org.polypheny.simpleclient.scenario.gavelEx.GavelExProfile;
 @Slf4j
 public class GavelExScenario {
 
-    public static void schema( ExecutorFactory executorFactory, boolean commitAfterEveryQuery, QueryMode queryMode ) {
+    public static void schema( ExecutorFactory executorFactoryHSQLDB, ExecutorFactory executorFactoryMONGODB, boolean commitAfterEveryQuery, QueryMode queryMode ) {
         GavelExConfig config = new GavelExConfig( getProperties(), 1 );
-        GavelEx gavelEx = new GavelEx( executorFactory, config, commitAfterEveryQuery, false, queryMode );
+        GavelEx gavelEx = new GavelEx( executorFactoryHSQLDB, executorFactoryMONGODB, config, commitAfterEveryQuery, false, queryMode );
         gavelEx.createSchema( true );
     }
 
 
-    public static void data( ExecutorFactory executorFactory, int multiplier, boolean commitAfterEveryQuery, QueryMode queryMode ) {
+    public static void data( ExecutorFactory executorFactoryHSQLDB, ExecutorFactory executorFactoryMONGODB, int multiplier, boolean commitAfterEveryQuery, QueryMode queryMode ) {
         GavelExConfig config = new GavelExConfig( getProperties(), multiplier );
-        GavelEx gavelEx = new GavelEx( executorFactory, config, commitAfterEveryQuery, false, queryMode );
+        GavelEx gavelEx = new GavelEx( executorFactoryHSQLDB, executorFactoryMONGODB, config, commitAfterEveryQuery, false, queryMode );
 
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
         gavelEx.generateData( progressReporter );
     }
 
 
-    public static void workload( ExecutorFactory executorFactory, int multiplier, boolean commitAfterEveryQuery, boolean writeCsv, boolean dumpQueryList, QueryMode queryMode, ProfileSelector profileSelector ) {
+    public static void workload( ExecutorFactory executorFactoryHSQLDB, ExecutorFactory executorFactoryMONGODB, int multiplier, boolean commitAfterEveryQuery, boolean writeCsv, boolean dumpQueryList, QueryMode queryMode, ProfileSelector profileSelector ) {
         GavelExConfig config = new GavelExConfig( getProperties(), multiplier );
-        GavelEx gavelEx = new GavelEx( executorFactory, config, commitAfterEveryQuery, dumpQueryList, queryMode );
+        GavelEx gavelEx = new GavelEx( executorFactoryHSQLDB, executorFactoryMONGODB, config, commitAfterEveryQuery, dumpQueryList, queryMode );
 
         final CsvWriter csvWriter;
         if ( writeCsv ) {
@@ -73,9 +74,9 @@ public class GavelExScenario {
     }
 
 
-    public static void warmup( ExecutorFactory executorFactory, int multiplier, boolean commitAfterEveryQuery, boolean dumpQueryList, QueryMode queryMode ) {
+    public static void warmup( ExecutorFactory executorFactoryHSQLDB, ExecutorFactory executorFactoryMONGODB, int multiplier, boolean commitAfterEveryQuery, boolean dumpQueryList, QueryMode queryMode ) {
         GavelExConfig config = new GavelExConfig( getProperties(), 1 );
-        GavelEx gavelEx = new GavelEx( executorFactory, config, commitAfterEveryQuery, dumpQueryList, queryMode );
+        GavelEx gavelEx = new GavelEx( executorFactoryHSQLDB, executorFactoryMONGODB, config, commitAfterEveryQuery, dumpQueryList, queryMode );
 
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
         gavelEx.warmUp( progressReporter, config.numberOfWarmUpIterations );

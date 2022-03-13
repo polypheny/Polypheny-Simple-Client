@@ -46,6 +46,7 @@ public abstract class Scenario {
 
     @Getter
     protected final ExecutorFactory executorFactory;
+    protected final ExecutorFactory executorFactoryMONGODB;
     protected final boolean commitAfterEveryQuery;
     protected final boolean dumpQueryList;
     protected final QueryMode queryMode;
@@ -53,10 +54,20 @@ public abstract class Scenario {
 
     protected Scenario( ExecutorFactory executorFactory, boolean commitAfterEveryQuery, boolean dumpQueryList, QueryMode queryMode ) {
         this.executorFactory = executorFactory;
+        this.executorFactoryMONGODB = null;
         this.commitAfterEveryQuery = commitAfterEveryQuery;
         this.dumpQueryList = dumpQueryList;
         this.queryMode = queryMode;
     }
+
+    protected Scenario( ExecutorFactory executorFactoryHSQLDB, ExecutorFactory executorFactoryMONGODB, boolean commitAfterEveryQuery, boolean dumpQueryList, QueryMode queryMode ) {
+        this.executorFactory = executorFactoryHSQLDB;
+        this.executorFactoryMONGODB = executorFactoryMONGODB;
+        this.commitAfterEveryQuery = commitAfterEveryQuery;
+        this.dumpQueryList = dumpQueryList;
+        this.queryMode = queryMode;
+    }
+
 
 
     public abstract void createSchema( boolean includingKeys );
