@@ -53,6 +53,7 @@ import org.polypheny.simpleclient.query.QueryBuilder;
 import org.polypheny.simpleclient.query.QueryListEntry;
 import org.polypheny.simpleclient.scenario.Scenario;
 import org.polypheny.simpleclient.scenario.gavelEx.GavelExProfile;
+import org.polypheny.simpleclient.scenario.gavelEx.GavelExSettings;
 import org.polypheny.simpleclient.scenario.multimedia.queryBuilder.CreateTable;
 import org.polypheny.simpleclient.scenario.multimedia.queryBuilder.DeleteRandomTimeline;
 import org.polypheny.simpleclient.scenario.multimedia.queryBuilder.InsertRandomTimeline;
@@ -94,7 +95,7 @@ public class MultimediaBench extends Scenario {
 
 
     @Override
-    public void createSchema( boolean includingKeys ) {
+    public void createSchema( boolean includingKeys, GavelExSettings gavelExSettings ) {
         if ( queryMode != QueryMode.TABLE ) {
             throw new UnsupportedOperationException( "Unsupported query mode: " + queryMode.name() );
         }

@@ -42,7 +42,7 @@ public class GavelScenario {
     public static void schema( ExecutorFactory executorFactory, boolean commitAfterEveryQuery, QueryMode queryMode ) {
         GavelConfig config = new GavelConfig( getProperties(), 1 );
         Gavel gavel = new Gavel( executorFactory, config, commitAfterEveryQuery, false, queryMode );
-        gavel.createSchema( true );
+        gavel.createSchema( true, null );
     }
 
 

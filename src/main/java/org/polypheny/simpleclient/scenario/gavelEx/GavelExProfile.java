@@ -15,9 +15,7 @@ public class GavelExProfile {
 
     public GavelExProfile( Properties properties ) {
 
-        String profileTimeline = properties.getProperty( "schedules" );
-
-        timeline = castProfileTimeline( profileTimeline );
+        timeline = castProfileTimeline( properties.getProperty( "schedules" ) );
     }
 
 
@@ -96,8 +94,6 @@ public class GavelExProfile {
     enum QueryPossibility {
         INSERT_SQL, SIMPLE_SELECT_SQL, COMPLEX_SELECT_SQL, UPDATE_SQL, DELETE_SQL, TRUNCATE_SQL,
         INSERT_MQL, SIMPLE_SELECT_MQL, COMPLEX_SELECT_MQL, UPDATE_MQL, DELETE_MQL, TRUNCATE_MQL
-
-
     }
 
 }

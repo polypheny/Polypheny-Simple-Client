@@ -33,10 +33,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.ProfileSelector;
 import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
-import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory;
 import org.polypheny.simpleclient.scenario.gavelEx.GavelEx;
 import org.polypheny.simpleclient.scenario.gavelEx.GavelExConfig;
 import org.polypheny.simpleclient.scenario.gavelEx.GavelExProfile;
+import org.polypheny.simpleclient.scenario.gavelEx.GavelExSettings;
 
 
 @Slf4j
@@ -44,8 +44,9 @@ public class GavelExScenario {
 
     public static void schema( ExecutorFactory executorFactoryHSQLDB, ExecutorFactory executorFactoryMONGODB, boolean commitAfterEveryQuery, QueryMode queryMode ) {
         GavelExConfig config = new GavelExConfig( getProperties(), 1 );
+        GavelExSettings gavelExSettings = new GavelExSettings( getProfileProperties(), executorFactoryHSQLDB );
         GavelEx gavelEx = new GavelEx( executorFactoryHSQLDB, executorFactoryMONGODB, config, commitAfterEveryQuery, false, queryMode );
-        gavelEx.createSchema( true );
+        gavelEx.createSchema( true, gavelExSettings );
     }
 
 
@@ -103,5 +104,6 @@ public class GavelExScenario {
         }
         return props;
     }
+
 
 }

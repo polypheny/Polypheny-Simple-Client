@@ -540,30 +540,30 @@ public class GavelEx extends Scenario {
 
 
     @Override
-    public void createSchema( boolean includingKeys ) {
+    public void createSchema( boolean includingKeys, GavelExSettings gavelExSettings ) {
         log.info( "Creating schema..." );
         InputStream file;
 
         file = ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/gavelEx/schema.sql" );
-        executeSchema( file );
+        executeSchema( file, gavelExSettings );
 
         file = ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/gavelEx/schema.mongoql" );
-        executeMongoQlSchema( file );
+        executeMongoQlSchema( file, gavelExSettings );
 
         // Create Views / Materialized Views
         if ( queryMode == QueryMode.VIEW ) {
             log.info( "Creating Views ..." );
             file = ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/gavel/view.sql" );
-            executeSchema( file );
+            executeSchema( file, gavelExSettings );
         } else if ( queryMode == QueryMode.MATERIALIZED ) {
             log.info( "Creating Materialized Views ..." );
             file = ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/gavel/materialized.sql" );
-            executeSchema( file );
+            executeSchema( file, gavelExSettings );
         }
     }
 
 
-    private void executeMongoQlSchema( InputStream file ) {
+    private void executeMongoQlSchema( InputStream file, GavelExSettings gavelExSettings ) {
         Executor executor = null;
         if ( file == null ) {
             throw new RuntimeException( "Unable to load schema definition file" );
@@ -584,7 +584,7 @@ public class GavelEx extends Scenario {
     }
 
 
-    private void executeSchema( InputStream file ) {
+    private void executeSchema( InputStream file, GavelExSettings gavelExSettings ) {
         Executor executor = null;
         if ( file == null ) {
             throw new RuntimeException( "Unable to load schema definition file" );
@@ -593,6 +593,22 @@ public class GavelEx extends Scenario {
             executor = executorFactory.createExecutorInstance();
             String line = bf.readLine();
             while ( line != null ) {
+                if(!gavelExSettings.tableStores.isEmpty()){
+                    List<Pair<String, String>> tableStores = gavelExSettings.tableStores;
+                    for ( Pair<String, String> tableStore : tableStores ) {
+                        if(line.startsWith( "CREATE" ) && line.split( " " )[2].replace( "\"", "" ).equals( tableStore.fst )){
+                            line = line + " ON STORE \"" + tableStore.snd + "\"";
+                        }
+                    }
+
+                }else if(!gavelExSettings.factoryStores.isEmpty()){
+                    List<Pair<String, String>> factoryStores = gavelExSettings.factoryStores;
+                    for ( Pair<String, String> tableStore : factoryStores ) {
+                        if(line.startsWith( "CREATE" ) && "efHsqldb".equals( tableStore.fst )){
+                            line = line + " ON STORE \"" + tableStore.snd + "\"";
+                        }
+                    }
+                }
                 executor.executeQuery( new RawQuery( line, null, false ) );
                 line = bf.readLine();
             }

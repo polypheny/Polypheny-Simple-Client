@@ -42,7 +42,7 @@ public class MultimediaScenario {
     public static void schema( ExecutorFactory executorFactory, boolean commitAfterEveryQuery ) {
         MultimediaConfig config = new MultimediaConfig( getProperties(), 1 );
         MultimediaBench multimediaBench = new MultimediaBench( executorFactory, config, commitAfterEveryQuery, false );
-        multimediaBench.createSchema( true );
+        multimediaBench.createSchema( true,null );
     }
 
 

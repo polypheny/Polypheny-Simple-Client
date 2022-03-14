@@ -30,12 +30,17 @@ import com.github.rvesse.airline.HelpOption;
 import com.github.rvesse.airline.annotations.Arguments;
 import com.github.rvesse.airline.annotations.Command;
 import com.github.rvesse.airline.annotations.Option;
+import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
+import java.util.Properties;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.ProfileSelector;
 import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
+import org.polypheny.simpleclient.executor.ExecutorException;
+import org.polypheny.simpleclient.executor.PolyphenyDbExecutor;
 import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory;
 import org.polypheny.simpleclient.executor.PolyphenyDbMongoQlExecutor.PolyphenyDbMongoQlExecutorFactory;
 import org.polypheny.simpleclient.executor.PolyphenyDbRestExecutor.PolyphenyDbRestExecutorFactory;
@@ -92,8 +97,8 @@ public class GavelExCommand implements CliRunnable {
                     queryMode = QueryMode.MATERIALIZED;
                 }
             }
-            if(args.size() > 3){
-                profileSelector = ProfileSelector.getById(Integer.parseInt( args.get( 3 ) ));
+            if ( args.size() > 3 ) {
+                profileSelector = ProfileSelector.getById( Integer.parseInt( args.get( 3 ) ) );
             }
         }
 
@@ -103,9 +108,9 @@ public class GavelExCommand implements CliRunnable {
 
         try {
             if ( args.get( 0 ).equalsIgnoreCase( "data" ) ) {
-                GavelExScenario.data( executorFactoryHSQLDB, executorFactoryMONGODB , multiplier, true, queryMode );
+                GavelExScenario.data( executorFactoryHSQLDB, executorFactoryMONGODB, multiplier, true, queryMode );
             } else if ( args.get( 0 ).equalsIgnoreCase( "workload" ) ) {
-                GavelExScenario.workload( executorFactoryHSQLDB, executorFactoryMONGODB , multiplier, true, writeCsv, dumpQueryList, queryMode, profileSelector );
+                GavelExScenario.workload( executorFactoryHSQLDB, executorFactoryMONGODB, multiplier, true, writeCsv, dumpQueryList, queryMode, profileSelector );
             } else if ( args.get( 0 ).equalsIgnoreCase( "schema" ) ) {
                 GavelExScenario.schema( executorFactoryHSQLDB, executorFactoryMONGODB, true, queryMode );
             } else if ( args.get( 0 ).equalsIgnoreCase( "warmup" ) ) {
@@ -126,5 +131,7 @@ public class GavelExCommand implements CliRunnable {
 
         return 0;
     }
+
+
 
 }

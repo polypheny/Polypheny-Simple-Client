@@ -39,6 +39,7 @@ import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.main.ProgressReporter;
 import org.polypheny.simpleclient.scenario.gavelEx.GavelExProfile;
+import org.polypheny.simpleclient.scenario.gavelEx.GavelExSettings;
 
 
 @Slf4j
@@ -70,9 +71,9 @@ public abstract class Scenario {
 
 
 
-    public abstract void createSchema( boolean includingKeys );
+    public abstract void createSchema( boolean includingKeys,GavelExSettings gavelExSettings );
 
-    public abstract void generateData( ProgressReporter progressReporter );
+    public abstract void generateData( ProgressReporter progressReporter);
 
     public abstract long execute( ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory, int numberOfThreads, GavelExProfile profile );
 

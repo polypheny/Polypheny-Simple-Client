@@ -53,6 +53,7 @@ import org.polypheny.simpleclient.query.QueryBuilder;
 import org.polypheny.simpleclient.query.QueryListEntry;
 import org.polypheny.simpleclient.scenario.Scenario;
 import org.polypheny.simpleclient.scenario.gavelEx.GavelExProfile;
+import org.polypheny.simpleclient.scenario.gavelEx.GavelExSettings;
 import org.polypheny.simpleclient.scenario.knnbench.queryBuilder.CreateIntFeature;
 import org.polypheny.simpleclient.scenario.knnbench.queryBuilder.CreateMetadata;
 import org.polypheny.simpleclient.scenario.knnbench.queryBuilder.CreateRealFeature;
@@ -85,7 +86,7 @@ public class KnnBench extends Scenario {
 
 
     @Override
-    public void createSchema( boolean includingKeys ) {
+    public void createSchema( boolean includingKeys,  GavelExSettings gavelExSettings ) {
         if ( queryMode != QueryMode.TABLE ) {
             throw new UnsupportedOperationException( "Unsupported query mode: " + queryMode.name() );
         }

@@ -78,6 +78,7 @@ import org.polypheny.simpleclient.scenario.gavel.queryBuilder.SelectTheHundredNe
 import org.polypheny.simpleclient.scenario.gavel.queryBuilder.SelectTopHundredSellerByNumberOfAuctions;
 import org.polypheny.simpleclient.scenario.gavel.queryBuilder.SelectTopTenCitiesByNumberOfCustomers;
 import org.polypheny.simpleclient.scenario.gavelEx.GavelExProfile;
+import org.polypheny.simpleclient.scenario.gavelEx.GavelExSettings;
 import org.polypheny.simpleclient.scenario.multimedia.queryBuilder.CreateTable;
 
 
@@ -398,7 +399,7 @@ public class Gavel extends Scenario {
 
 
     @Override
-    public void createSchema( boolean includingKeys ) {
+    public void createSchema( boolean includingKeys, GavelExSettings gavelExSettings ) {
         log.info( "Creating schema..." );
         InputStream file;
         if ( executorFactory instanceof PolyphenyDbMongoQlExecutorFactory ) {

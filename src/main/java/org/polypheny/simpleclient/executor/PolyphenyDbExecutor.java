@@ -133,9 +133,9 @@ public interface PolyphenyDbExecutor extends Executor {
 
 
     default void deployMongoDb() throws ExecutorException {
-        String config = "{\"mode\":\"docker\",\"instanceId\":\"0\",\"port\":\"" + nextPort.getAndIncrement() + "\",\"persistent\":\"false\",\"trxLifetimeLimit\":\"1209600\"}";
+        String config = "{\"mode\":\"docker\",\"instanceId\":\"0\",\"port\":\"" + nextPort.getAndIncrement() + "\",\"trxLifetimeLimit\":\"1209600\",\"persistent\":\"false\"}";
         deployStore(
-                "mongodb" + storeCounter.getAndIncrement(),
+                "mongo" + storeCounter.getAndIncrement(),
                 "org.polypheny.db.adapter.mongodb.MongoStore",
                 config );
     }
