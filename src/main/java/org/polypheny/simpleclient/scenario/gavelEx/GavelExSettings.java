@@ -1,12 +1,13 @@
 package org.polypheny.simpleclient.scenario.gavelEx;
 
-import com.sun.tools.javac.util.Pair;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
+import org.polypheny.simpleclient.Pair;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
 import org.polypheny.simpleclient.executor.ExecutorException;
 import org.polypheny.simpleclient.executor.PolyphenyDbExecutor;

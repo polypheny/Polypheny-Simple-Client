@@ -1,10 +1,10 @@
 package org.polypheny.simpleclient.scenario.gavelEx;
 
-import com.sun.tools.javac.util.Pair;
 import java.util.LinkedList;
 import java.util.Properties;
 import java.util.Queue;
 import lombok.extern.slf4j.Slf4j;
+import org.polypheny.simpleclient.Pair;
 
 @Slf4j
 public class GavelExProfile {

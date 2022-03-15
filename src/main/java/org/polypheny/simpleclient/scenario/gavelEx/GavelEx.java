@@ -27,7 +27,6 @@ package org.polypheny.simpleclient.scenario.gavelEx;
 
 
 import com.google.common.base.Joiner;
-import com.sun.tools.javac.util.Pair;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
@@ -48,9 +47,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.polypheny.simpleclient.Pair;
 import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.executor.Executor;
-import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
 import org.polypheny.simpleclient.executor.ExecutorException;
 import org.polypheny.simpleclient.executor.JdbcExecutor;
 import org.polypheny.simpleclient.executor.PolyphenyDbMongoQlExecutor;
@@ -225,15 +224,15 @@ public class GavelEx extends Scenario {
         List<QueryListEntry> queryList = new Vector<>();
 
         for ( Pair<Pair<QueryPossibility, Integer>, Integer> part : profile.timeline ) {
-            Pair<QueryPossibility, Integer> queryInfo = part.fst;
-            QueryPossibility query = queryInfo.fst;
+            Pair<QueryPossibility, Integer> queryInfo = part.left;
+            QueryPossibility query = queryInfo.left;
 
             Pair<List<QueryBuilder>, QueryLanguage> possibleQueries = getPossibleClasses( query, numbers );
 
-            if ( possibleQueries.fst.size() > 0 ) {
+            if ( possibleQueries.left.size() > 0 ) {
                 Random rand = new Random();
-                for ( int i = 0; i < queryInfo.snd; i++ ) {
-                    addNumberOfTimes( queryList, possibleQueries.fst.get( rand.nextInt( possibleQueries.fst.size() ) ), 1, part.snd, possibleQueries.snd );
+                for ( int i = 0; i < queryInfo.right; i++ ) {
+                    addNumberOfTimes( queryList, possibleQueries.left.get( rand.nextInt( possibleQueries.left.size() ) ), 1, part.right, possibleQueries.right );
                 }
             }
 
@@ -596,16 +595,16 @@ public class GavelEx extends Scenario {
                 if(!gavelExSettings.tableStores.isEmpty()){
                     List<Pair<String, String>> tableStores = gavelExSettings.tableStores;
                     for ( Pair<String, String> tableStore : tableStores ) {
-                        if(line.startsWith( "CREATE" ) && line.split( " " )[2].replace( "\"", "" ).equals( tableStore.fst )){
-                            line = line + " ON STORE \"" + tableStore.snd + "\"";
+                        if(line.startsWith( "CREATE" ) && line.split( " " )[2].replace( "\"", "" ).equals( tableStore.left )){
+                            line = line + " ON STORE \"" + tableStore.right + "\"";
                         }
                     }
 
                 }else if(!gavelExSettings.factoryStores.isEmpty()){
                     List<Pair<String, String>> factoryStores = gavelExSettings.factoryStores;
                     for ( Pair<String, String> tableStore : factoryStores ) {
-                        if(line.startsWith( "CREATE" ) && "efHsqldb".equals( tableStore.fst )){
-                            line = line + " ON STORE \"" + tableStore.snd + "\"";
+                        if(line.startsWith( "CREATE" ) && "efHsqldb".equals( tableStore.left )){
+                            line = line + " ON STORE \"" + tableStore.right + "\"";
                         }
                     }
                 }
