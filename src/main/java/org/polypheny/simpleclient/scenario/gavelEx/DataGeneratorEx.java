@@ -45,11 +45,13 @@ import org.polypheny.simpleclient.scenario.gavelEx.GavelEx.DataGenerationThreadM
 import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.InsertAuction;
 import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.InsertBid;
 import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.InsertCategory;
+import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.InsertCondition;
 import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.InsertPicture;
 import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.InsertUser;
 import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.TruncateAuction;
 import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.TruncateBid;
 import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.TruncateCategory;
+import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.TruncateCondition;
 import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.TruncatePicture;
 import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.TruncateUser;
 
@@ -88,6 +90,7 @@ class DataGeneratorEx {
         theExecutor.executeQuery( (new TruncateAuction()).getNewQuery() );
         theExecutor.executeQuery( (new TruncateBid()).getNewQuery() );
         theExecutor.executeQuery( (new TruncatePicture()).getNewQuery() );
+        theExecutor.executeQuery( (new TruncateCondition()).getNewQuery());
     }
 
 
@@ -119,6 +122,18 @@ class DataGeneratorEx {
         executeInsertList();
     }
 
+    void generateConditions() throws ExecutorException{
+        int numberOfConditions = config.numberOfConditions;
+
+        InsertCondition queryBuilder = new InsertCondition();
+        for ( int i = 0; i < numberOfConditions; i++ ) {
+            if ( aborted ) {
+                break;
+            }
+            addToInsertList( queryBuilder.getNewQuery() );
+        }
+        executeInsertList();
+    }
 
     void generateAuctions( int start, int end ) throws ExecutorException {
         int mod = ((end - start) + 1) / progressReporter.base;
@@ -163,7 +178,8 @@ class DataGeneratorEx {
             title = text.latinWord( ThreadLocalRandom.current().nextInt( auctionTitleMinLength, auctionTitleMaxLength + 1 ) );
             description = text.paragraph( ThreadLocalRandom.current().nextInt( auctionDescriptionMinLength, auctionDescriptionMaxLength + 1 ) );
             int auctionId = nextAuctionId.getAndIncrement();
-            addToInsertList( new InsertAuction( auctionId, user, category, startDate, endDate, title, description ).getNewQuery() );
+            int conditionId = nextAuctionId.getAndIncrement();
+            addToInsertList( new InsertAuction( auctionId, user, category, conditionId, startDate, endDate, title, description ).getNewQuery() );
             executeInsertList();
 
             // create bids for that auction

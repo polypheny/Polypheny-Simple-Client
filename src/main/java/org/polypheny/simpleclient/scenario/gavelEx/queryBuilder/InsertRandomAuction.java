@@ -34,7 +34,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
-import org.polypheny.simpleclient.scenario.gavel.queryBuilder.InsertAuction.InsertAuctionQuery;
+import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.InsertAuction.InsertAuctionQuery;
 import org.polypheny.simpleclient.scenario.gavelEx.GavelExConfig;
 
 
@@ -44,6 +44,7 @@ public class InsertRandomAuction extends QueryBuilder {
 
     private final int numberOfUsers;
     private final int numberOfCategories;
+    private final int numberOfConditions;
     private final int auctionTitleMinLength;
     private final int auctionTitleMaxLength;
     private final int auctionDescriptionMinLength;
@@ -57,9 +58,10 @@ public class InsertRandomAuction extends QueryBuilder {
     private static final AtomicInteger nextAuctionId = new AtomicInteger( 1 );
 
 
-    public InsertRandomAuction( int numberOfUsers, int numberOfCategories, GavelExConfig config ) {
+    public InsertRandomAuction( int numberOfUsers, int numberOfCategories, int numberOfConditions, GavelExConfig config ) {
         this.numberOfUsers = numberOfUsers;
         this.numberOfCategories = numberOfCategories;
+        this.numberOfConditions = numberOfConditions;
         this.auctionTitleMinLength = config.auctionTitleMinLength;
         this.auctionTitleMaxLength = config.auctionTitleMaxLength;
         this.auctionDescriptionMinLength = config.auctionDescriptionMinLength;
@@ -91,7 +93,8 @@ public class InsertRandomAuction extends QueryBuilder {
                 startDate,
                 endDate,
                 ThreadLocalRandom.current().nextInt( 1, numberOfUsers + 1 ),
-                ThreadLocalRandom.current().nextInt( 1, numberOfCategories + 1 )
+                ThreadLocalRandom.current().nextInt( 1, numberOfCategories + 1 ),
+                ThreadLocalRandom.current().nextInt(1, numberOfConditions + 1)
         );
     }
 
@@ -99,8 +102,8 @@ public class InsertRandomAuction extends QueryBuilder {
     private static class InsertRandomAuctionQuery extends InsertAuctionQuery {
 
 
-        public InsertRandomAuctionQuery( int auctionId, String title, String description, LocalDateTime startDate, LocalDateTime endDate, int userId, int categoryId ) {
-            super( auctionId, userId, categoryId, startDate, endDate, title, description );
+        public InsertRandomAuctionQuery( int auctionId, String title, String description, LocalDateTime startDate, LocalDateTime endDate, int userId, int categoryId, int conditionsId ) {
+            super( auctionId, userId, categoryId, conditionsId, startDate, endDate, title, description );
         }
 
     }

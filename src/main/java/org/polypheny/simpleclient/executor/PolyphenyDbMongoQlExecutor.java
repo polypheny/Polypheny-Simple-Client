@@ -88,8 +88,6 @@ public class PolyphenyDbMongoQlExecutor implements PolyphenyDbExecutor {
             }
             time = System.nanoTime() - start;
             if ( csvWriter != null ) {
-
-                log.warn( query.getMongoQl());
                 csvWriter.appendToCsv( query.getMongoQl(), time );
             }
         } catch ( UnirestException e ) {

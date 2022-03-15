@@ -30,17 +30,12 @@ import com.github.rvesse.airline.HelpOption;
 import com.github.rvesse.airline.annotations.Arguments;
 import com.github.rvesse.airline.annotations.Command;
 import com.github.rvesse.airline.annotations.Option;
-import java.io.IOException;
 import java.util.List;
-import java.util.Objects;
-import java.util.Properties;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.ProfileSelector;
 import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
-import org.polypheny.simpleclient.executor.ExecutorException;
-import org.polypheny.simpleclient.executor.PolyphenyDbExecutor;
 import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory;
 import org.polypheny.simpleclient.executor.PolyphenyDbMongoQlExecutor.PolyphenyDbMongoQlExecutorFactory;
 import org.polypheny.simpleclient.executor.PolyphenyDbRestExecutor.PolyphenyDbRestExecutorFactory;
@@ -60,12 +55,6 @@ public class GavelExCommand implements CliRunnable {
 
     @Option(name = { "-pdb", "--polyphenydb" }, title = "IP or Hostname", arity = 1, description = "IP or Hostname of  Polypheny-DB (default: 127.0.0.1).")
     public static String polyphenyDbHost = "127.0.0.1";
-
-    @Option(name = { "--rest" }, arity = 0, description = "Use Polypheny-DB REST interface instead of the JDBC interface (default: false).")
-    public static boolean restInterface = false;
-
-    @Option(name = { "--mongoql" }, arity = 0, description = "Use MongoQL instead of SQL (default: false).")
-    public static boolean mongoQlInterface = false;
 
     @Option(name = { "--writeCSV" }, arity = 0, description = "Write a CSV file containing execution times for all executed queries (default: false).")
     public boolean writeCsv = false;
@@ -104,7 +93,6 @@ public class GavelExCommand implements CliRunnable {
 
         ExecutorFactory executorFactoryMONGODB = new PolyphenyDbMongoQlExecutorFactory( polyphenyDbHost );
         ExecutorFactory executorFactoryHSQLDB = new PolyphenyDbJdbcExecutorFactory( polyphenyDbHost, true );
-        ExecutorFactory executorFactoryREST = new PolyphenyDbRestExecutorFactory( polyphenyDbHost );
 
         try {
             if ( args.get( 0 ).equalsIgnoreCase( "data" ) ) {
@@ -131,7 +119,6 @@ public class GavelExCommand implements CliRunnable {
 
         return 0;
     }
-
 
 
 }

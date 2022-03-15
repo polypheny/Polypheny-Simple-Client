@@ -71,9 +71,13 @@ import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.InsertRandomAuct
 import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.InsertRandomBid;
 import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.InsertUser;
 import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.SearchAuction;
+import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.SelectAllActiveAuctions;
 import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.SelectAllBidsOnRandomAuction;
+import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.SelectDifferenceBetweenLowestAndHighestBid;
 import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.SelectHighestBidOnRandomAuction;
 import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.SelectHighestOverallBid;
+import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.SelectMaxAmountConditionFinishedAuctions;
+import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.SelectOtherInterestingActiveAuctions;
 import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.SelectPriceBetweenAndNotInCategory;
 import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.SelectRandomAuction;
 import org.polypheny.simpleclient.scenario.gavelEx.queryBuilder.SelectRandomUser;
@@ -148,7 +152,7 @@ public class GavelEx extends Scenario {
 
  */
         final List<QueryBuilder> insertQueries = Arrays.asList(
-                new InsertRandomAuction( config.numberOfUsers, config.numberOfCategories, config ),
+                new InsertRandomAuction( config.numberOfUsers, config.numberOfCategories, config.numberOfConditions, config ),
                 new InsertRandomBid( config.numberOfAuctions, config.numberOfUsers ) );
         final List<QueryBuilder> updateQueries = Arrays.asList(
                 new ChangePasswordOfRandomUser( config.numberOfUsers ),
@@ -161,11 +165,15 @@ public class GavelEx extends Scenario {
                 new SelectPriceBetweenAndNotInCategory( queryMode ),
                 new SelectRandomAuction( config.numberOfAuctions, queryMode ),
                 //new SelectRandomBid( confi, queryMode ),
-                new SelectRandomUser( config.numberOfUsers, queryMode ) );
+                new SelectRandomUser( config.numberOfUsers, queryMode ),
+                new SelectAllActiveAuctions(queryMode));
         final List<QueryBuilder> complexSelectQueries = Arrays.asList(
                 new SelectTheHundredNextEndingAuctionsOfRandomCategory( config.numberOfCategories, config, queryMode ),
                 new SelectTopHundredSellerByNumberOfAuctions( queryMode ),
-                new SelectTopTenCitiesByNumberOfCustomers( queryMode ) );
+                new SelectTopTenCitiesByNumberOfCustomers( queryMode ),
+                new SelectMaxAmountConditionFinishedAuctions(queryMode),
+                new SelectDifferenceBetweenLowestAndHighestBid(queryMode),
+                new SelectOtherInterestingActiveAuctions(queryMode));
         final List<QueryBuilder> truncateQueries = Arrays.asList(
                 new TruncateAuction(),
                 new TruncateBid(),
@@ -572,6 +580,24 @@ public class GavelEx extends Scenario {
             String line = bf.readLine();
             executor.executeQuery( new RawQuery( null, null, "use test", false ) );
             while ( line != null ) {
+                if(!gavelExSettings.tableStores.isEmpty()){
+                    List<Pair<String, String>> tableStores = gavelExSettings.tableStores;
+                    for ( Pair<String, String> tableStore : tableStores ) {
+                        if(line.replace( "\"", "" ).equals( tableStore.left )){
+                            line = line + ",{\"store\":\"" + tableStore.right + "\"}";
+                        }
+                    }
+
+                }else if(!gavelExSettings.factoryStores.isEmpty()){
+                    List<Pair<String, String>> factoryStores = gavelExSettings.factoryStores;
+                    for ( Pair<String, String> tableStore : factoryStores ) {
+                        if( "efHsqldb".equals( tableStore.left )){
+                            line = line + ",{\"store\":\"" + tableStore.right + "\"}";
+                        }
+                    }
+                }
+
+
                 executor.executeQuery( new RawQuery( null, null, "db.createCollection(" + line + ")", false ) );
                 line = bf.readLine();
             }
@@ -631,15 +657,21 @@ public class GavelEx extends Scenario {
         Executor executor1Mongo = executorFactoryMONGODB.createExecutorInstance();
         DataGeneratorEx dataGeneratorExMongo = new DataGeneratorEx( executor1Mongo, config, progressReporter, threadMonitor );
         try {
-            //dataGenerator.truncateTables();
+            dataGeneratorEx.truncateTables();
             dataGeneratorEx.generateCategories();
+            dataGeneratorEx.generateConditions();
+            dataGeneratorExMongo.truncateTables();
             dataGeneratorExMongo.generateCategories();
+            dataGeneratorExMongo.generateConditions();
         } catch ( ExecutorException e ) {
             throw new RuntimeException( "Exception while generating data", e );
         } finally {
             commitAndCloseExecutor( executor1Mongo );
             commitAndCloseExecutor( executor1 );
         }
+
+
+
 
         ArrayList<Thread> threads = new ArrayList<>();
         int numberOfUserGenerationThreads;

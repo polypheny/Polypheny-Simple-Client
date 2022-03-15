@@ -47,6 +47,7 @@ public class InsertAuction extends QueryBuilder {
 
     private final int userId;
     private final int categoryId;
+    private final int conditionId;
     private final LocalDateTime startDate;
     private final LocalDateTime endDate;
     private final String title;
@@ -54,10 +55,11 @@ public class InsertAuction extends QueryBuilder {
     private final int auctionId;
 
 
-    public InsertAuction( int auctionId, int userId, int categoryId, LocalDateTime startDate, LocalDateTime endDate, String title, String description ) {
+    public InsertAuction( int auctionId, int userId, int categoryId, int conditionId, LocalDateTime startDate, LocalDateTime endDate, String title, String description ) {
         this.auctionId = auctionId;
         this.userId = userId;
         this.categoryId = categoryId;
+        this.conditionId = conditionId;
         this.startDate = startDate;
         this.endDate = endDate;
         this.title = title;
@@ -71,6 +73,7 @@ public class InsertAuction extends QueryBuilder {
                 auctionId,
                 userId,
                 categoryId,
+                conditionId,
                 startDate,
                 endDate,
                 title,
@@ -81,22 +84,24 @@ public class InsertAuction extends QueryBuilder {
     @Getter
     public static class InsertAuctionQuery extends BatchableInsert {
 
-        private static final String SQL = "INSERT INTO auction(id, title, description, start_date, end_date, category, \"user\") VALUES ";
+        private static final String SQL = "INSERT INTO auction(id, title, description, start_date, end_date, category, \"user\", \"condition\") VALUES ";
 
         private final int auctionId;
         private final int userId;
         private final int categoryId;
+        private final int conditionId;
         private final LocalDateTime startDate;
         private final LocalDateTime endDate;
         private final String title;
         private final String description;
 
 
-        public InsertAuctionQuery( int auctionId, int userId, int categoryId, LocalDateTime startDate, LocalDateTime endDate, String title, String description ) {
+        public InsertAuctionQuery( int auctionId, int userId, int categoryId, int conditionId, LocalDateTime startDate, LocalDateTime endDate, String title, String description ) {
             super( EXPECT_RESULT );
             this.auctionId = auctionId;
             this.userId = userId;
             this.categoryId = categoryId;
+            this.conditionId = conditionId;
             this.startDate = startDate;
             this.endDate = endDate;
             this.title = title;
@@ -119,14 +124,15 @@ public class InsertAuction extends QueryBuilder {
                     + "timestamp '" + startDate.format( DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss" ) ) + "',"
                     + "timestamp '" + endDate.format( DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss" ) ) + "',"
                     + categoryId + ","
-                    + userId
+                    + userId + ","
+                    + conditionId
                     + ")";
         }
 
 
         @Override
         public String getParameterizedSqlQuery() {
-            return SQL + "(?, ?, ?, ?, ?, ?, ?)";
+            return SQL + "(?, ?, ?, ?, ?, ?, ?, ?)";
         }
 
 
@@ -140,6 +146,7 @@ public class InsertAuction extends QueryBuilder {
             map.put( 5, new ImmutablePair<>( DataTypes.TIMESTAMP, Timestamp.valueOf( endDate ) ) );
             map.put( 6, new ImmutablePair<>( DataTypes.INTEGER, categoryId ) );
             map.put( 7, new ImmutablePair<>( DataTypes.INTEGER, userId ) );
+            map.put( 8, new ImmutablePair<>( DataTypes.INTEGER, conditionId ) );
             return map;
         }
 
@@ -158,7 +165,8 @@ public class InsertAuction extends QueryBuilder {
                     + ",\"start_date\":" + startDate.toLocalDate().toEpochDay()
                     + ",\"end_date\":" + endDate.toLocalDate().toEpochDay()
                     + ",\"category\":" + maybeQuote( categoryId )
-                    + ",\"user\":" + maybeQuote( userId ) + "})";
+                    + ",\"user\":" + maybeQuote( userId )
+                    + ",\"condition\":" + maybeQuote( conditionId ) + "})";
         }
 
 
@@ -172,6 +180,7 @@ public class InsertAuction extends QueryBuilder {
             row.add( "public.auction.end_date", new JsonPrimitive( endDate.format( DateTimeFormatter.ISO_LOCAL_DATE_TIME ) ) );
             row.add( "public.auction.category", new JsonPrimitive( categoryId ) );
             row.add( "public.auction.user", new JsonPrimitive( userId ) );
+            row.add( "public.auction.condition", new JsonPrimitive( conditionId ) );
             return row;
         }
 

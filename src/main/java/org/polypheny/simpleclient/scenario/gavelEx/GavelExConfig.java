@@ -39,6 +39,7 @@ public class GavelExConfig extends AbstractConfig {
     public final int numberOfUsers;
     public final int numberOfAuctions;
     public final int numberOfCategories;
+    public final int numberOfConditions;
     public final int auctionTitleMinLength;
     public final int auctionTitleMaxLength;
     public final int auctionDescriptionMinLength;
@@ -88,6 +89,7 @@ public class GavelExConfig extends AbstractConfig {
         numberOfUsers = getIntProperty( properties, "numberOfUsers" ) * multiplier;
         numberOfAuctions = getIntProperty( properties, "numberOfAuctions" ) * multiplier;
         numberOfCategories = getIntProperty( properties, "numberOfCategories" );
+        numberOfConditions = getIntProperty( properties, "numberOfConditions" );
         auctionTitleMinLength = getIntProperty( properties, "auctionTitleMinLength" );
         auctionTitleMaxLength = getIntProperty( properties, "auctionTitleMaxLength" );
         auctionDescriptionMinLength = getIntProperty( properties, "auctionDescriptionMinLength" );
@@ -141,6 +143,7 @@ public class GavelExConfig extends AbstractConfig {
         numberOfUsers = Integer.parseInt( cdl.get( "numberOfUsers" ) );
         numberOfAuctions = Integer.parseInt( cdl.get( "numberOfAuctions" ) );
         numberOfCategories = Integer.parseInt( cdl.get( "numberOfCategories" ) );
+        numberOfConditions = Integer.parseInt( cdl.get( "numberOfConditions" ));
         auctionTitleMinLength = Integer.parseInt( cdl.get( "auctionTitleMinLength" ) );
         auctionTitleMaxLength = Integer.parseInt( cdl.get( "auctionTitleMaxLength" ) );
         auctionDescriptionMinLength = Integer.parseInt( cdl.get( "auctionDescriptionMinLength" ) );
