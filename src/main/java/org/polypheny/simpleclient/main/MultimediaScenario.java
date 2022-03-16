@@ -42,7 +42,7 @@ public class MultimediaScenario {
     public static void schema( ExecutorFactory executorFactory, boolean commitAfterEveryQuery ) {
         MultimediaConfig config = new MultimediaConfig( getProperties(), 1 );
         MultimediaBench multimediaBench = new MultimediaBench( executorFactory, config, commitAfterEveryQuery, false );
-        multimediaBench.createSchema( true,null );
+        multimediaBench.createSchema( true );
     }
 
 
@@ -67,7 +67,7 @@ public class MultimediaScenario {
         }
 
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
-        multimediaBench.execute( progressReporter, csvWriter, new File( "." ), config.numberOfThreads, null );
+        multimediaBench.execute( progressReporter, csvWriter, new File( "." ), config.numberOfThreads );
     }
 
 

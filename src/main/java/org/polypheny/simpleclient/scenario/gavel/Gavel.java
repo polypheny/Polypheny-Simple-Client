@@ -103,7 +103,7 @@ public class Gavel extends Scenario {
 
 
     @Override
-    public long execute( ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory, int numberOfThreads, GavelExProfile profile ) {
+    public long execute( ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory, int numberOfThreads ) {
 
         log.info( "Analyzing currently stored data..." );
         Map<String, Integer> numbers = getNumbers();
@@ -399,7 +399,7 @@ public class Gavel extends Scenario {
 
 
     @Override
-    public void createSchema( boolean includingKeys, GavelExSettings gavelExSettings ) {
+    public void createSchema( boolean includingKeys ) {
         log.info( "Creating schema..." );
         InputStream file;
         if ( executorFactory instanceof PolyphenyDbMongoQlExecutorFactory ) {

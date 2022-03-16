@@ -41,7 +41,7 @@ public class KnnBenchScenario {
     public static void schema( ExecutorFactory executorFactory, boolean commitAfterEveryQuery ) {
         KnnBenchConfig config = new KnnBenchConfig( getProperties(), 1 );
         KnnBench knnBench = new KnnBench( executorFactory, config, commitAfterEveryQuery, false );
-        knnBench.createSchema( true, null );
+        knnBench.createSchema( true );
     }
 
 
@@ -66,7 +66,7 @@ public class KnnBenchScenario {
         }
 
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
-        knnBench.execute( progressReporter, csvWriter, new File( "." ), config.numberOfThreads, null );
+        knnBench.execute( progressReporter, csvWriter, new File( "." ), config.numberOfThreads );
     }
 
 

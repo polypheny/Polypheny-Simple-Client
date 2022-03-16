@@ -35,8 +35,6 @@ import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
 import org.polypheny.simpleclient.scenario.gavelEx.GavelEx;
 import org.polypheny.simpleclient.scenario.gavelEx.GavelExConfig;
-import org.polypheny.simpleclient.scenario.gavelEx.GavelExProfile;
-import org.polypheny.simpleclient.scenario.gavelEx.GavelExSettings;
 
 
 @Slf4j
@@ -44,9 +42,9 @@ public class GavelExScenario {
 
     public static void schema( ExecutorFactory executorFactoryHSQLDB, ExecutorFactory executorFactoryMONGODB, boolean commitAfterEveryQuery, QueryMode queryMode ) {
         GavelExConfig config = new GavelExConfig( getProperties(), 1 );
-        GavelExSettings gavelExSettings = new GavelExSettings( getProfileProperties(), executorFactoryHSQLDB );
+
         GavelEx gavelEx = new GavelEx( executorFactoryHSQLDB, executorFactoryMONGODB, config, commitAfterEveryQuery, false, queryMode );
-        gavelEx.createSchema( true, gavelExSettings );
+        gavelEx.createSchema( true );
     }
 
 
@@ -70,8 +68,8 @@ public class GavelExScenario {
             csvWriter = null;
         }
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
-        GavelExProfile profile = new GavelExProfile( getProfileProperties() );
-        gavelEx.execute( progressReporter, csvWriter, new File( "." ), config.numberOfThreads, profile );
+
+        gavelEx.execute( progressReporter, csvWriter, new File( "." ), config.numberOfThreads );
     }
 
 
@@ -80,6 +78,7 @@ public class GavelExScenario {
         GavelEx gavelEx = new GavelEx( executorFactoryHSQLDB, executorFactoryMONGODB, config, commitAfterEveryQuery, dumpQueryList, queryMode );
 
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
+
         gavelEx.warmUp( progressReporter, config.numberOfWarmUpIterations );
     }
 
@@ -88,17 +87,6 @@ public class GavelExScenario {
         Properties props = new Properties();
         try {
             props.load( Objects.requireNonNull( ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/gavelEx/gavelEx.properties" ) ) );
-        } catch ( IOException e ) {
-            log.error( "Exception while reading properties file", e );
-        }
-        return props;
-    }
-
-
-    private static Properties getProfileProperties() {
-        Properties props = new Properties();
-        try {
-            props.load( Objects.requireNonNull( ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/gavelEx/gavelExProfile1.properties" ) ) );
         } catch ( IOException e ) {
             log.error( "Exception while reading properties file", e );
         }

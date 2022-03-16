@@ -42,7 +42,7 @@ public class GavelScenario {
     public static void schema( ExecutorFactory executorFactory, boolean commitAfterEveryQuery, QueryMode queryMode ) {
         GavelConfig config = new GavelConfig( getProperties(), 1 );
         Gavel gavel = new Gavel( executorFactory, config, commitAfterEveryQuery, false, queryMode );
-        gavel.createSchema( true, null );
+        gavel.createSchema( true );
     }
 
 
@@ -66,7 +66,7 @@ public class GavelScenario {
             csvWriter = null;
         }
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
-        gavel.execute( progressReporter, csvWriter, new File( "." ), config.numberOfThreads, null );
+        gavel.execute( progressReporter, csvWriter, new File( "." ), config.numberOfThreads );
     }
 
 

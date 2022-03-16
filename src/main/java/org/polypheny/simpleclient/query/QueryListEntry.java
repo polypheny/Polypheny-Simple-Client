@@ -33,7 +33,7 @@ public class QueryListEntry {
 
     public final Query query;
     public final int templateId;
-    public final int delay;
+    public final long delay;
     @Getter
     public final QueryLanguage queryLanguage;
 
@@ -49,7 +49,7 @@ public class QueryListEntry {
     public QueryListEntry( Query query, int templateId, int delay, QueryLanguage queryLanguage ) {
         this.query = query;
         this.templateId = templateId;
-        this.delay = delay;
+        this.delay = delay * 1000L;
         this.queryLanguage = queryLanguage;
     }
 

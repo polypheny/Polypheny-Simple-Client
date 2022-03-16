@@ -86,7 +86,7 @@ public class KnnBench extends Scenario {
 
 
     @Override
-    public void createSchema( boolean includingKeys,  GavelExSettings gavelExSettings ) {
+    public void createSchema( boolean includingKeys ) {
         if ( queryMode != QueryMode.TABLE ) {
             throw new UnsupportedOperationException( "Unsupported query mode: " + queryMode.name() );
         }
@@ -125,7 +125,7 @@ public class KnnBench extends Scenario {
 
 
     @Override
-    public long execute( ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory, int numberOfThreads, GavelExProfile gavelExProfile ) {
+    public long execute( ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory, int numberOfThreads ) {
 
         log.info( "Preparing query list for the benchmark..." );
         List<QueryListEntry> queryList = new Vector<>();

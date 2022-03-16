@@ -40,7 +40,9 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
+import java.util.Queue;
 import java.util.Random;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
@@ -96,6 +98,8 @@ import org.polypheny.simpleclient.scenario.multimedia.queryBuilder.CreateTable;
 public class GavelEx extends Scenario {
 
     private final GavelExConfig config;
+    private final GavelExSettings gavelExSettings;
+    private final GavelExProfile profile;
 
     private final List<Long> measuredTimes;
     private final Map<Integer, String> queryTypes;
@@ -109,6 +113,22 @@ public class GavelEx extends Scenario {
 
         queryTypes = new HashMap<>();
         measuredTimePerQueryType = new ConcurrentHashMap<>();
+
+        this.gavelExSettings = new GavelExSettings( getProfileProperties() );
+        this.profile = new GavelExProfile( getProfileProperties() );
+
+
+    }
+
+
+    private static Properties getProfileProperties() {
+        Properties props = new Properties();
+        try {
+            props.load( Objects.requireNonNull( ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/gavelEx/gavelExProfile1.properties" ) ) );
+        } catch ( IOException e ) {
+            log.error( "Exception while reading properties file", e );
+        }
+        return props;
     }
 
 
@@ -118,9 +138,9 @@ public class GavelEx extends Scenario {
 
 
     public Pair<List<QueryBuilder>, QueryLanguage> getPossibleClasses( QueryPossibility query, Map<String, Integer> numbers ) {
-/*
+
         final List<QueryBuilder> insertQueries = Arrays.asList(
-                new InsertRandomAuction( numbers.get( "users" ), numbers.get( "categories" ), config ),
+                new InsertRandomAuction( numbers.get( "users" ), numbers.get( "categories" ), numbers.get( "categories" ), config ),
                 new InsertRandomBid( numbers.get( "auctions" ), numbers.get( "users" ) ) );
         final List<QueryBuilder> updateQueries = Arrays.asList(
                 new ChangePasswordOfRandomUser( numbers.get( "users" ) ),
@@ -132,48 +152,16 @@ public class GavelEx extends Scenario {
                 new SelectHighestOverallBid( queryMode ),
                 new SelectPriceBetweenAndNotInCategory( queryMode ),
                 new SelectRandomAuction( numbers.get( "auctions" ), queryMode ),
-                new SelectRandomBid( numbers.get( "bids" ), queryMode ),
-                new SelectRandomUser( numbers.get( "users" ), queryMode ) );
+                //new SelectRandomBid( numbers.get( "bids" ), queryMode ),
+                new SelectRandomUser( numbers.get( "users" ), queryMode ),
+                new SelectAllActiveAuctions( queryMode ) );
         final List<QueryBuilder> complexSelectQueries = Arrays.asList(
                 new SelectTheHundredNextEndingAuctionsOfRandomCategory( numbers.get( "categories" ), config, queryMode ),
                 new SelectTopHundredSellerByNumberOfAuctions( queryMode ),
-                new SelectTopTenCitiesByNumberOfCustomers( queryMode ) );
-        final List<QueryBuilder> truncateQueries = Arrays.asList(
-                new TruncateAuction(),
-                new TruncateBid(),
-                new TruncateCategory(),
-                new TruncatePicture(),
-                new TruncateUser()
-
-        );
-        final List<QueryBuilder> deleteQueries = Arrays.asList(
-
-        );
-
- */
-        final List<QueryBuilder> insertQueries = Arrays.asList(
-                new InsertRandomAuction( config.numberOfUsers, config.numberOfCategories, config.numberOfConditions, config ),
-                new InsertRandomBid( config.numberOfAuctions, config.numberOfUsers ) );
-        final List<QueryBuilder> updateQueries = Arrays.asList(
-                new ChangePasswordOfRandomUser( config.numberOfUsers ),
-                new ChangeRandomAuction( config.numberOfUsers, config ) );
-        final List<QueryBuilder> simpleSelectQueries = Arrays.asList(
-                new SearchAuction( queryMode ),
-                new SelectAllBidsOnRandomAuction( config.numberOfAuctions, queryMode ),
-                new SelectHighestBidOnRandomAuction( config.numberOfAuctions, queryMode ),
-                new SelectHighestOverallBid( queryMode ),
-                new SelectPriceBetweenAndNotInCategory( queryMode ),
-                new SelectRandomAuction( config.numberOfAuctions, queryMode ),
-                //new SelectRandomBid( confi, queryMode ),
-                new SelectRandomUser( config.numberOfUsers, queryMode ),
-                new SelectAllActiveAuctions(queryMode));
-        final List<QueryBuilder> complexSelectQueries = Arrays.asList(
-                new SelectTheHundredNextEndingAuctionsOfRandomCategory( config.numberOfCategories, config, queryMode ),
-                new SelectTopHundredSellerByNumberOfAuctions( queryMode ),
                 new SelectTopTenCitiesByNumberOfCustomers( queryMode ),
-                new SelectMaxAmountConditionFinishedAuctions(queryMode),
-                new SelectDifferenceBetweenLowestAndHighestBid(queryMode),
-                new SelectOtherInterestingActiveAuctions(queryMode));
+                new SelectMaxAmountConditionFinishedAuctions( queryMode ),
+                new SelectDifferenceBetweenLowestAndHighestBid( queryMode ),
+                new SelectOtherInterestingActiveAuctions( queryMode ) );
         final List<QueryBuilder> truncateQueries = Arrays.asList(
                 new TruncateAuction(),
                 new TruncateBid(),
@@ -219,7 +207,7 @@ public class GavelEx extends Scenario {
 
 
     @Override
-    public long execute( ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory, int numberOfThreads, GavelExProfile profile ) {
+    public long execute( ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory, int numberOfThreads ) {
 
         log.info( "Analyzing currently stored data..." );
         Map<String, Integer> numbers = getNumbers();
@@ -253,12 +241,12 @@ public class GavelEx extends Scenario {
                 FileWriter fw = new FileWriter( outputDirectory.getPath() + File.separator + "queryList" );
                 queryList.forEach( query -> {
                     try {
-                        if(query.queryLanguage == QueryLanguage.SQL){
+                        if ( query.queryLanguage == QueryLanguage.SQL ) {
                             fw.append( query.query.getSql() ).append( "\n" );
-                        }else if(query.queryLanguage == QueryLanguage.MQL){
+                        } else if ( query.queryLanguage == QueryLanguage.MQL ) {
                             fw.append( query.query.getMongoQl() ).append( "\n" );
-                        }else {
-                            throw new RuntimeException("Querylanguag is not implemented yet.");
+                        } else {
+                            throw new RuntimeException( "Querylanguag is not implemented yet." );
                         }
 
 
@@ -277,8 +265,10 @@ public class GavelEx extends Scenario {
         long startTime = System.nanoTime();
 
         ArrayList<EvaluationThread> threads = new ArrayList<>();
-        for ( int i = 0; i < numberOfThreads; i++ ) {
-            threads.add( new EvaluationThread( queryList, executorFactory.createExecutorInstance( csvWriter ), executorFactoryMONGODB.createExecutorInstance(csvWriter) ) );
+        // numberOfThreads must be 1
+        log.warn( "Number of Threads must be 1 and is set manually to 1." );
+        for ( int i = 0; i < 1; i++ ) {
+            threads.add( new EvaluationThread( queryList, executorFactory.createExecutorInstance( csvWriter ), executorFactoryMONGODB.createExecutorInstance( csvWriter ) ) );
         }
 
         EvaluationThreadMonitor threadMonitor = new EvaluationThreadMonitor( threads );
@@ -321,72 +311,31 @@ public class GavelEx extends Scenario {
         InsertRandomBid.setNextId( numbers.get( "bids" ) + 2 );
 
         log.info( "Warm-up..." );
-        Executor executor = null;
+        Executor executorHsqlDb = null;
+        Executor executorMongoDb = null;
         for ( int i = 0; i < iterations; i++ ) {
             try {
-                executor = executorFactory.createExecutorInstance();
-                executor.executeQuery( new InsertUser().getNewQuery() );
-                /*
-                if ( config.numberOfAddUserQueries > 0 ) {
-                    executor.executeQuery( new InsertUser().getNewQuery() );
-                }
-                if ( config.numberOfChangePasswordQueries > 0 ) {
-                    executor.executeQuery( new ChangePasswordOfRandomUser( numbers.get( "users" ) ).getNewQuery() );
-                }
-                if ( config.numberOfAddAuctionQueries > 0 ) {
-                    executor.executeQuery( new InsertRandomAuction( numbers.get( "users" ), numbers.get( "categories" ), config ).getNewQuery() );
-                }
-                if ( config.numberOfAddBidQueries > 0 ) {
-                    executor.executeQuery( new InsertRandomBid( numbers.get( "auctions" ), numbers.get( "users" ) ).getNewQuery() );
-                }
-                if ( config.numberOfChangeAuctionQueries > 0 ) {
-                    executor.executeQuery( new ChangeRandomAuction( numbers.get( "auctions" ), config ).getNewQuery() );
-                }
-                if ( config.numberOfGetAuctionQueries > 0 ) {
-                    executor.executeQuery( new SelectRandomAuction( numbers.get( "auctions" ), queryMode ).getNewQuery() );
-                }
-                if ( config.numberOfGetTheNextHundredEndingAuctionsOfACategoryQueries > 0 ) {
-                    executor.executeQuery( new SelectTheHundredNextEndingAuctionsOfRandomCategory( numbers.get( "categories" ), config, queryMode ).getNewQuery() );
-                }
-                if ( config.numberOfSearchAuctionQueries > 0 ) {
-                    executor.executeQuery( new SearchAuction( queryMode ).getNewQuery() );
-                }
-                if ( config.numberOfCountAuctionsQueries > 0 ) {
-                    executor.executeQuery( new CountAuction( queryMode ).getNewQuery() );
-                }
-                if ( config.numberOfTopTenCitiesByNumberOfCustomersQueries > 0 ) {
-                    executor.executeQuery( new SelectTopTenCitiesByNumberOfCustomers( queryMode ).getNewQuery() );
-                }
-                if ( config.numberOfCountBidsQueries > 0 ) {
-                    executor.executeQuery( new CountBid( queryMode ).getNewQuery() );
-                }
-                if ( config.numberOfGetBidQueries > 0 ) {
-                    executor.executeQuery( new SelectRandomBid( numbers.get( "bids" ), queryMode ).getNewQuery() );
-                }
-                if ( config.numberOfGetUserQueries > 0 ) {
-                    executor.executeQuery( new SelectRandomUser( numbers.get( "users" ), queryMode ).getNewQuery() );
-                }
-                if ( config.numberOfGetAllBidsOnAuctionQueries > 0 ) {
-                    executor.executeQuery( new SelectAllBidsOnRandomAuction( numbers.get( "auctions" ), queryMode ).getNewQuery() );
-                }
-                if ( config.numberOfGetCurrentlyHighestBidOnAuctionQueries > 0 ) {
-                    executor.executeQuery( new SelectHighestBidOnRandomAuction( numbers.get( "auctions" ), queryMode ).getNewQuery() );
-                }
-                if ( config.totalNumOfPriceBetweenAndNotInCategoryQueries > 0 ) {
-                    executor.executeQuery( new SelectPriceBetweenAndNotInCategory( queryMode ).getNewQuery() );
-                }
-                if ( config.totalNumOfTopHundredSellerByNumberOfAuctionsQueries > 0 ) {
-                    executor.executeQuery( new SelectTopHundredSellerByNumberOfAuctions( queryMode ).getNewQuery() );
-                }
-                if ( config.totalNumOfHighestOverallBidQueries > 0 ) {
-                    executor.executeQuery( new SelectHighestOverallBid( queryMode ).getNewQuery() );
+                executorHsqlDb = executorFactory.createExecutorInstance();
+                executorMongoDb = executorFactoryMONGODB.createExecutorInstance();
+
+                for( QueryPossibility query :profile.warmUp){
+                    Pair<List<QueryBuilder>, QueryLanguage> possibleQueries = getPossibleClasses( query, numbers );
+                    if(possibleQueries.left.size() > 0){
+                        for ( QueryBuilder queryBuilder : possibleQueries.left ) {
+                            if(possibleQueries.right == QueryLanguage.SQL){
+                                executorHsqlDb.executeQuery( queryBuilder.getNewQuery() );
+                            }else if (possibleQueries.right == QueryLanguage.MQL){
+                                executorMongoDb.executeQuery( queryBuilder.getNewQuery() );
+                            }
+                        }
+                    }
                 }
 
-                 */
             } catch ( ExecutorException e ) {
                 throw new RuntimeException( "Error while executing warm-up queries", e );
             } finally {
-                commitAndCloseExecutor( executor );
+                commitAndCloseExecutor( executorHsqlDb );
+                commitAndCloseExecutor( executorMongoDb );
             }
             try {
                 Thread.sleep( 10000 );
@@ -407,7 +356,7 @@ public class GavelEx extends Scenario {
         private EvaluationThreadMonitor threadMonitor;
 
 
-        EvaluationThread( List<QueryListEntry> queryList, Executor executorSQL, Executor  executorMQL) {
+        EvaluationThread( List<QueryListEntry> queryList, Executor executorSQL, Executor executorMQL ) {
             super( "EvaluationThread" );
             this.executorSQL = executorSQL;
             this.executorMQL = executorMQL;
@@ -431,22 +380,23 @@ public class GavelEx extends Scenario {
                     break;
                 }
                 try {
-                    if(queryListEntry.queryLanguage == QueryLanguage.SQL){
+                    if ( queryListEntry.queryLanguage == QueryLanguage.SQL ) {
                         executorSQL.executeQuery( queryListEntry.query );
-                    }else if(queryListEntry.queryLanguage == QueryLanguage.MQL){
+                    } else if ( queryListEntry.queryLanguage == QueryLanguage.MQL ) {
                         executorMQL.executeQuery( queryListEntry.query );
-                    }else{
-                        throw new RuntimeException("Query language is not implemented yet.");
+                    } else {
+                        throw new RuntimeException( "Query language is not implemented yet." );
                     }
-
                 } catch ( ExecutorException e ) {
                     log.error( "Caught exception while executing the following query: {}", queryListEntry.query.getClass().getName(), e );
                     threadMonitor.notifyAboutError( e );
                     try {
-                        if(queryListEntry.queryLanguage == QueryLanguage.SQL){
+                        if ( queryListEntry.queryLanguage == QueryLanguage.SQL ) {
                             executorSQL.executeRollback();
-                        }else if(queryListEntry.queryLanguage == QueryLanguage.MQL){
+                        } else if ( queryListEntry.queryLanguage == QueryLanguage.MQL ) {
                             executorMQL.executeRollback();
+                        }else{
+                            throw new RuntimeException("Not possible to rollback, the query language is not supported.");
                         }
                     } catch ( ExecutorException ex ) {
                         log.error( "Error while rollback", e );
@@ -456,21 +406,33 @@ public class GavelEx extends Scenario {
                 measuredTime = System.nanoTime() - measuredTimeStart;
                 measuredTimes.add( measuredTime );
                 measuredTimePerQueryType.get( queryListEntry.templateId ).add( measuredTime );
+
+                log.warn( String.valueOf( queryListEntry.delay ) );
+                try {
+                    Thread.sleep( queryListEntry.delay );
+                } catch ( InterruptedException e ) {
+                    e.printStackTrace();
+                }
+
                 if ( commitAfterEveryQuery ) {
                     try {
-                        if(queryListEntry.queryLanguage == QueryLanguage.SQL){
+                        if ( queryListEntry.queryLanguage == QueryLanguage.SQL ) {
                             executorSQL.executeCommit();
-                        }else if(queryListEntry.queryLanguage == QueryLanguage.MQL){
+                        } else if ( queryListEntry.queryLanguage == QueryLanguage.MQL ) {
                             executorMQL.executeCommit();
+                        }else{
+                            throw new RuntimeException("Not possible to commit, the query language is not supported.");
                         }
                     } catch ( ExecutorException e ) {
                         log.error( "Caught exception while committing", e );
                         threadMonitor.notifyAboutError( e );
                         try {
-                            if(queryListEntry.queryLanguage == QueryLanguage.SQL){
+                            if ( queryListEntry.queryLanguage == QueryLanguage.SQL ) {
                                 executorSQL.executeRollback();
-                            }else if(queryListEntry.queryLanguage == QueryLanguage.MQL){
+                            } else if ( queryListEntry.queryLanguage == QueryLanguage.MQL ) {
                                 executorMQL.executeRollback();
+                            }else{
+                                throw new RuntimeException("Not possible to rollback, the query language is not supported.");
                             }
                         } catch ( ExecutorException ex ) {
                             log.error( "Error while rollback", e );
@@ -547,7 +509,9 @@ public class GavelEx extends Scenario {
 
 
     @Override
-    public void createSchema( boolean includingKeys, GavelExSettings gavelExSettings ) {
+    public void createSchema( boolean includingKeys ) {
+        log.info( "Deploy Stores..." );
+        gavelExSettings.depolySelectedStore( executorFactory );
         log.info( "Creating schema..." );
         InputStream file;
 
@@ -580,23 +544,22 @@ public class GavelEx extends Scenario {
             String line = bf.readLine();
             executor.executeQuery( new RawQuery( null, null, "use test", false ) );
             while ( line != null ) {
-                if(!gavelExSettings.tableStores.isEmpty()){
+                if ( !gavelExSettings.tableStores.isEmpty() ) {
                     List<Pair<String, String>> tableStores = gavelExSettings.tableStores;
                     for ( Pair<String, String> tableStore : tableStores ) {
-                        if(line.replace( "\"", "" ).equals( tableStore.left )){
+                        if ( line.replace( "\"", "" ).equals( tableStore.left ) ) {
                             line = line + ",{\"store\":\"" + tableStore.right + "\"}";
                         }
                     }
 
-                }else if(!gavelExSettings.factoryStores.isEmpty()){
+                } else if ( !gavelExSettings.factoryStores.isEmpty() ) {
                     List<Pair<String, String>> factoryStores = gavelExSettings.factoryStores;
                     for ( Pair<String, String> tableStore : factoryStores ) {
-                        if( "efHsqldb".equals( tableStore.left )){
+                        if ( "efHsqldb".equals( tableStore.left ) ) {
                             line = line + ",{\"store\":\"" + tableStore.right + "\"}";
                         }
                     }
                 }
-
 
                 executor.executeQuery( new RawQuery( null, null, "db.createCollection(" + line + ")", false ) );
                 line = bf.readLine();
@@ -618,18 +581,18 @@ public class GavelEx extends Scenario {
             executor = executorFactory.createExecutorInstance();
             String line = bf.readLine();
             while ( line != null ) {
-                if(!gavelExSettings.tableStores.isEmpty()){
+                if ( !gavelExSettings.tableStores.isEmpty() ) {
                     List<Pair<String, String>> tableStores = gavelExSettings.tableStores;
                     for ( Pair<String, String> tableStore : tableStores ) {
-                        if(line.startsWith( "CREATE" ) && line.split( " " )[2].replace( "\"", "" ).equals( tableStore.left )){
+                        if ( line.startsWith( "CREATE" ) && line.split( " " )[2].replace( "\"", "" ).equals( tableStore.left ) ) {
                             line = line + " ON STORE \"" + tableStore.right + "\"";
                         }
                     }
 
-                }else if(!gavelExSettings.factoryStores.isEmpty()){
+                } else if ( !gavelExSettings.factoryStores.isEmpty() ) {
                     List<Pair<String, String>> factoryStores = gavelExSettings.factoryStores;
                     for ( Pair<String, String> tableStore : factoryStores ) {
-                        if(line.startsWith( "CREATE" ) && "efHsqldb".equals( tableStore.left )){
+                        if ( line.startsWith( "CREATE" ) && "efHsqldb".equals( tableStore.left ) ) {
                             line = line + " ON STORE \"" + tableStore.right + "\"";
                         }
                     }
@@ -669,9 +632,6 @@ public class GavelEx extends Scenario {
             commitAndCloseExecutor( executor1Mongo );
             commitAndCloseExecutor( executor1 );
         }
-
-
-
 
         ArrayList<Thread> threads = new ArrayList<>();
         int numberOfUserGenerationThreads;

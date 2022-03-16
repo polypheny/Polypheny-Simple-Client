@@ -235,19 +235,19 @@ public class ChronosAgent extends AbstractChronosAgent {
             case "polypheny-rest":
             case "polypheny-mongoql":
                 databaseInstance = new PolyphenyDbInstance( polyphenyControlConnector, executorFactory, outputDirectory, config );
-                scenario.createSchema( true, null );
+                scenario.createSchema( true );
                 break;
             case "postgres":
                 databaseInstance = new PostgresInstance();
-                scenario.createSchema( false, null );
+                scenario.createSchema( false );
                 break;
             case "monetdb":
                 databaseInstance = new MonetdbInstance();
-                scenario.createSchema( false, null );
+                scenario.createSchema( false );
                 break;
             case "cottontail":
                 databaseInstance = new CottontailInstance();
-                scenario.createSchema( false, null );
+                scenario.createSchema( false );
                 break;
             default:
                 throw new RuntimeException( "Unknown system: " + config.system );
@@ -336,7 +336,7 @@ public class ChronosAgent extends AbstractChronosAgent {
         }
         try {
             ProgressReporter progressReporter = new ChronosProgressReporter( chronosJob, this, numberOfThreads, config.progressReportBase );
-            long runtime = scenario.execute( progressReporter, csvWriter, outputDirectory, numberOfThreads, null );
+            long runtime = scenario.execute( progressReporter, csvWriter, outputDirectory, numberOfThreads );
             properties.put( "runtime", runtime );
         } catch ( Exception e ) {
             databaseInstance.tearDown();

@@ -71,11 +71,11 @@ public abstract class Scenario {
 
 
 
-    public abstract void createSchema( boolean includingKeys,GavelExSettings gavelExSettings );
+    public abstract void createSchema( boolean includingKeys );
 
     public abstract void generateData( ProgressReporter progressReporter);
 
-    public abstract long execute( ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory, int numberOfThreads, GavelExProfile profile );
+    public abstract long execute( ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory, int numberOfThreads );
 
     public abstract void warmUp( ProgressReporter progressReporter, int iterations );
 

@@ -15,12 +15,13 @@ import org.polypheny.simpleclient.executor.PolyphenyDbExecutor;
 @Slf4j
 public class GavelExSettings {
 
-    List<Pair<String, String>> tableStores = new ArrayList<>();
-    List<Pair<String, String>> factoryStores = new ArrayList<>();
+    public final List<Pair<String, String>> tableStores = new ArrayList<>();
+    public final List<Pair<String, String>> factoryStores = new ArrayList<>();
+    public final List<String> dataStore;
 
-    public GavelExSettings( Properties properties, ExecutorFactory executorFactory ) {
-        List<String> dataStore = Arrays.asList( properties.getProperty( "dataStores" ).replace( "\"", "" ).split( "," ) );
-        depolySelectedStore( executorFactory, dataStore );
+
+    public GavelExSettings( Properties properties ) {
+        this.dataStore = Arrays.asList( properties.getProperty( "dataStores" ).replace( "\"", "" ).split( "," ) );
         selectStore( properties );
     }
 
@@ -47,14 +48,14 @@ public class GavelExSettings {
     }
 
 
-    private static void depolySelectedStore( ExecutorFactory executorFactory, List<String> dataStores ) {
+    public void depolySelectedStore( ExecutorFactory executorFactory) {
 
         PolyphenyDbExecutor executor = (PolyphenyDbExecutor) executorFactory.createExecutorInstance();
         try {
             // Remove hsqldb store
             executor.dropStore( "hsqldb" );
             // Deploy stores
-            for ( String store : dataStores ) {
+            for ( String store : dataStore ) {
                 switch ( store ) {
                     case "hsqldb":
                         executor.deployHsqldb();
