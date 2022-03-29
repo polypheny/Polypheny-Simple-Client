@@ -140,6 +140,14 @@ public interface PolyphenyDbExecutor extends Executor {
                 config );
     }
 
+    default void deployNeo4j() throws ExecutorException {
+        String config = "{\"mode\":\"docker\",\"instanceId\":\"0\",\"port\":\"" + nextPort.getAndIncrement() + "\",\"persistent\":\"false\",\"trxLifetimeLimit\":\"1209600\"}";
+        deployStore(
+                "neo4j" + storeCounter.getAndIncrement(),
+                "org.polypheny.db.adapter.neo4j.Neo4jStore",
+                config );
+    }
+
 
     void setConfig( String key, String value );
 
@@ -246,6 +254,9 @@ public interface PolyphenyDbExecutor extends Executor {
                             break;
                         case "mongodb":
                             executor.deployMongoDb();
+                            break;
+                        case "neo4j":
+                            executor.deployNeo4j();
                             break;
                         default:
                             throw new RuntimeException( "Unknown data store: " + store );
