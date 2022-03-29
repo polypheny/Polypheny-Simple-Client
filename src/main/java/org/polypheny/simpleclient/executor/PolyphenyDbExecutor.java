@@ -403,6 +403,8 @@ public interface PolyphenyDbExecutor extends Executor {
                         break;
                     case "mongodb":
                         break;
+                    case "neo4j":
+                        break;
                     default:
                         throw new RuntimeException( "Unknown data store: " + store );
                 }
