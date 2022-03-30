@@ -98,13 +98,19 @@ public class SimpleMetadata extends QueryBuilder {
 
         @Override
         public HttpRequest<?> getRest() {
-            return null;
+            throw new UnsupportedOperationException("Knn benchmarking is not supported for the Rest interface.");
         }
 
 
         @Override
         public String getMongoQl() {
-            return null;
+            throw new UnsupportedOperationException("Knn benchmarking is not supported for the MongoQl interface.");
+        }
+
+
+        @Override
+        public String getCypher() {
+            throw new UnsupportedOperationException("Knn benchmarking is not supported for the Cypher interface.");
         }
 
     }

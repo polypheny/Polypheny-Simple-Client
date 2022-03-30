@@ -49,6 +49,7 @@ import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.executor.ExecutorException;
 import org.polypheny.simpleclient.executor.JdbcExecutor;
+import org.polypheny.simpleclient.executor.PolyphenyDbCypherExecutor.PolyphenyDbCypherExecutorFactory;
 import org.polypheny.simpleclient.executor.PolyphenyDbMongoQlExecutor.PolyphenyDbMongoQlExecutorFactory;
 import org.polypheny.simpleclient.main.ChronosAgent;
 import org.polypheny.simpleclient.main.CsvWriter;
@@ -404,6 +405,9 @@ public class Gavel extends Scenario {
             file = ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/gavel/schema.mongoql" );
             executeMongoQlSchema( file );
             return;
+        }else if ( executorFactory instanceof PolyphenyDbCypherExecutorFactory ){
+            executeCypherSchema();
+            return;
         }
         if ( includingKeys ) {
             file = ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/gavel/schema.sql" );
@@ -440,6 +444,19 @@ public class Gavel extends Scenario {
                 line = bf.readLine();
             }
         } catch ( IOException | ExecutorException e ) {
+            throw new RuntimeException( "Exception while creating schema", e );
+        } finally {
+            commitAndCloseExecutor( executor );
+        }
+    }
+
+    private void executeCypherSchema( ) {
+        Executor executor = null;
+        try {
+            executor = executorFactory.createExecutorInstance();
+
+            executor.executeQuery( new RawQuery( null, null, "CREATE DATABASE test", false ) );
+        } catch ( ExecutorException e ) {
             throw new RuntimeException( "Exception while creating schema", e );
         } finally {
             commitAndCloseExecutor( executor );

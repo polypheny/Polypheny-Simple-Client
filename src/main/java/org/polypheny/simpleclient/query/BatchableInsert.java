@@ -65,4 +65,8 @@ public abstract class BatchableInsert extends Query {
 
     public abstract String getTable();
 
+
+    public String getCypherRowExpression() {
+    }
+
 }
