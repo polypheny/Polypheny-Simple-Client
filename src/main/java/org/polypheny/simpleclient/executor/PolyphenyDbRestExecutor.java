@@ -28,7 +28,9 @@ package org.polypheny.simpleclient.executor;
 import com.google.gson.JsonObject;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import kong.unirest.HttpRequest;
@@ -36,6 +38,7 @@ import kong.unirest.HttpResponse;
 import kong.unirest.JsonNode;
 import kong.unirest.UnirestException;
 import kong.unirest.json.JSONArray;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory;
 import org.polypheny.simpleclient.main.CsvWriter;
@@ -233,17 +236,24 @@ public class PolyphenyDbRestExecutor implements PolyphenyDbExecutor {
 
 
     @Override
-    public void deployStore( String name, String clazz, String config ) throws ExecutorException {
+    public void deployStore( String name, String clazz, String config, String store ) throws ExecutorException {
+        dataStoreNames.put( store, name );
         PolyphenyDbJdbcExecutor executor = null;
         try {
             executor = jdbcExecutorFactory.createExecutorInstance( csvWriter );
-            executor.deployStore( name, clazz, config );
+            executor.deployStore( name, clazz, config, store );
             executor.executeCommit();
         } catch ( ExecutorException e ) {
             throw new ExecutorException( "Error while executing query via JDBC", e );
         } finally {
             commitAndCloseJdbcExecutor( executor );
         }
+    }
+
+
+    @Override
+    public void setPolicies( String clauseName, String value ) throws ExecutorException {
+        // NoOp
     }
 
 

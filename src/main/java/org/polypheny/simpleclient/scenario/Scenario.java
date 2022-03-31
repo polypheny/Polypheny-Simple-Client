@@ -38,8 +38,6 @@ import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.main.ProgressReporter;
-import org.polypheny.simpleclient.scenario.gavelEx.GavelExProfile;
-import org.polypheny.simpleclient.scenario.gavelEx.GavelExSettings;
 
 
 @Slf4j

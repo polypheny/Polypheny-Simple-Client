@@ -28,7 +28,10 @@ package org.polypheny.simpleclient.executor;
 
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.query.RawQuery;
@@ -36,7 +39,6 @@ import org.polypheny.simpleclient.query.RawQuery;
 
 @Slf4j
 public class PolyphenyDbJdbcExecutor extends JdbcExecutor implements PolyphenyDbExecutor {
-
 
     private PolyphenyDbJdbcExecutor( String polyphenyHost, CsvWriter csvWriter, boolean prepareStatements ) {
         super( csvWriter, prepareStatements );
@@ -75,9 +77,17 @@ public class PolyphenyDbJdbcExecutor extends JdbcExecutor implements PolyphenyDb
 
 
     @Override
-    public void deployStore( String name, String clazz, String config ) throws ExecutorException {
+    public void deployStore( String name, String clazz, String config, String store ) throws ExecutorException {
+        dataStoreNames.put( store, name );
         executeQuery( new RawQuery( "ALTER ADAPTERS ADD \"" + name + "\" USING '" + clazz + "' WITH '" + config + "'", null, false ) );
     }
+
+    // At the moment it is only possible to set Policies for the whole system
+    @Override
+    public void setPolicies(String clauseName, String value) throws ExecutorException{
+        executeQuery( new RawQuery( "ALTER POLICY " + clauseName + " SET " + value, null, false ) );
+    }
+
 
 
     @Override

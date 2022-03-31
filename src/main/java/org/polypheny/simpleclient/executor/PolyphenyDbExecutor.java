@@ -37,6 +37,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import kong.unirest.HttpResponse;
 import kong.unirest.Unirest;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.control.client.PolyphenyControlConnector;
 import org.polypheny.simpleclient.cli.ChronosCommand;
@@ -51,19 +52,25 @@ public interface PolyphenyDbExecutor extends Executor {
     AtomicInteger storeCounter = new AtomicInteger();
     AtomicInteger nextPort = new AtomicInteger( 3300 );
 
+    Map<String, String> dataStoreNames = new HashMap<>();
+
+    default Map<String, String> getDataStoreNames(){
+        return dataStoreNames;
+    }
+
     void dropStore( String name ) throws ExecutorException;
 
 
-    void deployStore( String name, String clazz, String config ) throws ExecutorException;
+    void deployStore( String name, String clazz, String config, String store ) throws ExecutorException;
 
 
     default void deployHsqldb() throws ExecutorException {
         deployStore(
                 "hsqldb" + storeCounter.getAndIncrement(),
                 "org.polypheny.db.adapter.jdbc.stores.HsqldbStore",
-                "{maxConnections:\"25\",trxControlMode:locks,trxIsolationLevel:read_committed,type:Memory,tableType:Memory,mode:embedded}" );
+                "{maxConnections:\"25\",trxControlMode:locks,trxIsolationLevel:read_committed,type:Memory,tableType:Memory,mode:embedded}",
+                "hsqldb");
     }
-
 
     default void deployMonetDb( boolean deployStoresUsingDocker ) throws ExecutorException {
         String config;
@@ -78,7 +85,8 @@ public interface PolyphenyDbExecutor extends Executor {
         deployStore(
                 name,
                 "org.polypheny.db.adapter.jdbc.stores.MonetdbStore",
-                config );
+                config,
+                "monetdb");
     }
 
 
@@ -95,7 +103,8 @@ public interface PolyphenyDbExecutor extends Executor {
         deployStore(
                 name,
                 "org.polypheny.db.adapter.jdbc.stores.PostgresqlStore",
-                config );
+                config,
+                "postgres");
     }
 
 
@@ -112,7 +121,8 @@ public interface PolyphenyDbExecutor extends Executor {
         deployStore(
                 name,
                 "org.polypheny.db.adapter.cassandra.CassandraStore",
-                config );
+                config,
+                "cassandra");
     }
 
 
@@ -120,7 +130,8 @@ public interface PolyphenyDbExecutor extends Executor {
         deployStore(
                 "file" + storeCounter.getAndIncrement(),
                 "org.polypheny.db.adapter.file.FileStore",
-                "{\"mode\":\"embedded\"}" );
+                "{\"mode\":\"embedded\"}",
+                "file");
     }
 
 
@@ -128,18 +139,22 @@ public interface PolyphenyDbExecutor extends Executor {
         deployStore(
                 "cottontail" + storeCounter.getAndIncrement(),
                 "org.polypheny.db.adapter.cottontail.CottontailStore",
-                "{\"type\":\"Embedded\",\"host\":\"localhost\",\"port\":\"" + nextPort.getAndIncrement() + "\",\"database\":\"cottontail\",\"engine\":\"MAPDB\",\"mode\":\"embedded\"}" );
+                "{\"type\":\"Embedded\",\"host\":\"localhost\",\"port\":\"" + nextPort.getAndIncrement() + "\",\"database\":\"cottontail\",\"engine\":\"MAPDB\",\"mode\":\"embedded\"}",
+                "cottontail");
     }
 
 
     default void deployMongoDb() throws ExecutorException {
         String config = "{\"mode\":\"docker\",\"instanceId\":\"0\",\"port\":\"" + nextPort.getAndIncrement() + "\",\"trxLifetimeLimit\":\"1209600\",\"persistent\":\"false\"}";
         deployStore(
-                "mongo" + storeCounter.getAndIncrement(),
+                "mongodb" + storeCounter.getAndIncrement(),
                 "org.polypheny.db.adapter.mongodb.MongoStore",
-                config );
+                config,
+                "mongodb");
     }
 
+    // At the moment it is only possible to set Policies for the whole system
+    void setPolicies( String clauseName, String value ) throws ExecutorException;
 
     void setConfig( String key, String value );
 
@@ -216,9 +231,20 @@ public interface PolyphenyDbExecutor extends Executor {
             PolyphenyDbExecutor executor = (PolyphenyDbExecutor) executorFactory.createExecutorInstance();
             try {
                 // Remove hsqldb store
-                executor.dropStore( "hsqldb" );
+                //executor.dropStore( "hsqldb" );
+                List<String> datastores;
+
+                if(!config.multipleDataStores.isEmpty()){
+                    datastores = config.multipleDataStores;
+                    log.warn( "multiple Datastore" );
+                }else{
+                    datastores = config.dataStores;
+                    log.warn( "one datastore" );
+                }
+
                 // Deploy stores
-                for ( String store : config.dataStores ) {
+                datastores.forEach( log::warn );
+                for ( String store : datastores) {
                     switch ( store ) {
                         case "hsqldb":
                             executor.deployHsqldb();
@@ -350,6 +376,33 @@ public interface PolyphenyDbExecutor extends Executor {
                     executor.closeConnection();
                 } catch ( ExecutorException e ) {
                     log.error( "Exception while closing connection", e );
+                }
+            }
+
+            // Set Policies
+            if(config.usePolicies != null && config.usePolicies.equals( "PolicyAndSelfAdaptiveness" )){
+                log.warn( "inside of self adaptiveness" );
+                executor = (PolyphenyDbExecutor) executorFactory.createExecutorInstance();
+                try {
+                    for ( String storePolicy : config.storePolicies ) {
+                        if ( storePolicy != null && !storePolicy.equals( "NONE" ) ) {
+                            executor.setPolicies( storePolicy, "true" );
+                        }
+                    }
+                    for ( String selfAdaptingPolicy : config.selfAdaptingPolicies ) {
+                        if ( selfAdaptingPolicy != null && !selfAdaptingPolicy.equals( "NONE" ) ) {
+                            executor.setPolicies( selfAdaptingPolicy, "true" );
+                        }
+                    }
+                    executor.executeCommit();
+                } catch ( ExecutorException e ) {
+                    throw new RuntimeException( "Not possible to set Policies", e );
+                } finally {
+                    try {
+                        executor.closeConnection();
+                    } catch ( ExecutorException e ) {
+                        log.error( "Exception while closing connection", e );
+                    }
                 }
             }
 

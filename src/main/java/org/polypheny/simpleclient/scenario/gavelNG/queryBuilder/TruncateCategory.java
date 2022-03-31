@@ -23,53 +23,62 @@
  *
  */
 
-package org.polypheny.simpleclient.executor;
+package org.polypheny.simpleclient.scenario.gavelNG.queryBuilder;
 
-import java.util.List;
+
 import java.util.Map;
-import org.polypheny.simpleclient.main.CsvWriter;
-import org.polypheny.simpleclient.query.BatchableInsert;
+import kong.unirest.HttpRequest;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.Query;
-import org.polypheny.simpleclient.scenario.AbstractConfig;
+import org.polypheny.simpleclient.query.QueryBuilder;
 
 
-public interface Executor {
+public class TruncateCategory extends QueryBuilder {
 
-    void reset() throws ExecutorException;
-
-    long executeQuery( Query query ) throws ExecutorException;
-
-    long executeQueryAndGetNumber( Query query ) throws ExecutorException;
-
-    void executeCommit() throws ExecutorException;
-
-    void executeRollback() throws ExecutorException;
-
-    void closeConnection() throws ExecutorException;
-
-    void executeInsertList( List<BatchableInsert> batchList, AbstractConfig config ) throws ExecutorException;
-
-    void flushCsvWriter();
+    private static final boolean EXPECT_RESULT = false;
 
 
-    abstract class ExecutorFactory {
-
-        public Executor createExecutorInstance() {
-            return createExecutorInstance( null );
-        }
-
-
-        public abstract Executor createExecutorInstance( CsvWriter csvWriter );
-
-        // Allows to limit number of concurrent executor threads, 0 means no limit
-        public abstract int getMaxNumberOfThreads();
-
+    @Override
+    public Query getNewQuery() {
+        return new TruncateCategoryQuery();
     }
 
 
-    abstract class DatabaseInstance {
+    private static class TruncateCategoryQuery extends Query {
 
-        public abstract void tearDown();
+        public TruncateCategoryQuery() {
+            super( EXPECT_RESULT );
+        }
+
+
+        @Override
+        public String getSql() {
+            return "TRUNCATE TABLE category";
+        }
+
+
+        @Override
+        public String getParameterizedSqlQuery() {
+            return null;
+        }
+
+
+        @Override
+        public Map<Integer, ImmutablePair<DataTypes, Object>> getParameterValues() {
+            return null;
+        }
+
+
+        @Override
+        public HttpRequest<?> getRest() {
+            return null;
+        }
+
+
+        @Override
+        public String getMongoQl() {
+            return "db.category.deleteMany({})";
+        }
 
     }
 

@@ -27,7 +27,7 @@ package org.polypheny.simpleclient.query;
 
 
 import lombok.Getter;
-import org.polypheny.simpleclient.scenario.gavelEx.GavelEx.QueryLanguage;
+import org.polypheny.simpleclient.scenario.gavelNG.GavelNG.QueryLanguage;
 
 public class QueryListEntry {
 
