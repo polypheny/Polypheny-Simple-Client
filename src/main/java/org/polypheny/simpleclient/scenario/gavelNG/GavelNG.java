@@ -71,7 +71,6 @@ import org.polypheny.simpleclient.scenario.gavelNG.queryBuilder.CountUser;
 import org.polypheny.simpleclient.scenario.gavelNG.queryBuilder.InsertRandomAuction;
 import org.polypheny.simpleclient.scenario.gavelNG.queryBuilder.InsertRandomBid;
 import org.polypheny.simpleclient.scenario.gavelNG.queryBuilder.SearchAuction;
-import org.polypheny.simpleclient.scenario.gavelNG.queryBuilder.SelectAllActiveAuctions;
 import org.polypheny.simpleclient.scenario.gavelNG.queryBuilder.SelectAllBidsOnRandomAuction;
 import org.polypheny.simpleclient.scenario.gavelNG.queryBuilder.SelectDifferenceBetweenLowestAndHighestBid;
 import org.polypheny.simpleclient.scenario.gavelNG.queryBuilder.SelectHighestBidOnRandomAuction;
@@ -108,15 +107,8 @@ public class GavelNG extends Scenario {
         this.config = config;
         this.profile = ngProfile;
         measuredTimes = Collections.synchronizedList( new LinkedList<>() );
-
         queryTypes = QueryPossibility.getQueryTypes();
-
         measuredTimePerQueryType = new ConcurrentHashMap<>();
-    }
-
-
-    public enum QueryLanguage {
-        SQL, MQL
     }
 
 
@@ -135,7 +127,7 @@ public class GavelNG extends Scenario {
                 new SelectHighestOverallBid( queryMode ),
                 new SelectPriceBetweenAndNotInCategory( queryMode ),
                 new SelectRandomAuction( numbers.get( "auctions" ), queryMode ),
-                new SelectRandomUser( numbers.get( "users" ), queryMode ));
+                new SelectRandomUser( numbers.get( "users" ), queryMode ) );
         final List<QueryBuilder> complexSelectQueries = Arrays.asList(
                 new SelectTheHundredNextEndingAuctionsOfRandomCategory( numbers.get( "categories" ), config, queryMode ),
                 new SelectTopHundredSellerByNumberOfAuctions( queryMode ),
@@ -192,30 +184,24 @@ public class GavelNG extends Scenario {
 
         log.info( "Analyzing currently stored data..." );
         Map<String, Integer> numbers = getNumbers();
-
         InsertRandomAuction.setNextId( numbers.get( "auctions" ) + 1 );
         InsertRandomBid.setNextId( numbers.get( "bids" ) + 1 );
 
         log.info( "Preparing query list for the benchmark..." );
-
         List<QueryListEntry> queryList = new Vector<>();
 
         for ( Pair<Pair<QueryPossibility, Integer>, Integer> part : profile.timeline ) {
             Pair<QueryPossibility, Integer> queryInfo = part.left;
             QueryPossibility query = queryInfo.left;
-
             Pair<List<QueryBuilder>, QueryLanguage> possibleQueries = getPossibleClasses( query, numbers );
-
             if ( possibleQueries.left.size() > 0 ) {
                 Random rand = new Random();
                 rand.setSeed( 1234 );
                 for ( int i = 0; i < queryInfo.right; i++ ) {
                     measuredTimePerQueryType.put( query.id, Collections.synchronizedList( new LinkedList<>() ) );
-                    queryList.add( new QueryListEntry( possibleQueries.left.get( rand.nextInt( possibleQueries.left.size() ) ).getNewQuery(), query.id, part.right, possibleQueries.right  ) );
-
+                    queryList.add( new QueryListEntry( possibleQueries.left.get( rand.nextInt( possibleQueries.left.size() ) ).getNewQuery(), query.id, part.right, possibleQueries.right ) );
                 }
             }
-
         }
 
         // This dumps the sql queries independent of the selected interface
@@ -232,8 +218,6 @@ public class GavelNG extends Scenario {
                         } else {
                             throw new RuntimeException( "Querylanguag is not implemented yet." );
                         }
-
-
                     } catch ( IOException e ) {
                         log.error( "Error while dumping query list", e );
                     }
@@ -713,10 +697,8 @@ public class GavelNG extends Scenario {
     public void updateMaterializedView() {
         log.info( "Update Materialized View..." );
         Executor executor = null;
-
         try {
             executor = executorFactory.createExecutorInstance();
-
             executor.executeQuery( (new CreateTable( "ALTER MATERIALIZED VIEW user_materialized FRESHNESS MANUAL" )).getNewQuery() );
             executor.executeQuery( (new CreateTable( "ALTER MATERIALIZED VIEW bid_materialized FRESHNESS MANUAL" )).getNewQuery() );
             executor.executeQuery( (new CreateTable( "ALTER MATERIALIZED VIEW picture_materialized FRESHNESS MANUAL" )).getNewQuery() );
@@ -728,7 +710,6 @@ public class GavelNG extends Scenario {
             executor.executeQuery( (new CreateTable( "ALTER MATERIALIZED VIEW topHundredSellerByNumberOfAuctions_materialized FRESHNESS MANUAL" )).getNewQuery() );
             executor.executeQuery( (new CreateTable( "ALTER MATERIALIZED VIEW highestBid_materialized FRESHNESS MANUAL" )).getNewQuery() );
             executor.executeQuery( (new CreateTable( "ALTER MATERIALIZED VIEW priceBetween_materialized FRESHNESS MANUAL" )).getNewQuery() );
-
         } catch ( ExecutorException e ) {
             throw new RuntimeException( "Exception while updating Materialized View", e );
         } finally {
@@ -776,11 +757,11 @@ public class GavelNG extends Scenario {
         properties.put( "measuredTime", calculateMean( measuredTimes ) );
 
         measuredTimePerQueryType.forEach( ( templateId, time ) -> {
-            properties.put( "queryTypes_" + QueryPossibility.getById(templateId) + "_mean", calculateMean( time ) );
+            properties.put( "queryTypes_" + QueryPossibility.getById( templateId ) + "_mean", calculateMean( time ) );
             if ( ChronosAgent.STORE_INDIVIDUAL_QUERY_TIMES ) {
-                properties.put( "queryTypes_" + QueryPossibility.getById(templateId) + "_all", Joiner.on( ',' ).join( time ) );
+                properties.put( "queryTypes_" + QueryPossibility.getById( templateId ) + "_all", Joiner.on( ',' ).join( time ) );
             }
-            properties.put( "queryTypes_" + QueryPossibility.getById(templateId) + "_example", queryTypes.get( templateId ) );
+            properties.put( "queryTypes_" + QueryPossibility.getById( templateId ) + "_example", queryTypes.get( templateId ) );
         } );
         properties.put( "queryTypes_maxId", queryTypes.size() );
     }
@@ -833,6 +814,11 @@ public class GavelNG extends Scenario {
                 log.error( "Error while closing connection", e );
             }
         }
+    }
+
+
+    public enum QueryLanguage {
+        SQL, MQL
     }
 
 }

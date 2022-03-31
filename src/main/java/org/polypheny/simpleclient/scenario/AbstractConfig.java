@@ -68,6 +68,7 @@ public abstract class AbstractConfig {
     public final List<String> storePolicies = new ArrayList<>();
     public final List<String> selfAdaptingPolicies = new ArrayList<>();
     public String usePolicies = null;
+    public boolean statisticActiveTracking = false;
 
 
     public AbstractConfig( String scenario, String system ) {

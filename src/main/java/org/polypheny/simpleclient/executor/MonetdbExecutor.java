@@ -30,7 +30,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.cli.ChronosCommand;
 import org.polypheny.simpleclient.main.CsvWriter;
@@ -74,6 +73,7 @@ public class MonetdbExecutor extends JdbcExecutor {
             throw new ExecutorException( e );
         }
     }
+
 
     public List<String> getListOfTables() throws SQLException {
         ResultSet resultSet = executeStatement.executeQuery( "select tables.name from tables where tables.system=false;" );

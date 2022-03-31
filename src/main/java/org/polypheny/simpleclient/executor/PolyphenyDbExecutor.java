@@ -37,7 +37,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import kong.unirest.HttpResponse;
 import kong.unirest.Unirest;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.control.client.PolyphenyControlConnector;
 import org.polypheny.simpleclient.cli.ChronosCommand;
@@ -54,7 +53,7 @@ public interface PolyphenyDbExecutor extends Executor {
 
     Map<String, String> dataStoreNames = new HashMap<>();
 
-    default Map<String, String> getDataStoreNames(){
+    default Map<String, String> getDataStoreNames() {
         return dataStoreNames;
     }
 
@@ -69,7 +68,7 @@ public interface PolyphenyDbExecutor extends Executor {
                 "hsqldb" + storeCounter.getAndIncrement(),
                 "org.polypheny.db.adapter.jdbc.stores.HsqldbStore",
                 "{maxConnections:\"25\",trxControlMode:locks,trxIsolationLevel:read_committed,type:Memory,tableType:Memory,mode:embedded}",
-                "hsqldb");
+                "hsqldb" );
     }
 
     default void deployMonetDb( boolean deployStoresUsingDocker ) throws ExecutorException {
@@ -86,7 +85,7 @@ public interface PolyphenyDbExecutor extends Executor {
                 name,
                 "org.polypheny.db.adapter.jdbc.stores.MonetdbStore",
                 config,
-                "monetdb");
+                "monetdb" );
     }
 
 
@@ -104,7 +103,7 @@ public interface PolyphenyDbExecutor extends Executor {
                 name,
                 "org.polypheny.db.adapter.jdbc.stores.PostgresqlStore",
                 config,
-                "postgres");
+                "postgres" );
     }
 
 
@@ -122,7 +121,7 @@ public interface PolyphenyDbExecutor extends Executor {
                 name,
                 "org.polypheny.db.adapter.cassandra.CassandraStore",
                 config,
-                "cassandra");
+                "cassandra" );
     }
 
 
@@ -131,7 +130,7 @@ public interface PolyphenyDbExecutor extends Executor {
                 "file" + storeCounter.getAndIncrement(),
                 "org.polypheny.db.adapter.file.FileStore",
                 "{\"mode\":\"embedded\"}",
-                "file");
+                "file" );
     }
 
 
@@ -140,7 +139,7 @@ public interface PolyphenyDbExecutor extends Executor {
                 "cottontail" + storeCounter.getAndIncrement(),
                 "org.polypheny.db.adapter.cottontail.CottontailStore",
                 "{\"type\":\"Embedded\",\"host\":\"localhost\",\"port\":\"" + nextPort.getAndIncrement() + "\",\"database\":\"cottontail\",\"engine\":\"MAPDB\",\"mode\":\"embedded\"}",
-                "cottontail");
+                "cottontail" );
     }
 
 
@@ -150,7 +149,7 @@ public interface PolyphenyDbExecutor extends Executor {
                 "mongodb" + storeCounter.getAndIncrement(),
                 "org.polypheny.db.adapter.mongodb.MongoStore",
                 config,
-                "mongodb");
+                "mongodb" );
     }
 
     default void deployNeo4j() throws ExecutorException {
@@ -159,7 +158,7 @@ public interface PolyphenyDbExecutor extends Executor {
                 "neo4j" + storeCounter.getAndIncrement(),
                 "org.polypheny.db.adapter.neo4j.Neo4jStore",
                 config,
-                "neo4j");
+                "neo4j" );
     }
 
     // At the moment it is only possible to set Policies for the whole system
@@ -241,20 +240,18 @@ public interface PolyphenyDbExecutor extends Executor {
             PolyphenyDbExecutor executor = (PolyphenyDbExecutor) executorFactory.createExecutorInstance();
             try {
                 // Remove hsqldb store
-                //executor.dropStore( "hsqldb" );
-                List<String> datastores;
+                executor.dropStore( "hsqldb" );
 
-                if(!config.multipleDataStores.isEmpty()){
+                List<String> datastores;
+                if ( !config.multipleDataStores.isEmpty() ) {
                     datastores = config.multipleDataStores;
-                    log.warn( "multiple Datastore" );
-                }else{
+                } else {
                     datastores = config.dataStores;
-                    log.warn( "one datastore" );
                 }
 
                 // Deploy stores
                 datastores.forEach( log::warn );
-                for ( String store : datastores) {
+                for ( String store : datastores ) {
                     switch ( store ) {
                         case "hsqldb":
                             executor.deployHsqldb();
@@ -305,7 +302,11 @@ public interface PolyphenyDbExecutor extends Executor {
             executor = (PolyphenyDbExecutor) executorFactory.createExecutorInstance();
             try {
                 // Disable active tracking (dynamic querying)
-                executor.setConfig( "statistics/activeTracking", "false" );
+                if (  config.statisticActiveTracking ) {
+                    executor.setConfig( "statistics/activeTracking", "true" );
+                } else {
+                    executor.setConfig( "statistics/activeTracking", "false" );
+                }
                 // Set router
                 if ( config.pdbBranch.equalsIgnoreCase( "old-routing" ) ) { // Old routing, to be removed
                     switch ( config.router ) {
@@ -393,8 +394,7 @@ public interface PolyphenyDbExecutor extends Executor {
             }
 
             // Set Policies
-            if(config.usePolicies != null && config.usePolicies.equals( "PolicyAndSelfAdaptiveness" )){
-                log.warn( "inside of self adaptiveness" );
+            if ( config.usePolicies != null && config.usePolicies.equals( "PolicyAndSelfAdaptiveness" ) ) {
                 executor = (PolyphenyDbExecutor) executorFactory.createExecutorInstance();
                 try {
                     for ( String storePolicy : config.storePolicies ) {

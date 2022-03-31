@@ -92,15 +92,14 @@ public class GavelNGCommand implements CliRunnable {
         ExecutorFactory executorFactoryMONGODB = new PolyphenyDbMongoQlExecutorFactory( polyphenyDbHost );
         ExecutorFactory executorFactoryHSQLDB = new PolyphenyDbJdbcExecutorFactory( polyphenyDbHost, true );
 
-
         try {
             if ( args.get( 0 ).equalsIgnoreCase( "data" ) ) {
                 GavelExScenario.data( executorFactoryHSQLDB, executorFactoryMONGODB, multiplier, true, queryMode );
             } else if ( args.get( 0 ).equalsIgnoreCase( "workload" ) ) {
-                GavelExScenario.workload( executorFactoryHSQLDB, executorFactoryMONGODB, multiplier, true, writeCsv, dumpQueryList, queryMode);
+                GavelExScenario.workload( executorFactoryHSQLDB, executorFactoryMONGODB, multiplier, true, writeCsv, dumpQueryList, queryMode );
             } else if ( args.get( 0 ).equalsIgnoreCase( "schema" ) ) {
-                List<String> dataStores = Arrays.asList("hsqldb","mongodb" );
-                deploySelectedStore(executorFactoryHSQLDB, dataStores);
+                List<String> dataStores = Arrays.asList( "hsqldb", "mongodb" );
+                deploySelectedStore( executorFactoryHSQLDB, dataStores );
                 GavelExScenario.schema( executorFactoryHSQLDB, executorFactoryMONGODB, true, queryMode );
             } else if ( args.get( 0 ).equalsIgnoreCase( "warmup" ) ) {
                 GavelExScenario.warmup( executorFactoryHSQLDB, executorFactoryMONGODB, multiplier, true, dumpQueryList, queryMode );
@@ -121,12 +120,13 @@ public class GavelNGCommand implements CliRunnable {
         return 0;
     }
 
-    public Map<String, String> deploySelectedStore( ExecutorFactory executorFactory, List<String> dataStore) {
+
+    public Map<String, String> deploySelectedStore( ExecutorFactory executorFactory, List<String> dataStore ) {
 
         PolyphenyDbExecutor executor = (PolyphenyDbExecutor) executorFactory.createExecutorInstance();
         try {
             // Remove hsqldb store
-            //executor.dropStore( "hsqldb" );
+            executor.dropStore( "hsqldb" );
             // Deploy stores
             for ( String store : dataStore ) {
                 switch ( store ) {
@@ -168,8 +168,6 @@ public class GavelNGCommand implements CliRunnable {
 
         return executor.getDataStoreNames();
     }
-
-
 
 
 }

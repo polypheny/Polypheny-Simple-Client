@@ -28,10 +28,7 @@ package org.polypheny.simpleclient.executor;
 
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Properties;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.query.RawQuery;
@@ -82,12 +79,12 @@ public class PolyphenyDbJdbcExecutor extends JdbcExecutor implements PolyphenyDb
         executeQuery( new RawQuery( "ALTER ADAPTERS ADD \"" + name + "\" USING '" + clazz + "' WITH '" + config + "'", null, false ) );
     }
 
-    // At the moment it is only possible to set Policies for the whole system
+
+    // At the moment it is only possible to set Policies for Polypheny
     @Override
-    public void setPolicies(String clauseName, String value) throws ExecutorException{
+    public void setPolicies( String clauseName, String value ) throws ExecutorException {
         executeQuery( new RawQuery( "ALTER POLICY " + clauseName + " SET " + value, null, false ) );
     }
-
 
 
     @Override

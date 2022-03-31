@@ -170,6 +170,7 @@ public class GavelNGConfig extends AbstractConfig {
         selfAdaptingPolicies.addAll( Arrays.asList( cdl.get( "selfAdaptingPolicy" ).split( "," ) ) );
         multipleDataStores.addAll( Arrays.asList( cdl.get( "multipleDataStores" ).split( "," ) ) );
         usePolicies = cdl.get( "policySelfAdaptiveness" );
+        statisticActiveTracking = Boolean.parseBoolean( cdl.get( "statisticActiveTracking" ) );
 
     }
 

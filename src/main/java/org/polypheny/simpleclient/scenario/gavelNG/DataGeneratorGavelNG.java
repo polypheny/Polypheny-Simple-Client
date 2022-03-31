@@ -66,7 +66,6 @@ class DataGeneratorGavelNG {
     private final Executor executorMongoDB;
     private final GavelNGConfig config;
     private final ProgressReporter progressReporter;
-
     private final List<BatchableInsert> batchList;
 
     @Getter
@@ -89,9 +88,9 @@ class DataGeneratorGavelNG {
     void truncateTables( QueryLanguage queryLanguage ) throws ExecutorException {
         Executor theExecutor;
         log.info( "Truncate Tables" );
-        if(queryLanguage == QueryLanguage.MQL){
+        if ( queryLanguage == QueryLanguage.MQL ) {
             theExecutor = executorMongoDB;
-        }else{
+        } else {
             theExecutor = executor;
         }
         theExecutor.executeQuery( (new TruncateCategory()).getNewQuery() );
@@ -99,12 +98,11 @@ class DataGeneratorGavelNG {
         theExecutor.executeQuery( (new TruncateAuction()).getNewQuery() );
         theExecutor.executeQuery( (new TruncateBid()).getNewQuery() );
         theExecutor.executeQuery( (new TruncatePicture()).getNewQuery() );
-        theExecutor.executeQuery( (new TruncateCondition()).getNewQuery());
-
+        theExecutor.executeQuery( (new TruncateCondition()).getNewQuery() );
     }
 
 
-    void generateCategories(QueryLanguage queryLanguage) throws ExecutorException {
+    void generateCategories( QueryLanguage queryLanguage ) throws ExecutorException {
         int numberOfCategories = config.numberOfCategories;
         InsertCategory queryBuilder = new InsertCategory();
         for ( int i = 0; i < numberOfCategories; i++ ) {
@@ -113,7 +111,7 @@ class DataGeneratorGavelNG {
             }
             addToInsertList( queryBuilder.getNewQuery(), queryLanguage );
         }
-        executeInsertList(queryLanguage);
+        executeInsertList( queryLanguage );
     }
 
 
@@ -129,10 +127,11 @@ class DataGeneratorGavelNG {
                 progressReporter.updateProgress();
             }
         }
-        executeInsertList(queryLanguage);
+        executeInsertList( queryLanguage );
     }
 
-    void generateConditions(QueryLanguage queryLanguage) throws ExecutorException{
+
+    void generateConditions( QueryLanguage queryLanguage ) throws ExecutorException {
         int numberOfConditions = config.numberOfConditions;
 
         InsertCondition queryBuilder = new InsertCondition();
@@ -142,8 +141,9 @@ class DataGeneratorGavelNG {
             }
             addToInsertList( queryBuilder.getNewQuery(), queryLanguage );
         }
-        executeInsertList(queryLanguage);
+        executeInsertList( queryLanguage );
     }
+
 
     void generateAuctions( int start, int end, QueryLanguage queryLanguage ) throws ExecutorException {
         int mod = ((end - start) + 1) / progressReporter.base;
@@ -190,7 +190,7 @@ class DataGeneratorGavelNG {
             int auctionId = nextAuctionId.getAndIncrement();
             int conditionId = nextAuctionId.getAndIncrement();
             addToInsertList( new InsertAuction( auctionId, user, category, conditionId, startDate, endDate, title, description ).getNewQuery(), queryLanguage );
-            executeInsertList(queryLanguage);
+            executeInsertList( queryLanguage );
 
             // create bids for that auction
             numberOfBids = ThreadLocalRandom.current().nextInt( minNumberOfBidsPerAuction, maxNumberOfBidsPerAuction );
@@ -223,33 +223,33 @@ class DataGeneratorGavelNG {
                 addToInsertList( new InsertBid( auctionId, u, amount, dt ).getNewQuery(), queryLanguage );
                 dtLast = dt;
             }
-            executeInsertList(queryLanguage);
+            executeInsertList( queryLanguage );
 
             // create pictures
             InsertPicture pictureBuilder = new InsertPicture( auctionId );
             numberOfPictures = ThreadLocalRandom.current().nextInt( minNumberOfPicturesPerAuction, maxNumberOfPicturesPerAuction );
             for ( int j = 0; j < numberOfPictures; j++ ) {
-                addToInsertList( pictureBuilder.getNewQuery(), queryLanguage  );
+                addToInsertList( pictureBuilder.getNewQuery(), queryLanguage );
             }
-            executeInsertList(queryLanguage);
+            executeInsertList( queryLanguage );
         }
 
     }
 
 
-    private void addToInsertList( BatchableInsert query, QueryLanguage queryLanguage  ) throws ExecutorException {
+    private void addToInsertList( BatchableInsert query, QueryLanguage queryLanguage ) throws ExecutorException {
         batchList.add( query );
         if ( batchList.size() >= config.maxBatchSize ) {
-            executeInsertList(queryLanguage);
+            executeInsertList( queryLanguage );
         }
     }
 
 
-    private void executeInsertList(QueryLanguage queryLanguage) throws ExecutorException {
+    private void executeInsertList( QueryLanguage queryLanguage ) throws ExecutorException {
         Executor theExecutor;
-        if(queryLanguage == QueryLanguage.MQL){
+        if ( queryLanguage == QueryLanguage.MQL ) {
             theExecutor = executorMongoDB;
-        }else{
+        } else {
             theExecutor = executor;
         }
         theExecutor.executeInsertList( batchList, config );
