@@ -153,8 +153,18 @@ public interface PolyphenyDbExecutor extends Executor {
                 "mongodb");
     }
 
+    default void deployNeo4j() throws ExecutorException {
+        String config = "{\"mode\":\"docker\",\"instanceId\":\"0\",\"port\":\"" + nextPort.getAndIncrement() + "\",\"persistent\":\"false\",\"trxLifetimeLimit\":\"1209600\"}";
+        deployStore(
+                "neo4j" + storeCounter.getAndIncrement(),
+                "org.polypheny.db.adapter.neo4j.Neo4jStore",
+                config,
+                "neo4j");
+    }
+
     // At the moment it is only possible to set Policies for the whole system
     void setPolicies( String clauseName, String value ) throws ExecutorException;
+
 
     void setConfig( String key, String value );
 
@@ -272,6 +282,9 @@ public interface PolyphenyDbExecutor extends Executor {
                             break;
                         case "mongodb":
                             executor.deployMongoDb();
+                            break;
+                        case "neo4j":
+                            executor.deployNeo4j();
                             break;
                         default:
                             throw new RuntimeException( "Unknown data store: " + store );
@@ -444,6 +457,8 @@ public interface PolyphenyDbExecutor extends Executor {
                     case "cottontail":
                         break;
                     case "mongodb":
+                        break;
+                    case "neo4j":
                         break;
                     default:
                         throw new RuntimeException( "Unknown data store: " + store );
