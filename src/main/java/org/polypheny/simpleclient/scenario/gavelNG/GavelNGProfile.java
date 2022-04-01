@@ -1,7 +1,6 @@
 package org.polypheny.simpleclient.scenario.gavelNG;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -11,7 +10,6 @@ import java.util.Properties;
 import java.util.Queue;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
-import org.polypheny.simpleclient.Pair;
 
 @Slf4j
 public class GavelNGProfile {
@@ -148,18 +146,21 @@ public class GavelNGProfile {
 
 
     enum QueryPossibility {
-        INSERT_SQL(1), SIMPLE_SELECT_SQL(2), COMPLEX_SELECT_SQL(3), UPDATE_SQL(4), DELETE_SQL(5), TRUNCATE_SQL(6),
-        INSERT_MQL(7), SIMPLE_SELECT_MQL(8), COMPLEX_SELECT_MQL(9), UPDATE_MQL(10), DELETE_MQL(11), TRUNCATE_MQL(12);
+        INSERT_SQL( 1 ), SIMPLE_SELECT_SQL( 2 ), COMPLEX_SELECT_SQL( 3 ), UPDATE_SQL( 4 ), DELETE_SQL( 5 ), TRUNCATE_SQL( 6 ),
+        INSERT_MQL( 7 ), SIMPLE_SELECT_MQL( 8 ), COMPLEX_SELECT_MQL( 9 ), UPDATE_MQL( 10 ), DELETE_MQL( 11 ), TRUNCATE_MQL( 12 );
 
 
         public int id;
+
+
         QueryPossibility( int id ) {
             this.id = id;
         }
 
-        public static Map<Integer, String> getQueryTypes(){
+
+        public static Map<Integer, String> getQueryTypes() {
             Map<Integer, String> queryTypes = new HashMap<>();
-            for(QueryPossibility queryPossibility: values()){
+            for ( QueryPossibility queryPossibility : values() ) {
                 queryTypes.put( queryPossibility.id, queryPossibility.name() );
             }
             return queryTypes;
@@ -167,8 +168,8 @@ public class GavelNGProfile {
 
 
         public static String getById( Integer templateId ) {
-            for(QueryPossibility queryPossibility: values()){
-                if(queryPossibility.id == templateId){
+            for ( QueryPossibility queryPossibility : values() ) {
+                if ( queryPossibility.id == templateId ) {
                     return queryPossibility.name();
                 }
             }

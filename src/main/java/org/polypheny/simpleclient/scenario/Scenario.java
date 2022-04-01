@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019-2021 The Polypheny Project
+ * Copyright (c) 2019-2022 The Polypheny Project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"), to deal
@@ -59,6 +59,7 @@ public abstract class Scenario {
         this.queryMode = queryMode;
     }
 
+
     protected Scenario( ExecutorFactory executorFactoryHSQLDB, ExecutorFactory executorFactoryMONGODB, boolean commitAfterEveryQuery, boolean dumpQueryList, QueryMode queryMode ) {
         this.executorFactory = executorFactoryHSQLDB;
         this.executorFactoryMONGODB = executorFactoryMONGODB;
@@ -68,10 +69,9 @@ public abstract class Scenario {
     }
 
 
-
     public abstract void createSchema( boolean includingKeys );
 
-    public abstract void generateData( ProgressReporter progressReporter);
+    public abstract void generateData( ProgressReporter progressReporter );
 
     public abstract long execute( ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory, int numberOfThreads );
 

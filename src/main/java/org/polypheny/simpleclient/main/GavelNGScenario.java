@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019-2021 The Polypheny Project
+ * Copyright (c) 2019-2022 The Polypheny Project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"), to deal
@@ -41,10 +41,10 @@ import org.polypheny.simpleclient.scenario.gavelNG.GavelNGProfile;
 public class GavelNGScenario {
 
     public static void schema( ExecutorFactory executorFactoryHSQLDB, ExecutorFactory executorFactoryMONGODB, boolean commitAfterEveryQuery, QueryMode queryMode ) {
-        GavelNGConfig config = new GavelNGConfig( getProperties(), 1);
+        GavelNGConfig config = new GavelNGConfig( getProperties(), 1 );
         GavelNGProfile profile = new GavelNGProfile( getProfileProperties() );
 
-        GavelNG gavelNG = new GavelNG( executorFactoryHSQLDB, executorFactoryMONGODB, config, profile, commitAfterEveryQuery, false, queryMode);
+        GavelNG gavelNG = new GavelNG( executorFactoryHSQLDB, executorFactoryMONGODB, config, profile, commitAfterEveryQuery, false, queryMode );
         gavelNG.createSchema( true );
     }
 
