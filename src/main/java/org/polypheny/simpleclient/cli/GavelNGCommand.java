@@ -151,7 +151,7 @@ public class GavelNGCommand implements CliRunnable {
                         executor.deployMongoDb();
                         break;
                     case "neo4j":
-                        executor.deployMongoDb();
+                        executor.deployNeo4j();
                         break;
                     default:
                         throw new RuntimeException( "Unknown data store: " + store );
