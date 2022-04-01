@@ -28,6 +28,7 @@ package org.polypheny.simpleclient.executor;
 
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
@@ -79,7 +80,7 @@ public class PolyphenyDbJdbcExecutor extends JdbcExecutor implements PolyphenyDb
     public void deployStore( String name, String clazz, String config, String store ) throws ExecutorException {
 
         if ( dataStoreNames.containsKey( store ) ) {
-            List<String> stringNames = dataStoreNames.get( store );
+            List<String> stringNames = new ArrayList<>( dataStoreNames.get( store ) );
             stringNames.add( name );
             dataStoreNames.put( store, stringNames );
         } else {

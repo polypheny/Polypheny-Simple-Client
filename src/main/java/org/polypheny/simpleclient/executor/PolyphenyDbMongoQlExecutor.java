@@ -226,7 +226,7 @@ public class PolyphenyDbMongoQlExecutor implements PolyphenyDbExecutor {
     @Override
     public void deployStore( String name, String clazz, String config, String store ) throws ExecutorException {
         if ( dataStoreNames.containsKey( store ) ) {
-            List<String> stringNames = dataStoreNames.get( store );
+            List<String> stringNames = new ArrayList<>( dataStoreNames.get( store ) );
             stringNames.add( name );
             dataStoreNames.put( store, stringNames );
         } else {
