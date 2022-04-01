@@ -40,29 +40,29 @@ import org.polypheny.simpleclient.scenario.gavelNG.GavelNGProfile;
 @Slf4j
 public class GavelNGScenario {
 
-    public static void schema( ExecutorFactory executorFactoryHSQLDB, ExecutorFactory executorFactoryMONGODB, boolean commitAfterEveryQuery, QueryMode queryMode ) {
+    public static void schema( ExecutorFactory jdbcExecutorFactory, ExecutorFactory mqlExecutorFactory, boolean commitAfterEveryQuery, QueryMode queryMode ) {
         GavelNGConfig config = new GavelNGConfig( getProperties(), 1);
         GavelNGProfile profile = new GavelNGProfile( getProfileProperties() );
 
-        GavelNG gavelNG = new GavelNG( executorFactoryHSQLDB, executorFactoryMONGODB, config, profile, commitAfterEveryQuery, false, queryMode);
+        GavelNG gavelNG = new GavelNG( jdbcExecutorFactory, mqlExecutorFactory, config, profile, commitAfterEveryQuery, false, queryMode);
         gavelNG.createSchema( true );
     }
 
 
-    public static void data( ExecutorFactory executorFactoryHSQLDB, ExecutorFactory executorFactoryMONGODB, int multiplier, boolean commitAfterEveryQuery, QueryMode queryMode ) {
+    public static void data( ExecutorFactory jdbcExecutorFactory, ExecutorFactory mqlExecutorFactory, int multiplier, boolean commitAfterEveryQuery, QueryMode queryMode ) {
         GavelNGConfig config = new GavelNGConfig( getProperties(), multiplier );
         GavelNGProfile profile = new GavelNGProfile( getProfileProperties() );
-        GavelNG gavelNG = new GavelNG( executorFactoryHSQLDB, executorFactoryMONGODB, config, profile, commitAfterEveryQuery, false, queryMode );
+        GavelNG gavelNG = new GavelNG( jdbcExecutorFactory, mqlExecutorFactory, config, profile, commitAfterEveryQuery, false, queryMode );
 
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
         gavelNG.generateData( progressReporter );
     }
 
 
-    public static void workload( ExecutorFactory executorFactoryHSQLDB, ExecutorFactory executorFactoryMONGODB, int multiplier, boolean commitAfterEveryQuery, boolean writeCsv, boolean dumpQueryList, QueryMode queryMode ) {
+    public static void workload( ExecutorFactory jdbcExecutorFactory, ExecutorFactory mqlExecutorFactory, int multiplier, boolean commitAfterEveryQuery, boolean writeCsv, boolean dumpQueryList, QueryMode queryMode ) {
         GavelNGConfig config = new GavelNGConfig( getProperties(), multiplier );
         GavelNGProfile profile = new GavelNGProfile( getProfileProperties() );
-        GavelNG gavelNG = new GavelNG( executorFactoryHSQLDB, executorFactoryMONGODB, config, profile, commitAfterEveryQuery, dumpQueryList, queryMode );
+        GavelNG gavelNG = new GavelNG( jdbcExecutorFactory, mqlExecutorFactory, config, profile, commitAfterEveryQuery, dumpQueryList, queryMode );
 
         final CsvWriter csvWriter;
         if ( writeCsv ) {
@@ -76,10 +76,10 @@ public class GavelNGScenario {
     }
 
 
-    public static void warmup( ExecutorFactory executorFactoryHSQLDB, ExecutorFactory executorFactoryMONGODB, int multiplier, boolean commitAfterEveryQuery, boolean dumpQueryList, QueryMode queryMode ) {
+    public static void warmup( ExecutorFactory jdbcExecutorFactory, ExecutorFactory mqlExecutorFactory, int multiplier, boolean commitAfterEveryQuery, boolean dumpQueryList, QueryMode queryMode ) {
         GavelNGConfig config = new GavelNGConfig( getProperties(), 1 );
         GavelNGProfile profile = new GavelNGProfile( getProfileProperties() );
-        GavelNG gavelNG = new GavelNG( executorFactoryHSQLDB, executorFactoryMONGODB, config, profile, commitAfterEveryQuery, dumpQueryList, queryMode );
+        GavelNG gavelNG = new GavelNG( jdbcExecutorFactory, mqlExecutorFactory, config, profile, commitAfterEveryQuery, dumpQueryList, queryMode );
 
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
 

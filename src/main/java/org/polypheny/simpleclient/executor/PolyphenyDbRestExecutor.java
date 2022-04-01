@@ -28,6 +28,7 @@ package org.polypheny.simpleclient.executor;
 import com.google.gson.JsonObject;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -234,7 +235,13 @@ public class PolyphenyDbRestExecutor implements PolyphenyDbExecutor {
 
     @Override
     public void deployStore( String name, String clazz, String config, String store ) throws ExecutorException {
-        dataStoreNames.put( store, name );
+        if ( dataStoreNames.containsKey( store ) ) {
+            List<String> stringNames = dataStoreNames.get( store );
+            stringNames.add( name );
+            dataStoreNames.put( store, stringNames );
+        } else {
+            dataStoreNames.put( store, Collections.singletonList( name ) );
+        }
         PolyphenyDbJdbcExecutor executor = null;
         try {
             executor = jdbcExecutorFactory.createExecutorInstance( csvWriter );

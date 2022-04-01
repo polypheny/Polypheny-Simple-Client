@@ -51,9 +51,9 @@ public interface PolyphenyDbExecutor extends Executor {
     AtomicInteger storeCounter = new AtomicInteger();
     AtomicInteger nextPort = new AtomicInteger( 3300 );
 
-    Map<String, String> dataStoreNames = new HashMap<>();
+    Map<String, List<String>> dataStoreNames = new HashMap<>();
 
-    default Map<String, String> getDataStoreNames() {
+    default Map<String, List<String>> getDataStoreNames() {
         return dataStoreNames;
     }
 

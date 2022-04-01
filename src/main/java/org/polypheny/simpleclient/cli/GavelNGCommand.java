@@ -30,15 +30,11 @@ import com.github.rvesse.airline.HelpOption;
 import com.github.rvesse.airline.annotations.Arguments;
 import com.github.rvesse.airline.annotations.Command;
 import com.github.rvesse.airline.annotations.Option;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
-import org.polypheny.simpleclient.executor.ExecutorException;
-import org.polypheny.simpleclient.executor.PolyphenyDbExecutor;
 import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory;
 import org.polypheny.simpleclient.executor.PolyphenyDbMongoQlExecutor.PolyphenyDbMongoQlExecutorFactory;
 import org.polypheny.simpleclient.main.GavelNGScenario;
@@ -89,20 +85,18 @@ public class GavelNGCommand implements CliRunnable {
             }
         }
 
-        ExecutorFactory executorFactoryMONGODB = new PolyphenyDbMongoQlExecutorFactory( polyphenyDbHost );
-        ExecutorFactory executorFactoryHSQLDB = new PolyphenyDbJdbcExecutorFactory( polyphenyDbHost, true );
+        ExecutorFactory mqlExecutorFactory = new PolyphenyDbMongoQlExecutorFactory( polyphenyDbHost );
+        ExecutorFactory sqlExecutorFactory = new PolyphenyDbJdbcExecutorFactory( polyphenyDbHost, true );
 
         try {
             if ( args.get( 0 ).equalsIgnoreCase( "data" ) ) {
-                GavelNGScenario.data( executorFactoryHSQLDB, executorFactoryMONGODB, multiplier, true, queryMode );
+                GavelNGScenario.data( sqlExecutorFactory, mqlExecutorFactory, multiplier, true, queryMode );
             } else if ( args.get( 0 ).equalsIgnoreCase( "workload" ) ) {
-                GavelNGScenario.workload( executorFactoryHSQLDB, executorFactoryMONGODB, multiplier, true, writeCsv, dumpQueryList, queryMode );
+                GavelNGScenario.workload( sqlExecutorFactory, mqlExecutorFactory, multiplier, true, writeCsv, dumpQueryList, queryMode );
             } else if ( args.get( 0 ).equalsIgnoreCase( "schema" ) ) {
-                List<String> dataStores = Arrays.asList( "hsqldb", "mongodb" );
-                deploySelectedStore( executorFactoryHSQLDB, dataStores );
-                GavelNGScenario.schema( executorFactoryHSQLDB, executorFactoryMONGODB, true, queryMode );
+                GavelNGScenario.schema( sqlExecutorFactory, mqlExecutorFactory, true, queryMode );
             } else if ( args.get( 0 ).equalsIgnoreCase( "warmup" ) ) {
-                GavelNGScenario.warmup( executorFactoryHSQLDB, executorFactoryMONGODB, multiplier, true, dumpQueryList, queryMode );
+                GavelNGScenario.warmup( sqlExecutorFactory, mqlExecutorFactory, multiplier, true, dumpQueryList, queryMode );
             } else {
                 System.err.println( "Unknown task: " + args.get( 0 ) );
             }
@@ -118,55 +112,6 @@ public class GavelNGCommand implements CliRunnable {
         }
 
         return 0;
-    }
-
-
-    public Map<String, String> deploySelectedStore( ExecutorFactory executorFactory, List<String> dataStore ) {
-
-        PolyphenyDbExecutor executor = (PolyphenyDbExecutor) executorFactory.createExecutorInstance();
-        try {
-            // Remove hsqldb store
-            executor.dropStore( "hsqldb" );
-            // Deploy stores
-            for ( String store : dataStore ) {
-                switch ( store ) {
-                    case "hsqldb":
-                        executor.deployHsqldb();
-                        break;
-                    case "postgres":
-                        executor.deployPostgres( true );
-                        break;
-                    case "monetdb":
-                        executor.deployMonetDb( true );
-                        break;
-                    case "cassandra":
-                        executor.deployCassandra( true );
-                        break;
-                    case "file":
-                        executor.deployFileStore();
-                        break;
-                    case "cottontail":
-                        executor.deployCottontail();
-                        break;
-                    case "mongodb":
-                        executor.deployMongoDb();
-                        break;
-                    default:
-                        throw new RuntimeException( "Unknown data store: " + store );
-                }
-            }
-            executor.executeCommit();
-        } catch ( ExecutorException e ) {
-            throw new RuntimeException( "Exception while configuring stores", e );
-        } finally {
-            try {
-                executor.closeConnection();
-            } catch ( ExecutorException e ) {
-                log.error( "Exception while closing connection", e );
-            }
-        }
-
-        return executor.getDataStoreNames();
     }
 
 

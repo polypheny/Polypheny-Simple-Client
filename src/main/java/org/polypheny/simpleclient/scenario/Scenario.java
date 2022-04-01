@@ -45,7 +45,7 @@ public abstract class Scenario {
 
     @Getter
     protected final ExecutorFactory executorFactory;
-    protected final ExecutorFactory executorFactoryMONGODB;
+    protected final ExecutorFactory mqlExecutorFactory;
     protected final boolean commitAfterEveryQuery;
     protected final boolean dumpQueryList;
     protected final QueryMode queryMode;
@@ -53,15 +53,15 @@ public abstract class Scenario {
 
     protected Scenario( ExecutorFactory executorFactory, boolean commitAfterEveryQuery, boolean dumpQueryList, QueryMode queryMode ) {
         this.executorFactory = executorFactory;
-        this.executorFactoryMONGODB = null;
+        this.mqlExecutorFactory = null;
         this.commitAfterEveryQuery = commitAfterEveryQuery;
         this.dumpQueryList = dumpQueryList;
         this.queryMode = queryMode;
     }
 
-    protected Scenario( ExecutorFactory executorFactoryHSQLDB, ExecutorFactory executorFactoryMONGODB, boolean commitAfterEveryQuery, boolean dumpQueryList, QueryMode queryMode ) {
-        this.executorFactory = executorFactoryHSQLDB;
-        this.executorFactoryMONGODB = executorFactoryMONGODB;
+    protected Scenario( ExecutorFactory jdbcExecutorFactory, ExecutorFactory mqlExecutorFactory, boolean commitAfterEveryQuery, boolean dumpQueryList, QueryMode queryMode ) {
+        this.executorFactory = jdbcExecutorFactory;
+        this.mqlExecutorFactory = mqlExecutorFactory;
         this.commitAfterEveryQuery = commitAfterEveryQuery;
         this.dumpQueryList = dumpQueryList;
         this.queryMode = queryMode;

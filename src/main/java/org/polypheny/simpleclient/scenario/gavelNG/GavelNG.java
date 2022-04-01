@@ -102,8 +102,8 @@ public class GavelNG extends Scenario {
     private final Map<Integer, List<Long>> measuredTimePerQueryType;
 
 
-    public GavelNG( JdbcExecutor.ExecutorFactory executorFactoryHSQLDB, PolyphenyDbMongoQlExecutor.ExecutorFactory executorFactoryMONGODB, GavelNGConfig config, GavelNGProfile ngProfile, boolean commitAfterEveryQuery, boolean dumpQueryList, QueryMode queryMode ) {
-        super( executorFactoryHSQLDB, executorFactoryMONGODB, commitAfterEveryQuery, dumpQueryList, queryMode );
+    public GavelNG( JdbcExecutor.ExecutorFactory jdbcExecutorFactory, PolyphenyDbMongoQlExecutor.ExecutorFactory mqlExecutorFactory, GavelNGConfig config, GavelNGProfile ngProfile, boolean commitAfterEveryQuery, boolean dumpQueryList, QueryMode queryMode ) {
+        super( jdbcExecutorFactory, mqlExecutorFactory, commitAfterEveryQuery, dumpQueryList, queryMode );
         this.config = config;
         this.profile = ngProfile;
         measuredTimes = Collections.synchronizedList( new LinkedList<>() );
@@ -235,7 +235,7 @@ public class GavelNG extends Scenario {
         ArrayList<EvaluationThread> threads = new ArrayList<>();
 
         for ( int i = 0; i < numberOfThreads; i++ ) {
-            threads.add( new EvaluationThread( queryList, executorFactory.createExecutorInstance( csvWriter ), executorFactoryMONGODB.createExecutorInstance( csvWriter ) ) );
+            threads.add( new EvaluationThread( queryList, executorFactory.createExecutorInstance( csvWriter ), mqlExecutorFactory.createExecutorInstance( csvWriter ) ) );
         }
 
         EvaluationThreadMonitor threadMonitor = new EvaluationThreadMonitor( threads );
@@ -278,21 +278,21 @@ public class GavelNG extends Scenario {
         InsertRandomBid.setNextId( numbers.get( "bids" ) + 2 );
 
         log.info( "Warm-up..." );
-        Executor executorHsqlDb = null;
-        Executor executorMongoDb = null;
+        Executor jdbcExecutorFactory = null;
+        Executor mqlExecutorFactory = null;
         for ( int i = 0; i < iterations; i++ ) {
             try {
-                executorHsqlDb = executorFactory.createExecutorInstance();
-                executorMongoDb = executorFactoryMONGODB.createExecutorInstance();
+                jdbcExecutorFactory = executorFactory.createExecutorInstance();
+                mqlExecutorFactory = this.mqlExecutorFactory.createExecutorInstance();
 
                 for ( QueryPossibility query : profile.warmUp ) {
                     Pair<List<QueryBuilder>, QueryLanguage> possibleQueries = getPossibleClasses( query, numbers );
                     if ( possibleQueries.left.size() > 0 ) {
                         for ( QueryBuilder queryBuilder : possibleQueries.left ) {
                             if ( possibleQueries.right == QueryLanguage.SQL ) {
-                                executorHsqlDb.executeQuery( queryBuilder.getNewQuery() );
+                                jdbcExecutorFactory.executeQuery( queryBuilder.getNewQuery() );
                             } else if ( possibleQueries.right == QueryLanguage.MQL ) {
-                                executorMongoDb.executeQuery( queryBuilder.getNewQuery() );
+                                mqlExecutorFactory.executeQuery( queryBuilder.getNewQuery() );
                             }
                         }
                     }
@@ -301,8 +301,8 @@ public class GavelNG extends Scenario {
             } catch ( ExecutorException e ) {
                 throw new RuntimeException( "Error while executing warm-up queries", e );
             } finally {
-                commitAndCloseExecutor( executorHsqlDb );
-                commitAndCloseExecutor( executorMongoDb );
+                commitAndCloseExecutor( jdbcExecutorFactory );
+                commitAndCloseExecutor( mqlExecutorFactory );
             }
             try {
                 Thread.sleep( 10000 );
@@ -315,18 +315,18 @@ public class GavelNG extends Scenario {
 
     private class EvaluationThread extends Thread {
 
-        private final Executor executorSQL;
-        private final Executor executorMQL;
+        private final Executor jdbcExecutorFactory;
+        private final Executor mqlExecutorFactory;
         private final List<QueryListEntry> theQueryList;
         private boolean abort = false;
         @Setter
         private EvaluationThreadMonitor threadMonitor;
 
 
-        EvaluationThread( List<QueryListEntry> queryList, Executor executorSQL, Executor executorMQL ) {
+        EvaluationThread( List<QueryListEntry> queryList, Executor jdbcExecutorFactory, Executor mqlExecutorFactory ) {
             super( "EvaluationThread" );
-            this.executorSQL = executorSQL;
-            this.executorMQL = executorMQL;
+            this.jdbcExecutorFactory = jdbcExecutorFactory;
+            this.mqlExecutorFactory = mqlExecutorFactory;
             theQueryList = queryList;
         }
 
@@ -348,9 +348,9 @@ public class GavelNG extends Scenario {
                 }
                 try {
                     if ( queryListEntry.queryLanguage == QueryLanguage.SQL ) {
-                        executorSQL.executeQuery( queryListEntry.query );
+                        jdbcExecutorFactory.executeQuery( queryListEntry.query );
                     } else if ( queryListEntry.queryLanguage == QueryLanguage.MQL ) {
-                        executorMQL.executeQuery( queryListEntry.query );
+                        mqlExecutorFactory.executeQuery( queryListEntry.query );
                     } else {
                         throw new RuntimeException( "Query language is not implemented yet." );
                     }
@@ -359,9 +359,9 @@ public class GavelNG extends Scenario {
                     threadMonitor.notifyAboutError( e );
                     try {
                         if ( queryListEntry.queryLanguage == QueryLanguage.SQL ) {
-                            executorSQL.executeRollback();
+                            jdbcExecutorFactory.executeRollback();
                         } else if ( queryListEntry.queryLanguage == QueryLanguage.MQL ) {
-                            executorMQL.executeRollback();
+                            mqlExecutorFactory.executeRollback();
                         } else {
                             throw new RuntimeException( "Not possible to rollback, the query language is not supported." );
                         }
@@ -383,9 +383,9 @@ public class GavelNG extends Scenario {
                 if ( commitAfterEveryQuery ) {
                     try {
                         if ( queryListEntry.queryLanguage == QueryLanguage.SQL ) {
-                            executorSQL.executeCommit();
+                            jdbcExecutorFactory.executeCommit();
                         } else if ( queryListEntry.queryLanguage == QueryLanguage.MQL ) {
-                            executorMQL.executeCommit();
+                            mqlExecutorFactory.executeCommit();
                         } else {
                             throw new RuntimeException( "Not possible to commit, the query language is not supported." );
                         }
@@ -394,9 +394,9 @@ public class GavelNG extends Scenario {
                         threadMonitor.notifyAboutError( e );
                         try {
                             if ( queryListEntry.queryLanguage == QueryLanguage.SQL ) {
-                                executorSQL.executeRollback();
+                                jdbcExecutorFactory.executeRollback();
                             } else if ( queryListEntry.queryLanguage == QueryLanguage.MQL ) {
-                                executorMQL.executeRollback();
+                                mqlExecutorFactory.executeRollback();
                             } else {
                                 throw new RuntimeException( "Not possible to rollback, the query language is not supported." );
                             }
@@ -409,21 +409,21 @@ public class GavelNG extends Scenario {
             }
 
             try {
-                executorSQL.executeCommit();
-                executorMQL.executeCommit();
+                jdbcExecutorFactory.executeCommit();
+                mqlExecutorFactory.executeCommit();
             } catch ( ExecutorException e ) {
                 log.error( "Caught exception while committing", e );
                 threadMonitor.notifyAboutError( e );
                 try {
-                    executorSQL.executeRollback();
-                    executorMQL.executeRollback();
+                    jdbcExecutorFactory.executeRollback();
+                    mqlExecutorFactory.executeRollback();
                 } catch ( ExecutorException ex ) {
                     log.error( "Error while rollback", e );
                 }
                 throw new RuntimeException( e );
             }
-            executorSQL.flushCsvWriter();
-            executorMQL.flushCsvWriter();
+            jdbcExecutorFactory.flushCsvWriter();
+            mqlExecutorFactory.flushCsvWriter();
         }
 
 
@@ -433,8 +433,8 @@ public class GavelNG extends Scenario {
 
 
         public void closeExecutor() {
-            commitAndCloseExecutor( executorSQL );
-            commitAndCloseExecutor( executorMQL );
+            commitAndCloseExecutor( jdbcExecutorFactory );
+            commitAndCloseExecutor( mqlExecutorFactory );
         }
 
     }
@@ -501,13 +501,13 @@ public class GavelNG extends Scenario {
     }
 
 
-    private void executeMongoQlSchema( InputStream file, GavelNGProfile gavelNGSettings, Map<String, String> dataStoreNames ) {
+    private void executeMongoQlSchema( InputStream file, GavelNGProfile gavelNGSettings, Map<String, List<String>> dataStoreNames ) {
         Executor executor = null;
         if ( file == null ) {
             throw new RuntimeException( "Unable to load schema definition file" );
         }
         try ( BufferedReader bf = new BufferedReader( new InputStreamReader( file ) ) ) {
-            executor = executorFactoryMONGODB.createExecutorInstance();
+            executor = mqlExecutorFactory.createExecutorInstance();
             String line = bf.readLine();
             executor.executeQuery( new RawQuery( null, null, "use test", false ) );
             while ( line != null ) {
@@ -515,12 +515,10 @@ public class GavelNG extends Scenario {
                     List<Pair<String, String>> tableStores = gavelNGSettings.tableStores;
                     for ( Pair<String, String> tableStore : tableStores ) {
                         if ( line.replace( "\"", "" ).equals( tableStore.left ) ) {
-                            line = line + ",{\"store\":\"" + dataStoreNames.get( tableStore.right ) + "\"}";
+                            line = line + ",{\"store\":\"" + dataStoreNames.get( tableStore.right ).get( dataStoreNames.get( tableStore.right ).size() - 1 ) + "\"}";
                         }
                     }
-
                 }
-
                 executor.executeQuery( new RawQuery( null, null, "db.createCollection(" + line + ")", false ) );
                 line = bf.readLine();
             }
@@ -532,7 +530,7 @@ public class GavelNG extends Scenario {
     }
 
 
-    private void executeSchema( InputStream file, GavelNGProfile gavelNGSettings, Map<String, String> dataStoreNames ) {
+    private void executeSchema( InputStream file, GavelNGProfile gavelNGSettings, Map<String, List<String>> dataStoreNames ) {
         Executor executor = null;
         if ( file == null ) {
             throw new RuntimeException( "Unable to load schema definition file" );
@@ -545,7 +543,7 @@ public class GavelNG extends Scenario {
                     List<Pair<String, String>> tableStores = gavelNGSettings.tableStores;
                     for ( Pair<String, String> tableStore : tableStores ) {
                         if ( line.startsWith( "CREATE" ) && line.split( " " )[2].replace( "\"", "" ).equals( tableStore.left ) ) {
-                            line = line + " ON STORE \"" + dataStoreNames.get( tableStore.right ) + "\"";
+                            line = line + " ON STORE \"" + dataStoreNames.get( tableStore.right ).get( dataStoreNames.get( tableStore.right ).size() - 1 ) + "\"";
                         }
                     }
                 }
@@ -567,7 +565,7 @@ public class GavelNG extends Scenario {
         DataGenerationThreadMonitor threadMonitor = new DataGenerationThreadMonitor();
 
         Executor executor1 = executorFactory.createExecutorInstance();
-        Executor executor1Mongo = executorFactoryMONGODB.createExecutorInstance();
+        Executor executor1Mongo = mqlExecutorFactory.createExecutorInstance();
         DataGeneratorGavelNG dataGeneratorGavelNG = new DataGeneratorGavelNG( executor1, executor1Mongo, config, progressReporter, threadMonitor );
         List<QueryLanguage> queryLanguages = Arrays.asList( QueryLanguage.SQL, QueryLanguage.MQL );
 
@@ -595,26 +593,26 @@ public class GavelNG extends Scenario {
         }
         for ( int i = 0; i < numberOfUserGenerationThreads; i++ ) {
             Runnable task = () -> {
-                Executor executor = executorFactory.createExecutorInstance();
-                Executor executorMongo = executorFactoryMONGODB.createExecutorInstance();
+                Executor jdbcExecutorFactory = executorFactory.createExecutorInstance();
+                Executor mqlExecutorFactory = this.mqlExecutorFactory.createExecutorInstance();
                 try {
-                    DataGeneratorGavelNG dg = new DataGeneratorGavelNG( executor, executorMongo, config, progressReporter, threadMonitor );
+                    DataGeneratorGavelNG dg = new DataGeneratorGavelNG( jdbcExecutorFactory, mqlExecutorFactory, config, progressReporter, threadMonitor );
                     for ( QueryLanguage queryLanguage : queryLanguages ) {
                         dg.generateUsers( config.numberOfUsers / numberOfUserGenerationThreads, queryLanguage );
                     }
                 } catch ( ExecutorException e ) {
                     threadMonitor.notifyAboutError( e );
                     try {
-                        executor.executeRollback();
-                        executorMongo.executeRollback();
+                        jdbcExecutorFactory.executeRollback();
+                        mqlExecutorFactory.executeRollback();
                     } catch ( ExecutorException ex ) {
                         log.error( "Error while rollback", e );
                     }
                     log.error( "Exception while generating data", e );
                 } finally {
                     try {
-                        executor.closeConnection();
-                        executorMongo.closeConnection();
+                        jdbcExecutorFactory.closeConnection();
+                        mqlExecutorFactory.closeConnection();
                     } catch ( ExecutorException e ) {
                         log.error( "Error while closing connection", e );
                     }
@@ -645,10 +643,10 @@ public class GavelNG extends Scenario {
             final int start = ((i - 1) * rangeSize) + 1;
             final int end = rangeSize * i;
             Runnable task = () -> {
-                Executor executor = executorFactory.createExecutorInstance();
-                Executor executorMongo = executorFactoryMONGODB.createExecutorInstance();
+                Executor jdbcExecutorFactory = executorFactory.createExecutorInstance();
+                Executor mqlExecutorFactory = this.mqlExecutorFactory.createExecutorInstance();
                 try {
-                    DataGeneratorGavelNG dg = new DataGeneratorGavelNG( executor, executorMongo, config, progressReporter, threadMonitor );
+                    DataGeneratorGavelNG dg = new DataGeneratorGavelNG( jdbcExecutorFactory, mqlExecutorFactory, config, progressReporter, threadMonitor );
                     for ( QueryLanguage queryLanguage : queryLanguages ) {
                         dg.generateAuctions( start, end, queryLanguage );
                     }
@@ -656,16 +654,16 @@ public class GavelNG extends Scenario {
                 } catch ( ExecutorException e ) {
                     threadMonitor.notifyAboutError( e );
                     try {
-                        executor.executeRollback();
-                        executorMongo.executeRollback();
+                        jdbcExecutorFactory.executeRollback();
+                        mqlExecutorFactory.executeRollback();
                     } catch ( ExecutorException ex ) {
                         log.error( "Error while rollback", e );
                     }
                     log.error( "Exception while generating data", e );
                 } finally {
                     try {
-                        executor.closeConnection();
-                        executorMongo.closeConnection();
+                        jdbcExecutorFactory.closeConnection();
+                        mqlExecutorFactory.closeConnection();
                     } catch ( ExecutorException e ) {
                         log.error( "Error while closing connection", e );
                     }

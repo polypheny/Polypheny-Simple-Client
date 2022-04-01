@@ -26,7 +26,6 @@ public class GavelNGProfile {
     public GavelNGProfile( Properties properties ) {
         timeline = castProfileTimeline( properties.getProperty( "schedules" ) );
         warmUp = castWarmUp( properties.getProperty( "warmup" ) );
-        //this.dataStore = Arrays.asList( properties.getProperty( "dataStores" ).replace( "\"", "" ).split( "," ) );
         selectStore( properties.getProperty( "storeForFactory" ), properties.getProperty( "storeForTable" ) );
     }
 
@@ -34,8 +33,6 @@ public class GavelNGProfile {
     public GavelNGProfile( Map<String, String> cdl ) {
         timeline = castProfileTimeline( cdl.get( "schedules" ) );
         warmUp = castWarmUp( cdl.get( "warmup" ) );
-
-        //this.dataStore = Arrays.asList( cdl.get( "dataStores" ).replace( "\"", "" ).split( "," ) );
         selectStore( cdl.get( "storeForFactory" ), cdl.get( "storeForTable" ) );
     }
 
