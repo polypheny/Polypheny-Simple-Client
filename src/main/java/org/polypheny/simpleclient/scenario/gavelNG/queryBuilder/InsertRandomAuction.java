@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019-2021 The Polypheny Project
+ * Copyright (c) 2019-2022 The Polypheny Project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"), to deal
@@ -34,8 +34,8 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
-import org.polypheny.simpleclient.scenario.gavelNG.queryBuilder.InsertAuction.InsertAuctionQuery;
 import org.polypheny.simpleclient.scenario.gavelNG.GavelNGConfig;
+import org.polypheny.simpleclient.scenario.gavelNG.queryBuilder.InsertAuction.InsertAuctionQuery;
 
 
 public class InsertRandomAuction extends QueryBuilder {
@@ -94,7 +94,7 @@ public class InsertRandomAuction extends QueryBuilder {
                 endDate,
                 ThreadLocalRandom.current().nextInt( 1, numberOfUsers + 1 ),
                 ThreadLocalRandom.current().nextInt( 1, numberOfCategories + 1 ),
-                ThreadLocalRandom.current().nextInt(1, numberOfConditions + 1)
+                ThreadLocalRandom.current().nextInt( 1, numberOfConditions + 1 )
         );
     }
 

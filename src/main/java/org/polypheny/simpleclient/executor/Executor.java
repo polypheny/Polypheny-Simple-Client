@@ -26,7 +26,6 @@
 package org.polypheny.simpleclient.executor;
 
 import java.util.List;
-import java.util.Map;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.query.BatchableInsert;
 import org.polypheny.simpleclient.query.Query;

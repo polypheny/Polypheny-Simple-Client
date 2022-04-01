@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019-2021 The Polypheny Project
+ * Copyright (c) 2019-2022 The Polypheny Project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"), to deal
@@ -30,11 +30,15 @@ import com.github.rvesse.airline.HelpOption;
 import com.github.rvesse.airline.annotations.Arguments;
 import com.github.rvesse.airline.annotations.Command;
 import com.github.rvesse.airline.annotations.Option;
+import com.google.api.client.util.store.DataStore;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
+import org.polypheny.simpleclient.executor.PolyphenyDbExecutor;
 import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory;
 import org.polypheny.simpleclient.executor.PolyphenyDbMongoQlExecutor.PolyphenyDbMongoQlExecutorFactory;
 import org.polypheny.simpleclient.main.GavelNGScenario;
@@ -68,6 +72,7 @@ public class GavelNGCommand implements CliRunnable {
             System.exit( 1 );
         }
 
+        List<String> datastores = Collections.singletonList( "hsqldb,mongodb" );
         QueryMode queryMode = QueryMode.TABLE;
         int multiplier = 1;
         if ( args.size() > 1 ) {
@@ -77,26 +82,23 @@ public class GavelNGCommand implements CliRunnable {
                 System.exit( 1 );
             }
             if ( args.size() > 2 ) {
-                if ( args.get( 2 ).equalsIgnoreCase( "view" ) ) {
-                    queryMode = QueryMode.VIEW;
-                } else if ( args.get( 2 ).equalsIgnoreCase( "materialized" ) ) {
-                    queryMode = QueryMode.MATERIALIZED;
-                }
+                datastores = Arrays.asList( args.get( 2 ).split( "," ) );
             }
         }
 
         ExecutorFactory mqlExecutorFactory = new PolyphenyDbMongoQlExecutorFactory( polyphenyDbHost );
-        ExecutorFactory sqlExecutorFactory = new PolyphenyDbJdbcExecutorFactory( polyphenyDbHost, true );
+        ExecutorFactory jdbcExecutorFactory = new PolyphenyDbJdbcExecutorFactory( polyphenyDbHost, true );
 
         try {
             if ( args.get( 0 ).equalsIgnoreCase( "data" ) ) {
-                GavelNGScenario.data( sqlExecutorFactory, mqlExecutorFactory, multiplier, true, queryMode );
+                GavelNGScenario.data( jdbcExecutorFactory, mqlExecutorFactory, multiplier, true, queryMode );
             } else if ( args.get( 0 ).equalsIgnoreCase( "workload" ) ) {
-                GavelNGScenario.workload( sqlExecutorFactory, mqlExecutorFactory, multiplier, true, writeCsv, dumpQueryList, queryMode );
+                GavelNGScenario.workload( jdbcExecutorFactory, mqlExecutorFactory, multiplier, true, writeCsv, dumpQueryList, queryMode );
             } else if ( args.get( 0 ).equalsIgnoreCase( "schema" ) ) {
-                GavelNGScenario.schema( sqlExecutorFactory, mqlExecutorFactory, true, queryMode );
+                PolyphenyDbExecutor.PolyphenyDbInstance.deployStores( true, jdbcExecutorFactory, datastores );
+                GavelNGScenario.schema( jdbcExecutorFactory, mqlExecutorFactory, true, queryMode );
             } else if ( args.get( 0 ).equalsIgnoreCase( "warmup" ) ) {
-                GavelNGScenario.warmup( sqlExecutorFactory, mqlExecutorFactory, multiplier, true, dumpQueryList, queryMode );
+                GavelNGScenario.warmup( jdbcExecutorFactory, mqlExecutorFactory, multiplier, true, dumpQueryList, queryMode );
             } else {
                 System.err.println( "Unknown task: " + args.get( 0 ) );
             }
