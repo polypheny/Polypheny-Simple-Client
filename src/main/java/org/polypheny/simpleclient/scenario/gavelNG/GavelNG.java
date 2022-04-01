@@ -475,7 +475,6 @@ public class GavelNG extends Scenario {
 
     @Override
     public void createSchema( boolean includingKeys ) {
-
         log.info( "Creating schema..." );
         InputStream file;
 

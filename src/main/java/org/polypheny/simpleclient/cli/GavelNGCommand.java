@@ -99,7 +99,7 @@ public class GavelNGCommand implements CliRunnable {
                 GavelNGScenario.workload( executorFactoryHSQLDB, executorFactoryMONGODB, multiplier, true, writeCsv, dumpQueryList, queryMode );
             } else if ( args.get( 0 ).equalsIgnoreCase( "schema" ) ) {
                 List<String> dataStores = Arrays.asList( "hsqldb", "mongodb" );
-                deploySelectedStore( executorFactoryHSQLDB, dataStores );
+                deployDataStores( executorFactoryHSQLDB, dataStores );
                 GavelNGScenario.schema( executorFactoryHSQLDB, executorFactoryMONGODB, true, queryMode );
             } else if ( args.get( 0 ).equalsIgnoreCase( "warmup" ) ) {
                 GavelNGScenario.warmup( executorFactoryHSQLDB, executorFactoryMONGODB, multiplier, true, dumpQueryList, queryMode );
@@ -121,8 +121,7 @@ public class GavelNGCommand implements CliRunnable {
     }
 
 
-    public Map<String, String> deploySelectedStore( ExecutorFactory executorFactory, List<String> dataStore ) {
-
+    public Map<String, String> deployDataStores( ExecutorFactory executorFactory, List<String> dataStore ) {
         PolyphenyDbExecutor executor = (PolyphenyDbExecutor) executorFactory.createExecutorInstance();
         try {
             // Remove hsqldb store
@@ -151,6 +150,9 @@ public class GavelNGCommand implements CliRunnable {
                     case "mongodb":
                         executor.deployMongoDb();
                         break;
+                    case "neo4j":
+                        executor.deployMongoDb();
+                        break;
                     default:
                         throw new RuntimeException( "Unknown data store: " + store );
                 }
@@ -165,7 +167,6 @@ public class GavelNGCommand implements CliRunnable {
                 log.error( "Exception while closing connection", e );
             }
         }
-
         return executor.getDataStoreNames();
     }
 
