@@ -41,11 +41,11 @@ import org.polypheny.simpleclient.executor.ExecutorException;
 import org.polypheny.simpleclient.executor.PolyphenyDbExecutor;
 import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory;
 import org.polypheny.simpleclient.executor.PolyphenyDbMongoQlExecutor.PolyphenyDbMongoQlExecutorFactory;
-import org.polypheny.simpleclient.main.GavelExScenario;
+import org.polypheny.simpleclient.main.GavelNGScenario;
 
 
 @Slf4j
-@Command(name = "gavelEx", description = "Mode for quick testing of Polypheny-DB using the Gavel benchmark.")
+@Command(name = "gavelng", description = "Mode for quick testing of Polypheny-DB using the Gavel benchmark.")
 public class GavelNGCommand implements CliRunnable {
 
     @SuppressWarnings("SpringAutowiredFieldsWarningInspection")
@@ -94,15 +94,15 @@ public class GavelNGCommand implements CliRunnable {
 
         try {
             if ( args.get( 0 ).equalsIgnoreCase( "data" ) ) {
-                GavelExScenario.data( executorFactoryHSQLDB, executorFactoryMONGODB, multiplier, true, queryMode );
+                GavelNGScenario.data( executorFactoryHSQLDB, executorFactoryMONGODB, multiplier, true, queryMode );
             } else if ( args.get( 0 ).equalsIgnoreCase( "workload" ) ) {
-                GavelExScenario.workload( executorFactoryHSQLDB, executorFactoryMONGODB, multiplier, true, writeCsv, dumpQueryList, queryMode );
+                GavelNGScenario.workload( executorFactoryHSQLDB, executorFactoryMONGODB, multiplier, true, writeCsv, dumpQueryList, queryMode );
             } else if ( args.get( 0 ).equalsIgnoreCase( "schema" ) ) {
                 List<String> dataStores = Arrays.asList( "hsqldb", "mongodb" );
                 deploySelectedStore( executorFactoryHSQLDB, dataStores );
-                GavelExScenario.schema( executorFactoryHSQLDB, executorFactoryMONGODB, true, queryMode );
+                GavelNGScenario.schema( executorFactoryHSQLDB, executorFactoryMONGODB, true, queryMode );
             } else if ( args.get( 0 ).equalsIgnoreCase( "warmup" ) ) {
-                GavelExScenario.warmup( executorFactoryHSQLDB, executorFactoryMONGODB, multiplier, true, dumpQueryList, queryMode );
+                GavelNGScenario.warmup( executorFactoryHSQLDB, executorFactoryMONGODB, multiplier, true, dumpQueryList, queryMode );
             } else {
                 System.err.println( "Unknown task: " + args.get( 0 ) );
             }

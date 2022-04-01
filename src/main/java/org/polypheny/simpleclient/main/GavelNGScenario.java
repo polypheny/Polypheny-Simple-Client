@@ -27,7 +27,6 @@ package org.polypheny.simpleclient.main;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
@@ -39,7 +38,7 @@ import org.polypheny.simpleclient.scenario.gavelNG.GavelNGProfile;
 
 
 @Slf4j
-public class GavelExScenario {
+public class GavelNGScenario {
 
     public static void schema( ExecutorFactory executorFactoryHSQLDB, ExecutorFactory executorFactoryMONGODB, boolean commitAfterEveryQuery, QueryMode queryMode ) {
         GavelNGConfig config = new GavelNGConfig( getProperties(), 1);
@@ -91,7 +90,7 @@ public class GavelExScenario {
     private static Properties getProperties() {
         Properties props = new Properties();
         try {
-            props.load( Objects.requireNonNull( ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/gavelNG/gavelEx.properties" ) ) );
+            props.load( Objects.requireNonNull( ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/gavelNG/gavelNG.properties" ) ) );
         } catch ( IOException e ) {
             log.error( "Exception while reading properties file", e );
         }
@@ -102,7 +101,7 @@ public class GavelExScenario {
     private static Properties getProfileProperties() {
         Properties props = new Properties();
         try {
-            props.load( Objects.requireNonNull( ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/gavelNG/gavelExProfile1.properties" ) ) );
+            props.load( Objects.requireNonNull( ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/gavelNG/gavelNGProfile.properties" ) ) );
         } catch ( IOException e ) {
             log.error( "Exception while reading properties file", e );
         }
