@@ -438,9 +438,9 @@ public class Gavel extends Scenario {
         try ( BufferedReader bf = new BufferedReader( new InputStreamReader( file ) ) ) {
             executor = executorFactory.createExecutorInstance();
             String line = bf.readLine();
-            executor.executeQuery( new RawQuery( null, null, "use test", false ) );
+            executor.executeQuery( new RawQuery( null, null, "use test", null, false ) );
             while ( line != null ) {
-                executor.executeQuery( new RawQuery( null, null, "db.createCollection(" + line + ")", false ) );
+                executor.executeQuery( new RawQuery( null, null, "db.createCollection(" + line + ")", null, false ) );
                 line = bf.readLine();
             }
         } catch ( IOException | ExecutorException e ) {
@@ -455,7 +455,7 @@ public class Gavel extends Scenario {
         try {
             executor = executorFactory.createExecutorInstance();
 
-            executor.executeQuery( new RawQuery( null, null, "CREATE DATABASE test", false ) );
+            executor.executeQuery( new RawQuery( null, null, "CREATE DATABASE test", null, false ) );
         } catch ( ExecutorException e ) {
             throw new RuntimeException( "Exception while creating schema", e );
         } finally {

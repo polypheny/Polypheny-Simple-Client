@@ -44,6 +44,7 @@ public class Main {
         builder.withCommands( GavelCommand.class );
         builder.withCommands( KnnCommand.class );
         builder.withCommands( MultimediaCommand.class );
+        builder.withCommands( GraphCommand.class );
         builder.withCommands( DumpCommand.class );
         builder.withCommands( HelpCommand.class );
         builder.withDefaultCommand( HelpCommand.class );

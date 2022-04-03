@@ -153,7 +153,7 @@ public class PolyphenyDbMongoQlExecutor extends PolyphenyDbHttpExecutor {
             }
         }
         if ( rows.size() > 0 ) {
-            executeQuery( new RawQuery( null, null, Query.buildMongoQlManyInsert( currentTable, rows ), false ) );
+            executeQuery( new RawQuery( null, null, Query.buildMongoQlManyInsert( currentTable, rows ), null, false ) );
         }
     }
 
