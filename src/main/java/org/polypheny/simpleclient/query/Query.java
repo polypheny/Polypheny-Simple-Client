@@ -52,7 +52,6 @@ public abstract class Query {
     }
 
 
-
     public enum DataTypes {INTEGER, VARCHAR, TIMESTAMP, DATE, ARRAY_INT, ARRAY_REAL, BYTE_ARRAY, FILE}
 
 
@@ -66,7 +65,10 @@ public abstract class Query {
 
     public abstract String getMongoQl();
 
-    public abstract String getCypher();
+
+    public String getCypher() {
+        return null;
+    }
 
 
     public CottontailQuery getCottontail() {
@@ -122,8 +124,9 @@ public abstract class Query {
         return "db." + splits[splits.length - 1] + ".insertMany([" + String.join( ",", rows ) + "])";
     }
 
-    public static String buildCypherManyInsert( String currentTable, List<String> rows ) {
-        return String.format( "CREATE DATABASE %s IF NOT EXISTS\n" );
+
+    public static String buildCypherManyInsert( List<String> rows ) {
+        return String.format( "CREATE %s", String.join( ", ", rows ) );
     }
 
 

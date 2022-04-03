@@ -65,6 +65,8 @@ import org.polypheny.simpleclient.scenario.AbstractConfig;
 import org.polypheny.simpleclient.scenario.Scenario;
 import org.polypheny.simpleclient.scenario.gavel.Gavel;
 import org.polypheny.simpleclient.scenario.gavel.GavelConfig;
+import org.polypheny.simpleclient.scenario.graph.GraphBench;
+import org.polypheny.simpleclient.scenario.graph.GraphBenchConfig;
 import org.polypheny.simpleclient.scenario.knnbench.KnnBench;
 import org.polypheny.simpleclient.scenario.knnbench.KnnBenchConfig;
 import org.polypheny.simpleclient.scenario.multimedia.MultimediaBench;
@@ -215,6 +217,10 @@ public class ChronosAgent extends AbstractChronosAgent {
             case "multimedia":
                 config = new MultimediaConfig( parsedConfig );
                 scenario = new MultimediaBench( executorFactory, (MultimediaConfig) config, true, dumpQueryList );
+                break;
+            case "graph":
+                config = new GraphBenchConfig( parsedConfig );
+                scenario = new GraphBench( executorFactory, (GraphBenchConfig) config, true, dumpQueryList );
                 break;
             case "auctionmark":
                 config = new AuctionMarkConfig( parsedConfig );

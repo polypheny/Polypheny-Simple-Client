@@ -56,25 +56,17 @@ public class PolyphenyDbCypherExecutor extends PolyphenyDbHttpExecutor {
 
     @Override
     public void executeInsertList( List<BatchableInsert> batchList, AbstractConfig config ) throws ExecutorException {
-        String currentTable = null;
         List<String> rows = new ArrayList<>();
         for ( BatchableInsert query : batchList ) {
             query.debug();
             if ( query instanceof MultipartInsert ) {
                 continue;
             }
-            if ( currentTable == null ) {
-                currentTable = query.getTable();
-            }
 
-            if ( currentTable.equals( query.getTable() ) ) {
-                rows.add( Objects.requireNonNull( query.getCypherRowExpression() ) );
-            } else {
-                throw new RuntimeException( "Different tables in multi-inserts. This should not happen!" );
-            }
+            rows.add( Objects.requireNonNull( query.getCypherRowExpression() ) );
         }
         if ( rows.size() > 0 ) {
-            executeQuery( new RawQuery( null, null, Query.buildCypherManyInsert( currentTable, rows ), false ) );
+            executeQuery( new RawQuery( null, null, null, Query.buildCypherManyInsert( rows ), false ) );
         }
     }
 

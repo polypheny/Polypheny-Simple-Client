@@ -154,7 +154,7 @@ public abstract class PolyphenyDbHttpExecutor implements PolyphenyDbExecutor {
         request.basicAuth( "pa", "" );
         request.routeParam( "protocol", "http" );
         request.routeParam( "host", "127.0.0.1" );
-        request.routeParam( "port", "2717" );
+        request.routeParam( "port", "13137" );
         return request;
     }
 
