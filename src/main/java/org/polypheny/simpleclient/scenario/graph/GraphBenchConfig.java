@@ -56,7 +56,10 @@ public class GraphBenchConfig extends AbstractConfig {
     public final int numberOfUnwindQueries;
     public final int numberOfNodeFilterQueries;
     public final int numberOfDifferentLengthQueries;
-    public int numberOfShortestPathQueries;
+    public final int numberOfShortestPathQueries;
+    public final int numberOfSetPropertyQueries;
+    public final int numberOfDeleteQueries;
+    public final int numberOfInsertQueries;
 
     public final int highestLabel;
     public final int highestProperty;
@@ -115,6 +118,9 @@ public class GraphBenchConfig extends AbstractConfig {
         numberOfNodeFilterQueries = getIntProperty( properties, "numberOfNodeFilterQueries" )* multiplier;
         numberOfDifferentLengthQueries = getIntProperty( properties, "numberOfDifferentLengthQueries" )* multiplier;
         numberOfShortestPathQueries = getIntProperty( properties, "numberOfShortestPathQueries" )* multiplier;
+        numberOfSetPropertyQueries = getIntProperty( properties, "numberOfSetPropertyQueries" )* multiplier;
+        numberOfDeleteQueries= getIntProperty( properties, "numberOfDeleteQueries" )* multiplier;
+        numberOfInsertQueries =  getIntProperty( properties, "numberOfInsertQueries" )* multiplier;
 
         this.highestLabel = maxPathLength - 1;
         this.highestProperty = this.properties - 1;
@@ -173,6 +179,9 @@ public class GraphBenchConfig extends AbstractConfig {
         numberOfNodeFilterQueries = Integer.parseInt( cdl.get( "numberOfNodeFilterQueries" ) );
         numberOfDifferentLengthQueries = Integer.parseInt( cdl.get( "numberOfDifferentLengthQueries" ) );
         numberOfShortestPathQueries = Integer.parseInt( cdl.get( "numberOfShortestPathQueries" ) );
+        numberOfSetPropertyQueries = Integer.parseInt( cdl.get( "numberOfSetPropertyQueries" ) );
+        numberOfDeleteQueries = Integer.parseInt( cdl.get( "numberOfDeleteQueries" ) );
+        numberOfInsertQueries = Integer.parseInt( cdl.get( "numberOfDeleteQueries" ) );
 
         this.highestLabel = maxPathLength - 1;
         this.highestProperty = labels - 1;

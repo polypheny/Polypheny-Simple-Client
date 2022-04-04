@@ -56,10 +56,13 @@ import org.polypheny.simpleclient.query.QueryListEntry;
 import org.polypheny.simpleclient.scenario.Scenario;
 import org.polypheny.simpleclient.scenario.graph.queryBuilder.CountNodePropertyBuilder;
 import org.polypheny.simpleclient.scenario.graph.queryBuilder.CreateGraphDatabase;
+import org.polypheny.simpleclient.scenario.graph.queryBuilder.DeleteNodeBuilder;
 import org.polypheny.simpleclient.scenario.graph.queryBuilder.DifferentPathsBuilder;
 import org.polypheny.simpleclient.scenario.graph.queryBuilder.EdgeLabelMatchBuilder;
 import org.polypheny.simpleclient.scenario.graph.queryBuilder.FindNeighborsBuilder;
 import org.polypheny.simpleclient.scenario.graph.queryBuilder.NodeFilterBuilder;
+import org.polypheny.simpleclient.scenario.graph.queryBuilder.RelatedInsertBuilder;
+import org.polypheny.simpleclient.scenario.graph.queryBuilder.SetPropertyBuilder;
 import org.polypheny.simpleclient.scenario.graph.queryBuilder.ShortestPathBuilder;
 import org.polypheny.simpleclient.scenario.graph.queryBuilder.UnwindBuilder;
 
@@ -137,6 +140,9 @@ public class GraphBench extends Scenario {
         addNumberOfTimes( queryList, new NodeFilterBuilder( config ), config.numberOfNodeFilterQueries );
         addNumberOfTimes( queryList, new DifferentPathsBuilder( config ), config.numberOfDifferentLengthQueries );
         addNumberOfTimes( queryList, new ShortestPathBuilder( config ), config.numberOfShortestPathQueries );
+        addNumberOfTimes( queryList, new SetPropertyBuilder( config ), config.numberOfSetPropertyQueries );
+        addNumberOfTimes( queryList, new RelatedInsertBuilder( config ), config.numberOfInsertQueries );
+        addNumberOfTimes( queryList, new DeleteNodeBuilder( config ), config.numberOfDeleteQueries );
 
         Collections.shuffle( queryList, new Random( config.seed ) );
 
@@ -210,6 +216,9 @@ public class GraphBench extends Scenario {
         NodeFilterBuilder nodeFilter = new NodeFilterBuilder( config );
         DifferentPathsBuilder differentPaths = new DifferentPathsBuilder( config );
         ShortestPathBuilder shortestPathBuilder = new ShortestPathBuilder( config );
+        DeleteNodeBuilder deleteNodeBuilder = new DeleteNodeBuilder( config );
+        SetPropertyBuilder setPropertyBuilder = new SetPropertyBuilder( config );
+        RelatedInsertBuilder relatedInsertBuilder = new RelatedInsertBuilder( config );
 
         for ( int i = 0; i < iterations; i++ ) {
             try {
@@ -234,6 +243,15 @@ public class GraphBench extends Scenario {
                 }
                 if ( config.numberOfShortestPathQueries > 0 ) {
                     executor.executeQuery( shortestPathBuilder.getNewQuery() );
+                }
+                if ( config.numberOfInsertQueries > 0 ) {
+                    executor.executeQuery( relatedInsertBuilder.getNewQuery() );
+                }
+                if ( config.numberOfSetPropertyQueries > 0 ) {
+                    executor.executeQuery( setPropertyBuilder.getNewQuery() );
+                }
+                if ( config.numberOfDeleteQueries > 0 ) {
+                    executor.executeQuery( deleteNodeBuilder.getNewQuery() );
                 }
 
             } catch ( ExecutorException e ) {
