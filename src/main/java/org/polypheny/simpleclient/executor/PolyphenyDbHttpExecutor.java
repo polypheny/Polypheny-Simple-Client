@@ -127,7 +127,7 @@ public abstract class PolyphenyDbHttpExecutor implements PolyphenyDbExecutor {
             }
             time = System.nanoTime() - start;
             if ( csvWriter != null ) {
-                csvWriter.appendToCsv( request.getUrl(), time );
+                csvWriter.appendToCsv( queryAccessor.apply( query ), time );
             }
         } catch ( UnirestException e ) {
             throw new ExecutorException( e );
