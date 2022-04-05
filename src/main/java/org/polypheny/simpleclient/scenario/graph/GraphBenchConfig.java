@@ -25,6 +25,7 @@
 
 package org.polypheny.simpleclient.scenario.graph;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
@@ -41,7 +42,7 @@ public class GraphBenchConfig extends AbstractConfig {
     public final int maxClusterSize;
     public final int minPathLength;
     public final int maxPathLength;
-    public final int labels;
+    public final int usedLabels;
     public final int properties;
     public final int paths;
     public final int batchSizeCreates;
@@ -66,7 +67,7 @@ public class GraphBenchConfig extends AbstractConfig {
 
 
     public GraphBenchConfig( Properties properties, int multiplier ) {
-        super( "graphBench", "polypheny" );
+        super( "graph", "polypheny" );
 
         pdbBranch = null;
         puiBranch = null;
@@ -87,8 +88,6 @@ public class GraphBenchConfig extends AbstractConfig {
 
         planAndImplementationCaching = "Both";
 
-        //dataStores.add( "cottontail" );
-
         clusterSeed = getIntProperty( properties, "clusterSeed" );
         seed = getIntProperty( properties, "seed" );
 
@@ -103,7 +102,7 @@ public class GraphBenchConfig extends AbstractConfig {
         minClusterConnections = getIntProperty( properties, "minClusterConnections" );
         maxClusterConnections = getIntProperty( properties, "maxClusterConnections" );
 
-        labels = getIntProperty( properties, "labels" );
+        usedLabels = getIntProperty( properties, "usedLabels" );
         this.properties = getIntProperty( properties, "amountProperties" );
         listSize = getIntProperty( properties, "listSize" );
 
@@ -111,24 +110,33 @@ public class GraphBenchConfig extends AbstractConfig {
         numberOfThreads = getIntProperty( properties, "numberOfThreads" );
         numberOfWarmUpIterations = getIntProperty( properties, "numberOfWarmUpIterations" );
 
-        numberOfEdgeMatchQueries = getIntProperty( properties, "numberOfEdgeMatchQueries" )* multiplier;
-        numberOfPropertyCountQueries = getIntProperty( properties, "numberOfPropertyCountQueries" )* multiplier;
-        numberOfFindNeighborsQueries = getIntProperty( properties, "numberOfFindNeighborsQueries" )* multiplier;
-        numberOfUnwindQueries = getIntProperty( properties, "numberOfUnwindQueries" )* multiplier;
-        numberOfNodeFilterQueries = getIntProperty( properties, "numberOfNodeFilterQueries" )* multiplier;
-        numberOfDifferentLengthQueries = getIntProperty( properties, "numberOfDifferentLengthQueries" )* multiplier;
-        numberOfShortestPathQueries = getIntProperty( properties, "numberOfShortestPathQueries" )* multiplier;
-        numberOfSetPropertyQueries = getIntProperty( properties, "numberOfSetPropertyQueries" )* multiplier;
-        numberOfDeleteQueries= getIntProperty( properties, "numberOfDeleteQueries" )* multiplier;
-        numberOfInsertQueries =  getIntProperty( properties, "numberOfInsertQueries" )* multiplier;
+        numberOfEdgeMatchQueries = getIntProperty( properties, "numberOfEdgeMatchQueries" ) * multiplier;
+        numberOfPropertyCountQueries = getIntProperty( properties, "numberOfPropertyCountQueries" ) * multiplier;
+        numberOfFindNeighborsQueries = getIntProperty( properties, "numberOfFindNeighborsQueries" ) * multiplier;
+        numberOfUnwindQueries = getIntProperty( properties, "numberOfUnwindQueries" ) * multiplier;
+        numberOfNodeFilterQueries = getIntProperty( properties, "numberOfNodeFilterQueries" ) * multiplier;
+        numberOfDifferentLengthQueries = getIntProperty( properties, "numberOfDifferentLengthQueries" ) * multiplier;
+        numberOfShortestPathQueries = getIntProperty( properties, "numberOfShortestPathQueries" ) * multiplier;
+        numberOfSetPropertyQueries = getIntProperty( properties, "numberOfSetPropertyQueries" ) * multiplier;
+        numberOfDeleteQueries = getIntProperty( properties, "numberOfDeleteQueries" ) * multiplier;
+        numberOfInsertQueries = getIntProperty( properties, "numberOfInsertQueries" ) * multiplier;
 
-        this.highestLabel = maxPathLength - 1;
-        this.highestProperty = this.properties - 1;
+        if ( maxPathLength - 1 <= 0 ){
+            this.highestLabel = 1;
+        }else{
+            this.highestLabel = maxPathLength - 1;
+        }
+
+        if( usedLabels - 1 <= 0){
+            this.highestProperty = 1;
+        }else{
+            this.highestProperty = usedLabels - 1;
+        }
     }
 
 
     public GraphBenchConfig( Map<String, String> cdl ) {
-        super( "gavel", cdl.get( "store" ) );
+        super( "graph", cdl.get( "store" ) );
 
         pdbBranch = cdl.get( "pdbBranch" );
         puiBranch = cdl.get( "puiBranch" );
@@ -136,6 +144,7 @@ public class GraphBenchConfig extends AbstractConfig {
         resetCatalog = Boolean.parseBoolean( cdl.get( "resetCatalog" ) );
         memoryCatalog = Boolean.parseBoolean( cdl.get( "memoryCatalog" ) );
 
+        dataStores.addAll( Arrays.asList( cdl.get( "dataStore" ).split( "_" ) ) );
         deployStoresUsingDocker = Boolean.parseBoolean( cdlGetOrDefault( cdl, "deployStoresUsingDocker", "false" ) );
 
         router = cdl.get( "router" ); // For old routing, to be removed
@@ -165,7 +174,7 @@ public class GraphBenchConfig extends AbstractConfig {
         minClusterConnections = Integer.parseInt( cdl.get( "minClusterConnections" ) );
         maxClusterConnections = Integer.parseInt( cdl.get( "maxClusterConnections" ) );
 
-        labels = Integer.parseInt( cdl.get( "labels" ) );
+        usedLabels = Integer.parseInt( cdl.get( "usedLabels" ) );
         this.properties = Integer.parseInt( cdl.get( "amountProperties" ) );
         listSize = Integer.parseInt( cdl.get( "listSize" ) );
 
@@ -181,10 +190,20 @@ public class GraphBenchConfig extends AbstractConfig {
         numberOfShortestPathQueries = Integer.parseInt( cdl.get( "numberOfShortestPathQueries" ) );
         numberOfSetPropertyQueries = Integer.parseInt( cdl.get( "numberOfSetPropertyQueries" ) );
         numberOfDeleteQueries = Integer.parseInt( cdl.get( "numberOfDeleteQueries" ) );
-        numberOfInsertQueries = Integer.parseInt( cdl.get( "numberOfDeleteQueries" ) );
+        numberOfInsertQueries = Integer.parseInt( cdl.get( "numberOfInsertQueries" ) );
 
-        this.highestLabel = maxPathLength - 1;
-        this.highestProperty = labels - 1;
+
+        if ( maxPathLength - 1 <= 0 ){
+            this.highestLabel = 1;
+        }else{
+            this.highestLabel = maxPathLength - 1;
+        }
+
+        if( usedLabels - 1 <= 0){
+            this.highestProperty = 1;
+        }else{
+            this.highestProperty = usedLabels - 1;
+        }
     }
 
 

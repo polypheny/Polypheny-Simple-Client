@@ -121,7 +121,7 @@ public class DataGenerator {
         StringBuilder path = new StringBuilder();
         for ( int i = 0; i < (length + length - 1); i++ ) {
             if ( i % 2 == 0 ) {
-                path.append( getNode( null, i, config.labels, properties ) );
+                path.append( getNode( null, i, config.usedLabels, properties ) );
             } else {
                 path.append( getEdge( i, properties ) );
             }
@@ -166,7 +166,7 @@ public class DataGenerator {
         List<String> names = new ArrayList<>();
         for ( int i = 0; i < size; i++ ) {
             String id = GraphBench.getUniqueIdentifier();
-            cluster.add( getNode( id, i, config.labels, properties ) );
+            cluster.add( getNode( id, i, config.usedLabels, properties ) );
             names.add( id );
         }
 
