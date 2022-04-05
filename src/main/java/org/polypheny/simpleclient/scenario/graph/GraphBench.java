@@ -48,6 +48,7 @@ import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.executor.ExecutorException;
 import org.polypheny.simpleclient.executor.PolyphenyDbCypherExecutor;
+import org.polypheny.simpleclient.executor.PolyphenyDbCypherExecutor.PolyphenyDbCypherExecutorFactory;
 import org.polypheny.simpleclient.main.ChronosAgent;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.main.ProgressReporter;
@@ -425,7 +426,7 @@ public class GraphBench extends Scenario {
 
     private void addNumberOfTimes( List<QueryListEntry> list, QueryBuilder queryBuilder, int numberOfTimes ) {
         int id = queryTypes.size() + 1;
-        queryTypes.put( id, queryBuilder.getNewQuery().getSql() );
+        queryTypes.put( id, queryBuilder.getNewQuery().getCypher() );
         measuredTimePerQueryType.put( id, Collections.synchronizedList( new LinkedList<>() ) );
         for ( int i = 0; i < numberOfTimes; i++ ) {
             list.add( new QueryListEntry( queryBuilder.getNewQuery(), id ) );
