@@ -21,7 +21,7 @@ public class RelatedInsertBuilder extends QueryBuilder {
     @Override
     public Query getNewQuery() {
         return new SimpleGraphQuery( String.format(
-                "MATCH (n:Label%s), (m:Label%s) CREATE (n)-[:Label%s {list:['el','el','el']}]-(m)",
+                "MATCH (n:Label%s), (m:Label%s) CREATE (n)-[:Label%s {list:['el','el','el']}]->(m)",
                 random.nextInt( config.highestLabel ),
                 random.nextInt( config.highestLabel ),
                 random.nextInt( config.highestLabel ) ) );
