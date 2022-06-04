@@ -134,6 +134,11 @@ public abstract class AbstractOltpBenchScenario extends Scenario {
         for ( Map.Entry<String, List<Long>> entry : latencyPerTransactionType.entrySet() ) {
             properties.put( entry.getKey() + "MeanLatency", calculateMean( entry.getValue() ) );
         }
+
+        properties.put( "NumberOfTransactions", latency.size() );
+        double runtimeSeconds = Long.parseLong( properties.get( "runtime" ).toString() ) / 1000000000.0;
+        double throughput = runtimeSeconds / latency.size();
+        properties.put( "Throughput", throughput );
     }
 
 

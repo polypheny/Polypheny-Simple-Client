@@ -95,7 +95,6 @@ public class AuctionMarkConfig extends AbstractOltpBenchConfig {
         createAndAppendElement( doc, rootElement, "terminals", numberOfThreads + "" );
 
         // -- Scenario specific elements --
-        createAndAppendElement( doc, rootElement, "dbtype", dbType );
 
         // Works
         Element worksElement = doc.createElement( "works" );
@@ -142,18 +141,4 @@ public class AuctionMarkConfig extends AbstractOltpBenchConfig {
         return sw.toString();
     }
 
-
-    private void createAndAppendElement( Document doc, Element parent, String tag, String content ) {
-        Element element = doc.createElement(tag);
-        element.setTextContent( content );
-        parent.appendChild(element);
-    }
-
-    private void createAndAppendTransactionTypeElement( Document doc, Element parent, String name ) {
-        Element element = doc.createElement( "transactiontype" );
-        parent.appendChild(element);
-        Element nameElement = doc.createElement( "name" );
-        nameElement.setTextContent( name );
-        element.appendChild(nameElement);
-    }
 }

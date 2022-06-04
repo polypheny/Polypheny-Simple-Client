@@ -4,6 +4,8 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Properties;
 import org.polypheny.simpleclient.scenario.AbstractConfig;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 public abstract class AbstractOltpBenchConfig extends AbstractConfig {
 
@@ -98,5 +100,21 @@ public abstract class AbstractOltpBenchConfig extends AbstractConfig {
             String dialectFileName,
             String isolation
     );
+
+
+    protected void createAndAppendElement( Document doc, Element parent, String tag, String content ) {
+        Element element = doc.createElement( tag );
+        element.setTextContent( content );
+        parent.appendChild( element );
+    }
+
+
+    protected void createAndAppendTransactionTypeElement( Document doc, Element parent, String name ) {
+        Element element = doc.createElement( "transactiontype" );
+        parent.appendChild( element );
+        Element nameElement = doc.createElement( "name" );
+        nameElement.setTextContent( name );
+        element.appendChild( nameElement );
+    }
 
 }

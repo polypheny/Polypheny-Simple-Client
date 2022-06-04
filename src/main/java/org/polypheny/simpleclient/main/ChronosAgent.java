@@ -69,6 +69,12 @@ import org.polypheny.simpleclient.scenario.multimedia.MultimediaBench;
 import org.polypheny.simpleclient.scenario.multimedia.MultimediaConfig;
 import org.polypheny.simpleclient.scenario.oltpbench.auctionmark.AuctionMark;
 import org.polypheny.simpleclient.scenario.oltpbench.auctionmark.AuctionMarkConfig;
+import org.polypheny.simpleclient.scenario.oltpbench.smallbank.SmallBank;
+import org.polypheny.simpleclient.scenario.oltpbench.smallbank.SmallBankConfig;
+import org.polypheny.simpleclient.scenario.oltpbench.tpcc.Tpcc;
+import org.polypheny.simpleclient.scenario.oltpbench.tpcc.TpccConfig;
+import org.polypheny.simpleclient.scenario.oltpbench.ycsb.Ycsb;
+import org.polypheny.simpleclient.scenario.oltpbench.ycsb.YcsbConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -206,6 +212,18 @@ public class ChronosAgent extends AbstractChronosAgent {
             case "auctionmark":
                 config = new AuctionMarkConfig( parsedConfig );
                 scenario = new AuctionMark( executorFactory, (AuctionMarkConfig) config, dumpQueryList, queryMode );
+                break;
+            case "smallbank":
+                config = new SmallBankConfig( parsedConfig );
+                scenario = new SmallBank( executorFactory, (SmallBankConfig) config, dumpQueryList, queryMode );
+                break;
+            case "tpcc":
+                config = new TpccConfig( parsedConfig );
+                scenario = new Tpcc( executorFactory, (TpccConfig) config, dumpQueryList, queryMode );
+                break;
+            case "ycsb":
+                config = new YcsbConfig( parsedConfig );
+                scenario = new Ycsb( executorFactory, (YcsbConfig) config, dumpQueryList, queryMode );
                 break;
             default:
                 throw new RuntimeException( "Unknown scenario: " + parsedConfig.get( "scenario" ) );

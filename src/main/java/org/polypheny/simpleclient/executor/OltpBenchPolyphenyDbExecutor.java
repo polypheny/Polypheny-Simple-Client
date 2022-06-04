@@ -44,7 +44,7 @@ public class OltpBenchPolyphenyDbExecutor extends OltpBenchExecutor implements P
                 "jdbc:polypheny://localhost/",
                 "pa",
                 "",
-                "auctionmark-polypheny-ddl.sql",
+                config.scenario + "-polypheny-ddl.sql",
                 "polypheny-dialects.xml",
                 "TRANSACTION_SERIALIZABLE"
         );
