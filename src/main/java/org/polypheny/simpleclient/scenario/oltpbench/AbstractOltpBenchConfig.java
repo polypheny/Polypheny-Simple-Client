@@ -9,6 +9,7 @@ public abstract class AbstractOltpBenchConfig extends AbstractConfig {
 
     //public int batchSize;
     public int scaleFactor;
+    public int warmupTime;
 
     public AbstractOltpBenchConfig( Properties properties, int multiplier, String scenario, String system ) {
         super( scenario, system );
@@ -35,12 +36,13 @@ public abstract class AbstractOltpBenchConfig extends AbstractConfig {
 
         progressReportBase = getIntProperty( properties, "progressReportBase" );
         numberOfThreads = getIntProperty( properties, "numberOfThreads" );
-        numberOfWarmUpIterations = getIntProperty( properties, "numberOfWarmUpIterations" );
+        numberOfWarmUpIterations = 0;
 
 
         // OLTPbench settings
         //batchSize = getIntProperty( properties, "batchSize"); // 128
         scaleFactor = multiplier;
+        warmupTime = 0;
     }
 
 
@@ -57,6 +59,7 @@ public abstract class AbstractOltpBenchConfig extends AbstractConfig {
         memoryCatalog = Boolean.parseBoolean( cdl.get( "memoryCatalog" ) );
 
         numberOfThreads = Integer.parseInt( cdl.get( "numberOfThreads" ) );
+        warmupTime = Integer.parseInt( cdl.get( "warmupTime" ) );
         numberOfWarmUpIterations = 0;
 
         dataStores.addAll( Arrays.asList( cdl.get( "dataStore" ).split( "_" ) ) );
@@ -69,13 +72,12 @@ public abstract class AbstractOltpBenchConfig extends AbstractConfig {
         preCostRatio = Integer.parseInt( cdlGetOrDefault( cdl, "preCostRatio", "50%" ).replace( "%", "" ).trim() );
         postCostRatio = Integer.parseInt( cdlGetOrDefault( cdl, "postCostRatio", "50%" ).replace( "%", "" ).trim() );
         postCostAggregation = cdlGetOrDefault( cdl, "postCostAggregation", "onWarmup" );
-        routingCache = true;
+        routingCache = Boolean.parseBoolean( cdl.get( "routingCache" ) );
 
         progressReportBase = 100;
 
 
         // OLTPbench settings
-        batchSize = Integer.parseInt( cdl.get( "batchSize" ) );
         scaleFactor = Integer.parseInt( cdl.get( "scaleFactor" ) );
     }
 

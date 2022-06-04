@@ -5,11 +5,8 @@ import java.util.Map;
 import java.util.Properties;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerConfigurationException;
-import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
@@ -54,20 +51,20 @@ public class AuctionMarkConfig extends AbstractOltpBenchConfig {
 
 
     public AuctionMarkConfig( Map<String, String> cdl  ) {
-        super(  cdl, "auctionmark", cdl.get( "store" ) );
+        super( cdl, "auctionmark", cdl.get( "store" ) );
 
         time = Long.parseLong( cdl.get( "time" ) );
         rate = Long.parseLong( cdl.get( "rate" ) );
 
-        getItemWeight = Integer.getInteger( cdl.get( "getItemWeight" ) );
-        getUserInfoWeight = Integer.getInteger( cdl.get( "getUserInfoWeight" ) );
-        newBidWeight = Integer.getInteger( cdl.get( "newBidWeight" ) );
-        newCommentWeight = Integer.getInteger( cdl.get( "newCommentWeight" ) );
-        newCommentResponseWeight = Integer.getInteger( cdl.get( "newCommentResponseWeight" ) );
-        newFeedbackWeight = Integer.getInteger( cdl.get( "newFeedbackWeight" ) );
-        newItemWeight = Integer.getInteger( cdl.get( "newItemWeight" ) );
-        newPurchaseWeight = Integer.getInteger( cdl.get( "newPurchaseWeight" ) );
-        updateItemWeight = Integer.getInteger( cdl.get( "updateItemWeight" ) );
+        getItemWeight = Integer.parseInt( cdl.get( "getItemWeight" ) );
+        getUserInfoWeight = Integer.parseInt( cdl.get( "getUserInfoWeight" ) );
+        newBidWeight = Integer.parseInt( cdl.get( "newBidWeight" ) );
+        newCommentWeight = Integer.parseInt( cdl.get( "newCommentWeight" ) );
+        newCommentResponseWeight = Integer.parseInt( cdl.get( "newCommentResponseWeight" ) );
+        newFeedbackWeight = Integer.parseInt( cdl.get( "newFeedbackWeight" ) );
+        newItemWeight = Integer.parseInt( cdl.get( "newItemWeight" ) );
+        newPurchaseWeight = Integer.parseInt( cdl.get( "newPurchaseWeight" ) );
+        updateItemWeight = Integer.parseInt( cdl.get( "updateItemWeight" ) );
     }
 
 
@@ -107,6 +104,7 @@ public class AuctionMarkConfig extends AbstractOltpBenchConfig {
         worksElement.appendChild( workElement );
         createAndAppendElement( doc, workElement, "time", time + "" );
         createAndAppendElement( doc, workElement, "rate", rate + "" );
+        createAndAppendElement( doc, workElement, "warmup", warmupTime + "" );
         createAndAppendElement( doc, workElement, "weights",
                 getItemWeight + "," +
                         getUserInfoWeight + "," +
@@ -116,7 +114,7 @@ public class AuctionMarkConfig extends AbstractOltpBenchConfig {
                         newFeedbackWeight + "," +
                         newItemWeight + "," +
                         newPurchaseWeight + "," +
-                        updateItemWeight + ","
+                        updateItemWeight
         );
 
         // Transaction types

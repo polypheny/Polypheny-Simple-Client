@@ -1,6 +1,14 @@
 package org.polypheny.simpleclient.scenario.oltpbench;
 
+import com.opencsv.CSVReader;
+import com.opencsv.exceptions.CsvValidationException;
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.QueryMode;
@@ -11,7 +19,6 @@ import org.polypheny.simpleclient.executor.OltpBenchExecutor.OltpBenchExecutorFa
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.main.ProgressReporter;
 import org.polypheny.simpleclient.scenario.Scenario;
-import org.polypheny.simpleclient.scenario.oltpbench.auctionmark.AuctionMarkConfig;
 
 
 @Slf4j
@@ -60,7 +67,7 @@ public abstract class AbstractOltpBenchScenario extends Scenario {
             executor = executorFactory.createExecutorInstance();
             executor.loadData( config );
         } catch ( ExecutorException e ) {
-            throw new RuntimeException( "Exception while creating schema", e );
+            throw new RuntimeException( "Exception while loading data", e );
         }
     }
 
@@ -78,7 +85,7 @@ public abstract class AbstractOltpBenchScenario extends Scenario {
             executor = executorFactory.createExecutorInstance();
             executor.executeWorkload( config, outputDirectory );
         } catch ( ExecutorException e ) {
-            throw new RuntimeException( "Exception while creating schema", e );
+            throw new RuntimeException( "Exception while executing workload", e );
         }
 
         long runTime = System.nanoTime() - startTime;
@@ -89,13 +96,44 @@ public abstract class AbstractOltpBenchScenario extends Scenario {
 
     @Override
     public void warmUp( ProgressReporter progressReporter, int iterations ) {
-
+        log.info( "Executing warmup workload using OLTPbench..." );
+        OltpBenchExecutor executor;
+        try {
+            executor = executorFactory.createExecutorInstance();
+            executor.executeWorkload( config, new File( System.getProperty( "java.io.tmpdir" ) ) );
+        } catch ( ExecutorException e ) {
+            throw new RuntimeException( "Exception while executing warmup workload", e );
+        }
     }
 
 
     @Override
-    public void analyze( Properties properties ) {
+    public void analyze( Properties properties, File outputDirectory ) {
+        File csvFile = new File( outputDirectory, "oltpbench.csv" );
+        if ( !csvFile.exists() ) {
+            throw new RuntimeException( "Something went wrong, there should be an oltpbench.csv file!" );
+        }
 
+        Map<String, List<Long>> latencyPerTransactionType = new HashMap<>();
+        List<Long> latency = new ArrayList<>();
+        try ( CSVReader csvReader = new CSVReader( new FileReader( csvFile ) ) ) {
+            String[] values;
+            csvReader.readNextSilently();
+            while ( (values = csvReader.readNext()) != null ) {
+                if ( !latencyPerTransactionType.containsKey( values[1] ) ) {
+                    latencyPerTransactionType.put( values[1], new ArrayList<>() );
+                }
+                latencyPerTransactionType.get( values[1] ).add( Long.parseLong( values[3] ) );
+                latency.add( Long.parseLong( values[3] ) );
+            }
+        } catch ( IOException | CsvValidationException e ) {
+            throw new RuntimeException( "Error while reading csv file", e );
+        }
+
+        properties.put( "MeanLatency", calculateMean( latency ) );
+        for ( Map.Entry<String, List<Long>> entry : latencyPerTransactionType.entrySet() ) {
+            properties.put( entry.getKey() + "MeanLatency", calculateMean( entry.getValue() ) );
+        }
     }
 
 

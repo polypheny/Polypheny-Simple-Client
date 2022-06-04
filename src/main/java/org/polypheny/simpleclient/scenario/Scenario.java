@@ -66,7 +66,7 @@ public abstract class Scenario {
 
     public abstract void warmUp( ProgressReporter progressReporter, int iterations );
 
-    public abstract void analyze( Properties properties );
+    public abstract void analyze( Properties properties, File outputDirectory );
 
 
     protected double calculateMean( List<Long> times ) {

@@ -61,14 +61,14 @@ import org.polypheny.simpleclient.executor.PostgresExecutor.PostgresExecutorFact
 import org.polypheny.simpleclient.executor.PostgresExecutor.PostgresInstance;
 import org.polypheny.simpleclient.scenario.AbstractConfig;
 import org.polypheny.simpleclient.scenario.Scenario;
-import org.polypheny.simpleclient.scenario.oltpbench.auctionmark.AuctionMark;
-import org.polypheny.simpleclient.scenario.oltpbench.auctionmark.AuctionMarkConfig;
 import org.polypheny.simpleclient.scenario.gavel.Gavel;
 import org.polypheny.simpleclient.scenario.gavel.GavelConfig;
 import org.polypheny.simpleclient.scenario.knnbench.KnnBench;
 import org.polypheny.simpleclient.scenario.knnbench.KnnBenchConfig;
 import org.polypheny.simpleclient.scenario.multimedia.MultimediaBench;
 import org.polypheny.simpleclient.scenario.multimedia.MultimediaConfig;
+import org.polypheny.simpleclient.scenario.oltpbench.auctionmark.AuctionMark;
+import org.polypheny.simpleclient.scenario.oltpbench.auctionmark.AuctionMarkConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -364,7 +364,7 @@ public class ChronosAgent extends AbstractChronosAgent {
         @SuppressWarnings("unchecked") DatabaseInstance databaseInstance = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getRight();
 
         try {
-            scenario.analyze( properties );
+            scenario.analyze( properties, outputDirectory );
         } catch ( Exception e ) {
             databaseInstance.tearDown();
             throw e;

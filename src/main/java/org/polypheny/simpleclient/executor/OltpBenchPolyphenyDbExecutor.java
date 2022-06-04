@@ -1,12 +1,8 @@
 package org.polypheny.simpleclient.executor;
 
-import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory;
-import org.polypheny.simpleclient.main.CsvWriter;
-import org.polypheny.simpleclient.query.BatchableInsert;
 import org.polypheny.simpleclient.query.Query;
-import org.polypheny.simpleclient.scenario.AbstractConfig;
 import org.polypheny.simpleclient.scenario.oltpbench.AbstractOltpBenchConfig;
 
 
@@ -37,12 +33,6 @@ public class OltpBenchPolyphenyDbExecutor extends OltpBenchExecutor implements P
         } finally {
             commitAndCloseJdbcExecutor( executor );
         }
-    }
-
-
-    @Override
-    public void collectResults() throws ExecutorException {
-        throw new ExecutorException( "Implement!" );
     }
 
 

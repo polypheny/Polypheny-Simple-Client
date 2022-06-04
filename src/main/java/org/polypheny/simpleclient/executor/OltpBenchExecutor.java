@@ -26,9 +26,22 @@
 package org.polypheny.simpleclient.executor;
 
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import net.lingala.zip4j.core.ZipFile;
+import net.lingala.zip4j.exception.ZipException;
+import org.apache.commons.io.FileUtils;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.query.BatchableInsert;
 import org.polypheny.simpleclient.query.Query;
@@ -38,6 +51,10 @@ import org.polypheny.simpleclient.scenario.oltpbench.AbstractOltpBenchConfig;
 
 @Slf4j
 public abstract class OltpBenchExecutor implements Executor {
+
+    public static final String OLTPBENCH_RELEASE_URL = "https://marcovogt.de/download/oltpbench-polypheny-0.1.0-SNAPSHOT-jdk11-mac64.zip";
+    public static final String FILE_NAME = OLTPBENCH_RELEASE_URL.substring( OLTPBENCH_RELEASE_URL.lastIndexOf( '/' ) + 1 );
+    public static final String CLIENT_DIR = System.getProperty( "user.home" ) + File.separator + ".polypheny" + File.separator + "client" + File.separator;
 
 
     public OltpBenchExecutor() {
@@ -85,31 +102,95 @@ public abstract class OltpBenchExecutor implements Executor {
 
 
     private void downloadOltpBench() {
-        // Check if already downloaded
-        throw new RuntimeException("Implement");
+        if ( !new File( CLIENT_DIR + FILE_NAME ).exists() ) {
+            new File( CLIENT_DIR ).mkdirs();
+            try {
+                ReadableByteChannel readableByteChannel = Channels.newChannel( new URL( OLTPBENCH_RELEASE_URL ).openStream() );
+                try ( FileOutputStream fileOutputStream = new FileOutputStream( CLIENT_DIR + FILE_NAME ) ) {
+                    fileOutputStream.getChannel().transferFrom( readableByteChannel, 0, Long.MAX_VALUE );
+                }
+                ZipFile zipFile = new ZipFile( CLIENT_DIR + FILE_NAME );
+                zipFile.extractAll( CLIENT_DIR );
+                File oltpBenchDir = new File( CLIENT_DIR + "oltpbench" );
+                if ( oltpBenchDir.exists() ) {
+                    FileUtils.deleteDirectory( oltpBenchDir );
+                }
+                new File( CLIENT_DIR + FILE_NAME.substring( 0, FILE_NAME.lastIndexOf( "." ) ) ).renameTo( oltpBenchDir );
+            } catch ( IOException | ZipException e ) {
+                throw new RuntimeException( "Error while downloading OLTPbench", e );
+            }
+        }
+    }
+
+
+    private String writeConfigFile( AbstractOltpBenchConfig config, String fileName ) {
+        try {
+            String outputFilePath = CLIENT_DIR + fileName;
+            FileWriter fileWriter = new FileWriter( CLIENT_DIR + fileName );
+            BufferedWriter writer = new BufferedWriter( fileWriter );
+            writer.write( getConfigXml( config ) );
+            writer.close();
+            return outputFilePath;
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
     }
 
 
     public void createSchema( AbstractOltpBenchConfig config ) throws ExecutorException {
-        String xmlConfig = getConfigXml( config );
-        // Write config file
-        // Execute OLTPBench with config
+        String configFilePath = writeConfigFile( config, config.scenario + ".xml" );
+
+        ProcessBuilder builder = new ProcessBuilder();
+        builder.command( "./bin/oltpbenchmark", "-b", config.scenario, "-c", configFilePath, "--create=true", "--load=false", "--execute=false" );
+        builder.directory( new File( CLIENT_DIR + "oltpbench" ) );
+
+        try {
+            Process process = builder.start();
+            StreamGobbler.startFor( process, true );
+            int exitCode = process.waitFor();
+        } catch ( IOException | InterruptedException e ) {
+            throw new RuntimeException( e );
+        }
     }
 
 
     public void loadData( AbstractOltpBenchConfig config ) throws ExecutorException {
-        // Write config file
-        // Execute OLTPBench with config
+        String configFilePath = writeConfigFile( config, config.scenario + ".xml" );
+
+        ProcessBuilder builder = new ProcessBuilder();
+        builder.command( "./bin/oltpbenchmark", "-b", config.scenario, "-c", configFilePath, "--create=false", "--load=true", "--execute=false" );
+        builder.directory( new File( CLIENT_DIR + "oltpbench" ) );
+
+        try {
+            Process process = builder.start();
+            StreamGobbler.startFor( process, true );
+            int exitCode = process.waitFor();
+        } catch ( IOException | InterruptedException e ) {
+            throw new RuntimeException( e );
+        }
     }
 
 
-    public void executeWorkload( AbstractOltpBenchConfig config, File outputDirectory ) throws ExecutorException {
-        // Write config file
-        // Execute OLTPBench with config
+    public void executeWorkload( AbstractOltpBenchConfig config, File outputDir ) throws ExecutorException {
+        String configFilePath = writeConfigFile( config, config.scenario + ".xml" );
+
+        ProcessBuilder builder = new ProcessBuilder();
+        builder.command( "./bin/oltpbenchmark", "-b", config.scenario, "-c", configFilePath, "--create=false", "--load=false", "--execute=true" );
+        builder.directory( new File( CLIENT_DIR + "oltpbench" ) );
+
+        try {
+            Process process = builder.start();
+            StreamGobbler.startFor( process, true );
+            int exitCode = process.waitFor();
+        } catch ( IOException | InterruptedException e ) {
+            throw new RuntimeException( e );
+        }
+
+        new File( configFilePath )
+                .renameTo( new File( outputDir, config.scenario + ".xml" ) );
+        new File( CLIENT_DIR + "oltpbench" + File.separator + "results" + File.separator + "oltpbench.csv" )
+                .renameTo( new File( outputDir, "oltpbench.csv" ) );
     }
-
-
-    public abstract void collectResults() throws ExecutorException ;
 
 
     protected abstract String getConfigXml( AbstractOltpBenchConfig config );
@@ -136,12 +217,61 @@ public abstract class OltpBenchExecutor implements Executor {
             }
         }
 
+
         // Allows to limit number of concurrent executor threads, 0 means no limit
         @Override
         public abstract int getMaxNumberOfThreads();
 
     }
 
+
+    // From: https://gist.github.com/jmartisk/6535784
+    public static class StreamGobbler extends Thread {
+
+        private final InputStream inputStream;
+        private final boolean printOutput;
+
+
+        private StreamGobbler( final InputStream inputStream, boolean printOutput ) {
+            this.inputStream = inputStream;
+            this.printOutput = printOutput;
+        }
+
+
+        private StreamGobbler( final InputStream inputStream ) {
+            this.inputStream = inputStream;
+            printOutput = false;
+        }
+
+
+        static void startFor( final Process process ) {
+            new StreamGobbler( process.getErrorStream() ).start();
+            new StreamGobbler( process.getInputStream() ).start();
+        }
+
+
+        static void startFor( final Process process, boolean printOutput ) {
+            new StreamGobbler( process.getErrorStream(), printOutput ).start();
+            new StreamGobbler( process.getInputStream(), printOutput ).start();
+        }
+
+
+        @Override
+        public void run() {
+            try {
+                final BufferedReader reader = new BufferedReader( new InputStreamReader( inputStream ) );
+                String line;
+                while ( (line = reader.readLine()) != null ) {
+                    if ( printOutput ) {
+                        log.warn( "OLTPBench> " + line );
+                    }
+                }
+            } catch ( IOException ioe ) {
+                ioe.printStackTrace();
+            }
+        }
+
+    }
 
 
 }
