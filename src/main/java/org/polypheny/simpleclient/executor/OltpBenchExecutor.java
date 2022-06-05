@@ -268,7 +268,7 @@ public abstract class OltpBenchExecutor implements Executor {
                 while ( (line = reader.readLine()) != null ) {
                     if ( printOutput ) {
                         if ( !line.contains( ") DEBUG - " ) ) {
-                            log.info( "OLTPBench> " + line );
+                            log.warn( "OLTPBench> " + line );
                         }
                         if ( writer != null ) {
                             writer.append( line );
