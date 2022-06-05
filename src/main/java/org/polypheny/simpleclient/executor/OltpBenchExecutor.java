@@ -146,7 +146,7 @@ public abstract class OltpBenchExecutor implements Executor {
 
         try {
             Process process = builder.start();
-            StreamGobbler.startFor( process, true );
+            StreamGobbler.startFor( process, true, null );
             int exitCode = process.waitFor();
         } catch ( IOException | InterruptedException e ) {
             throw new RuntimeException( e );
@@ -163,7 +163,7 @@ public abstract class OltpBenchExecutor implements Executor {
 
         try {
             Process process = builder.start();
-            StreamGobbler.startFor( process, true );
+            StreamGobbler.startFor( process, true, null );
             int exitCode = process.waitFor();
         } catch ( IOException | InterruptedException e ) {
             throw new RuntimeException( e );
@@ -179,8 +179,9 @@ public abstract class OltpBenchExecutor implements Executor {
         builder.directory( new File( CLIENT_DIR + "oltpbench" ) );
 
         try {
+            FileWriter writer = new FileWriter( new File( outputDir, "oltpbench.log" ) );
             Process process = builder.start();
-            StreamGobbler.startFor( process, true );
+            StreamGobbler.startFor( process, true, writer );
             int exitCode = process.waitFor();
         } catch ( IOException | InterruptedException e ) {
             throw new RuntimeException( e );
@@ -230,29 +231,32 @@ public abstract class OltpBenchExecutor implements Executor {
 
         private final InputStream inputStream;
         private final boolean printOutput;
+        private final FileWriter writer;
 
 
-        private StreamGobbler( final InputStream inputStream, boolean printOutput ) {
+        private StreamGobbler( final InputStream inputStream, boolean printOutput, FileWriter writer ) {
             this.inputStream = inputStream;
             this.printOutput = printOutput;
+            this.writer = writer;
         }
 
 
-        private StreamGobbler( final InputStream inputStream ) {
+        private StreamGobbler( final InputStream inputStream, FileWriter writer ) {
             this.inputStream = inputStream;
             printOutput = false;
+            this.writer = writer;
         }
 
 
         static void startFor( final Process process ) {
-            new StreamGobbler( process.getErrorStream() ).start();
-            new StreamGobbler( process.getInputStream() ).start();
+            new StreamGobbler( process.getErrorStream(), null ).start();
+            new StreamGobbler( process.getInputStream(), null ).start();
         }
 
 
-        static void startFor( final Process process, boolean printOutput ) {
-            new StreamGobbler( process.getErrorStream(), printOutput ).start();
-            new StreamGobbler( process.getInputStream(), printOutput ).start();
+        static void startFor( final Process process, boolean printOutput, FileWriter writer ) {
+            new StreamGobbler( process.getErrorStream(), printOutput, writer ).start();
+            new StreamGobbler( process.getInputStream(), printOutput, writer ).start();
         }
 
 
@@ -263,8 +267,12 @@ public abstract class OltpBenchExecutor implements Executor {
                 String line;
                 while ( (line = reader.readLine()) != null ) {
                     if ( printOutput ) {
-                        if ( !line.contains( ") DEBUG - " ) && !line.contains( ") INFO  - " ) ) {
+                        if ( !line.contains( ") DEBUG - " ) ) {
                             log.info( "OLTPBench> " + line );
+                        }
+                        if ( writer != null ) {
+                            writer.append( line );
+                            writer.flush();
                         }
                     }
                 }
@@ -274,6 +282,5 @@ public abstract class OltpBenchExecutor implements Executor {
         }
 
     }
-
 
 }

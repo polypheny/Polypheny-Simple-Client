@@ -137,7 +137,7 @@ public abstract class AbstractOltpBenchScenario extends Scenario {
 
         properties.put( "NumberOfTransactions", latency.size() );
         double runtimeSeconds = Long.parseLong( properties.get( "runtime" ).toString() ) / 1000000000.0;
-        double throughput = runtimeSeconds / latency.size();
+        double throughput = latency.size() / runtimeSeconds;
         properties.put( "Throughput", throughput );
     }
 
