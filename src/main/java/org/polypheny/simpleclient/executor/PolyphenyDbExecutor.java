@@ -51,6 +51,7 @@ public interface PolyphenyDbExecutor extends Executor {
     AtomicInteger storeCounter = new AtomicInteger();
     AtomicInteger nextPort = new AtomicInteger( 3300 );
 
+
     void dropStore( String name ) throws ExecutorException;
 
 
@@ -364,7 +365,7 @@ public interface PolyphenyDbExecutor extends Executor {
                 }
             }
 
-            // Wait 5 seconds to let the the config changes take effect
+            // Wait 5 seconds to let the config changes take effect
             try {
                 TimeUnit.SECONDS.sleep( 5 );
             } catch ( InterruptedException e ) {
