@@ -39,8 +39,7 @@ import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
-import net.lingala.zip4j.core.ZipFile;
-import net.lingala.zip4j.exception.ZipException;
+import net.lingala.zip4j.ZipFile;
 import org.apache.commons.io.FileUtils;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.query.BatchableInsert;
@@ -52,7 +51,7 @@ import org.polypheny.simpleclient.scenario.oltpbench.AbstractOltpBenchConfig;
 @Slf4j
 public abstract class OltpBenchExecutor implements Executor {
 
-    public static final String OLTPBENCH_RELEASE_URL = "https://marcovogt.de/download/oltpbench-polypheny-0.1.0-SNAPSHOT-jdk11-mac64.zip";
+    public static final String OLTPBENCH_RELEASE_URL = "https://marcovogt.de/download/oltpbench-polypheny-0.1.0-SNAPSHOT-jdk11-linux64.zip";
     public static final String FILE_NAME = OLTPBENCH_RELEASE_URL.substring( OLTPBENCH_RELEASE_URL.lastIndexOf( '/' ) + 1 );
     public static final String CLIENT_DIR = System.getProperty( "user.home" ) + File.separator + ".polypheny" + File.separator + "client" + File.separator;
 
@@ -109,14 +108,15 @@ public abstract class OltpBenchExecutor implements Executor {
                 try ( FileOutputStream fileOutputStream = new FileOutputStream( CLIENT_DIR + FILE_NAME ) ) {
                     fileOutputStream.getChannel().transferFrom( readableByteChannel, 0, Long.MAX_VALUE );
                 }
-                ZipFile zipFile = new ZipFile( CLIENT_DIR + FILE_NAME );
-                zipFile.extractAll( CLIENT_DIR );
+                try ( ZipFile zipFile = new ZipFile( CLIENT_DIR + FILE_NAME ) ) {
+                    zipFile.extractAll( CLIENT_DIR );
+                }
                 File oltpBenchDir = new File( CLIENT_DIR + "oltpbench" );
                 if ( oltpBenchDir.exists() ) {
                     FileUtils.deleteDirectory( oltpBenchDir );
                 }
                 new File( CLIENT_DIR + FILE_NAME.substring( 0, FILE_NAME.lastIndexOf( "." ) ) ).renameTo( oltpBenchDir );
-            } catch ( IOException | ZipException e ) {
+            } catch ( IOException e ) {
                 throw new RuntimeException( "Error while downloading OLTPbench", e );
             }
         }
