@@ -41,6 +41,7 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import net.lingala.zip4j.ZipFile;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.SystemUtils;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.query.BatchableInsert;
 import org.polypheny.simpleclient.query.Query;
@@ -51,9 +52,24 @@ import org.polypheny.simpleclient.scenario.oltpbench.AbstractOltpBenchConfig;
 @Slf4j
 public abstract class OltpBenchExecutor implements Executor {
 
-    public static final String OLTPBENCH_RELEASE_URL = "https://marcovogt.de/download/oltpbench-polypheny-0.1.0-SNAPSHOT-jdk11-linux64.zip";
-    public static final String FILE_NAME = OLTPBENCH_RELEASE_URL.substring( OLTPBENCH_RELEASE_URL.lastIndexOf( '/' ) + 1 );
-    public static final String CLIENT_DIR = System.getProperty( "user.home" ) + File.separator + ".polypheny" + File.separator + "client" + File.separator;
+    public static final String OLTPBENCH_RELEASE_URL;
+    public static final String FILE_NAME;
+    public static final String CLIENT_DIR;
+
+
+    static {
+        if ( SystemUtils.IS_OS_WINDOWS ) {
+            OLTPBENCH_RELEASE_URL = "https://marcovogt.de/download/oltpbench-polypheny-0.1.0-SNAPSHOT-jdk11-windows64.zip";
+        } else if ( SystemUtils.IS_OS_LINUX ) {
+            OLTPBENCH_RELEASE_URL = "https://marcovogt.de/download/oltpbench-polypheny-0.1.0-SNAPSHOT-jdk11-linux64.zip";
+        } else if ( SystemUtils.IS_OS_MAC ) {
+            OLTPBENCH_RELEASE_URL = "https://marcovogt.de/download/oltpbench-polypheny-0.1.0-SNAPSHOT-jdk11-mac64.zip";
+        } else {
+            throw new RuntimeException( "Unknown OS: " + SystemUtils.OS_NAME );
+        }
+        FILE_NAME = OLTPBENCH_RELEASE_URL.substring( OLTPBENCH_RELEASE_URL.lastIndexOf( '/' ) + 1 );
+        CLIENT_DIR = System.getProperty( "user.home" ) + File.separator + ".polypheny" + File.separator + "client" + File.separator;
+    }
 
 
     public OltpBenchExecutor() {
