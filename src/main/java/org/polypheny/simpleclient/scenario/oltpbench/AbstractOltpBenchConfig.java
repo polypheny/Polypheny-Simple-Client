@@ -12,6 +12,7 @@ public abstract class AbstractOltpBenchConfig extends AbstractConfig {
     //public int batchSize;
     public int scaleFactor;
     public int warmupTime;
+    public boolean workloadMonitoring;
 
     public AbstractOltpBenchConfig( Properties properties, int multiplier, String scenario, String system ) {
         super( scenario, system );
@@ -40,6 +41,7 @@ public abstract class AbstractOltpBenchConfig extends AbstractConfig {
         numberOfThreads = getIntProperty( properties, "numberOfThreads" );
         numberOfWarmUpIterations = 0;
 
+        workloadMonitoring = getBooleanProperty( properties, "workloadMonitoring" );
 
         // OLTPbench settings
         //batchSize = getIntProperty( properties, "batchSize"); // 128
@@ -77,7 +79,7 @@ public abstract class AbstractOltpBenchConfig extends AbstractConfig {
         routingCache = Boolean.parseBoolean( cdl.get( "routingCache" ) );
 
         progressReportBase = 100;
-
+        workloadMonitoring = Boolean.parseBoolean( cdlGetOrDefault( cdl, "workloadMonitoring", "false" ) );
 
         // OLTPbench settings
         scaleFactor = Integer.parseInt( cdl.get( "scaleFactor" ) );

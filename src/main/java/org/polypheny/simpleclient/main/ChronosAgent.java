@@ -68,6 +68,7 @@ import org.polypheny.simpleclient.scenario.knnbench.KnnBench;
 import org.polypheny.simpleclient.scenario.knnbench.KnnBenchConfig;
 import org.polypheny.simpleclient.scenario.multimedia.MultimediaBench;
 import org.polypheny.simpleclient.scenario.multimedia.MultimediaConfig;
+import org.polypheny.simpleclient.scenario.oltpbench.AbstractOltpBenchConfig;
 import org.polypheny.simpleclient.scenario.oltpbench.auctionmark.AuctionMark;
 import org.polypheny.simpleclient.scenario.oltpbench.auctionmark.AuctionMarkConfig;
 import org.polypheny.simpleclient.scenario.oltpbench.smallbank.SmallBank;
@@ -360,6 +361,10 @@ public class ChronosAgent extends AbstractChronosAgent {
             csvWriter = new CsvWriter( outputDirectory.getPath() + File.separator + "results.csv" );
         } else {
             csvWriter = null;
+        }
+
+        if ( config.system.equals( "polypheny" ) ) {
+            ((PolyphenyDbInstance) databaseInstance).setWorkloadMonitoring( ((AbstractOltpBenchConfig) config).workloadMonitoring );
         }
 
         int numberOfThreads = config.numberOfThreads;

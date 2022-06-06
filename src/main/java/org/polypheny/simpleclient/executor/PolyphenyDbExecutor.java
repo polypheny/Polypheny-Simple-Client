@@ -466,6 +466,23 @@ public interface PolyphenyDbExecutor extends Executor {
             }
         }
 
+
+        public void setWorkloadMonitoring( boolean b ) {
+            PolyphenyDbExecutor executor = (PolyphenyDbExecutor) new PolyphenyDbJdbcExecutorFactory( ChronosCommand.hostname, false ).createExecutorInstance();
+            try {
+                executor.setConfig( "routing/monitoringQueueActive", b ? "true" : "false" );
+                executor.executeCommit();
+            } catch ( ExecutorException e ) {
+                throw new RuntimeException( "Exception while updating polypheny config", e );
+            } finally {
+                try {
+                    executor.closeConnection();
+                } catch ( ExecutorException e ) {
+                    log.error( "Exception while closing connection", e );
+                }
+            }
+        }
+
     }
 
 }
