@@ -41,7 +41,7 @@ public class OltpBenchPolyphenyDbExecutor extends OltpBenchExecutor implements P
         return config.toXml(
                 "POLYPHENY",
                 "org.polypheny.jdbc.Driver",
-                "jdbc:polypheny://localhost/",
+                "jdbc:polypheny://" + host + "/",
                 "pa",
                 "",
                 config.scenario + "-polypheny-ddl.sql",

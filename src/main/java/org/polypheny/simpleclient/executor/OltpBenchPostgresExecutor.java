@@ -68,7 +68,7 @@ public class OltpBenchPostgresExecutor extends OltpBenchExecutor implements Exec
         return config.toXml(
                 "postgres",
                 "org.postgresql.Driver",
-                "jdbc:postgresql://localhost:5432/test",
+                "jdbc:postgresql://" + host + ":5432/test",
                 "postgres",
                 "postgres",
                 config.scenario + "-postgres-ddl.sql",

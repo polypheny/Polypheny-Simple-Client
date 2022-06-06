@@ -187,7 +187,7 @@ public class ChronosAgent extends AbstractChronosAgent {
                 executorFactory = new MonetdbExecutorFactory( ChronosCommand.hostname, Boolean.parseBoolean( parsedConfig.get( "prepareStatements" ) ) );
                 break;
             case "cottontail":
-                executorFactory = new CottontailExecutorFactory();
+                executorFactory = new CottontailExecutorFactory( ChronosCommand.hostname );
                 break;
             case "oltpbench-polypheny":
                 executorFactory = new OltpBenchPolyphenyDbExecutorFactory( ChronosCommand.hostname );
