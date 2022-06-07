@@ -32,37 +32,37 @@ import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
 import org.polypheny.simpleclient.main.ProgressBar;
 import org.polypheny.simpleclient.main.ProgressReporter;
-import org.polypheny.simpleclient.scenario.oltpbench.auctionmark.AuctionMark;
-import org.polypheny.simpleclient.scenario.oltpbench.auctionmark.AuctionMarkConfig;
+import org.polypheny.simpleclient.scenario.oltpbench.tpcc.Tpcc;
+import org.polypheny.simpleclient.scenario.oltpbench.tpcc.TpccConfig;
 
 
 @Slf4j
-@Command(name = "auctionmark", description = "Mode for quick testing of Polypheny-DB using the AuctionMark benchmark.")
-public class AuctionMarkCommand extends AbstractOltpBenchCommand {
+@Command(name = "tpcc", description = "Mode for quick testing of Polypheny-DB using the TPC-C benchmark.")
+public class TpccCommand extends AbstractOltpBenchCommand {
 
     @Override
     protected void schema( ExecutorFactory executorFactory ) {
-        AuctionMarkConfig config = new AuctionMarkConfig( getProperties( "auctionmark.properties" ), 1 );
-        AuctionMark auctionMark = new AuctionMark( executorFactory, config, false, QueryMode.TABLE );
-        auctionMark.createSchema( true );
+        TpccConfig config = new TpccConfig( getProperties( "tpcc.properties" ), 1 );
+        Tpcc tpcc = new Tpcc( executorFactory, config, false, QueryMode.TABLE );
+        tpcc.createSchema( true );
     }
 
 
     @Override
     protected void data( ExecutorFactory executorFactory, int multiplier ) {
-        AuctionMarkConfig config = new AuctionMarkConfig( getProperties( "auctionmark.properties" ), multiplier );
-        AuctionMark auctionMark = new AuctionMark( executorFactory, config, false, QueryMode.TABLE );
+        TpccConfig config = new TpccConfig( getProperties( "tpcc.properties" ), multiplier );
+        Tpcc tpcc = new Tpcc( executorFactory, config, false, QueryMode.TABLE );
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
-        auctionMark.generateData( progressReporter );
+        tpcc.generateData( progressReporter );
     }
 
 
     @Override
     protected void workload( ExecutorFactory executorFactory, int multiplier ) {
-        AuctionMarkConfig config = new AuctionMarkConfig( getProperties( "auctionmark.properties" ), multiplier );
-        AuctionMark auctionMark = new AuctionMark( executorFactory, config, false, QueryMode.TABLE );
+        TpccConfig config = new TpccConfig( getProperties( "tpcc.properties" ), multiplier );
+        Tpcc tpcc = new Tpcc( executorFactory, config, false, QueryMode.TABLE );
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
-        auctionMark.execute( progressReporter, null, new File( "." ), config.numberOfThreads );
+        tpcc.execute( progressReporter, null, new File( "." ), config.numberOfThreads );
     }
 
 }

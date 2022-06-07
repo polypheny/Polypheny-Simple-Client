@@ -75,6 +75,8 @@ import org.polypheny.simpleclient.scenario.oltpbench.smallbank.SmallBank;
 import org.polypheny.simpleclient.scenario.oltpbench.smallbank.SmallBankConfig;
 import org.polypheny.simpleclient.scenario.oltpbench.tpcc.Tpcc;
 import org.polypheny.simpleclient.scenario.oltpbench.tpcc.TpccConfig;
+import org.polypheny.simpleclient.scenario.oltpbench.tpch.Tpch;
+import org.polypheny.simpleclient.scenario.oltpbench.tpch.TpchConfig;
 import org.polypheny.simpleclient.scenario.oltpbench.ycsb.Ycsb;
 import org.polypheny.simpleclient.scenario.oltpbench.ycsb.YcsbConfig;
 import org.slf4j.Logger;
@@ -225,6 +227,10 @@ public class ChronosAgent extends AbstractChronosAgent {
             case "tpcc":
                 config = new TpccConfig( parsedConfig );
                 scenario = new Tpcc( executorFactory, (TpccConfig) config, dumpQueryList, queryMode );
+                break;
+            case "tpch":
+                config = new TpchConfig( parsedConfig );
+                scenario = new Tpch( executorFactory, (TpchConfig) config, dumpQueryList, queryMode );
                 break;
             case "ycsb":
                 config = new YcsbConfig( parsedConfig );

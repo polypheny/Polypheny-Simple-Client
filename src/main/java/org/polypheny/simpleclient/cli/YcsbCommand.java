@@ -32,37 +32,37 @@ import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
 import org.polypheny.simpleclient.main.ProgressBar;
 import org.polypheny.simpleclient.main.ProgressReporter;
-import org.polypheny.simpleclient.scenario.oltpbench.auctionmark.AuctionMark;
-import org.polypheny.simpleclient.scenario.oltpbench.auctionmark.AuctionMarkConfig;
+import org.polypheny.simpleclient.scenario.oltpbench.ycsb.Ycsb;
+import org.polypheny.simpleclient.scenario.oltpbench.ycsb.YcsbConfig;
 
 
 @Slf4j
-@Command(name = "auctionmark", description = "Mode for quick testing of Polypheny-DB using the AuctionMark benchmark.")
-public class AuctionMarkCommand extends AbstractOltpBenchCommand {
+@Command(name = "ycsb", description = "Mode for quick testing of Polypheny-DB using the YCSB benchmark.")
+public class YcsbCommand extends AbstractOltpBenchCommand {
 
     @Override
     protected void schema( ExecutorFactory executorFactory ) {
-        AuctionMarkConfig config = new AuctionMarkConfig( getProperties( "auctionmark.properties" ), 1 );
-        AuctionMark auctionMark = new AuctionMark( executorFactory, config, false, QueryMode.TABLE );
-        auctionMark.createSchema( true );
+        YcsbConfig config = new YcsbConfig( getProperties( "ycsb.properties" ), 1 );
+        Ycsb ycsb = new Ycsb( executorFactory, config, false, QueryMode.TABLE );
+        ycsb.createSchema( true );
     }
 
 
     @Override
     protected void data( ExecutorFactory executorFactory, int multiplier ) {
-        AuctionMarkConfig config = new AuctionMarkConfig( getProperties( "auctionmark.properties" ), multiplier );
-        AuctionMark auctionMark = new AuctionMark( executorFactory, config, false, QueryMode.TABLE );
+        YcsbConfig config = new YcsbConfig( getProperties( "ycsb.properties" ), multiplier );
+        Ycsb ycsb = new Ycsb( executorFactory, config, false, QueryMode.TABLE );
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
-        auctionMark.generateData( progressReporter );
+        ycsb.generateData( progressReporter );
     }
 
 
     @Override
     protected void workload( ExecutorFactory executorFactory, int multiplier ) {
-        AuctionMarkConfig config = new AuctionMarkConfig( getProperties( "auctionmark.properties" ), multiplier );
-        AuctionMark auctionMark = new AuctionMark( executorFactory, config, false, QueryMode.TABLE );
+        YcsbConfig config = new YcsbConfig( getProperties( "ycsb.properties" ), multiplier );
+        Ycsb ycsb = new Ycsb( executorFactory, config, false, QueryMode.TABLE );
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
-        auctionMark.execute( progressReporter, null, new File( "." ), config.numberOfThreads );
+        ycsb.execute( progressReporter, null, new File( "." ), config.numberOfThreads );
     }
 
 }
