@@ -5,6 +5,11 @@ A simple benchmarking and testing client for Polypheny-DB. It includes support f
 * **Gavel**: The Gavel benchmark simulates the workload of a fictional auction house.
 * **kNN-Bench**: A benchmark tailored towards typical workloads of multimedia retrieval applications and especially k-Nearest-Neighbor search.
 * **Multimedia**: This benchmarks produces workload containing or requesting randomly generated BLOBs.
+* [**AuctionMark**](http://hstore.cs.brown.edu/projects/auctionmark/): A benchmark executing workload that simulates the activities found in a well-known auction site.
+* [**SmallBank**](http://ses.library.usyd.edu.au/bitstream/2123/5353/1/michael-cahill-2009-thesis.pdf): The SmallBank benchmark models a simple banking application.
+* [**TPC-C**](http://www.tpc.org/tpcc/): A well-known on-line transaction processing (OLTP) benchmark.
+* [**TPC-H**](http://www.tpc.org/tpch/): A decision support benchmark consisting of a suite of business oriented ad-hoc queries and concurrent data modifications.
+* [**YCSB**](https://github.com/brianfrankcooper/YCSB): Benchmark for evaluating the performance of "key-value" and "cloud" serving stores.
 
 This benchmarking client contains a [Chronos](https://chronos-eaas.org/) connector. This allows to easily execute evaluation campaigns.
 
@@ -62,7 +67,7 @@ The general syntax is identical for all three benchmarks:
 java -jar polypheny-simple-client.jar  BENCHMARK  TASK  [ MULTIPLIER ] 
 ```
 
-_BENCHMARK_: `{ gavel | knnbench | multimedia }`
+_BENCHMARK_: `{ gavel | knnbench | multimedia | auctionmark | smallbank | tpcc | tpch | ycsb }`
 
 _TASK_: `{ schema | data | workload | warmup }`
 
