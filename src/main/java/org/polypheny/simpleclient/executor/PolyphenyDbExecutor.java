@@ -51,6 +51,7 @@ public interface PolyphenyDbExecutor extends Executor {
     AtomicInteger storeCounter = new AtomicInteger();
     AtomicInteger nextPort = new AtomicInteger( 3300 );
 
+
     void dropStore( String name ) throws ExecutorException;
 
 
@@ -364,7 +365,7 @@ public interface PolyphenyDbExecutor extends Executor {
                 }
             }
 
-            // Wait 5 seconds to let the the config changes take effect
+            // Wait 5 seconds to let the config changes take effect
             try {
                 TimeUnit.SECONDS.sleep( 5 );
             } catch ( InterruptedException e ) {
@@ -453,6 +454,23 @@ public interface PolyphenyDbExecutor extends Executor {
             PolyphenyDbExecutor executor = (PolyphenyDbExecutor) new PolyphenyDbJdbcExecutorFactory( ChronosCommand.hostname, false ).createExecutorInstance();
             try {
                 executor.setConfig( "routing/postCostAggregationActive", b ? "true" : "false" );
+                executor.executeCommit();
+            } catch ( ExecutorException e ) {
+                throw new RuntimeException( "Exception while updating polypheny config", e );
+            } finally {
+                try {
+                    executor.closeConnection();
+                } catch ( ExecutorException e ) {
+                    log.error( "Exception while closing connection", e );
+                }
+            }
+        }
+
+
+        public void setWorkloadMonitoring( boolean b ) {
+            PolyphenyDbExecutor executor = (PolyphenyDbExecutor) new PolyphenyDbJdbcExecutorFactory( ChronosCommand.hostname, false ).createExecutorInstance();
+            try {
+                executor.setConfig( "routing/monitoringQueueActive", b ? "true" : "false" );
                 executor.executeCommit();
             } catch ( ExecutorException e ) {
                 throw new RuntimeException( "Exception while updating polypheny config", e );

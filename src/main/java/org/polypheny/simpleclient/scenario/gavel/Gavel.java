@@ -644,7 +644,7 @@ public class Gavel extends Scenario {
 
 
     @Override
-    public void analyze( Properties properties ) {
+    public void analyze( Properties properties, File outputDirectory ) {
         properties.put( "measuredTime", calculateMean( measuredTimes ) );
 
         measuredTimePerQueryType.forEach( ( templateId, time ) -> {

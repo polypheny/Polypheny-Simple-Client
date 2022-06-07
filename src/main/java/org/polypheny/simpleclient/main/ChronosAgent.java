@@ -52,6 +52,8 @@ import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.executor.Executor.DatabaseInstance;
 import org.polypheny.simpleclient.executor.MonetdbExecutor.MonetdbExecutorFactory;
 import org.polypheny.simpleclient.executor.MonetdbExecutor.MonetdbInstance;
+import org.polypheny.simpleclient.executor.OltpBenchPolyphenyDbExecutor.OltpBenchPolyphenyDbExecutorFactory;
+import org.polypheny.simpleclient.executor.OltpBenchPostgresExecutor.OltpBenchPostgresExecutorFactory;
 import org.polypheny.simpleclient.executor.PolyphenyDbExecutor.PolyphenyDbInstance;
 import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory;
 import org.polypheny.simpleclient.executor.PolyphenyDbMongoQlExecutor.PolyphenyDbMongoQlExecutorFactory;
@@ -66,6 +68,17 @@ import org.polypheny.simpleclient.scenario.knnbench.KnnBench;
 import org.polypheny.simpleclient.scenario.knnbench.KnnBenchConfig;
 import org.polypheny.simpleclient.scenario.multimedia.MultimediaBench;
 import org.polypheny.simpleclient.scenario.multimedia.MultimediaConfig;
+import org.polypheny.simpleclient.scenario.oltpbench.AbstractOltpBenchConfig;
+import org.polypheny.simpleclient.scenario.oltpbench.auctionmark.AuctionMark;
+import org.polypheny.simpleclient.scenario.oltpbench.auctionmark.AuctionMarkConfig;
+import org.polypheny.simpleclient.scenario.oltpbench.smallbank.SmallBank;
+import org.polypheny.simpleclient.scenario.oltpbench.smallbank.SmallBankConfig;
+import org.polypheny.simpleclient.scenario.oltpbench.tpcc.Tpcc;
+import org.polypheny.simpleclient.scenario.oltpbench.tpcc.TpccConfig;
+import org.polypheny.simpleclient.scenario.oltpbench.tpch.Tpch;
+import org.polypheny.simpleclient.scenario.oltpbench.tpch.TpchConfig;
+import org.polypheny.simpleclient.scenario.oltpbench.ycsb.Ycsb;
+import org.polypheny.simpleclient.scenario.oltpbench.ycsb.YcsbConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -176,7 +189,13 @@ public class ChronosAgent extends AbstractChronosAgent {
                 executorFactory = new MonetdbExecutorFactory( ChronosCommand.hostname, Boolean.parseBoolean( parsedConfig.get( "prepareStatements" ) ) );
                 break;
             case "cottontail":
-                executorFactory = new CottontailExecutorFactory();
+                executorFactory = new CottontailExecutorFactory( ChronosCommand.hostname );
+                break;
+            case "oltpbench-polypheny":
+                executorFactory = new OltpBenchPolyphenyDbExecutorFactory( ChronosCommand.hostname );
+                break;
+            case "oltpbench-postgres":
+                executorFactory = new OltpBenchPostgresExecutorFactory( ChronosCommand.hostname );
                 break;
             default:
                 throw new RuntimeException( "Unknown system: " + parsedConfig.get( "store" ) );
@@ -196,6 +215,26 @@ public class ChronosAgent extends AbstractChronosAgent {
             case "multimedia":
                 config = new MultimediaConfig( parsedConfig );
                 scenario = new MultimediaBench( executorFactory, (MultimediaConfig) config, true, dumpQueryList );
+                break;
+            case "auctionmark":
+                config = new AuctionMarkConfig( parsedConfig );
+                scenario = new AuctionMark( executorFactory, (AuctionMarkConfig) config, dumpQueryList, queryMode );
+                break;
+            case "smallbank":
+                config = new SmallBankConfig( parsedConfig );
+                scenario = new SmallBank( executorFactory, (SmallBankConfig) config, dumpQueryList, queryMode );
+                break;
+            case "tpcc":
+                config = new TpccConfig( parsedConfig );
+                scenario = new Tpcc( executorFactory, (TpccConfig) config, dumpQueryList, queryMode );
+                break;
+            case "tpch":
+                config = new TpchConfig( parsedConfig );
+                scenario = new Tpch( executorFactory, (TpchConfig) config, dumpQueryList, queryMode );
+                break;
+            case "ycsb":
+                config = new YcsbConfig( parsedConfig );
+                scenario = new Ycsb( executorFactory, (YcsbConfig) config, dumpQueryList, queryMode );
                 break;
             default:
                 throw new RuntimeException( "Unknown scenario: " + parsedConfig.get( "scenario" ) );
@@ -234,10 +273,12 @@ public class ChronosAgent extends AbstractChronosAgent {
             case "polypheny":
             case "polypheny-rest":
             case "polypheny-mongoql":
+            case "oltpbench-polypheny":
                 databaseInstance = new PolyphenyDbInstance( polyphenyControlConnector, executorFactory, outputDirectory, config );
                 scenario.createSchema( true );
                 break;
             case "postgres":
+            case "oltpbench-postgres":
                 databaseInstance = new PostgresInstance();
                 scenario.createSchema( false );
                 break;
@@ -328,6 +369,10 @@ public class ChronosAgent extends AbstractChronosAgent {
             csvWriter = null;
         }
 
+        if ( config.system.equals( "polypheny" ) ) {
+            ((PolyphenyDbInstance) databaseInstance).setWorkloadMonitoring( ((AbstractOltpBenchConfig) config).workloadMonitoring );
+        }
+
         int numberOfThreads = config.numberOfThreads;
         int maxNumberOfThreads = scenario.getExecutorFactory().getMaxNumberOfThreads();
         if ( maxNumberOfThreads > 0 && config.numberOfThreads > maxNumberOfThreads ) {
@@ -353,7 +398,7 @@ public class ChronosAgent extends AbstractChronosAgent {
         @SuppressWarnings("unchecked") DatabaseInstance databaseInstance = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getRight();
 
         try {
-            scenario.analyze( properties );
+            scenario.analyze( properties, outputDirectory );
         } catch ( Exception e ) {
             databaseInstance.tearDown();
             throw e;

@@ -44,6 +44,11 @@ public class Main {
         builder.withCommands( GavelCommand.class );
         builder.withCommands( KnnCommand.class );
         builder.withCommands( MultimediaCommand.class );
+        builder.withCommands( AuctionMarkCommand.class );
+        builder.withCommands( SmallBankCommand.class );
+        builder.withCommands( TpccCommand.class );
+        builder.withCommands( TpchCommand.class );
+        builder.withCommands( YcsbCommand.class );
         builder.withCommands( DumpCommand.class );
         builder.withCommands( HelpCommand.class );
         builder.withDefaultCommand( HelpCommand.class );

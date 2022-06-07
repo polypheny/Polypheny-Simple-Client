@@ -1,8 +1,8 @@
 group "org.polypheny"
 description = "A lightweight Polypheny-DB benchmarking client"
 
-def versionMajor = 1
-def versionMinor = 12.2
+def versionMajor = 2
+def versionMinor = 0
 def versionQualifier = "-SNAPSHOT"
 version = versionMajor + "." + versionMinor + versionQualifier
 
@@ -18,7 +18,7 @@ buildscript {
         // Shadowing; used to make a fat jar (https://github.com/johnrengelman/shadow)
         classpath group: "gradle.plugin.com.github.johnrengelman", name: "shadow", version: "7.1.2"
         // Lombok (https://plugins.gradle.org/plugin/io.freefair.lombok)
-        classpath group: "io.freefair.gradle", name: "lombok-plugin", version: "6.4.1"
+        classpath group: "io.freefair.gradle", name: "lombok-plugin", version: "6.4.3"
     }
 }
 
@@ -58,13 +58,13 @@ dependencies {
     implementation group: 'commons-io', name: 'commons-io', version: '2.11.0'  // License: Apache 2.0
 
     // Polypheny Control Connector
-    implementation group: 'org.polypheny', name: 'control-connector', version: '1.2.4'  // License: Apache 2.0
+    implementation group: 'org.polypheny', name: 'control-connector', version: '1.2.6'  // License: Apache 2.0
 
     // Chronos
-    implementation group: 'org.chronos-eaas', name: 'chronos-agent', version: '2.3.3' // License: MIT
+    implementation group: 'org.chronos-eaas', name: 'chronos-agent', version: '2.4' // License: MIT
 
     // REST
-    implementation group: 'com.konghq', name: 'unirest-java', version: '3.13.7' // License: MIT
+    implementation group: 'com.konghq', name: 'unirest-java', version: '3.13.10' // License: MIT
 
     // JDBC Drivers
     implementation group: 'org.polypheny', name: 'polypheny-jdbc-driver', version: '1.5.2' // License: Apache 2.0
@@ -82,7 +82,7 @@ dependencies {
     implementation group: 'com.github.rvesse', name: 'airline', version: '2.8.5' // License: Apache 2.0
 
     // Fake data generator
-    implementation group: 'com.devskiller', name: 'jfairy', version: '0.6.4' // License: Apache 2.0
+    implementation group: 'com.devskiller', name: 'jfairy', version: '0.6.5' // License: Apache 2.0
 
     // Video processing
     implementation group: 'org.jcodec', name: 'jcodec', version: '0.2.5' // License: BSD-2-Clause License
@@ -95,6 +95,9 @@ dependencies {
     implementation group: 'org.slf4j', name: 'slf4j-api', version: '1.7.36' // License: MIT
     implementation group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.17.2' // License: Apache 2.0
     implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.17.2' // License: Apache 2.0
+
+    // Extracting ZIPs
+    implementation group: 'net.lingala.zip4j', name: 'zip4j', version: '2.10.0'
 
     // Testing
     testImplementation group: 'junit', name: 'junit', version: '4.13'

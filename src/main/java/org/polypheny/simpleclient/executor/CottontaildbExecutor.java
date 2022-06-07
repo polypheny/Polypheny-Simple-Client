@@ -77,11 +77,11 @@ public class CottontaildbExecutor implements Executor {
     private final ManagedChannel channel;
 
 
-    public CottontaildbExecutor( CsvWriter csvWriter ) {
+    public CottontaildbExecutor( CsvWriter csvWriter, String hostname ) {
         super();
         this.csvWriter = csvWriter;
 
-        channel = NettyChannelBuilder.forAddress( "localhost", 1865 ).usePlaintext().maxInboundMetadataSize( 150_000_000 ).maxInboundMessageSize( 150_000_000 ).build();
+        channel = NettyChannelBuilder.forAddress( hostname, 1865 ).usePlaintext().maxInboundMetadataSize( 150_000_000 ).maxInboundMessageSize( 150_000_000 ).build();
         ensurePublicSchemaExists();
     }
 
@@ -378,13 +378,17 @@ public class CottontaildbExecutor implements Executor {
 
     public static class CottontailExecutorFactory extends ExecutorFactory {
 
-        public CottontailExecutorFactory() {
+        protected String hostname;
+
+
+        public CottontailExecutorFactory( String hostname ) {
+            this.hostname = hostname;
         }
 
 
         @Override
         public CottontaildbExecutor createExecutorInstance( CsvWriter csvWriter ) {
-            return new CottontaildbExecutor( csvWriter );
+            return new CottontaildbExecutor( csvWriter, hostname );
         }
 
 
