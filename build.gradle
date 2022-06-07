@@ -1,8 +1,8 @@
 group "org.polypheny"
 description = "A lightweight Polypheny-DB benchmarking client"
 
-def versionMajor = 1
-def versionMinor = 12.2
+def versionMajor = 2
+def versionMinor = 0
 def versionQualifier = "-SNAPSHOT"
 version = versionMajor + "." + versionMinor + versionQualifier
 
@@ -61,7 +61,7 @@ dependencies {
     implementation group: 'org.polypheny', name: 'control-connector', version: '1.2.6'  // License: Apache 2.0
 
     // Chronos
-    implementation group: 'org.chronos-eaas', name: 'chronos-agent', version: '2.3.4' // License: MIT
+    implementation group: 'org.chronos-eaas', name: 'chronos-agent', version: '2.4' // License: MIT
 
     // REST
     implementation group: 'com.konghq', name: 'unirest-java', version: '3.13.10' // License: MIT
