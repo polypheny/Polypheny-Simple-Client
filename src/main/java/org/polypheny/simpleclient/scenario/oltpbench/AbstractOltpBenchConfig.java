@@ -47,6 +47,7 @@ public abstract class AbstractOltpBenchConfig extends AbstractConfig {
         //batchSize = getIntProperty( properties, "batchSize"); // 128
         scaleFactor = multiplier;
         warmupTime = 0;
+        //loaderThreads
     }
 
 
