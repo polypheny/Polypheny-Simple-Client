@@ -1,8 +1,11 @@
 package org.polypheny.simpleclient.executor;
 
+import java.io.File;
 import lombok.extern.slf4j.Slf4j;
+import org.polypheny.control.client.PolyphenyControlConnector;
 import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory;
 import org.polypheny.simpleclient.query.Query;
+import org.polypheny.simpleclient.scenario.AbstractConfig;
 import org.polypheny.simpleclient.scenario.oltpbench.AbstractOltpBenchConfig;
 
 
@@ -13,7 +16,7 @@ public class OltpBenchPolyphenyDbExecutor extends OltpBenchExecutor implements P
     private final String host;
 
 
-    public OltpBenchPolyphenyDbExecutor(String host) {
+    public OltpBenchPolyphenyDbExecutor( String host ) {
         super();
         this.host = host;
         jdbcExecutorFactory = new PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory( host, false );
@@ -55,7 +58,7 @@ public class OltpBenchPolyphenyDbExecutor extends OltpBenchExecutor implements P
     public void dropStore( String name ) throws ExecutorException {
         PolyphenyDbJdbcExecutor executor = null;
         try {
-            executor = jdbcExecutorFactory.createExecutorInstance(null);
+            executor = jdbcExecutorFactory.createExecutorInstance( null );
             executor.dropStore( name );
             executor.executeCommit();
         } catch ( ExecutorException e ) {
@@ -121,10 +124,25 @@ public class OltpBenchPolyphenyDbExecutor extends OltpBenchExecutor implements P
     }
 
 
+    public static class OltpBenchPolyphenyInstance extends PolyphenyDbInstance {
+
+        public OltpBenchPolyphenyInstance( PolyphenyControlConnector polyphenyControlConnector, ExecutorFactory executorFactory, File outputDirectory, AbstractConfig config ) {
+            super( polyphenyControlConnector, executorFactory, outputDirectory, config );
+        }
+
+
+        @Override
+        protected void pushConfiguration( ExecutorFactory executorFactory, AbstractConfig config ) {
+            // do nothing
+        }
+
+    }
+
 
     public static class OltpBenchPolyphenyDbExecutorFactory extends OltpBenchExecutorFactory {
 
         private final String host;
+
 
         public OltpBenchPolyphenyDbExecutorFactory( String host ) {
             this.host = host;

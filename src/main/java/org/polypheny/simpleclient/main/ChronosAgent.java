@@ -53,6 +53,7 @@ import org.polypheny.simpleclient.executor.Executor.DatabaseInstance;
 import org.polypheny.simpleclient.executor.MonetdbExecutor.MonetdbExecutorFactory;
 import org.polypheny.simpleclient.executor.MonetdbExecutor.MonetdbInstance;
 import org.polypheny.simpleclient.executor.OltpBenchPolyphenyDbExecutor.OltpBenchPolyphenyDbExecutorFactory;
+import org.polypheny.simpleclient.executor.OltpBenchPolyphenyDbExecutor.OltpBenchPolyphenyInstance;
 import org.polypheny.simpleclient.executor.OltpBenchPostgresExecutor.OltpBenchPostgresExecutorFactory;
 import org.polypheny.simpleclient.executor.PolyphenyDbExecutor.PolyphenyDbInstance;
 import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory;
@@ -273,8 +274,11 @@ public class ChronosAgent extends AbstractChronosAgent {
             case "polypheny":
             case "polypheny-rest":
             case "polypheny-mongoql":
-            case "oltpbench-polypheny":
                 databaseInstance = new PolyphenyDbInstance( polyphenyControlConnector, executorFactory, outputDirectory, config );
+                scenario.createSchema( true );
+                break;
+            case "oltpbench-polypheny":
+                databaseInstance = new OltpBenchPolyphenyInstance( polyphenyControlConnector, executorFactory, outputDirectory, config );
                 scenario.createSchema( true );
                 break;
             case "postgres":

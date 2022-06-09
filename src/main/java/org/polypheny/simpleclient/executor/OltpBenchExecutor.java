@@ -276,6 +276,15 @@ public abstract class OltpBenchExecutor implements Executor {
         }
 
 
+        private boolean isIgnoredLogLine( String logLine ) {
+            return logLine.startsWith( "WARNING: An illegal reflective access operation has occurred" ) ||
+                    logLine.startsWith( "WARNING: Illegal reflective access by com.sun.xml.bind.v2.runtime.reflect.opt.Injector" ) ||
+                    logLine.startsWith( "WARNING: Please consider reporting this to the maintainers of com.sun.xml.bind.v2.runtime.reflect.opt.Injector" ) ||
+                    logLine.startsWith( "WARNING: Use --illegal-access=warn to enable warnings of further illegal reflective access operations" ) ||
+                    logLine.startsWith( "WARNING: All illegal access operations will be denied in a future release" );
+        }
+
+
         @Override
         public void run() {
             try {
@@ -283,7 +292,7 @@ public abstract class OltpBenchExecutor implements Executor {
                 String line;
                 while ( (line = reader.readLine()) != null ) {
                     if ( printOutput ) {
-                        if ( line.contains( "INFO - PHASE" ) || !line.contains( ") DEBUG - " ) && !line.contains( ") INFO  - " ) ) {
+                        if ( line.contains( "INFO - PHASE" ) || !line.contains( ") DEBUG - " ) && !line.contains( ") INFO  - " ) || !isIgnoredLogLine( line ) ) {
                             log.warn( "OLTPBench> " + line );
                         }
                         if ( writer != null ) {

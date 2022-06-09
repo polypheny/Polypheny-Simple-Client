@@ -274,6 +274,19 @@ public interface PolyphenyDbExecutor extends Executor {
                 }
             }
 
+            pushConfiguration( executorFactory, config );
+
+            // Wait 5 seconds to let the config changes take effect
+            try {
+                TimeUnit.SECONDS.sleep( 5 );
+            } catch ( InterruptedException e ) {
+                throw new RuntimeException( "Unexpected interrupt", e );
+            }
+        }
+
+
+        protected void pushConfiguration( ExecutorFactory executorFactory, AbstractConfig config ) {
+            PolyphenyDbExecutor executor;
             // Update polypheny config
             executor = (PolyphenyDbExecutor) executorFactory.createExecutorInstance();
             try {
@@ -363,13 +376,6 @@ public interface PolyphenyDbExecutor extends Executor {
                 } catch ( ExecutorException e ) {
                     log.error( "Exception while closing connection", e );
                 }
-            }
-
-            // Wait 5 seconds to let the config changes take effect
-            try {
-                TimeUnit.SECONDS.sleep( 5 );
-            } catch ( InterruptedException e ) {
-                throw new RuntimeException( "Unexpected interrupt", e );
             }
         }
 

@@ -74,7 +74,7 @@ public abstract class Scenario {
         OptionalDouble meanOptional = times.stream().mapToLong( Long::longValue ).average();
         if ( meanOptional.isPresent() ) {
             // scale
-            double mean = meanOptional.getAsDouble() / 1000000;
+            double mean = meanOptional.getAsDouble() / 1000000.0;
             String roundFormat = df.format( mean );
             try {
                 return df.parse( roundFormat ).doubleValue();
