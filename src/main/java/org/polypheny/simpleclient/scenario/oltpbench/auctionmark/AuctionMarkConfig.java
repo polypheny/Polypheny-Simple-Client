@@ -19,7 +19,7 @@ public class AuctionMarkConfig extends AbstractOltpBenchConfig {
 
 
     public long time;
-    public long rate;
+    public String rate;
 
     public int getItemWeight;
     public int getUserInfoWeight;
@@ -35,8 +35,8 @@ public class AuctionMarkConfig extends AbstractOltpBenchConfig {
     public AuctionMarkConfig( Properties properties, int multiplier ) {
         super( properties, multiplier, "auctionmark", "oltpbench-polypheny" );
 
-        time = getLongProperty( properties, "time");
-        rate = getLongProperty( properties, "rate");
+        time = getLongProperty( properties, "time" );
+        rate = getStringProperty( properties, "rate" );
 
         getItemWeight = getIntProperty( properties, "getItemWeight" );
         getUserInfoWeight = getIntProperty( properties, "getUserInfoWeight" );
@@ -54,7 +54,7 @@ public class AuctionMarkConfig extends AbstractOltpBenchConfig {
         super( cdl, "auctionmark", cdl.get( "store" ) );
 
         time = Long.parseLong( cdl.get( "time" ) );
-        rate = Long.parseLong( cdl.get( "rate" ) );
+        rate = cdl.get( "rate" );
 
         getItemWeight = Integer.parseInt( cdl.get( "getItemWeight" ) );
         getUserInfoWeight = Integer.parseInt( cdl.get( "getUserInfoWeight" ) );
@@ -102,7 +102,7 @@ public class AuctionMarkConfig extends AbstractOltpBenchConfig {
         Element workElement = doc.createElement( "work" );
         worksElement.appendChild( workElement );
         createAndAppendElement( doc, workElement, "time", time + "" );
-        createAndAppendElement( doc, workElement, "rate", rate + "" );
+        createAndAppendElement( doc, workElement, "rate", rate );
         createAndAppendElement( doc, workElement, "warmup", warmupTime + "" );
         createAndAppendElement( doc, workElement, "weights",
                 getItemWeight + "," +
