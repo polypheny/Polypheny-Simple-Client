@@ -59,11 +59,11 @@ public abstract class OltpBenchExecutor implements Executor {
 
     static {
         if ( SystemUtils.IS_OS_WINDOWS ) {
-            OLTPBENCH_RELEASE_URL = "https://github.com/polypheny/OLTPBench/releases/download/v1.1/oltpbench-polypheny-1.1.0-jdk11-windows64.zip";
+            OLTPBENCH_RELEASE_URL = "https://github.com/polypheny/OLTPBench/releases/download/v1.2/oltpbench-polypheny-1.2.0-jdk11-windows64.zip";
         } else if ( SystemUtils.IS_OS_LINUX ) {
-            OLTPBENCH_RELEASE_URL = "https://github.com/polypheny/OLTPBench/releases/download/v1.1/oltpbench-polypheny-1.1.0-jdk11-linux64.zip";
+            OLTPBENCH_RELEASE_URL = "https://github.com/polypheny/OLTPBench/releases/download/v1.2/oltpbench-polypheny-1.2.0-jdk11-linux64.zip";
         } else if ( SystemUtils.IS_OS_MAC ) {
-            OLTPBENCH_RELEASE_URL = "https://github.com/polypheny/OLTPBench/releases/download/v1.1/oltpbench-polypheny-1.1.0-jdk11-mac64.zip";
+            OLTPBENCH_RELEASE_URL = "https://github.com/polypheny/OLTPBench/releases/download/v1.2/oltpbench-polypheny-1.2.0-jdk11-mac64.zip";
         } else {
             throw new RuntimeException( "Unknown OS: " + SystemUtils.OS_NAME );
         }
