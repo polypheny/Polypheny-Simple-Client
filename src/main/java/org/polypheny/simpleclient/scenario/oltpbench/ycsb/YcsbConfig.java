@@ -17,8 +17,6 @@ import org.w3c.dom.Element;
 
 public class YcsbConfig extends AbstractOltpBenchConfig {
 
-
-    public boolean serial;
     public long time;
     public String rate;
     public int batchSize;
@@ -34,7 +32,6 @@ public class YcsbConfig extends AbstractOltpBenchConfig {
     public YcsbConfig( Properties properties, int multiplier ) {
         super( properties, multiplier, "ycsb", "oltpbench-polypheny" );
 
-        serial = getBooleanProperty( properties, "serial" );
         time = getLongProperty( properties, "time" );
         rate = getStringProperty( properties, "rate" );
         batchSize = 128;
@@ -51,7 +48,6 @@ public class YcsbConfig extends AbstractOltpBenchConfig {
     public YcsbConfig( Map<String, String> cdl ) {
         super( cdl, "ycsb", cdl.get( "store" ) );
 
-        serial = Boolean.parseBoolean( cdl.get( "serial" ) );
         time = Long.parseLong( cdl.get( "time" ) );
         rate = cdl.get( "rate" );
         batchSize = 128;
@@ -99,7 +95,7 @@ public class YcsbConfig extends AbstractOltpBenchConfig {
         rootElement.appendChild( worksElement );
         Element workElement = doc.createElement( "work" );
         worksElement.appendChild( workElement );
-        createAndAppendElement( doc, workElement, "serial", serial + "" );
+        createAndAppendElement( doc, workElement, "serial", "false" );
         createAndAppendElement( doc, workElement, "time", time + "" );
         createAndAppendElement( doc, workElement, "rate", rate );
         createAndAppendElement( doc, workElement, "warmup", warmupTime + "" );
