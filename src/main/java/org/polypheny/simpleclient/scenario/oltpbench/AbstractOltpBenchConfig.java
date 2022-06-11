@@ -85,7 +85,7 @@ public abstract class AbstractOltpBenchConfig extends AbstractConfig {
         workloadMonitoring = Boolean.parseBoolean( cdlGetOrDefault( cdl, "workloadMonitoring", "false" ) );
 
         restartAfterLoadingData = Boolean.parseBoolean( cdlGetOrDefault( cdl, "restartAfterLoadingData", "false" ) );
-        if ( dataStores.contains( "hsqldb" ) ) {
+        if ( restartAfterLoadingData && dataStores.contains( "hsqldb" ) ) {
             throw new RuntimeException( "Not allowed to restart Polypheny after loading data if using a non-persistent data store!" );
         }
 

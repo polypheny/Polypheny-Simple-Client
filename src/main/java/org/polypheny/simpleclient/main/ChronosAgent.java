@@ -377,7 +377,7 @@ public class ChronosAgent extends AbstractChronosAgent {
             csvWriter = null;
         }
 
-        if ( config.system.equals( "polypheny" ) ) {
+        if ( databaseInstance instanceof PolyphenyDbInstance ) {
             ((PolyphenyDbInstance) databaseInstance).setWorkloadMonitoring( ((AbstractOltpBenchConfig) config).workloadMonitoring );
         }
 
