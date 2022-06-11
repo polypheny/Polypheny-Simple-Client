@@ -308,6 +308,10 @@ public class ChronosAgent extends AbstractChronosAgent {
             throw e;
         }
 
+        if ( databaseInstance instanceof PolyphenyDbInstance && config.restartAfterLoadingData ) {
+            ((PolyphenyDbInstance) databaseInstance).restartPolypheny();
+        }
+
         return new ImmutableTriple<>( scenario, config, databaseInstance );
     }
 

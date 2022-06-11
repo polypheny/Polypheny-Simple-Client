@@ -164,53 +164,17 @@ public interface PolyphenyDbExecutor extends Executor {
             this.polyphenyControlConnector = polyphenyControlConnector;
             this.config = config;
 
-            // Update settings
-            Map<String, String> conf = new HashMap<>();
-            conf.put( "pcrtl.pdbms.branch", config.pdbBranch.trim() );
-            conf.put( "pcrtl.ui.branch", config.puiBranch.trim() );
-            conf.put( "pcrtl.java.heap", "10" );
-            if ( config.buildUi ) {
-                conf.put( "pcrtl.buildmode", "both" );
-            } else {
-                conf.put( "pcrtl.buildmode", "pdb" );
-            }
-            conf.put( "pcrtl.clean.mode", "branchChange" );
-            String args = "";
-            if ( config.resetCatalog ) {
-                args += "-resetCatalog ";
-            }
-            if ( config.memoryCatalog ) {
-                args += "-memoryCatalog ";
-            }
-            conf.put( "pcrtl.pdbms.args", args.trim() );
-            polyphenyControlConnector.setConfig( conf );
+            // Stop Polypheny
+            stopPolypheny( polyphenyControlConnector );
+
+            // Update Polypheny Control settings
+            configurePolyphenyControl( polyphenyControlConnector, config, config.resetCatalog );
 
             // Pull branch and update polypheny
             polyphenyControlConnector.updatePolypheny();
 
             // Start Polypheny
-            polyphenyControlConnector.startPolypheny();
-            // Try for 300 seconds (30 times)
-            for ( int i = 0; i <= 30; i++ ) {
-                if ( isReady() ) {
-                    break;
-                }
-                try {
-                    TimeUnit.SECONDS.sleep( 10 );
-                } catch ( InterruptedException e ) {
-                    // ignore
-                }
-                if ( i >= 30 ) {
-                    throw new RuntimeException( "System not ready. Aborting" );
-                }
-            }
-
-            // Wait another five seconds for post-startup process to finish
-            try {
-                TimeUnit.SECONDS.sleep( 5 );
-            } catch ( InterruptedException e ) {
-                throw new RuntimeException( "Unexpected interrupt", e );
-            }
+            startPolypheny( polyphenyControlConnector );
 
             // Store Polypheny version for documentation
             try {
@@ -282,6 +246,53 @@ public interface PolyphenyDbExecutor extends Executor {
             } catch ( InterruptedException e ) {
                 throw new RuntimeException( "Unexpected interrupt", e );
             }
+        }
+
+
+        private void stopPolypheny( PolyphenyControlConnector polyphenyControlConnector ) {
+            polyphenyControlConnector.stopPolypheny();
+            try {
+                TimeUnit.SECONDS.sleep( 3 );
+            } catch ( InterruptedException e ) {
+                throw new RuntimeException( "Unexpected interrupt", e );
+            }
+        }
+
+
+        private void startPolypheny( PolyphenyControlConnector polyphenyControlConnector ) {
+            polyphenyControlConnector.startPolypheny();
+            // Try for 300 seconds (30 times)
+            for ( int i = 0; i <= 30; i++ ) {
+                if ( isReady() ) {
+                    break;
+                }
+                try {
+                    TimeUnit.SECONDS.sleep( 10 );
+                } catch ( InterruptedException e ) {
+                    // ignore
+                }
+                if ( i >= 30 ) {
+                    throw new RuntimeException( "System not ready. Aborting" );
+                }
+            }
+            // Wait another five seconds for post-startup process to finish
+            try {
+                TimeUnit.SECONDS.sleep( 5 );
+            } catch ( InterruptedException e ) {
+                throw new RuntimeException( "Unexpected interrupt", e );
+            }
+        }
+
+
+        public void restartPolypheny() {
+            // Stop Polypheny
+            stopPolypheny( polyphenyControlConnector );
+
+            // Update Polypheny Control settings
+            configurePolyphenyControl( polyphenyControlConnector, config, false );
+
+            // Start Polypheny
+            startPolypheny( polyphenyControlConnector );
         }
 
 
@@ -380,14 +391,32 @@ public interface PolyphenyDbExecutor extends Executor {
         }
 
 
+        protected void configurePolyphenyControl( PolyphenyControlConnector polyphenyControlConnector, AbstractConfig config, boolean resetCatalog ) {
+            Map<String, String> conf = new HashMap<>();
+            conf.put( "pcrtl.pdbms.branch", config.pdbBranch.trim() );
+            conf.put( "pcrtl.ui.branch", config.puiBranch.trim() );
+            conf.put( "pcrtl.java.heap", "10" );
+            if ( config.buildUi ) {
+                conf.put( "pcrtl.buildmode", "both" );
+            } else {
+                conf.put( "pcrtl.buildmode", "pdb" );
+            }
+            conf.put( "pcrtl.clean.mode", "branchChange" );
+            String args = "";
+            if ( resetCatalog ) {
+                args += "-resetCatalog ";
+            }
+            if ( config.memoryCatalog ) {
+                args += "-memoryCatalog ";
+            }
+            conf.put( "pcrtl.pdbms.args", args.trim() );
+            polyphenyControlConnector.setConfig( conf );
+        }
+
+
         @Override
         public void tearDown() {
-            polyphenyControlConnector.stopPolypheny();
-            try {
-                TimeUnit.SECONDS.sleep( 3 );
-            } catch ( InterruptedException e ) {
-                throw new RuntimeException( "Unexpected interrupt", e );
-            }
+            stopPolypheny( polyphenyControlConnector );
             for ( String store : config.dataStores ) {
                 switch ( store ) {
                     case "hsqldb":

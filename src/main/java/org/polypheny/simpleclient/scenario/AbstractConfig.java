@@ -43,6 +43,7 @@ public abstract class AbstractConfig {
     public boolean buildUi;
     public boolean memoryCatalog;
     public boolean resetCatalog;
+    public boolean restartAfterLoadingData = false;
 
     public List<String> dataStores = new ArrayList<>();
     public String planAndImplementationCaching;
