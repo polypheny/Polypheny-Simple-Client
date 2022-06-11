@@ -292,11 +292,11 @@ public abstract class OltpBenchExecutor implements Executor {
                 String line;
                 while ( (line = reader.readLine()) != null ) {
                     if ( printOutput ) {
-                        if ( line.contains( "INFO - PHASE" ) || (!line.contains( ") DEBUG - " ) && !line.contains( ") INFO  - " ) && !isIgnoredLogLine( line )) ) {
+                        if ( line.contains( "::" ) || (!line.contains( ") DEBUG - " ) && !line.contains( ") INFO  - " ) && !isIgnoredLogLine( line )) ) {
                             log.warn( "OLTPBench> " + line );
                         }
                         if ( writer != null ) {
-                            writer.append( line );
+                            writer.append( line ).append( System.lineSeparator() );
                             writer.flush();
                         }
                     }
