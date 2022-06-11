@@ -293,6 +293,13 @@ public interface PolyphenyDbExecutor extends Executor {
 
             // Start Polypheny
             startPolypheny( polyphenyControlConnector );
+
+            // Wait a minute for statistics to be gathered
+            try {
+                TimeUnit.SECONDS.sleep( 60 );
+            } catch ( InterruptedException e ) {
+                throw new RuntimeException( "Unexpected interrupt", e );
+            }
         }
 
 
@@ -450,7 +457,7 @@ public interface PolyphenyDbExecutor extends Executor {
 
         private boolean isReady() {
             try {
-                HttpResponse<String> response = Unirest.get( "http://" + ChronosCommand.hostname + ":8080/getTypeInfo" ).asString();
+                HttpResponse<String> response = Unirest.get( "http://" + ChronosCommand.hostname + ":8080/product" ).asString();
                 if ( response.isSuccess() ) {
                     return true;
                 }
