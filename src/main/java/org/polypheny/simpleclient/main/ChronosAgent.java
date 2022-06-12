@@ -304,7 +304,11 @@ public class ChronosAgent extends AbstractChronosAgent {
 
         // Insert data
         log.info( "Inserting data..." );
-        ProgressReporter progressReporter = new ChronosProgressReporter( chronosJob, this, scenario.getNumberOfInsertThreads(), config.progressReportBase );
+        ProgressReporter progressReporter = new ChronosProgressReporter(
+                chronosJob,
+                this,
+                scenario.getNumberOfInsertThreads(),
+                config.progressReportBase );
         try {
             scenario.generateData( progressReporter );
         } catch ( Exception e ) {

@@ -72,6 +72,7 @@ public abstract class AbstractOltpBenchConfig extends AbstractConfig {
         dataStores.addAll( Arrays.asList( cdl.get( "dataStore" ).split( "_" ) ) );
         planAndImplementationCaching = "Both";
 
+        router = "icarus"; // For old routing, to be removed
         routers = cdl.get( "routers" ).split( "_" );
         newTablePlacementStrategy = cdl.get( "newTablePlacementStrategy" );
         planSelectionStrategy = cdl.get( "planSelectionStrategy" );

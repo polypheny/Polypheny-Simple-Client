@@ -130,12 +130,6 @@ public class OltpBenchPolyphenyDbExecutor extends OltpBenchExecutor implements P
             super( polyphenyControlConnector, executorFactory, outputDirectory, config );
         }
 
-
-        @Override
-        protected void pushConfiguration( ExecutorFactory executorFactory, AbstractConfig config ) {
-            // do nothing
-        }
-
     }
 
 
