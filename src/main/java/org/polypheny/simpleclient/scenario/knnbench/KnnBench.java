@@ -195,7 +195,7 @@ public class KnnBench extends Scenario {
 
 
     @Override
-    public void warmUp( ProgressReporter progressReporter, int iterations ) {
+    public void warmUp( ProgressReporter progressReporter ) {
         log.info( "Warm-up..." );
 
         Executor executor = null;
@@ -207,7 +207,7 @@ public class KnnBench extends Scenario {
         MetadataKnnIntFeature metadataKnnIntFeature = new MetadataKnnIntFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
         MetadataKnnRealFeature metadataKnnRealFeature = new MetadataKnnRealFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
 
-        for ( int i = 0; i < iterations; i++ ) {
+        for ( int i = 0; i < config.numberOfWarmUpIterations; i++ ) {
             try {
                 executor = executorFactory.createExecutorInstance();
                 if ( config.numberOfSimpleKnnIntFeatureQueries > 0 ) {

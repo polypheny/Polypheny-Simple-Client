@@ -12,7 +12,7 @@ public abstract class AbstractOltpBenchConfig extends AbstractConfig {
     //public int batchSize;
     public int scaleFactor;
     public int warmupTime;
-    public boolean workloadMonitoring;
+
 
     public AbstractOltpBenchConfig( Properties properties, int multiplier, String scenario, String system ) {
         super( scenario, system );
@@ -39,9 +39,10 @@ public abstract class AbstractOltpBenchConfig extends AbstractConfig {
 
         progressReportBase = getIntProperty( properties, "progressReportBase" );
         numberOfThreads = getIntProperty( properties, "numberOfThreads" );
-        numberOfWarmUpIterations = 0;
 
-        workloadMonitoring = getBooleanProperty( properties, "workloadMonitoring" );
+        workloadMonitoringExecutingWorkload = getBooleanProperty( properties, "workloadMonitoringExecutingWorkload" );
+        workloadMonitoringLoadingData = getBooleanProperty( properties, "workloadMonitoringLoadingData" );
+        workloadMonitoringWarmup = getBooleanProperty( properties, "workloadMonitoringWarmup" );
 
         restartAfterLoadingData = false;
 
@@ -67,7 +68,6 @@ public abstract class AbstractOltpBenchConfig extends AbstractConfig {
 
         numberOfThreads = Integer.parseInt( cdl.get( "numberOfThreads" ) );
         warmupTime = Integer.parseInt( cdl.get( "warmupTime" ) );
-        numberOfWarmUpIterations = 0;
 
         dataStores.addAll( Arrays.asList( cdl.get( "dataStore" ).split( "_" ) ) );
         planAndImplementationCaching = "Both";
@@ -82,7 +82,9 @@ public abstract class AbstractOltpBenchConfig extends AbstractConfig {
         routingCache = Boolean.parseBoolean( cdl.get( "routingCache" ) );
 
         progressReportBase = 100;
-        workloadMonitoring = Boolean.parseBoolean( cdlGetOrDefault( cdl, "workloadMonitoring", "false" ) );
+        workloadMonitoringExecutingWorkload = Boolean.parseBoolean( cdlGetOrDefault( cdl, "workloadMonitoring", "false" ) );
+        workloadMonitoringLoadingData = Boolean.parseBoolean( cdlGetOrDefault( cdl, "workloadMonitoringLoadingData", "false" ) );
+        workloadMonitoringWarmup = Boolean.parseBoolean( cdlGetOrDefault( cdl, "workloadMonitoringWarmup", "false" ) );
 
         restartAfterLoadingData = Boolean.parseBoolean( cdlGetOrDefault( cdl, "restartAfterLoadingData", "false" ) );
         if ( restartAfterLoadingData && dataStores.contains( "hsqldb" ) ) {

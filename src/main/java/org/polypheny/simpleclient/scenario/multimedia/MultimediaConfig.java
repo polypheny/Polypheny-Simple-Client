@@ -54,6 +54,8 @@ public class MultimediaConfig extends AbstractConfig {
 
     public final int maxBatchSize;
 
+    public final int numberOfWarmUpIterations;
+
 
     public MultimediaConfig( Properties properties, int multiplier ) {
         super( "multimedia", "polypheny-rest" );

@@ -76,6 +76,8 @@ public class GavelConfig extends AbstractConfig {
     public final int numberOfAuctionGenerationThreads;
     public final boolean parallelizeUserGenerationAndAuctionGeneration;
 
+    public final int numberOfWarmUpIterations;
+
 
     public GavelConfig( Properties properties, int multiplier ) {
         super( "gavel", "polypheny" );

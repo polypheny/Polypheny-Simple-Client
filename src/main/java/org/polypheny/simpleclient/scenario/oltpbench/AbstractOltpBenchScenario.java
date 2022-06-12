@@ -95,7 +95,7 @@ public abstract class AbstractOltpBenchScenario extends Scenario {
 
 
     @Override
-    public void warmUp( ProgressReporter progressReporter, int iterations ) {
+    public void warmUp( ProgressReporter progressReporter ) {
         log.info( "Executing warmup workload using OLTPbench..." );
         OltpBenchExecutor executor;
         try {

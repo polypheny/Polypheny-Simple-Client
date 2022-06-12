@@ -49,7 +49,6 @@ public abstract class AbstractConfig {
     public String planAndImplementationCaching;
 
     public int numberOfThreads;
-    public int numberOfWarmUpIterations;
 
     public int progressReportBase;
 
@@ -63,6 +62,10 @@ public abstract class AbstractConfig {
     public int postCostRatio;
     public boolean routingCache;
     public String postCostAggregation;
+
+    public boolean workloadMonitoringExecutingWorkload;
+    public boolean workloadMonitoringLoadingData;
+    public boolean workloadMonitoringWarmup;
 
 
     public AbstractConfig( String scenario, String system ) {

@@ -64,7 +64,7 @@ public abstract class Scenario {
 
     public abstract long execute( ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory, int numberOfThreads );
 
-    public abstract void warmUp( ProgressReporter progressReporter, int iterations );
+    public abstract void warmUp( ProgressReporter progressReporter );
 
     public abstract void analyze( Properties properties, File outputDirectory );
 

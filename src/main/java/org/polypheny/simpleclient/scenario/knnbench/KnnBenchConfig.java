@@ -58,6 +58,8 @@ public class KnnBenchConfig extends AbstractConfig {
     public final int limitKnnQueries;
     public final String distanceNorm;
 
+    public final int numberOfWarmUpIterations;
+
 
     public KnnBenchConfig( Properties properties, int multiplier ) {
         super( "knnBench", "polypheny" );
