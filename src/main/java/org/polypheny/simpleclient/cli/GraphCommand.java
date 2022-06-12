@@ -64,7 +64,6 @@ public class GraphCommand implements CliRunnable {
 
     @Override
     public int run() throws SQLException {
-
         if ( args == null || args.size() < 1 ) {
             System.err.println( "Missing task" );
             System.exit( 1 );

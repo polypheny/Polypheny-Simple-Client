@@ -90,6 +90,27 @@ public class PolyphenyDbJdbcExecutor extends JdbcExecutor implements PolyphenyDb
     }
 
 
+    public static void commitAndCloseJdbcExecutor( JdbcExecutor executor ) throws ExecutorException {
+        if ( executor != null ) {
+            try {
+                executor.executeCommit();
+            } catch ( ExecutorException e ) {
+                try {
+                    executor.executeRollback();
+                } catch ( ExecutorException ex ) {
+                    log.error( "Error while rollback connection", e );
+                }
+            } finally {
+                try {
+                    executor.closeConnection();
+                } catch ( ExecutorException e ) {
+                    log.error( "Error while closing connection", e );
+                }
+            }
+        }
+    }
+
+
     public static class PolyphenyDbJdbcExecutorFactory extends ExecutorFactory {
 
         private final String host;

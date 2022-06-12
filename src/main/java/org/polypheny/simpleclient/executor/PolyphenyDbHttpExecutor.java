@@ -1,7 +1,5 @@
 package org.polypheny.simpleclient.executor;
 
-import static org.polypheny.simpleclient.executor.PolyphenyDbRestExecutor.commitAndCloseJdbcExecutor;
-
 import com.google.gson.JsonObject;
 import java.io.IOException;
 import java.util.Locale;
@@ -19,6 +17,7 @@ import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.query.MultipartInsert;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.RawQuery;
+
 
 @Slf4j
 public abstract class PolyphenyDbHttpExecutor implements PolyphenyDbExecutor {
@@ -70,7 +69,7 @@ public abstract class PolyphenyDbHttpExecutor implements PolyphenyDbExecutor {
         } catch ( ExecutorException e ) {
             throw new ExecutorException( "Error while executing query via JDBC", e );
         } finally {
-            commitAndCloseJdbcExecutor( executor );
+            PolyphenyDbJdbcExecutor.commitAndCloseJdbcExecutor( executor );
         }
     }
 
@@ -85,7 +84,7 @@ public abstract class PolyphenyDbHttpExecutor implements PolyphenyDbExecutor {
         } catch ( ExecutorException e ) {
             throw new ExecutorException( "Error while executing query via JDBC", e );
         } finally {
-            commitAndCloseJdbcExecutor( executor );
+            PolyphenyDbJdbcExecutor.commitAndCloseJdbcExecutor( executor );
         }
     }
 
@@ -101,7 +100,7 @@ public abstract class PolyphenyDbHttpExecutor implements PolyphenyDbExecutor {
             log.error( "Exception while setting config \"" + key + "\"!", e );
         } finally {
             try {
-                commitAndCloseJdbcExecutor( executor );
+                PolyphenyDbJdbcExecutor.commitAndCloseJdbcExecutor( executor );
             } catch ( ExecutorException e ) {
                 log.error( "Exception while closing JDBC executor", e );
             }
