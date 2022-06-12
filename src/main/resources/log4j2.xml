@@ -25,6 +25,10 @@
             <AppenderRef ref="ConsoleAppender"/>
             <AppenderRef ref="ChronosAppender"/>
         </logger>
+        <logger name="org.polypheny.simpleclient.executor.OltpBenchExecutor" level="INFO" additivity="false">
+            <AppenderRef ref="ConsoleAppender"/>
+            <AppenderRef ref="ChronosAppender"/>
+        </logger>
         <logger name="ch.unibas.dmi.dbis.chronos.agent" level="INFO">
             <AppenderRef ref="ConsoleAppenderChronos"/>
             <AppenderRef ref="ChronosAppender"/>
