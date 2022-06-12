@@ -36,7 +36,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
 import org.polypheny.simpleclient.executor.PolyphenyDbCypherExecutor.PolyphenyDbCypherExecutorFactory;
 import org.polypheny.simpleclient.main.GraphBenchScenario;
-import org.polypheny.simpleclient.main.KnnBenchScenario;
 
 
 @Slf4j

@@ -111,7 +111,6 @@ public class PolyphenyDbMongoQlExecutor extends PolyphenyDbHttpExecutor {
         } catch ( UnirestException e ) {
             throw new ExecutorException( e );
         }
-
     }
 
 
@@ -181,6 +180,5 @@ public class PolyphenyDbMongoQlExecutor extends PolyphenyDbHttpExecutor {
         }
 
     }
-
 
 }

@@ -84,6 +84,11 @@ public class GraphBench extends Scenario {
 
     public GraphBench( Executor.ExecutorFactory executorFactory, GraphBenchConfig config, boolean commitAfterEveryQuery, boolean dumpQueryList ) {
         super( executorFactory, commitAfterEveryQuery, dumpQueryList, QueryMode.TABLE );
+
+        if ( !(executorFactory instanceof PolyphenyDbCypherExecutorFactory) ) {
+            throw new RuntimeException( "GraphBench is only supported by the PolyphenyDbCypherExecutor!" );
+        }
+
         this.config = config;
 
         measuredTimes = Collections.synchronizedList( new LinkedList<>() );
@@ -131,7 +136,6 @@ public class GraphBench extends Scenario {
 
     @Override
     public long execute( ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory, int numberOfThreads ) {
-
         log.info( "Preparing query list for the benchmark..." );
         List<QueryListEntry> queryList = new Vector<>();
         addNumberOfTimes( queryList, new CountNodePropertyBuilder( config ), config.numberOfPropertyCountQueries );
@@ -206,7 +210,7 @@ public class GraphBench extends Scenario {
 
 
     @Override
-    public void warmUp( ProgressReporter progressReporter, int iterations ) {
+    public void warmUp( ProgressReporter progressReporter ) {
         log.info( "Warm-up..." );
 
         Executor executor = null;
@@ -221,7 +225,7 @@ public class GraphBench extends Scenario {
         SetPropertyBuilder setPropertyBuilder = new SetPropertyBuilder( config );
         RelatedInsertBuilder relatedInsertBuilder = new RelatedInsertBuilder( config );
 
-        for ( int i = 0; i < iterations; i++ ) {
+        for ( int i = 0; i < config.numberOfWarmUpIterations; i++ ) {
             try {
                 executor = executorFactory.createExecutorInstance();
                 if ( config.numberOfEdgeMatchQueries > 0 ) {
@@ -390,7 +394,7 @@ public class GraphBench extends Scenario {
 
 
     @Override
-    public void analyze( Properties properties ) {
+    public void analyze( Properties properties, File outputDirectory ) {
         properties.put( "measuredTime", calculateMean( measuredTimes ) );
 
         measuredTimePerQueryType.forEach( ( templateId, time ) -> {

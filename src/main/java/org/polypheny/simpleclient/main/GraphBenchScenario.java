@@ -33,8 +33,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
 import org.polypheny.simpleclient.scenario.graph.GraphBench;
 import org.polypheny.simpleclient.scenario.graph.GraphBenchConfig;
-import org.polypheny.simpleclient.scenario.knnbench.KnnBench;
-import org.polypheny.simpleclient.scenario.knnbench.KnnBenchConfig;
 
 
 @Slf4j
@@ -48,7 +46,6 @@ public class GraphBenchScenario {
 
 
     public static void data( ExecutorFactory executorFactory, int multiplier, boolean commitAfterEveryQuery ) {
-        //KnnBenchConfig config = new KnnBenchConfig( getProperties(), multiplier );
         GraphBenchConfig config = new GraphBenchConfig( getProperties(), multiplier );
         GraphBench graphBench = new GraphBench( executorFactory, config, commitAfterEveryQuery, false );
 
@@ -78,7 +75,7 @@ public class GraphBenchScenario {
         GraphBench graphBench = new GraphBench( executorFactory, config, commitAfterEveryQuery, dumpQueryList );
 
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
-        graphBench.warmUp( progressReporter, config.numberOfWarmUpIterations );
+        graphBench.warmUp( progressReporter );
     }
 
 

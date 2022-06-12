@@ -52,7 +52,6 @@ import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.executor.Executor.DatabaseInstance;
 import org.polypheny.simpleclient.executor.MonetdbExecutor.MonetdbExecutorFactory;
 import org.polypheny.simpleclient.executor.MonetdbExecutor.MonetdbInstance;
-import org.polypheny.simpleclient.executor.PolyphenyDbCypherExecutor.PolyphenyDbCypherExecutorFactory;
 import org.polypheny.simpleclient.executor.OltpBenchPolyphenyDbExecutor.OltpBenchPolyphenyDbExecutorFactory;
 import org.polypheny.simpleclient.executor.OltpBenchPolyphenyDbExecutor.OltpBenchPolyphenyInstance;
 import org.polypheny.simpleclient.executor.OltpBenchPostgresExecutor.OltpBenchPostgresExecutorFactory;
@@ -221,8 +220,7 @@ public class ChronosAgent extends AbstractChronosAgent {
                 break;
             case "graph":
                 config = new GraphBenchConfig( parsedConfig );
-                // We force the cypherExecutor for graph queries as it required for the graph queries
-                scenario = new GraphBench( new PolyphenyDbCypherExecutorFactory( ChronosCommand.hostname ), (GraphBenchConfig) config, true, dumpQueryList );
+                scenario = new GraphBench( executorFactory, (GraphBenchConfig) config, true, dumpQueryList );
                 break;
             case "auctionmark":
                 config = new AuctionMarkConfig( parsedConfig );

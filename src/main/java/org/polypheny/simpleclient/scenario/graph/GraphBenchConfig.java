@@ -65,6 +65,8 @@ public class GraphBenchConfig extends AbstractConfig {
     public final int highestLabel;
     public final int highestProperty;
 
+    public final int numberOfWarmUpIterations;
+
 
     public GraphBenchConfig( Properties properties, int multiplier ) {
         super( "graph", "polypheny" );
