@@ -39,7 +39,6 @@ public class DifferentPathsBuilder extends QueryBuilder {
     public DifferentPathsBuilder( GraphBenchConfig config ) {
         this.config = config;
         this.random = new Random( config.seed );
-
     }
 
 

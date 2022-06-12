@@ -126,7 +126,6 @@ public class DataGenerator {
             }
         }
         return path.toString();
-
     }
 
 
@@ -156,7 +155,6 @@ public class DataGenerator {
             addToInsertList( new SimpleGraphInsert( getCluster( minClusterSize + (i % diff), config.properties, random ) ) );
         }
         executeInsertList();
-
     }
 
 
@@ -187,6 +185,5 @@ public class DataGenerator {
         }
         return String.join( ", ", cluster );
     }
-
 
 }

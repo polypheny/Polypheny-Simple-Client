@@ -42,7 +42,6 @@ public class FindNeighborsBuilder extends QueryBuilder {
 
         this.highestLabel = config.maxClusterSize;
         this.highestProperty = config.properties;
-
     }
 
 
@@ -52,6 +51,5 @@ public class FindNeighborsBuilder extends QueryBuilder {
         int propertyId = random.nextInt( highestProperty );
         return new SimpleGraphQuery( String.format( "MATCH (n:Label%s { key_%s_%s: 'value_%s_%s'})-[]-(t)\nRETURN t", labelId * 2, propertyId, propertyId, propertyId, propertyId ) );
     }
-
 
 }
