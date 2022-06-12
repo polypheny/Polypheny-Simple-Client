@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019-2021 The Polypheny Project
+ * Copyright (c) 2019-2022 The Polypheny Project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"), to deal
@@ -405,7 +405,7 @@ public class Gavel extends Scenario {
             file = ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/gavel/schema.mongoql" );
             executeMongoQlSchema( file );
             return;
-        }else if ( executorFactory instanceof PolyphenyDbCypherExecutorFactory ){
+        } else if ( executorFactory instanceof PolyphenyDbCypherExecutorFactory ) {
             executeCypherSchema();
             return;
         }
@@ -450,7 +450,8 @@ public class Gavel extends Scenario {
         }
     }
 
-    private void executeCypherSchema( ) {
+
+    private void executeCypherSchema() {
         Executor executor = null;
         try {
             executor = executorFactory.createExecutorInstance();

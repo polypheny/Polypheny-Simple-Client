@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019-2021 The Polypheny Project
+ * Copyright (c) 2019-2022 The Polypheny Project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"), to deal
@@ -20,7 +20,6 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- *
  */
 
 package org.polypheny.simpleclient.executor;
@@ -51,7 +50,6 @@ public class PolyphenyDbMongoQlExecutor extends PolyphenyDbHttpExecutor {
     }
 
 
-
     @Override
     public long executeQuery( Query query ) throws ExecutorException {
         //query.debug();
@@ -80,7 +78,6 @@ public class PolyphenyDbMongoQlExecutor extends PolyphenyDbHttpExecutor {
 
         return time;
     }
-
 
 
     @Override
@@ -155,7 +152,6 @@ public class PolyphenyDbMongoQlExecutor extends PolyphenyDbHttpExecutor {
             executeQuery( new RawQuery( null, null, Query.buildMongoQlManyInsert( currentTable, rows ), null, false ) );
         }
     }
-
 
 
     public static class PolyphenyDbMongoQlExecutorFactory extends ExecutorFactory {

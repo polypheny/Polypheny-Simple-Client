@@ -1,3 +1,27 @@
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2019-2022 The Polypheny Project
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 package org.polypheny.simpleclient.executor;
 
 import com.google.gson.JsonObject;
@@ -30,7 +54,6 @@ public abstract class PolyphenyDbHttpExecutor implements PolyphenyDbExecutor {
 
     protected final PolyphenyDbJdbcExecutorFactory jdbcExecutorFactory;
     protected final CsvWriter csvWriter;
-
 
 
     public PolyphenyDbHttpExecutor( String name, Function<Query, String> queryAccessor, String host, CsvWriter csvWriter ) {
@@ -122,7 +145,7 @@ public abstract class PolyphenyDbHttpExecutor implements PolyphenyDbExecutor {
             long start = System.nanoTime();
             @SuppressWarnings("rawtypes") HttpResponse result = request.asBytes();
             if ( !result.isSuccess() ) {
-                throw new ExecutorException( "Error while executing " + name +  " query. Message: " + result.getStatusText() + "  |  URL: " + request.getUrl() );
+                throw new ExecutorException( "Error while executing " + name + " query. Message: " + result.getStatusText() + "  |  URL: " + request.getUrl() );
             }
             time = System.nanoTime() - start;
             if ( csvWriter != null ) {
@@ -141,10 +164,9 @@ public abstract class PolyphenyDbHttpExecutor implements PolyphenyDbExecutor {
         data.addProperty( "query", mql );
         data.addProperty( "database", "test" );
 
-        return Unirest.post( "{protocol}://{host}:{port}/"+name.toLowerCase( Locale.ROOT ) )
+        return Unirest.post( "{protocol}://{host}:{port}/" + name.toLowerCase( Locale.ROOT ) )
                 .header( "Content-Type", "application/json" )
                 .body( data );
-
     }
 
 
