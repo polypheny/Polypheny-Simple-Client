@@ -27,9 +27,12 @@ package org.polypheny.simpleclient.scenario.graph;
 import java.util.Map;
 import kong.unirest.HttpRequest;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.Query;
 
+
+@Slf4j
 public class GraphQuery extends Query {
 
     @Getter
@@ -69,6 +72,12 @@ public class GraphQuery extends Query {
     @Override
     public Map<Integer, ImmutablePair<DataTypes, Object>> getParameterValues() {
         throw new RuntimeException( "getParameterValues() is not supported for graph queries!" );
+    }
+
+
+    @Override
+    public void debug() {
+        log.debug( cypher );
     }
 
 }

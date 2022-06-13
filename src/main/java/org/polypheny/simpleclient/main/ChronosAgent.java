@@ -55,6 +55,7 @@ import org.polypheny.simpleclient.executor.MonetdbExecutor.MonetdbInstance;
 import org.polypheny.simpleclient.executor.OltpBenchPolyphenyDbExecutor.OltpBenchPolyphenyDbExecutorFactory;
 import org.polypheny.simpleclient.executor.OltpBenchPolyphenyDbExecutor.OltpBenchPolyphenyInstance;
 import org.polypheny.simpleclient.executor.OltpBenchPostgresExecutor.OltpBenchPostgresExecutorFactory;
+import org.polypheny.simpleclient.executor.PolyphenyDbCypherExecutor.PolyphenyDbCypherExecutorFactory;
 import org.polypheny.simpleclient.executor.PolyphenyDbExecutor.PolyphenyDbInstance;
 import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory;
 import org.polypheny.simpleclient.executor.PolyphenyDbMongoQlExecutor.PolyphenyDbMongoQlExecutorFactory;
@@ -184,6 +185,9 @@ public class ChronosAgent extends AbstractChronosAgent {
             case "polypheny-mongoql":
                 executorFactory = new PolyphenyDbMongoQlExecutorFactory( ChronosCommand.hostname );
                 break;
+            case "polypheny-cypher":
+                executorFactory = new PolyphenyDbCypherExecutorFactory( ChronosCommand.hostname );
+                break;
             case "postgres":
                 executorFactory = new PostgresExecutorFactory( ChronosCommand.hostname, Boolean.parseBoolean( parsedConfig.get( "prepareStatements" ) ) );
                 break;
@@ -279,6 +283,7 @@ public class ChronosAgent extends AbstractChronosAgent {
             case "polypheny":
             case "polypheny-rest":
             case "polypheny-mongoql":
+            case "polypheny-cypher":
                 databaseInstance = new PolyphenyDbInstance( polyphenyControlConnector, executorFactory, outputDirectory, config );
                 scenario.createSchema( true );
                 break;

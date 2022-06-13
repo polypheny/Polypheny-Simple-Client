@@ -28,10 +28,12 @@ import com.google.gson.JsonObject;
 import java.util.Map;
 import kong.unirest.HttpRequest;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.BatchableInsert;
 
 
+@Slf4j
 public class GraphInsert extends BatchableInsert {
 
     @Getter
@@ -95,6 +97,12 @@ public class GraphInsert extends BatchableInsert {
     @Override
     public String getMongoQl() {
         throw new RuntimeException( "MongoQL is not supported for graph queries!" );
+    }
+
+
+    @Override
+    public void debug() {
+        log.debug( cypher );
     }
 
 }
