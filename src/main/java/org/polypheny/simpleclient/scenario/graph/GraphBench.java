@@ -67,7 +67,7 @@ import org.polypheny.simpleclient.scenario.graph.queryBuilder.UnwindBuilder;
 @Slf4j
 public class GraphBench extends Scenario {
 
-    public static final String GRAPH_DATABASE = "test";
+    public static final String GRAPH_NAMESPACE = "test";
     public static boolean EXPECTED_RESULT = true;
     public static final AtomicLong idBuilder = new AtomicLong();
 
@@ -102,7 +102,7 @@ public class GraphBench extends Scenario {
         log.info( "Creating schema..." );
         Executor executor = null;
         try {
-            executor = executorFactory.createExecutorInstance();
+            executor = executorFactory.createExecutorInstance( null, GRAPH_NAMESPACE );
             executor.executeQuery( new CreateGraphDatabase().getNewQuery() );
         } catch ( ExecutorException e ) {
             throw new RuntimeException( "Exception while creating schema", e );
@@ -115,7 +115,7 @@ public class GraphBench extends Scenario {
     @Override
     public void generateData( ProgressReporter progressReporter ) {
         log.info( "Generating data..." );
-        Executor executor1 = executorFactory.createExecutorInstance();
+        Executor executor1 = executorFactory.createExecutorInstance( null, GRAPH_NAMESPACE );
         assert executor1 instanceof PolyphenyDbCypherExecutor;
         DataGenerator dataGenerator = new DataGenerator( executor1, config, progressReporter );
 
@@ -171,7 +171,7 @@ public class GraphBench extends Scenario {
 
         ArrayList<EvaluationThread> threads = new ArrayList<>();
         for ( int i = 0; i < numberOfThreads; i++ ) {
-            threads.add( new EvaluationThread( queryList, executorFactory.createExecutorInstance( csvWriter ) ) );
+            threads.add( new EvaluationThread( queryList, executorFactory.createExecutorInstance( csvWriter, GRAPH_NAMESPACE ) ) );
         }
 
         EvaluationThreadMonitor threadMonitor = new EvaluationThreadMonitor( threads );
@@ -223,7 +223,7 @@ public class GraphBench extends Scenario {
 
         for ( int i = 0; i < config.numberOfWarmUpIterations; i++ ) {
             try {
-                executor = executorFactory.createExecutorInstance();
+                executor = executorFactory.createExecutorInstance(null, GRAPH_NAMESPACE);
                 if ( config.numberOfEdgeMatchQueries > 0 ) {
                     executor.executeQuery( edgeMatch.getNewQuery() );
                 }

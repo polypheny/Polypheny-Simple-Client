@@ -24,6 +24,8 @@
 
 package org.polypheny.simpleclient.executor;
 
+import static org.polypheny.simpleclient.scenario.graph.GraphBench.GRAPH_NAMESPACE;
+
 import com.google.gson.JsonObject;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,8 +45,9 @@ import org.polypheny.simpleclient.scenario.AbstractConfig;
 public class PolyphenyDbCypherExecutor extends PolyphenyDbHttpExecutor {
 
 
-    public PolyphenyDbCypherExecutor( String host, CsvWriter csvWriter ) {
+    public PolyphenyDbCypherExecutor( String host, CsvWriter csvWriter, String namespace ) {
         super( "Cypher", Query::getCypher, host, csvWriter );
+        this.namespace = namespace;
     }
 
 
@@ -106,7 +109,13 @@ public class PolyphenyDbCypherExecutor extends PolyphenyDbHttpExecutor {
 
         @Override
         public PolyphenyDbCypherExecutor createExecutorInstance( CsvWriter csvWriter ) {
-            return new PolyphenyDbCypherExecutor( host, csvWriter );
+            return (PolyphenyDbCypherExecutor) createExecutorInstance( csvWriter, GRAPH_NAMESPACE );
+        }
+
+
+        @Override
+        public Executor createExecutorInstance( CsvWriter csvWriter, String namespace ) {
+            return new PolyphenyDbCypherExecutor( host, csvWriter, namespace );
         }
 
 
