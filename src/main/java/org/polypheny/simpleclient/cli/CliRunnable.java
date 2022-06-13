@@ -25,7 +25,6 @@
 
 package org.polypheny.simpleclient.cli;
 
-
 import java.sql.SQLException;
 
 

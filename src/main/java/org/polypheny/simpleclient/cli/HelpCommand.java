@@ -25,7 +25,6 @@
 
 package org.polypheny.simpleclient.cli;
 
-
 import com.github.rvesse.airline.annotations.Arguments;
 import com.github.rvesse.airline.annotations.Command;
 import com.github.rvesse.airline.annotations.Option;

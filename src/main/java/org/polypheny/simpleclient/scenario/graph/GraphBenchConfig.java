@@ -140,9 +140,10 @@ public class GraphBenchConfig extends AbstractConfig {
         super( "graph", cdl.get( "store" ) );
 
         pdbBranch = cdl.get( "pdbBranch" );
-        puiBranch = cdl.get( "puiBranch" );
-        buildUi = Boolean.parseBoolean( cdlGetOrDefault( cdl, "buildUi", "false" ) );
-        resetCatalog = Boolean.parseBoolean( cdl.get( "resetCatalog" ) );
+        puiBranch = "master";
+        buildUi = false;
+
+        resetCatalog = true;
         memoryCatalog = Boolean.parseBoolean( cdl.get( "memoryCatalog" ) );
 
         dataStores.addAll( Arrays.asList( cdl.get( "dataStore" ).split( "_" ) ) );
