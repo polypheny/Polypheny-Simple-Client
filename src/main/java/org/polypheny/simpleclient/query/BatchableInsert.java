@@ -20,7 +20,6 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- *
  */
 
 package org.polypheny.simpleclient.query;
@@ -63,11 +62,11 @@ public abstract class BatchableInsert extends Query {
     }
 
 
-    public abstract String getTable();
-
-
     public String getCypherRowExpression() {
         return null;
     }
+
+
+    public abstract String getTable();
 
 }

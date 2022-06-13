@@ -97,7 +97,7 @@ public class SimpleMetadata extends QueryBuilder {
 
         @Override
         public HttpRequest<?> getRest() {
-            throw new UnsupportedOperationException( "kNN benchmarking is not supported for the Rest interface." );
+            throw new UnsupportedOperationException( "kNN benchmarking is not supported for the REST interface." );
         }
 
 

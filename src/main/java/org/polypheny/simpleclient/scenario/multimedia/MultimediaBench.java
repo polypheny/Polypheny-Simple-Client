@@ -26,7 +26,6 @@
 package org.polypheny.simpleclient.scenario.multimedia;
 
 
-import com.google.common.base.Joiner;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -46,7 +45,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.executor.ExecutorException;
-import org.polypheny.simpleclient.main.ChronosAgent;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.main.ProgressReporter;
 import org.polypheny.simpleclient.query.QueryBuilder;
@@ -393,11 +391,7 @@ public class MultimediaBench extends Scenario {
         properties.put( "measuredTime", calculateMean( measuredTimes ) );
 
         measuredTimePerQueryType.forEach( ( templateId, time ) -> {
-            properties.put( "queryTypes_" + templateId + "_mean", calculateMean( time ) );
-            if ( ChronosAgent.STORE_INDIVIDUAL_QUERY_TIMES ) {
-                properties.put( "queryTypes_" + templateId + "_all", Joiner.on( ',' ).join( time ) );
-            }
-            properties.put( "queryTypes_" + templateId + "_example", queryTypes.get( templateId ) );
+            calculateResults( queryTypes, properties, templateId, time );
         } );
         properties.put( "queryTypes_maxId", queryTypes.size() );
     }
@@ -417,26 +411,6 @@ public class MultimediaBench extends Scenario {
         measuredTimePerQueryType.put( id, Collections.synchronizedList( new LinkedList<>() ) );
         for ( int i = 0; i < numberOfTimes; i++ ) {
             list.add( new QueryListEntry( queryBuilder.getNewQuery(), id ) );
-        }
-    }
-
-
-    private void commitAndCloseExecutor( Executor executor ) {
-        if ( executor != null ) {
-            try {
-                executor.executeCommit();
-            } catch ( ExecutorException e ) {
-                try {
-                    executor.executeRollback();
-                } catch ( ExecutorException ex ) {
-                    log.error( "Error while rollback connection", e );
-                }
-            }
-            try {
-                executor.closeConnection();
-            } catch ( ExecutorException e ) {
-                log.error( "Error while closing connection", e );
-            }
         }
     }
 

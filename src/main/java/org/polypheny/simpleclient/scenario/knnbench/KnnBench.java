@@ -25,7 +25,6 @@
 
 package org.polypheny.simpleclient.scenario.knnbench;
 
-import com.google.common.base.Joiner;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -34,7 +33,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.LongSummaryStatistics;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Vector;
@@ -45,7 +43,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.executor.ExecutorException;
-import org.polypheny.simpleclient.main.ChronosAgent;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.main.ProgressReporter;
 import org.polypheny.simpleclient.query.QueryBuilder;
@@ -372,27 +369,9 @@ public class KnnBench extends Scenario {
         properties.put( "measuredTime", calculateMean( measuredTimes ) );
 
         measuredTimePerQueryType.forEach( ( templateId, time ) -> {
-            calculateResults( properties, templateId, time );
+            calculateResults( queryTypes, properties, templateId, time );
         } );
         properties.put( "queryTypes_maxId", queryTypes.size() );
-    }
-
-
-    private void calculateResults( Properties properties, int templateId, List<Long> time ) {
-        LongSummaryStatistics summaryStatistics = time.stream().mapToLong( Long::longValue ).summaryStatistics();
-        double mean = summaryStatistics.getAverage();
-        long max = summaryStatistics.getMax();
-        long min = summaryStatistics.getMin();
-        double stddev = calculateSampleStandardDeviation( time, mean );
-
-        properties.put( "queryTypes_" + templateId + "_mean", processDoubleValue( mean ) );
-        if ( ChronosAgent.STORE_INDIVIDUAL_QUERY_TIMES ) {
-            properties.put( "queryTypes_" + templateId + "_all", Joiner.on( ',' ).join( time ) );
-        }
-        properties.put( "queryTypes_" + templateId + "_stddev", processDoubleValue( stddev ) );
-        properties.put( "queryTypes_" + templateId + "_min", min / 1_000_000L );
-        properties.put( "queryTypes_" + templateId + "_max", max / 1_000_000L );
-        properties.put( "queryTypes_" + templateId + "_example", queryTypes.get( templateId ) );
     }
 
 
@@ -408,26 +387,6 @@ public class KnnBench extends Scenario {
         measuredTimePerQueryType.put( id, Collections.synchronizedList( new LinkedList<>() ) );
         for ( int i = 0; i < numberOfTimes; i++ ) {
             list.add( new QueryListEntry( queryBuilder.getNewQuery(), id ) );
-        }
-    }
-
-
-    private void commitAndCloseExecutor( Executor executor ) {
-        if ( executor != null ) {
-            try {
-                executor.executeCommit();
-            } catch ( ExecutorException e ) {
-                try {
-                    executor.executeRollback();
-                } catch ( ExecutorException ex ) {
-                    log.error( "Error while rollback connection", e );
-                }
-            }
-            try {
-                executor.closeConnection();
-            } catch ( ExecutorException e ) {
-                log.error( "Error while closing connection", e );
-            }
         }
     }
 
