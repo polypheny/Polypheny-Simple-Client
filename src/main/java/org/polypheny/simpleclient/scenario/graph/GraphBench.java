@@ -147,7 +147,7 @@ public class GraphBench extends Scenario {
 
         Collections.shuffle( queryList, new Random( config.seed ) );
 
-        // This dumps the sql queries independent of the selected interface
+        // This dumps the cypher queries independent of the selected interface
         if ( outputDirectory != null && dumpQueryList ) {
             log.info( "Dump query list..." );
             try {

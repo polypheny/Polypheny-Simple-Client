@@ -28,7 +28,7 @@ import java.util.Random;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 import org.polypheny.simpleclient.scenario.graph.GraphBenchConfig;
-import org.polypheny.simpleclient.scenario.graph.GraphQuery.SimpleGraphQuery;
+import org.polypheny.simpleclient.scenario.graph.GraphQuery;
 
 public class NodeFilterBuilder extends QueryBuilder {
 
@@ -47,7 +47,7 @@ public class NodeFilterBuilder extends QueryBuilder {
         int label = random.nextInt( config.highestLabel );
         int key1 = random.nextInt( config.highestProperty );
         int key3 = random.nextInt( config.highestProperty );
-        return new SimpleGraphQuery( String.format(
+        return new GraphQuery( String.format(
                 "MATCH (n:Label%s { key_%s_%s: 'value_%s_%s', key_%s_0: 'value_%s_0' }) WHERE n.key_1_%s <> 'value%s' RETURN n", label * 2, key1, key1, key1, key1, key1 + 1, key1 + 1, key3, 1 ) );
     }
 

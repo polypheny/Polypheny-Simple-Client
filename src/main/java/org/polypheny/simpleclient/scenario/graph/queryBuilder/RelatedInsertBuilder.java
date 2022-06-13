@@ -28,7 +28,7 @@ import java.util.Random;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 import org.polypheny.simpleclient.scenario.graph.GraphBenchConfig;
-import org.polypheny.simpleclient.scenario.graph.GraphQuery.SimpleGraphQuery;
+import org.polypheny.simpleclient.scenario.graph.GraphQuery;
 
 public class RelatedInsertBuilder extends QueryBuilder {
 
@@ -44,7 +44,7 @@ public class RelatedInsertBuilder extends QueryBuilder {
 
     @Override
     public Query getNewQuery() {
-        return new SimpleGraphQuery( String.format(
+        return new GraphQuery( String.format(
                 "MATCH (n:Label%s), (m:Label%s) CREATE (n)-[:Label%s {list:['el','el','el']}]->(m)",
                 random.nextInt( config.highestLabel ),
                 random.nextInt( config.highestLabel ),

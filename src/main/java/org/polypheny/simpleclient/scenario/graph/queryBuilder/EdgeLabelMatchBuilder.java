@@ -28,7 +28,7 @@ import java.util.Random;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 import org.polypheny.simpleclient.scenario.graph.GraphBenchConfig;
-import org.polypheny.simpleclient.scenario.graph.GraphQuery.SimpleGraphQuery;
+import org.polypheny.simpleclient.scenario.graph.GraphQuery;
 
 public class EdgeLabelMatchBuilder extends QueryBuilder {
 
@@ -53,7 +53,7 @@ public class EdgeLabelMatchBuilder extends QueryBuilder {
 
     @Override
     public Query getNewQuery() {
-        return new SimpleGraphQuery(
+        return new GraphQuery(
                 String.format(
                         "MATCH (n%s)-[rel%s %s]-(m%s) RETURN rel",
                         nodeLeftLabel == null ? "" : ":" + nodeLeftLabel,

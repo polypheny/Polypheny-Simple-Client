@@ -22,91 +22,79 @@
  * SOFTWARE.
  */
 
-package org.polypheny.simpleclient.scenario.graph.queryBuilder;
+package org.polypheny.simpleclient.scenario.graph;
 
 import com.google.gson.JsonObject;
 import java.util.Map;
 import kong.unirest.HttpRequest;
+import lombok.Getter;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.BatchableInsert;
-import org.polypheny.simpleclient.scenario.graph.GraphBench;
 
-public abstract class GraphInsert extends BatchableInsert {
 
-    public GraphInsert() {
+public class GraphInsert extends BatchableInsert {
+
+    @Getter
+    private final String cypher;
+
+
+    public GraphInsert( String cypher ) {
         super( GraphBench.EXPECTED_RESULT );
+        this.cypher = cypher;
+    }
+
+
+    @Override
+    public String getCypherRowExpression() {
+        return cypher;
     }
 
 
     @Override
     public String getSqlRowExpression() {
-        return null;
+        throw new RuntimeException( "SQL is not supported for graph queries!" );
     }
 
 
     @Override
     public JsonObject getRestRowExpression() {
-        return null;
+        throw new RuntimeException( "REST is not supported for graph queries!" );
     }
 
 
     @Override
     public String getTable() {
-        return null;
+        throw new RuntimeException( "getTable() is not supported for graph queries!" );
     }
 
 
     @Override
     public String getSql() {
-        return null;
+        throw new RuntimeException( "SQL is not supported for graph queries!" );
     }
 
 
     @Override
     public String getParameterizedSqlQuery() {
-        return null;
+        throw new RuntimeException( "SQL is not supported for graph queries!" );
     }
 
 
     @Override
     public Map<Integer, ImmutablePair<DataTypes, Object>> getParameterValues() {
-        return null;
+        throw new RuntimeException( "getParameterValues() is not supported for graph queries!" );
     }
 
 
     @Override
     public HttpRequest<?> getRest() {
-        return null;
+        throw new RuntimeException( "REST is not supported for graph queries!" );
     }
 
 
     @Override
     public String getMongoQl() {
-        return null;
-    }
-
-
-    public static class SimpleGraphInsert extends GraphInsert {
-
-        private final String cypher;
-
-
-        public SimpleGraphInsert( String cypher ) {
-            this.cypher = cypher;
-        }
-
-
-        @Override
-        public String getCypherRowExpression() {
-            return cypher;
-        }
-
-
-        @Override
-        public String getCypher() {
-            return cypher;
-        }
-
+        throw new RuntimeException( "MongoQL is not supported for graph queries!" );
     }
 
 }

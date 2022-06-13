@@ -26,63 +26,49 @@ package org.polypheny.simpleclient.scenario.graph;
 
 import java.util.Map;
 import kong.unirest.HttpRequest;
+import lombok.Getter;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.Query;
 
-public abstract class GraphQuery extends Query {
+public class GraphQuery extends Query {
+
+    @Getter
+    private final String cypher;
 
 
-    public GraphQuery() {
+    public GraphQuery( String cypher ) {
         super( GraphBench.EXPECTED_RESULT );
+        this.cypher = cypher;
     }
 
 
     @Override
     public String getSql() {
-        return null;
+        throw new RuntimeException( "SQL is not supported for graph queries!" );
     }
 
 
     @Override
     public String getParameterizedSqlQuery() {
-        return null;
+        throw new RuntimeException( "SQL is not supported for graph queries!" );
     }
 
 
     @Override
     public HttpRequest<?> getRest() {
-        return null;
+        throw new RuntimeException( "REST is not supported for graph queries!" );
     }
 
 
     @Override
     public String getMongoQl() {
-        return null;
+        throw new RuntimeException( "MongoQL is not supported for graph queries!" );
     }
 
 
     @Override
     public Map<Integer, ImmutablePair<DataTypes, Object>> getParameterValues() {
-        return null;
-    }
-
-
-    public static class SimpleGraphQuery extends GraphQuery {
-
-
-        private final String cypher;
-
-
-        public SimpleGraphQuery( String cypher ) {
-            this.cypher = cypher;
-        }
-
-
-        @Override
-        public String getCypher() {
-            return this.cypher;
-        }
-
+        throw new RuntimeException( "getParameterValues() is not supported for graph queries!" );
     }
 
 }

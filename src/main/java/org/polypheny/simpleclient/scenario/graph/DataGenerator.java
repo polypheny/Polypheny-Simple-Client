@@ -35,7 +35,6 @@ import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.executor.ExecutorException;
 import org.polypheny.simpleclient.main.ProgressReporter;
 import org.polypheny.simpleclient.query.BatchableInsert;
-import org.polypheny.simpleclient.scenario.graph.queryBuilder.GraphInsert.SimpleGraphInsert;
 
 
 @Slf4j
@@ -136,7 +135,7 @@ public class DataGenerator {
                 break;
             }
 
-            addToInsertList( new SimpleGraphInsert( getPath( minPathLength + (i % diff), config.properties ) ) );
+            addToInsertList( new GraphInsert( getPath( minPathLength + (i % diff), config.properties ) ) );
         }
         executeInsertList();
     }
@@ -152,7 +151,7 @@ public class DataGenerator {
                 break;
             }
 
-            addToInsertList( new SimpleGraphInsert( getCluster( minClusterSize + (i % diff), config.properties, random ) ) );
+            addToInsertList( new GraphInsert( getCluster( minClusterSize + (i % diff), config.properties, random ) ) );
         }
         executeInsertList();
     }

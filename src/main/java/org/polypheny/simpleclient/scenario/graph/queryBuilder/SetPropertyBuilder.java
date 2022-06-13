@@ -28,7 +28,7 @@ import java.util.Random;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 import org.polypheny.simpleclient.scenario.graph.GraphBenchConfig;
-import org.polypheny.simpleclient.scenario.graph.GraphQuery.SimpleGraphQuery;
+import org.polypheny.simpleclient.scenario.graph.GraphQuery;
 
 public class SetPropertyBuilder extends QueryBuilder {
 
@@ -44,7 +44,7 @@ public class SetPropertyBuilder extends QueryBuilder {
 
     @Override
     public Query getNewQuery() {
-        return new SimpleGraphQuery( String.format( "MATCH (n:Label%s) SET n.newProp = 'value'", random.nextInt( config.highestLabel ) ) );
+        return new GraphQuery( String.format( "MATCH (n:Label%s) SET n.newProp = 'value'", random.nextInt( config.highestLabel ) ) );
     }
 
 }

@@ -28,7 +28,7 @@ import java.util.Random;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 import org.polypheny.simpleclient.scenario.graph.GraphBenchConfig;
-import org.polypheny.simpleclient.scenario.graph.GraphQuery.SimpleGraphQuery;
+import org.polypheny.simpleclient.scenario.graph.GraphQuery;
 
 public class ShortestPathBuilder extends QueryBuilder {
 
@@ -44,7 +44,7 @@ public class ShortestPathBuilder extends QueryBuilder {
 
     @Override
     public Query getNewQuery() {
-        return new SimpleGraphQuery( String.format( "MATCH p = shortestPath((n:Label1)-[*]-(m:Label%s)) RETURN p", random.nextInt( config.maxPathLength ) ) );
+        return new GraphQuery( String.format( "MATCH p = shortestPath((n:Label1)-[*]-(m:Label%s)) RETURN p", random.nextInt( config.maxPathLength ) ) );
     }
 
 }

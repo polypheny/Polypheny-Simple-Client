@@ -28,7 +28,7 @@ import java.util.Random;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 import org.polypheny.simpleclient.scenario.graph.GraphBenchConfig;
-import org.polypheny.simpleclient.scenario.graph.GraphQuery.SimpleGraphQuery;
+import org.polypheny.simpleclient.scenario.graph.GraphQuery;
 
 public class FindNeighborsBuilder extends QueryBuilder {
 
@@ -49,7 +49,7 @@ public class FindNeighborsBuilder extends QueryBuilder {
     public Query getNewQuery() {
         int labelId = random.nextInt( highestLabel );
         int propertyId = random.nextInt( highestProperty );
-        return new SimpleGraphQuery( String.format( "MATCH (n:Label%s { key_%s_%s: 'value_%s_%s'})-[]-(t)\nRETURN t", labelId * 2, propertyId, propertyId, propertyId, propertyId ) );
+        return new GraphQuery( String.format( "MATCH (n:Label%s { key_%s_%s: 'value_%s_%s'})-[]-(t)\nRETURN t", labelId * 2, propertyId, propertyId, propertyId, propertyId ) );
     }
 
 }

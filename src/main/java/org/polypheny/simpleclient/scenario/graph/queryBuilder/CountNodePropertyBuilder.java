@@ -28,7 +28,7 @@ import java.util.Random;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 import org.polypheny.simpleclient.scenario.graph.GraphBenchConfig;
-import org.polypheny.simpleclient.scenario.graph.GraphQuery.SimpleGraphQuery;
+import org.polypheny.simpleclient.scenario.graph.GraphQuery;
 
 public class CountNodePropertyBuilder extends QueryBuilder {
 
@@ -49,7 +49,7 @@ public class CountNodePropertyBuilder extends QueryBuilder {
 
     @Override
     public Query getNewQuery() {
-        return new SimpleGraphQuery( String.format(
+        return new GraphQuery( String.format(
                 "MATCH (n%s) RETURN count(n.value_%s_1)",
                 ":Label" + (random.nextInt( highestLabel ) * 2),
                 random.nextInt( highestProperty ) ) );
