@@ -22,52 +22,19 @@
  * SOFTWARE.
  */
 
-package org.polypheny.simpleclient.query;
+package org.polypheny.simpleclient.scenario.graph.queryBuilder;
 
-import java.util.Map;
-import kong.unirest.HttpRequest;
-import lombok.Getter;
-import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.polypheny.simpleclient.query.Query;
+import org.polypheny.simpleclient.query.QueryBuilder;
+import org.polypheny.simpleclient.scenario.graph.GraphBench;
+import org.polypheny.simpleclient.scenario.graph.GraphInsert;
 
-
-public class RawQuery extends Query {
-
-    @Getter
-    private final String sql;
-
-    @Getter
-    private final HttpRequest<?> rest;
-
-    @Getter
-    private final String mongoQl;
-
-    @Getter
-    private final String cypher;
-
-
-    public RawQuery( String sql, HttpRequest<?> rest, boolean expectResultSet ) {
-        this( sql, rest, null, null, expectResultSet );
-    }
-
-
-    public RawQuery( String sql, HttpRequest<?> rest, String mongoQl, String cypher, boolean expectResultSet ) {
-        super( expectResultSet );
-        this.sql = sql;
-        this.rest = rest;
-        this.mongoQl = mongoQl;
-        this.cypher = cypher;
-    }
+public class CreateGraphDatabase extends QueryBuilder {
 
 
     @Override
-    public String getParameterizedSqlQuery() {
-        return null;
-    }
-
-
-    @Override
-    public Map<Integer, ImmutablePair<DataTypes, Object>> getParameterValues() {
-        return null;
+    public Query getNewQuery() {
+        return new GraphInsert( String.format( "CREATE DATABASE %s IF NOT EXISTS", GraphBench.GRAPH_DATABASE ) );
     }
 
 }

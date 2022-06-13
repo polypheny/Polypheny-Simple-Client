@@ -26,16 +26,22 @@
 package org.polypheny.simpleclient.scenario;
 
 
+import com.google.common.base.Joiner;
 import java.io.File;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.util.List;
+import java.util.LongSummaryStatistics;
+import java.util.Map;
 import java.util.OptionalDouble;
 import java.util.Properties;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.QueryMode;
+import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
+import org.polypheny.simpleclient.executor.ExecutorException;
+import org.polypheny.simpleclient.main.ChronosAgent;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.main.ProgressReporter;
 
@@ -67,6 +73,24 @@ public abstract class Scenario {
     public abstract void warmUp( ProgressReporter progressReporter );
 
     public abstract void analyze( Properties properties, File outputDirectory );
+
+
+    protected void calculateResults( Map<Integer, String> queryTypes, Properties properties, int templateId, List<Long> time ) {
+        LongSummaryStatistics summaryStatistics = time.stream().mapToLong( Long::longValue ).summaryStatistics();
+        double mean = summaryStatistics.getAverage();
+        long max = summaryStatistics.getMax();
+        long min = summaryStatistics.getMin();
+        double stddev = calculateSampleStandardDeviation( time, mean );
+
+        properties.put( "queryTypes_" + templateId + "_mean", processDoubleValue( mean ) );
+        if ( ChronosAgent.STORE_INDIVIDUAL_QUERY_TIMES ) {
+            properties.put( "queryTypes_" + templateId + "_all", Joiner.on( ',' ).join( time ) );
+        }
+        properties.put( "queryTypes_" + templateId + "_stddev", processDoubleValue( stddev ) );
+        properties.put( "queryTypes_" + templateId + "_min", min / 1_000_000L );
+        properties.put( "queryTypes_" + templateId + "_max", max / 1_000_000L );
+        properties.put( "queryTypes_" + templateId + "_example", queryTypes.get( templateId ) );
+    }
 
 
     protected double calculateMean( List<Long> times ) {
@@ -107,5 +131,25 @@ public abstract class Scenario {
 
 
     public abstract int getNumberOfInsertThreads();
+
+
+    protected void commitAndCloseExecutor( Executor executor ) {
+        if ( executor != null ) {
+            try {
+                executor.executeCommit();
+            } catch ( ExecutorException e ) {
+                try {
+                    executor.executeRollback();
+                } catch ( ExecutorException ex ) {
+                    log.error( "Error while rollback connection", e );
+                }
+            }
+            try {
+                executor.closeConnection();
+            } catch ( ExecutorException e ) {
+                log.error( "Error while closing connection", e );
+            }
+        }
+    }
 
 }

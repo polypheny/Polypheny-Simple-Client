@@ -22,52 +22,62 @@
  * SOFTWARE.
  */
 
-package org.polypheny.simpleclient.query;
+package org.polypheny.simpleclient.scenario.graph;
 
 import java.util.Map;
 import kong.unirest.HttpRequest;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.polypheny.simpleclient.query.Query;
 
 
-public class RawQuery extends Query {
-
-    @Getter
-    private final String sql;
-
-    @Getter
-    private final HttpRequest<?> rest;
-
-    @Getter
-    private final String mongoQl;
+@Slf4j
+public class GraphQuery extends Query {
 
     @Getter
     private final String cypher;
 
 
-    public RawQuery( String sql, HttpRequest<?> rest, boolean expectResultSet ) {
-        this( sql, rest, null, null, expectResultSet );
-    }
-
-
-    public RawQuery( String sql, HttpRequest<?> rest, String mongoQl, String cypher, boolean expectResultSet ) {
-        super( expectResultSet );
-        this.sql = sql;
-        this.rest = rest;
-        this.mongoQl = mongoQl;
+    public GraphQuery( String cypher ) {
+        super( GraphBench.EXPECTED_RESULT );
         this.cypher = cypher;
     }
 
 
     @Override
+    public String getSql() {
+        throw new RuntimeException( "SQL is not supported for graph queries!" );
+    }
+
+
+    @Override
     public String getParameterizedSqlQuery() {
-        return null;
+        throw new RuntimeException( "SQL is not supported for graph queries!" );
+    }
+
+
+    @Override
+    public HttpRequest<?> getRest() {
+        throw new RuntimeException( "REST is not supported for graph queries!" );
+    }
+
+
+    @Override
+    public String getMongoQl() {
+        throw new RuntimeException( "MongoQL is not supported for graph queries!" );
     }
 
 
     @Override
     public Map<Integer, ImmutablePair<DataTypes, Object>> getParameterValues() {
-        return null;
+        throw new RuntimeException( "getParameterValues() is not supported for graph queries!" );
+    }
+
+
+    @Override
+    public void debug() {
+        log.debug( cypher );
     }
 
 }

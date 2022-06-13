@@ -22,52 +22,29 @@
  * SOFTWARE.
  */
 
-package org.polypheny.simpleclient.query;
+package org.polypheny.simpleclient.scenario.graph.queryBuilder;
 
-import java.util.Map;
-import kong.unirest.HttpRequest;
-import lombok.Getter;
-import org.apache.commons.lang3.tuple.ImmutablePair;
+import java.util.Random;
+import org.polypheny.simpleclient.query.Query;
+import org.polypheny.simpleclient.query.QueryBuilder;
+import org.polypheny.simpleclient.scenario.graph.GraphBenchConfig;
+import org.polypheny.simpleclient.scenario.graph.GraphQuery;
 
+public class SetPropertyBuilder extends QueryBuilder {
 
-public class RawQuery extends Query {
-
-    @Getter
-    private final String sql;
-
-    @Getter
-    private final HttpRequest<?> rest;
-
-    @Getter
-    private final String mongoQl;
-
-    @Getter
-    private final String cypher;
+    private final Random random;
+    private final GraphBenchConfig config;
 
 
-    public RawQuery( String sql, HttpRequest<?> rest, boolean expectResultSet ) {
-        this( sql, rest, null, null, expectResultSet );
-    }
-
-
-    public RawQuery( String sql, HttpRequest<?> rest, String mongoQl, String cypher, boolean expectResultSet ) {
-        super( expectResultSet );
-        this.sql = sql;
-        this.rest = rest;
-        this.mongoQl = mongoQl;
-        this.cypher = cypher;
+    public SetPropertyBuilder( GraphBenchConfig config ) {
+        this.random = new Random( config.seed );
+        this.config = config;
     }
 
 
     @Override
-    public String getParameterizedSqlQuery() {
-        return null;
-    }
-
-
-    @Override
-    public Map<Integer, ImmutablePair<DataTypes, Object>> getParameterValues() {
-        return null;
+    public Query getNewQuery() {
+        return new GraphQuery( String.format( "MATCH (n:Label%s) SET n.newProp = 'value'", random.nextInt( config.highestLabel ) ) );
     }
 
 }

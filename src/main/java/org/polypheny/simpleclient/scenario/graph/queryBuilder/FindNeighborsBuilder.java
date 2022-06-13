@@ -22,52 +22,34 @@
  * SOFTWARE.
  */
 
-package org.polypheny.simpleclient.query;
+package org.polypheny.simpleclient.scenario.graph.queryBuilder;
 
-import java.util.Map;
-import kong.unirest.HttpRequest;
-import lombok.Getter;
-import org.apache.commons.lang3.tuple.ImmutablePair;
+import java.util.Random;
+import org.polypheny.simpleclient.query.Query;
+import org.polypheny.simpleclient.query.QueryBuilder;
+import org.polypheny.simpleclient.scenario.graph.GraphBenchConfig;
+import org.polypheny.simpleclient.scenario.graph.GraphQuery;
 
+public class FindNeighborsBuilder extends QueryBuilder {
 
-public class RawQuery extends Query {
-
-    @Getter
-    private final String sql;
-
-    @Getter
-    private final HttpRequest<?> rest;
-
-    @Getter
-    private final String mongoQl;
-
-    @Getter
-    private final String cypher;
+    private final Random random;
+    private final int highestLabel;
+    private final int highestProperty;
 
 
-    public RawQuery( String sql, HttpRequest<?> rest, boolean expectResultSet ) {
-        this( sql, rest, null, null, expectResultSet );
-    }
+    public FindNeighborsBuilder( GraphBenchConfig config ) {
+        this.random = new Random( config.seed );
 
-
-    public RawQuery( String sql, HttpRequest<?> rest, String mongoQl, String cypher, boolean expectResultSet ) {
-        super( expectResultSet );
-        this.sql = sql;
-        this.rest = rest;
-        this.mongoQl = mongoQl;
-        this.cypher = cypher;
+        this.highestLabel = config.maxClusterSize;
+        this.highestProperty = config.properties;
     }
 
 
     @Override
-    public String getParameterizedSqlQuery() {
-        return null;
-    }
-
-
-    @Override
-    public Map<Integer, ImmutablePair<DataTypes, Object>> getParameterValues() {
-        return null;
+    public Query getNewQuery() {
+        int labelId = random.nextInt( highestLabel );
+        int propertyId = random.nextInt( highestProperty );
+        return new GraphQuery( String.format( "MATCH (n:Label%s { key_%s_%s: 'value_%s_%s'})-[]-(t)\nRETURN t", labelId * 2, propertyId, propertyId, propertyId, propertyId ) );
     }
 
 }

@@ -34,7 +34,7 @@ public class OltpBenchPolyphenyDbExecutor extends OltpBenchExecutor implements P
         } catch ( ExecutorException e ) {
             throw new ExecutorException( "Error while executing query via JDBC", e );
         } finally {
-            commitAndCloseJdbcExecutor( executor );
+            PolyphenyDbJdbcExecutor.commitAndCloseJdbcExecutor( executor );
         }
     }
 
@@ -64,7 +64,7 @@ public class OltpBenchPolyphenyDbExecutor extends OltpBenchExecutor implements P
         } catch ( ExecutorException e ) {
             throw new ExecutorException( "Error while executing query via JDBC", e );
         } finally {
-            commitAndCloseJdbcExecutor( executor );
+            PolyphenyDbJdbcExecutor.commitAndCloseJdbcExecutor( executor );
         }
     }
 
@@ -79,7 +79,7 @@ public class OltpBenchPolyphenyDbExecutor extends OltpBenchExecutor implements P
         } catch ( ExecutorException e ) {
             throw new ExecutorException( "Error while executing query via JDBC", e );
         } finally {
-            commitAndCloseJdbcExecutor( executor );
+            PolyphenyDbJdbcExecutor.commitAndCloseJdbcExecutor( executor );
         }
     }
 
@@ -95,30 +95,9 @@ public class OltpBenchPolyphenyDbExecutor extends OltpBenchExecutor implements P
             log.error( "Exception while setting config \"" + key + "\"!", e );
         } finally {
             try {
-                commitAndCloseJdbcExecutor( executor );
+                PolyphenyDbJdbcExecutor.commitAndCloseJdbcExecutor( executor );
             } catch ( ExecutorException e ) {
                 log.error( "Exception while closing JDBC executor", e );
-            }
-        }
-    }
-
-
-    public static void commitAndCloseJdbcExecutor( JdbcExecutor executor ) throws ExecutorException {
-        if ( executor != null ) {
-            try {
-                executor.executeCommit();
-            } catch ( ExecutorException e ) {
-                try {
-                    executor.executeRollback();
-                } catch ( ExecutorException ex ) {
-                    log.error( "Error while rollback connection", e );
-                }
-            } finally {
-                try {
-                    executor.closeConnection();
-                } catch ( ExecutorException e ) {
-                    log.error( "Error while closing connection", e );
-                }
             }
         }
     }
@@ -141,6 +120,7 @@ public class OltpBenchPolyphenyDbExecutor extends OltpBenchExecutor implements P
         public OltpBenchPolyphenyDbExecutorFactory( String host ) {
             this.host = host;
         }
+
 
         @Override
         public OltpBenchPolyphenyDbExecutor createExecutorInstance() {

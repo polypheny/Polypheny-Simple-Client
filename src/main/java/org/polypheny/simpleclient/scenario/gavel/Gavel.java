@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019-2021 The Polypheny Project
+ * Copyright (c) 2019-2022 The Polypheny Project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"), to deal
@@ -26,7 +26,6 @@
 package org.polypheny.simpleclient.scenario.gavel;
 
 
-import com.google.common.base.Joiner;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
@@ -49,8 +48,10 @@ import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.executor.ExecutorException;
 import org.polypheny.simpleclient.executor.JdbcExecutor;
+import org.polypheny.simpleclient.executor.MonetdbExecutor.MonetdbExecutorFactory;
+import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory;
 import org.polypheny.simpleclient.executor.PolyphenyDbMongoQlExecutor.PolyphenyDbMongoQlExecutorFactory;
-import org.polypheny.simpleclient.main.ChronosAgent;
+import org.polypheny.simpleclient.executor.PostgresExecutor.PostgresExecutorFactory;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.main.ProgressReporter;
 import org.polypheny.simpleclient.query.QueryBuilder;
@@ -403,25 +404,28 @@ public class Gavel extends Scenario {
         if ( executorFactory instanceof PolyphenyDbMongoQlExecutorFactory ) {
             file = ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/gavel/schema.mongoql" );
             executeMongoQlSchema( file );
-            return;
-        }
-        if ( includingKeys ) {
-            file = ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/gavel/schema.sql" );
-        } else {
-            file = ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/gavel/schema-without-keys-and-constraints.sql" );
-        }
-        // Check if file != null
-        executeSchema( file );
+        } else if ( executorFactory instanceof PolyphenyDbJdbcExecutorFactory || executorFactory instanceof PostgresExecutorFactory ||
+                executorFactory instanceof MonetdbExecutorFactory ) {
+            if ( includingKeys ) {
+                file = ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/gavel/schema.sql" );
+            } else {
+                file = ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/gavel/schema-without-keys-and-constraints.sql" );
+            }
+            // Check if file != null
+            executeSchema( file );
 
-        // Create Views / Materialized Views
-        if ( queryMode == QueryMode.VIEW ) {
-            log.info( "Creating Views ..." );
-            file = ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/gavel/view.sql" );
-            executeSchema( file );
-        } else if ( queryMode == QueryMode.MATERIALIZED ) {
-            log.info( "Creating Materialized Views ..." );
-            file = ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/gavel/materialized.sql" );
-            executeSchema( file );
+            // Create Views / Materialized Views
+            if ( queryMode == QueryMode.VIEW ) {
+                log.info( "Creating Views ..." );
+                file = ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/gavel/view.sql" );
+                executeSchema( file );
+            } else if ( queryMode == QueryMode.MATERIALIZED ) {
+                log.info( "Creating Materialized Views ..." );
+                file = ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/gavel/materialized.sql" );
+                executeSchema( file );
+            }
+        } else {
+            throw new RuntimeException( "Unsupported executor factory: " + executorFactory.getClass().getName() );
         }
     }
 
@@ -434,9 +438,9 @@ public class Gavel extends Scenario {
         try ( BufferedReader bf = new BufferedReader( new InputStreamReader( file ) ) ) {
             executor = executorFactory.createExecutorInstance();
             String line = bf.readLine();
-            executor.executeQuery( new RawQuery( null, null, "use test", false ) );
+            executor.executeQuery( new RawQuery( null, null, "use test", null, false ) );
             while ( line != null ) {
-                executor.executeQuery( new RawQuery( null, null, "db.createCollection(" + line + ")", false ) );
+                executor.executeQuery( new RawQuery( null, null, "db.createCollection(" + line + ")", null, false ) );
                 line = bf.readLine();
             }
         } catch ( IOException | ExecutorException e ) {
@@ -648,11 +652,7 @@ public class Gavel extends Scenario {
         properties.put( "measuredTime", calculateMean( measuredTimes ) );
 
         measuredTimePerQueryType.forEach( ( templateId, time ) -> {
-            properties.put( "queryTypes_" + templateId + "_mean", calculateMean( time ) );
-            if ( ChronosAgent.STORE_INDIVIDUAL_QUERY_TIMES ) {
-                properties.put( "queryTypes_" + templateId + "_all", Joiner.on( ',' ).join( time ) );
-            }
-            properties.put( "queryTypes_" + templateId + "_example", queryTypes.get( templateId ) );
+            calculateResults( queryTypes, properties, templateId, time );
         } );
         properties.put( "queryTypes_maxId", queryTypes.size() );
     }
@@ -695,26 +695,6 @@ public class Gavel extends Scenario {
         }
         log.info( "Current number of elements in the database:\nAuctions: {} | Users: {} | Categories: {} | Bids: {}", numbers.get( "auction" ), numbers.get( "user" ), numbers.get( "categories" ), numbers.get( "bids" ) );
         return numbers;
-    }
-
-
-    private void commitAndCloseExecutor( Executor executor ) {
-        if ( executor != null ) {
-            try {
-                executor.executeCommit();
-            } catch ( ExecutorException e ) {
-                try {
-                    executor.executeRollback();
-                } catch ( ExecutorException ex ) {
-                    log.error( "Error while rollback connection", e );
-                }
-            }
-            try {
-                executor.closeConnection();
-            } catch ( ExecutorException e ) {
-                log.error( "Error while closing connection", e );
-            }
-        }
     }
 
 }

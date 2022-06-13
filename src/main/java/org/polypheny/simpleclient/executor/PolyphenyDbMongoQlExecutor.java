@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019-2021 The Polypheny Project
+ * Copyright (c) 2019-2022 The Polypheny Project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"), to deal
@@ -20,26 +20,19 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- *
  */
 
 package org.polypheny.simpleclient.executor;
 
-import static org.polypheny.simpleclient.executor.PolyphenyDbRestExecutor.commitAndCloseJdbcExecutor;
-
-import com.google.gson.JsonObject;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import kong.unirest.HttpRequest;
 import kong.unirest.HttpResponse;
 import kong.unirest.JsonNode;
-import kong.unirest.Unirest;
 import kong.unirest.UnirestException;
 import kong.unirest.json.JSONArray;
 import lombok.extern.slf4j.Slf4j;
-import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.query.BatchableInsert;
 import org.polypheny.simpleclient.query.MultipartInsert;
@@ -49,22 +42,11 @@ import org.polypheny.simpleclient.scenario.AbstractConfig;
 
 
 @Slf4j
-public class PolyphenyDbMongoQlExecutor implements PolyphenyDbExecutor {
-
-    private final PolyphenyDbJdbcExecutorFactory jdbcExecutorFactory;
-
-    private final CsvWriter csvWriter;
+public class PolyphenyDbMongoQlExecutor extends PolyphenyDbHttpExecutor {
 
 
     public PolyphenyDbMongoQlExecutor( String host, CsvWriter csvWriter ) {
-        this.csvWriter = csvWriter;
-        this.jdbcExecutorFactory = new PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory( host, false );
-    }
-
-
-    @Override
-    public void reset() throws ExecutorException {
-        throw new RuntimeException( "Unsupported operation" );
+        super( "Mongo", Query::getMongoQl, host, csvWriter );
     }
 
 
@@ -98,28 +80,6 @@ public class PolyphenyDbMongoQlExecutor implements PolyphenyDbExecutor {
     }
 
 
-    private HttpRequest<?> buildQuery( String mql ) {
-        JsonObject data = new JsonObject();
-        data.addProperty( "query", mql );
-        data.addProperty( "database", "test" );
-
-        return Unirest.post( "{protocol}://{host}:{port}/mongo" )
-                .header( "Content-Type", "application/json" )
-                .body( data );
-
-    }
-
-
-    private HttpRequest<?> getRequest( String mql ) {
-        HttpRequest<?> request = buildQuery( mql );
-        request.basicAuth( "pa", "" );
-        request.routeParam( "protocol", "http" );
-        request.routeParam( "host", "127.0.0.1" );
-        request.routeParam( "port", "2717" );
-        return request;
-    }
-
-
     @Override
     public long executeQueryAndGetNumber( Query query ) throws ExecutorException {
         query.debug();
@@ -148,7 +108,6 @@ public class PolyphenyDbMongoQlExecutor implements PolyphenyDbExecutor {
         } catch ( UnirestException e ) {
             throw new ExecutorException( e );
         }
-
     }
 
 
@@ -190,68 +149,7 @@ public class PolyphenyDbMongoQlExecutor implements PolyphenyDbExecutor {
             }
         }
         if ( rows.size() > 0 ) {
-            executeQuery( new RawQuery( null, null, Query.buildMongoQlManyInsert( currentTable, rows ), false ) );
-        }
-    }
-
-
-    @Override
-    public void flushCsvWriter() {
-        if ( csvWriter != null ) {
-            try {
-                csvWriter.flush();
-            } catch ( IOException e ) {
-                log.warn( "Exception while flushing csv writer", e );
-            }
-        }
-    }
-
-
-    @Override
-    public void dropStore( String name ) throws ExecutorException {
-        PolyphenyDbJdbcExecutor executor = null;
-        try {
-            executor = jdbcExecutorFactory.createExecutorInstance( csvWriter );
-            executor.dropStore( name );
-            executor.executeCommit();
-        } catch ( ExecutorException e ) {
-            throw new ExecutorException( "Error while executing query via JDBC", e );
-        } finally {
-            commitAndCloseJdbcExecutor( executor );
-        }
-    }
-
-
-    @Override
-    public void deployStore( String name, String clazz, String config ) throws ExecutorException {
-        PolyphenyDbJdbcExecutor executor = null;
-        try {
-            executor = jdbcExecutorFactory.createExecutorInstance( csvWriter );
-            executor.deployStore( name, clazz, config );
-            executor.executeCommit();
-        } catch ( ExecutorException e ) {
-            throw new ExecutorException( "Error while executing query via JDBC", e );
-        } finally {
-            commitAndCloseJdbcExecutor( executor );
-        }
-    }
-
-
-    @Override
-    public void setConfig( String key, String value ) {
-        PolyphenyDbJdbcExecutor executor = null;
-        try {
-            executor = jdbcExecutorFactory.createExecutorInstance( csvWriter );
-            executor.setConfig( key, value );
-            executor.executeCommit();
-        } catch ( ExecutorException e ) {
-            log.error( "Exception while setting config \"" + key + "\"!", e );
-        } finally {
-            try {
-                commitAndCloseJdbcExecutor( executor );
-            } catch ( ExecutorException e ) {
-                log.error( "Exception while closing JDBC executor", e );
-            }
+            executeQuery( new RawQuery( null, null, Query.buildMongoQlManyInsert( currentTable, rows ), null, false ) );
         }
     }
 
@@ -278,6 +176,5 @@ public class PolyphenyDbMongoQlExecutor implements PolyphenyDbExecutor {
         }
 
     }
-
 
 }

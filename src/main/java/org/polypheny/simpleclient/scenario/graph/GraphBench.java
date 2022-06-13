@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019-2021 The Polypheny Project
+ * Copyright (c) 2019-2022 The Polypheny Project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"), to deal
@@ -20,10 +20,9 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- *
  */
 
-package org.polypheny.simpleclient.scenario.knnbench;
+package org.polypheny.simpleclient.scenario.graph;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -35,42 +34,57 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Random;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.executor.ExecutorException;
+import org.polypheny.simpleclient.executor.PolyphenyDbCypherExecutor;
+import org.polypheny.simpleclient.executor.PolyphenyDbCypherExecutor.PolyphenyDbCypherExecutorFactory;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.main.ProgressReporter;
 import org.polypheny.simpleclient.query.QueryBuilder;
 import org.polypheny.simpleclient.query.QueryListEntry;
 import org.polypheny.simpleclient.scenario.Scenario;
-import org.polypheny.simpleclient.scenario.knnbench.queryBuilder.CreateIntFeature;
-import org.polypheny.simpleclient.scenario.knnbench.queryBuilder.CreateMetadata;
-import org.polypheny.simpleclient.scenario.knnbench.queryBuilder.CreateRealFeature;
-import org.polypheny.simpleclient.scenario.knnbench.queryBuilder.MetadataKnnIntFeature;
-import org.polypheny.simpleclient.scenario.knnbench.queryBuilder.MetadataKnnRealFeature;
-import org.polypheny.simpleclient.scenario.knnbench.queryBuilder.SimpleKnnIdRealFeature;
-import org.polypheny.simpleclient.scenario.knnbench.queryBuilder.SimpleKnnIntFeature;
-import org.polypheny.simpleclient.scenario.knnbench.queryBuilder.SimpleKnnRealFeature;
-import org.polypheny.simpleclient.scenario.knnbench.queryBuilder.SimpleMetadata;
+import org.polypheny.simpleclient.scenario.graph.queryBuilder.CountNodePropertyBuilder;
+import org.polypheny.simpleclient.scenario.graph.queryBuilder.CreateGraphDatabase;
+import org.polypheny.simpleclient.scenario.graph.queryBuilder.DeleteNodeBuilder;
+import org.polypheny.simpleclient.scenario.graph.queryBuilder.DifferentPathsBuilder;
+import org.polypheny.simpleclient.scenario.graph.queryBuilder.EdgeLabelMatchBuilder;
+import org.polypheny.simpleclient.scenario.graph.queryBuilder.FindNeighborsBuilder;
+import org.polypheny.simpleclient.scenario.graph.queryBuilder.NodeFilterBuilder;
+import org.polypheny.simpleclient.scenario.graph.queryBuilder.RelatedInsertBuilder;
+import org.polypheny.simpleclient.scenario.graph.queryBuilder.SetPropertyBuilder;
+import org.polypheny.simpleclient.scenario.graph.queryBuilder.ShortestPathBuilder;
+import org.polypheny.simpleclient.scenario.graph.queryBuilder.UnwindBuilder;
 
 
 @Slf4j
-public class KnnBench extends Scenario {
+public class GraphBench extends Scenario {
 
-    private final KnnBenchConfig config;
+    public static final String GRAPH_DATABASE = "test";
+    public static boolean EXPECTED_RESULT = true;
+    public static final AtomicLong idBuilder = new AtomicLong();
+
+    private final GraphBenchConfig config;
 
     private final List<Long> measuredTimes;
     private final Map<Integer, String> queryTypes;
     private final Map<Integer, List<Long>> measuredTimePerQueryType;
 
 
-    public KnnBench( Executor.ExecutorFactory executorFactory, KnnBenchConfig config, boolean commitAfterEveryQuery, boolean dumpQueryList ) {
+    public GraphBench( Executor.ExecutorFactory executorFactory, GraphBenchConfig config, boolean commitAfterEveryQuery, boolean dumpQueryList ) {
         super( executorFactory, commitAfterEveryQuery, dumpQueryList, QueryMode.TABLE );
+
+        if ( !(executorFactory instanceof PolyphenyDbCypherExecutorFactory) ) {
+            throw new RuntimeException( "GraphBench is only supported by the PolyphenyDbCypherExecutor!" );
+        }
+
         this.config = config;
 
         measuredTimes = Collections.synchronizedList( new LinkedList<>() );
@@ -89,9 +103,7 @@ public class KnnBench extends Scenario {
         Executor executor = null;
         try {
             executor = executorFactory.createExecutorInstance();
-            executor.executeQuery( (new CreateMetadata( config.dataStoreMetadata )).getNewQuery() );
-            executor.executeQuery( (new CreateIntFeature( config.dataStoreFeature, config.dimensionFeatureVectors )).getNewQuery() );
-            executor.executeQuery( (new CreateRealFeature( config.dataStoreFeature, config.dimensionFeatureVectors )).getNewQuery() );
+            executor.executeQuery( new CreateGraphDatabase().getNewQuery() );
         } catch ( ExecutorException e ) {
             throw new RuntimeException( "Exception while creating schema", e );
         } finally {
@@ -104,12 +116,12 @@ public class KnnBench extends Scenario {
     public void generateData( ProgressReporter progressReporter ) {
         log.info( "Generating data..." );
         Executor executor1 = executorFactory.createExecutorInstance();
+        assert executor1 instanceof PolyphenyDbCypherExecutor;
         DataGenerator dataGenerator = new DataGenerator( executor1, config, progressReporter );
 
         try {
-            dataGenerator.generateMetadata();
-            dataGenerator.generateIntFeatures();
-            dataGenerator.generateRealFeatures();
+            dataGenerator.generatePaths( config.paths, config.minPathLength, config.maxPathLength );
+            dataGenerator.generateClusters( config.clusters, config.minClusterSize, config.maxClusterSize );
         } catch ( ExecutorException e ) {
             throw new RuntimeException( "Exception while generating data", e );
         } finally {
@@ -120,27 +132,29 @@ public class KnnBench extends Scenario {
 
     @Override
     public long execute( ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory, int numberOfThreads ) {
-
         log.info( "Preparing query list for the benchmark..." );
         List<QueryListEntry> queryList = new Vector<>();
-        addNumberOfTimes( queryList, new SimpleKnnIntFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm ), config.numberOfSimpleKnnIntFeatureQueries );
-        addNumberOfTimes( queryList, new SimpleKnnRealFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm ), config.numberOfSimpleKnnRealFeatureQueries );
-        addNumberOfTimes( queryList, new SimpleMetadata( config.randomSeedQuery, config.numberOfEntries ), config.numberOfSimpleMetadataQueries );
-//        addNumberOfTimes( queryList, new SimpleKnnIdIntFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm ), config.numberOfSimpleKnnIdIntFeatureQueries );
-        addNumberOfTimes( queryList, new SimpleKnnIdRealFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm ), config.numberOfSimpleKnnIdRealFeatureQueries );
-        addNumberOfTimes( queryList, new MetadataKnnIntFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm ), config.numberOfMetadataKnnIntFeatureQueries );
-        addNumberOfTimes( queryList, new MetadataKnnRealFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm ), config.numberOfMetadataKnnRealFeatureQueries );
+        addNumberOfTimes( queryList, new CountNodePropertyBuilder( config ), config.numberOfPropertyCountQueries );
+        addNumberOfTimes( queryList, new EdgeLabelMatchBuilder( config ), config.numberOfEdgeMatchQueries );
+        addNumberOfTimes( queryList, new FindNeighborsBuilder( config ), config.numberOfFindNeighborsQueries );
+        addNumberOfTimes( queryList, new UnwindBuilder( config ), config.numberOfUnwindQueries );
+        addNumberOfTimes( queryList, new NodeFilterBuilder( config ), config.numberOfNodeFilterQueries );
+        addNumberOfTimes( queryList, new DifferentPathsBuilder( config ), config.numberOfDifferentLengthQueries );
+        addNumberOfTimes( queryList, new ShortestPathBuilder( config ), config.numberOfShortestPathQueries );
+        addNumberOfTimes( queryList, new SetPropertyBuilder( config ), config.numberOfSetPropertyQueries );
+        addNumberOfTimes( queryList, new RelatedInsertBuilder( config ), config.numberOfInsertQueries );
+        addNumberOfTimes( queryList, new DeleteNodeBuilder( config ), config.numberOfDeleteQueries );
 
-        Collections.shuffle( queryList );
+        Collections.shuffle( queryList, new Random( config.seed ) );
 
-        // This dumps the sql queries independent of the selected interface
+        // This dumps the cypher queries independent of the selected interface
         if ( outputDirectory != null && dumpQueryList ) {
             log.info( "Dump query list..." );
             try {
                 FileWriter fw = new FileWriter( outputDirectory.getPath() + File.separator + "queryList" );
                 queryList.forEach( query -> {
                     try {
-                        fw.append( query.query.getSql() ).append( "\n" );
+                        fw.append( query.query.getCypher() ).append( "\n" );
                     } catch ( IOException e ) {
                         log.error( "Error while dumping query list", e );
                     }
@@ -196,40 +210,51 @@ public class KnnBench extends Scenario {
         log.info( "Warm-up..." );
 
         Executor executor = null;
-        SimpleKnnIntFeature simpleKnnIntFeatureBuilder = new SimpleKnnIntFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
-        SimpleKnnRealFeature simpleKnnRealFeatureBuilder = new SimpleKnnRealFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
-        SimpleMetadata simpleMetadataBuilder = new SimpleMetadata( config.randomSeedQuery, config.numberOfEntries );
-//        SimpleKnnIdIntFeature simpleKnnIdIntFeatureBuilder = new SimpleKnnIdIntFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
-        SimpleKnnIdRealFeature simpleKnnIdRealFeatureBuilder = new SimpleKnnIdRealFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
-        MetadataKnnIntFeature metadataKnnIntFeature = new MetadataKnnIntFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
-        MetadataKnnRealFeature metadataKnnRealFeature = new MetadataKnnRealFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
+        EdgeLabelMatchBuilder edgeMatch = new EdgeLabelMatchBuilder( config );
+        CountNodePropertyBuilder propertyCount = new CountNodePropertyBuilder( config );
+        FindNeighborsBuilder findNeighbors = new FindNeighborsBuilder( config );
+        UnwindBuilder unwind = new UnwindBuilder( config );
+        NodeFilterBuilder nodeFilter = new NodeFilterBuilder( config );
+        DifferentPathsBuilder differentPaths = new DifferentPathsBuilder( config );
+        ShortestPathBuilder shortestPathBuilder = new ShortestPathBuilder( config );
+        DeleteNodeBuilder deleteNodeBuilder = new DeleteNodeBuilder( config );
+        SetPropertyBuilder setPropertyBuilder = new SetPropertyBuilder( config );
+        RelatedInsertBuilder relatedInsertBuilder = new RelatedInsertBuilder( config );
 
         for ( int i = 0; i < config.numberOfWarmUpIterations; i++ ) {
             try {
                 executor = executorFactory.createExecutorInstance();
-                if ( config.numberOfSimpleKnnIntFeatureQueries > 0 ) {
-                    executor.executeQuery( simpleKnnIntFeatureBuilder.getNewQuery() );
+                if ( config.numberOfEdgeMatchQueries > 0 ) {
+                    executor.executeQuery( edgeMatch.getNewQuery() );
                 }
-                if ( config.numberOfSimpleKnnRealFeatureQueries > 0 ) {
-                    executor.executeQuery( simpleKnnRealFeatureBuilder.getNewQuery() );
+                if ( config.numberOfPropertyCountQueries > 0 ) {
+                    executor.executeQuery( propertyCount.getNewQuery() );
+                }
+                if ( config.numberOfFindNeighborsQueries > 0 ) {
+                    executor.executeQuery( findNeighbors.getNewQuery() );
+                }
+                if ( config.numberOfUnwindQueries > 0 ) {
+                    executor.executeQuery( unwind.getNewQuery() );
+                }
+                if ( config.numberOfNodeFilterQueries > 0 ) {
+                    executor.executeQuery( nodeFilter.getNewQuery() );
+                }
+                if ( config.numberOfDifferentLengthQueries > 0 ) {
+                    executor.executeQuery( differentPaths.getNewQuery() );
+                }
+                if ( config.numberOfShortestPathQueries > 0 ) {
+                    executor.executeQuery( shortestPathBuilder.getNewQuery() );
+                }
+                if ( config.numberOfInsertQueries > 0 ) {
+                    executor.executeQuery( relatedInsertBuilder.getNewQuery() );
+                }
+                if ( config.numberOfSetPropertyQueries > 0 ) {
+                    executor.executeQuery( setPropertyBuilder.getNewQuery() );
+                }
+                if ( config.numberOfDeleteQueries > 0 ) {
+                    executor.executeQuery( deleteNodeBuilder.getNewQuery() );
                 }
 
-                if ( config.numberOfSimpleMetadataQueries > 0 ) {
-                    executor.executeQuery( simpleMetadataBuilder.getNewQuery() );
-                }
-
-//                if ( config.numberOfSimpleKnnIdIntFeatureQueries > 0 ) {
-//                    executor.executeQuery( simpleKnnIdIntFeatureBuilder.getNewQuery() );
-//                }
-                if ( config.numberOfSimpleKnnIdRealFeatureQueries > 0 ) {
-                    executor.executeQuery( simpleKnnIdRealFeatureBuilder.getNewQuery() );
-                }
-                if ( config.numberOfMetadataKnnIntFeatureQueries > 0 ) {
-                    executor.executeQuery( metadataKnnIntFeature.getNewQuery() );
-                }
-                if ( config.numberOfMetadataKnnRealFeatureQueries > 0 ) {
-                    executor.executeQuery( metadataKnnRealFeature.getNewQuery() );
-                }
             } catch ( ExecutorException e ) {
                 throw new RuntimeException( "Error while executing warm-up queries", e );
             } finally {
@@ -367,7 +392,6 @@ public class KnnBench extends Scenario {
     @Override
     public void analyze( Properties properties, File outputDirectory ) {
         properties.put( "measuredTime", calculateMean( measuredTimes ) );
-
         measuredTimePerQueryType.forEach( ( templateId, time ) -> {
             calculateResults( queryTypes, properties, templateId, time );
         } );
@@ -383,11 +407,16 @@ public class KnnBench extends Scenario {
 
     private void addNumberOfTimes( List<QueryListEntry> list, QueryBuilder queryBuilder, int numberOfTimes ) {
         int id = queryTypes.size() + 1;
-        queryTypes.put( id, queryBuilder.getNewQuery().getSql() );
+        queryTypes.put( id, queryBuilder.getNewQuery().getCypher() );
         measuredTimePerQueryType.put( id, Collections.synchronizedList( new LinkedList<>() ) );
         for ( int i = 0; i < numberOfTimes; i++ ) {
             list.add( new QueryListEntry( queryBuilder.getNewQuery(), id ) );
         }
+    }
+
+
+    public synchronized static String getUniqueIdentifier() {
+        return "id_" + GraphBench.idBuilder.getAndIncrement();
     }
 
 }

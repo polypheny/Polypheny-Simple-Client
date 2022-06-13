@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019-2021 The Polypheny Project
+ * Copyright (c) 2019-2022 The Polypheny Project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"), to deal
@@ -55,6 +55,7 @@ import org.polypheny.simpleclient.executor.MonetdbExecutor.MonetdbInstance;
 import org.polypheny.simpleclient.executor.OltpBenchPolyphenyDbExecutor.OltpBenchPolyphenyDbExecutorFactory;
 import org.polypheny.simpleclient.executor.OltpBenchPolyphenyDbExecutor.OltpBenchPolyphenyInstance;
 import org.polypheny.simpleclient.executor.OltpBenchPostgresExecutor.OltpBenchPostgresExecutorFactory;
+import org.polypheny.simpleclient.executor.PolyphenyDbCypherExecutor.PolyphenyDbCypherExecutorFactory;
 import org.polypheny.simpleclient.executor.PolyphenyDbExecutor.PolyphenyDbInstance;
 import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory;
 import org.polypheny.simpleclient.executor.PolyphenyDbMongoQlExecutor.PolyphenyDbMongoQlExecutorFactory;
@@ -65,6 +66,8 @@ import org.polypheny.simpleclient.scenario.AbstractConfig;
 import org.polypheny.simpleclient.scenario.Scenario;
 import org.polypheny.simpleclient.scenario.gavel.Gavel;
 import org.polypheny.simpleclient.scenario.gavel.GavelConfig;
+import org.polypheny.simpleclient.scenario.graph.GraphBench;
+import org.polypheny.simpleclient.scenario.graph.GraphBenchConfig;
 import org.polypheny.simpleclient.scenario.knnbench.KnnBench;
 import org.polypheny.simpleclient.scenario.knnbench.KnnBenchConfig;
 import org.polypheny.simpleclient.scenario.multimedia.MultimediaBench;
@@ -182,6 +185,9 @@ public class ChronosAgent extends AbstractChronosAgent {
             case "polypheny-mongoql":
                 executorFactory = new PolyphenyDbMongoQlExecutorFactory( ChronosCommand.hostname );
                 break;
+            case "polypheny-cypher":
+                executorFactory = new PolyphenyDbCypherExecutorFactory( ChronosCommand.hostname );
+                break;
             case "postgres":
                 executorFactory = new PostgresExecutorFactory( ChronosCommand.hostname, Boolean.parseBoolean( parsedConfig.get( "prepareStatements" ) ) );
                 break;
@@ -215,6 +221,10 @@ public class ChronosAgent extends AbstractChronosAgent {
             case "multimedia":
                 config = new MultimediaConfig( parsedConfig );
                 scenario = new MultimediaBench( executorFactory, (MultimediaConfig) config, true, dumpQueryList );
+                break;
+            case "graph":
+                config = new GraphBenchConfig( parsedConfig );
+                scenario = new GraphBench( executorFactory, (GraphBenchConfig) config, true, dumpQueryList );
                 break;
             case "auctionmark":
                 config = new AuctionMarkConfig( parsedConfig );
@@ -273,6 +283,7 @@ public class ChronosAgent extends AbstractChronosAgent {
             case "polypheny":
             case "polypheny-rest":
             case "polypheny-mongoql":
+            case "polypheny-cypher":
                 databaseInstance = new PolyphenyDbInstance( polyphenyControlConnector, executorFactory, outputDirectory, config );
                 scenario.createSchema( true );
                 break;

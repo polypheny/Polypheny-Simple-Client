@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019-2021 The Polypheny Project
+ * Copyright (c) 2019-2022 The Polypheny Project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"), to deal
@@ -86,6 +86,27 @@ public class PolyphenyDbJdbcExecutor extends JdbcExecutor implements PolyphenyDb
             executeQuery( new RawQuery( "ALTER CONFIG '" + key + "' SET '" + value + "'", null, false ) );
         } catch ( ExecutorException e ) {
             log.error( "Exception while setting config \"" + key + "\"!", e );
+        }
+    }
+
+
+    public static void commitAndCloseJdbcExecutor( JdbcExecutor executor ) throws ExecutorException {
+        if ( executor != null ) {
+            try {
+                executor.executeCommit();
+            } catch ( ExecutorException e ) {
+                try {
+                    executor.executeRollback();
+                } catch ( ExecutorException ex ) {
+                    log.error( "Error while rollback connection", e );
+                }
+            } finally {
+                try {
+                    executor.closeConnection();
+                } catch ( ExecutorException e ) {
+                    log.error( "Error while closing connection", e );
+                }
+            }
         }
     }
 
