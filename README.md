@@ -5,6 +5,7 @@ A simple benchmarking and testing client for Polypheny-DB. It includes support f
 * **Gavel**: The Gavel benchmark simulates the workload of a fictional auction house.
 * **kNN-Bench**: A benchmark tailored towards typical workloads of multimedia retrieval applications and especially k-Nearest-Neighbor search.
 * **Multimedia**: This benchmarks produces workload containing or requesting randomly generated BLOBs.
+* **Graph**: A simple synthetic graph benchmark that executes a mixture of DQL and DML Cypher queries against a pseudo-random network.
 * [**AuctionMark**](http://hstore.cs.brown.edu/projects/auctionmark/): A benchmark executing workload that simulates the activities found in a well-known auction site.
 * [**SmallBank**](http://ses.library.usyd.edu.au/bitstream/2123/5353/1/michael-cahill-2009-thesis.pdf): The SmallBank benchmark models a simple banking application.
 * [**TPC-C**](http://www.tpc.org/tpcc/): A well-known on-line transaction processing (OLTP) benchmark.
