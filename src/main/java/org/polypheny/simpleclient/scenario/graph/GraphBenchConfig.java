@@ -68,7 +68,7 @@ public class GraphBenchConfig extends AbstractConfig {
 
 
     public GraphBenchConfig( Properties properties, int multiplier ) {
-        super( "graph", "polypheny" );
+        super( "graph", "polypheny-cypher" );
 
         pdbBranch = null;
         puiBranch = null;

@@ -83,7 +83,6 @@ import org.polypheny.simpleclient.scenario.multimedia.queryBuilder.CreateTable;
 public class Gavel extends Scenario {
 
     private final GavelConfig config;
-
     private final List<Long> measuredTimes;
     private final Map<Integer, String> queryTypes;
     private final Map<Integer, List<Long>> measuredTimePerQueryType;
@@ -101,7 +100,6 @@ public class Gavel extends Scenario {
 
     @Override
     public long execute( ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory, int numberOfThreads ) {
-
         log.info( "Analyzing currently stored data..." );
         Map<String, Integer> numbers = getNumbers();
 

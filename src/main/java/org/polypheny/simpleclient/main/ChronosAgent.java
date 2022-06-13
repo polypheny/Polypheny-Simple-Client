@@ -62,6 +62,8 @@ import org.polypheny.simpleclient.executor.PostgresExecutor.PostgresExecutorFact
 import org.polypheny.simpleclient.executor.PostgresExecutor.PostgresInstance;
 import org.polypheny.simpleclient.scenario.AbstractConfig;
 import org.polypheny.simpleclient.scenario.Scenario;
+import org.polypheny.simpleclient.scenario.docbench.DocBench;
+import org.polypheny.simpleclient.scenario.docbench.DocBenchConfig;
 import org.polypheny.simpleclient.scenario.gavel.Gavel;
 import org.polypheny.simpleclient.scenario.gavel.GavelConfig;
 import org.polypheny.simpleclient.scenario.graph.GraphBench;
@@ -174,7 +176,7 @@ public class ChronosAgent extends AbstractChronosAgent {
         // Create Executor Factory
         Executor.ExecutorFactory executorFactory;
         switch ( parsedConfig.get( "store" ) ) {
-            case "polypheny":
+            case "polypheny-jdbc":
                 executorFactory = new PolyphenyDbJdbcExecutorFactory( ChronosCommand.hostname, Boolean.parseBoolean( parsedConfig.get( "prepareStatements" ) ) );
                 break;
             case "polypheny-rest":
@@ -223,6 +225,10 @@ public class ChronosAgent extends AbstractChronosAgent {
             case "graph":
                 config = new GraphBenchConfig( parsedConfig );
                 scenario = new GraphBench( executorFactory, (GraphBenchConfig) config, true, dumpQueryList );
+                break;
+            case "docbench":
+                config = new DocBenchConfig( parsedConfig );
+                scenario = new DocBench( executorFactory, (DocBenchConfig) config, true, dumpQueryList );
                 break;
             case "auctionmark":
                 config = new AuctionMarkConfig( parsedConfig );
@@ -278,7 +284,7 @@ public class ChronosAgent extends AbstractChronosAgent {
 
         DatabaseInstance databaseInstance;
         switch ( config.system ) {
-            case "polypheny":
+            case "polypheny-jdbc":
             case "polypheny-rest":
             case "polypheny-mongoql":
             case "polypheny-cypher":

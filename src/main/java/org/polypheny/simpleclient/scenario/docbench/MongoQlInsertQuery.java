@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019-2022 The Polypheny Project
+ * Copyright (c) 2019-13.06.22, 15:47 The Polypheny Project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"), to deal
@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.polypheny.simpleclient.scenario.graph;
+package org.polypheny.simpleclient.scenario.docbench;
 
 import com.google.gson.JsonObject;
 import java.util.Map;
@@ -34,75 +34,73 @@ import org.polypheny.simpleclient.query.BatchableInsert;
 
 
 @Slf4j
-public class GraphInsert extends BatchableInsert {
+public class MongoQlInsertQuery extends BatchableInsert {
 
     @Getter
-    private final String cypher;
+    private final String mongoQl;
+    private final String collection;
+    private final String expression;
 
 
-    public GraphInsert( String cypher ) {
-        super( GraphBench.EXPECTED_RESULT );
-        this.cypher = cypher;
-    }
-
-
-    @Override
-    public String getCypherRowExpression() {
-        return cypher;
+    public MongoQlInsertQuery( String collection, String expression, boolean expectResult ) {
+        super( expectResult );
+        this.mongoQl = "db." + collection + ".insert({" + expression + ")";
+        this.collection = collection;
+        this.expression = expression;
     }
 
 
     @Override
     public String getSqlRowExpression() {
-        throw new RuntimeException( "SQL is not supported for graph queries!" );
-    }
-
-
-    @Override
-    public JsonObject getRestRowExpression() {
-        throw new RuntimeException( "REST is not supported for graph queries!" );
-    }
-
-
-    @Override
-    public String getEntity() {
-        throw new RuntimeException( "getTable() is not supported for graph queries!" );
-    }
-
-
-    @Override
-    public String getSql() {
-        throw new RuntimeException( "SQL is not supported for graph queries!" );
+        throw new UnsupportedOperationException();
     }
 
 
     @Override
     public String getParameterizedSqlQuery() {
-        throw new RuntimeException( "SQL is not supported for graph queries!" );
+        throw new UnsupportedOperationException();
     }
 
 
     @Override
     public Map<Integer, ImmutablePair<DataTypes, Object>> getParameterValues() {
-        throw new RuntimeException( "getParameterValues() is not supported for graph queries!" );
+        throw new UnsupportedOperationException();
+    }
+
+
+    @Override
+    public JsonObject getRestRowExpression() {
+        throw new UnsupportedOperationException();
+    }
+
+
+    @Override
+    public String getMongoQlRowExpression() {
+        return expression;
+    }
+
+
+    @Override
+    public String getEntity() {
+        return collection;
+    }
+
+
+    @Override
+    public String getSql() {
+        throw new UnsupportedOperationException();
     }
 
 
     @Override
     public HttpRequest<?> getRest() {
-        throw new RuntimeException( "REST is not supported for graph queries!" );
-    }
-
-
-    @Override
-    public String getMongoQl() {
-        throw new RuntimeException( "MongoQL is not supported for graph queries!" );
+        throw new UnsupportedOperationException();
     }
 
 
     @Override
     public void debug() {
-        log.debug( cypher );
+        log.debug( mongoQl );
     }
 
 }

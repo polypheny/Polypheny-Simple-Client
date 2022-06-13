@@ -92,7 +92,7 @@ public class GraphCommand implements CliRunnable {
                 System.err.println( "Unknown task: " + args.get( 0 ) );
             }
         } catch ( Throwable t ) {
-            log.error( "Exception while executing KnnBench!", t );
+            log.error( "Exception while executing GraphBench!", t );
             System.exit( 1 );
         }
 

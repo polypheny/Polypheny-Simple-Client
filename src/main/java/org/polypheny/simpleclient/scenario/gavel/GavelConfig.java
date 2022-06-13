@@ -78,7 +78,7 @@ public class GavelConfig extends AbstractConfig {
 
 
     public GavelConfig( Properties properties, int multiplier ) {
-        super( "gavel", "polypheny" );
+        super( "gavel", "polypheny-jdbc" );
 
         pdbBranch = null;
         puiBranch = null;

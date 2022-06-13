@@ -50,6 +50,9 @@ public abstract class PolyphenyDbHttpExecutor implements PolyphenyDbExecutor {
     public final String name;
 
     @Getter
+    String namespace;
+
+    @Getter
     public final Function<Query, String> queryAccessor;
 
     protected final PolyphenyDbJdbcExecutorFactory jdbcExecutorFactory;
@@ -140,7 +143,7 @@ public abstract class PolyphenyDbHttpExecutor implements PolyphenyDbExecutor {
         }
         long time;
 
-        HttpRequest<?> request = getRequest( queryAccessor.apply( query ) );
+        HttpRequest<?> request = getRequest( queryAccessor.apply( query ), namespace );
         try {
             long start = System.nanoTime();
             @SuppressWarnings("rawtypes") HttpResponse result = request.asBytes();
@@ -159,10 +162,10 @@ public abstract class PolyphenyDbHttpExecutor implements PolyphenyDbExecutor {
     }
 
 
-    HttpRequest<?> buildQuery( String mql ) {
+    HttpRequest<?> buildQuery( String mql, String namespace ) {
         JsonObject data = new JsonObject();
         data.addProperty( "query", mql );
-        data.addProperty( "database", "test" );
+        data.addProperty( "database", namespace );
 
         return Unirest.post( "{protocol}://{host}:{port}/" + name.toLowerCase( Locale.ROOT ) )
                 .header( "Content-Type", "application/json" )
@@ -170,8 +173,8 @@ public abstract class PolyphenyDbHttpExecutor implements PolyphenyDbExecutor {
     }
 
 
-    HttpRequest<?> getRequest( String query ) {
-        HttpRequest<?> request = buildQuery( query );
+    HttpRequest<?> getRequest( String query, String namespace ) {
+        HttpRequest<?> request = buildQuery( query, namespace );
         request.basicAuth( "pa", "" );
         request.routeParam( "protocol", "http" );
         request.routeParam( "host", "127.0.0.1" );
@@ -187,7 +190,7 @@ public abstract class PolyphenyDbHttpExecutor implements PolyphenyDbExecutor {
             throw new RuntimeException( "not supported" );
         }
 
-        HttpRequest<?> request = getRequest( queryAccessor.apply( query ) );
+        HttpRequest<?> request = getRequest( queryAccessor.apply( query ), namespace );
 
         try {
             long start = System.nanoTime();

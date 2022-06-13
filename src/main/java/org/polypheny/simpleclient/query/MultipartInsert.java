@@ -50,7 +50,7 @@ public abstract class MultipartInsert extends BatchableInsert {
 
     public HttpRequest<?> buildMultipartInsert() {
         MultipartBody body = Unirest.post( "{protocol}://{host}:{port}/restapi/v1/multipart" ).multiPartContent();
-        body.field( "resName", getTable() );
+        body.field( "resName", getEntity() );
         if ( getRestRowExpression() != null ) {
             JsonArray jsonArray = new JsonArray();
             jsonArray.add( getRestRowExpression() );

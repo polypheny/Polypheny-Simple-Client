@@ -59,6 +59,12 @@ public interface Executor {
 
         public abstract Executor createExecutorInstance( CsvWriter csvWriter );
 
+
+        public Executor createExecutorInstance( CsvWriter csvWriter, String namespace ) {
+            return createExecutorInstance( csvWriter );
+        }
+
+
         // Allows to limit number of concurrent executor threads, 0 means no limit
         public abstract int getMaxNumberOfThreads();
 
