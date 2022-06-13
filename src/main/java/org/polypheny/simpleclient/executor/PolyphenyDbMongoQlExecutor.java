@@ -131,25 +131,25 @@ public class PolyphenyDbMongoQlExecutor extends PolyphenyDbHttpExecutor {
 
     @Override
     public void executeInsertList( List<BatchableInsert> batchList, AbstractConfig config ) throws ExecutorException {
-        String currentTable = null;
-        List<String> rows = new ArrayList<>();
+        String currentDocument = null;
+        List<String> documents = new ArrayList<>();
         for ( BatchableInsert query : batchList ) {
             query.debug();
             if ( query instanceof MultipartInsert ) {
                 continue;
             }
-            if ( currentTable == null ) {
-                currentTable = query.getTable();
+            if ( currentDocument == null ) {
+                currentDocument = query.getEntity();
             }
 
-            if ( currentTable.equals( query.getTable() ) ) {
-                rows.add( Objects.requireNonNull( query.getMongoQlRowExpression() ) );
+            if ( currentDocument.equals( query.getEntity() ) ) {
+                documents.add( Objects.requireNonNull( query.getMongoQlRowExpression() ) );
             } else {
                 throw new RuntimeException( "Different tables in multi-inserts. This should not happen!" );
             }
         }
-        if ( rows.size() > 0 ) {
-            executeQuery( new RawQuery( null, null, Query.buildMongoQlManyInsert( currentTable, rows ), null, false ) );
+        if ( documents.size() > 0 ) {
+            executeQuery( new RawQuery( null, null, Query.buildMongoQlManyInsert( currentDocument, documents ), null, false ) );
         }
     }
 

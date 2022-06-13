@@ -6,6 +6,7 @@ A simple benchmarking and testing client for Polypheny-DB. It includes support f
 * **kNN-Bench**: A benchmark tailored towards typical workloads of multimedia retrieval applications and especially k-Nearest-Neighbor search.
 * **Multimedia**: This benchmarks produces workload containing or requesting randomly generated BLOBs.
 * **Graph**: A simple synthetic graph benchmark that executes a mixture of DQL and DML Cypher queries against a pseudo-random network.
+* **DocBench**: A simple benchmark for document schemas generating MongoQL queries.
 * [**AuctionMark**](http://hstore.cs.brown.edu/projects/auctionmark/): A benchmark executing workload that simulates the activities found in a well-known auction site.
 * [**SmallBank**](http://ses.library.usyd.edu.au/bitstream/2123/5353/1/michael-cahill-2009-thesis.pdf): The SmallBank benchmark models a simple banking application.
 * [**TPC-C**](http://www.tpc.org/tpcc/): A well-known on-line transaction processing (OLTP) benchmark.
@@ -56,19 +57,19 @@ OPTIONS
 
 ### Stand-alone
 
-This client can be used by specifying the name of the benchmark as first parameter (`gavel`, `knnbench`, `multimedia`). Use the `help` command to get an overview on all available parameters for this benchmark. For example:
-
-```
-java -jar polypheny-simple-client.jar help gavel  
-```
-
-The general syntax is identical for all three benchmarks:
+This client can be used by specifying the name of the benchmark as first parameter and the task as second parameter. Optionally, it is also possible to specify a multiplier for the data and workload (integer > 0). The general syntax is identical for all benchmarks:
 
 ```
 java -jar polypheny-simple-client.jar  BENCHMARK  TASK  [ MULTIPLIER ] 
 ```
 
-_BENCHMARK_: `{ gavel | knnbench | multimedia | auctionmark | smallbank | tpcc | tpch | ycsb }`
+Use the `help` command to get an overview on all available parameters for a benchmark. For example:
+
+```
+java -jar polypheny-simple-client.jar help gavel  
+```
+
+_BENCHMARK_: `{ gavel | knnbench | multimedia | graph | docbench | auctionmark | smallbank | tpcc | tpch | ycsb }`
 
 _TASK_: `{ schema | data | workload | warmup }`
 

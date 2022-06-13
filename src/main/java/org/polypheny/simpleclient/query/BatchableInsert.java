@@ -67,6 +67,6 @@ public abstract class BatchableInsert extends Query {
     }
 
 
-    public abstract String getTable();
+    public abstract String getEntity();
 
 }

@@ -26,31 +26,39 @@ package org.polypheny.simpleclient.cli;
 
 import com.github.rvesse.airline.HelpOption;
 import com.github.rvesse.airline.annotations.Arguments;
+import com.github.rvesse.airline.annotations.Command;
 import com.github.rvesse.airline.annotations.Option;
-import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.Objects;
-import java.util.Properties;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
-import org.polypheny.simpleclient.executor.OltpBenchPolyphenyDbExecutor.OltpBenchPolyphenyDbExecutorFactory;
+import org.polypheny.simpleclient.executor.PolyphenyDbMongoQlExecutor.PolyphenyDbMongoQlExecutorFactory;
+import org.polypheny.simpleclient.main.DocBenchScenario;
 
 
 @Slf4j
-public abstract class AbstractOltpBenchCommand implements CliRunnable {
+@Command(name = "docbench", description = "Mode for quick testing of Polypheny-DB using the DocBench benchmark.")
+public class DocBenchCommand implements CliRunnable {
 
     @SuppressWarnings("SpringAutowiredFieldsWarningInspection")
     @Inject
-    private HelpOption<AbstractOltpBenchCommand> help;
+    private HelpOption<DocBenchCommand> help;
 
     @Arguments(description = "Task { schema | data | workload } and multiplier.")
     private List<String> args;
 
 
     @Option(name = { "-pdb", "--polyphenydb" }, title = "IP or Hostname", arity = 1, description = "IP or Hostname of the Polypheny-DB server (default: 127.0.0.1).")
-    public String polyphenyDbHost = "127.0.0.1";
+    public static String polyphenyDbHost = "127.0.0.1";
+
+
+    @Option(name = { "--writeCSV" }, arity = 0, description = "Write a CSV file containing execution times for all executed queries (default: false).")
+    public boolean writeCsv = false;
+
+
+    @Option(name = { "--queryList" }, arity = 0, description = "Dump all queries into a file (default: false).")
+    public boolean dumpQueryList = false;
 
 
     @Override
@@ -69,22 +77,22 @@ public abstract class AbstractOltpBenchCommand implements CliRunnable {
             }
         }
 
-        ExecutorFactory executorFactory;
-        executorFactory = new OltpBenchPolyphenyDbExecutorFactory( polyphenyDbHost ) {
-        };
+        ExecutorFactory executorFactory = new PolyphenyDbMongoQlExecutorFactory( polyphenyDbHost );
 
         try {
             if ( args.get( 0 ).equalsIgnoreCase( "data" ) ) {
-                data( executorFactory, multiplier );
+                DocBenchScenario.data( executorFactory, multiplier, true );
             } else if ( args.get( 0 ).equalsIgnoreCase( "workload" ) ) {
-                workload( executorFactory, multiplier );
+                DocBenchScenario.workload( executorFactory, multiplier, true, writeCsv, dumpQueryList );
             } else if ( args.get( 0 ).equalsIgnoreCase( "schema" ) ) {
-                schema( executorFactory );
+                DocBenchScenario.schema( executorFactory, true );
+            } else if ( args.get( 0 ).equalsIgnoreCase( "warmup" ) ) {
+                DocBenchScenario.warmup( executorFactory, multiplier, true, dumpQueryList );
             } else {
                 System.err.println( "Unknown task: " + args.get( 0 ) );
             }
         } catch ( Throwable t ) {
-            log.error( "Exception while executing OltpBench!", t );
+            log.error( "Exception while executing DocBench!", t );
             System.exit( 1 );
         }
 
@@ -95,26 +103,6 @@ public abstract class AbstractOltpBenchCommand implements CliRunnable {
         }
 
         return 0;
-    }
-
-
-    protected abstract void schema( ExecutorFactory executorFactory );
-
-
-    protected abstract void data( ExecutorFactory executorFactory, int multiplier );
-
-
-    protected abstract void workload( ExecutorFactory executorFactory, int multiplier );
-
-
-    protected Properties getProperties( String fileName ) {
-        Properties props = new Properties();
-        try {
-            props.load( Objects.requireNonNull( ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/oltpbench/" + fileName ) ) );
-        } catch ( IOException e ) {
-            log.error( "Exception while reading properties file", e );
-        }
-        return props;
     }
 
 }

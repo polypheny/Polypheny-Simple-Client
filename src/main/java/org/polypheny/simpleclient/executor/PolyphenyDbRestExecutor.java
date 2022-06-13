@@ -201,10 +201,10 @@ public class PolyphenyDbRestExecutor implements PolyphenyDbExecutor {
                 continue;
             }
             if ( currentTable == null ) {
-                currentTable = query.getTable();
+                currentTable = query.getEntity();
             }
 
-            if ( currentTable.equals( query.getTable() ) ) {
+            if ( currentTable.equals( query.getEntity() ) ) {
                 rows.add( Objects.requireNonNull( query.getRestRowExpression() ) );
             } else {
                 throw new RuntimeException( "Different tables in multi-inserts. This should not happen!" );

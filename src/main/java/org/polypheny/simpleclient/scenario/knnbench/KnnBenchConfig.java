@@ -62,7 +62,7 @@ public class KnnBenchConfig extends AbstractConfig {
 
 
     public KnnBenchConfig( Properties properties, int multiplier ) {
-        super( "knnBench", "polypheny" );
+        super( "knnBench", "polypheny-jdbc" );
 
         pdbBranch = null;
         puiBranch = null;

@@ -127,7 +127,7 @@ public class InsertRealFeature extends QueryBuilder {
 
 
         @Override
-        public String getTable() {
+        public String getEntity() {
             return "public.knn_realfeature";
         }
 
