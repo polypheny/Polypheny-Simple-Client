@@ -44,9 +44,12 @@ import org.polypheny.simpleclient.scenario.AbstractConfig;
 @Slf4j
 public class PolyphenyDbMongoQlExecutor extends PolyphenyDbHttpExecutor {
 
+    public static final String DEFAULT_NAMESPACE = "test";
 
-    public PolyphenyDbMongoQlExecutor( String host, CsvWriter csvWriter ) {
+
+    public PolyphenyDbMongoQlExecutor( String host, CsvWriter csvWriter, String namespace ) {
         super( "Mongo", Query::getMongoQl, host, csvWriter );
+        this.namespace = namespace;
     }
 
 
@@ -60,7 +63,7 @@ public class PolyphenyDbMongoQlExecutor extends PolyphenyDbHttpExecutor {
         }
         long time;
 
-        HttpRequest<?> request = getRequest( query.getMongoQl() );
+        HttpRequest<?> request = getRequest( query.getMongoQl(), namespace );
         log.debug( request.getUrl() );
         try {
             long start = System.nanoTime();
@@ -87,7 +90,7 @@ public class PolyphenyDbMongoQlExecutor extends PolyphenyDbHttpExecutor {
             throw new RuntimeException( "not supported" );
         }
 
-        HttpRequest<?> request = getRequest( query.getMongoQl() );
+        HttpRequest<?> request = getRequest( query.getMongoQl(), namespace );
         log.debug( request.getUrl() );
         try {
             long start = System.nanoTime();
@@ -166,7 +169,13 @@ public class PolyphenyDbMongoQlExecutor extends PolyphenyDbHttpExecutor {
 
         @Override
         public PolyphenyDbMongoQlExecutor createExecutorInstance( CsvWriter csvWriter ) {
-            return new PolyphenyDbMongoQlExecutor( host, csvWriter );
+            return new PolyphenyDbMongoQlExecutor( host, csvWriter, DEFAULT_NAMESPACE );
+        }
+
+
+        @Override
+        public Executor createExecutorInstance( CsvWriter csvWriter, String namespace ) {
+            return new PolyphenyDbMongoQlExecutor( host, csvWriter, namespace );
         }
 
 

@@ -62,6 +62,8 @@ public class DocBench extends Scenario {
     private final Random random;
     public final List<String> valuesPool = new ArrayList<>();
 
+    public static final String NAMESPACE = "docbench";
+
 
     public DocBench( Executor.ExecutorFactory executorFactory, DocBenchConfig config, boolean commitAfterEveryQuery, boolean dumpQueryList, QueryMode queryMode ) {
         super( executorFactory, commitAfterEveryQuery, dumpQueryList, queryMode );
@@ -84,8 +86,8 @@ public class DocBench extends Scenario {
         log.info( "Creating schema..." );
         Executor executor = null;
         try {
-            executor = executorFactory.createExecutorInstance();
-            executor.executeQuery( new RawQuery( null, null, "use docbench", null, false ) );
+            executor = executorFactory.createExecutorInstance( null, NAMESPACE );
+            executor.executeQuery( new RawQuery( null, null, "use " + NAMESPACE, null, false ) );
             executor.executeQuery( new RawQuery( null, null, "db.createCollection(product)", null, false ) );
         } catch ( ExecutorException e ) {
             throw new RuntimeException( "Exception while creating schema", e );
@@ -98,7 +100,7 @@ public class DocBench extends Scenario {
     @Override
     public void generateData( ProgressReporter progressReporter ) {
         log.info( "Generating data..." );
-        Executor executor = executorFactory.createExecutorInstance();
+        Executor executor = executorFactory.createExecutorInstance( null, NAMESPACE );
         DataGenerator dataGenerator = new DataGenerator( random, executor, config, progressReporter, valuesPool );
         try {
             dataGenerator.generateData();
@@ -182,7 +184,7 @@ public class DocBench extends Scenario {
         SearchProductQueryBuilder searchProduct = new SearchProductQueryBuilder( random, valuesPool, config );
         for ( int i = 0; i < config.numberOfWarmUpIterations; i++ ) {
             try {
-                executor = executorFactory.createExecutorInstance();
+                executor = executorFactory.createExecutorInstance( null, NAMESPACE );
                 executor.executeQuery( searchProduct.getNewQuery() );
             } catch ( ExecutorException e ) {
                 throw new RuntimeException( "Error while executing warm-up queries", e );
