@@ -24,7 +24,6 @@
 
 package org.polypheny.simpleclient.scenario.gavel;
 
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
@@ -34,75 +33,49 @@ import org.polypheny.simpleclient.scenario.AbstractConfig;
 @Slf4j
 public class GavelConfig extends AbstractConfig {
 
-    public final int numberOfAddUserQueries;
-    public final int numberOfChangePasswordQueries;
-    public final int numberOfAddAuctionQueries;
-    public final int numberOfAddBidQueries;
-    public final int numberOfChangeAuctionQueries;
-    public final int numberOfGetAuctionQueries;
-    public final int numberOfGetTheNextHundredEndingAuctionsOfACategoryQueries;
-    public final int numberOfSearchAuctionQueries;
-    public final int numberOfCountAuctionsQueries;
-    public final int numberOfTopTenCitiesByNumberOfCustomersQueries;
-    public final int numberOfCountBidsQueries;
-    public final int numberOfGetBidQueries;
-    public final int numberOfGetUserQueries;
-    public final int numberOfGetAllBidsOnAuctionQueries;
-    public final int numberOfGetCurrentlyHighestBidOnAuctionQueries;
-    public final int totalNumOfPriceBetweenAndNotInCategoryQueries;
-    public final int totalNumOfHighestOverallBidQueries;
-    public final int totalNumOfTopHundredSellerByNumberOfAuctionsQueries;
+    public int numberOfAddUserQueries;
+    public int numberOfChangePasswordQueries;
+    public int numberOfAddAuctionQueries;
+    public int numberOfAddBidQueries;
+    public int numberOfChangeAuctionQueries;
+    public int numberOfGetAuctionQueries;
+    public int numberOfGetTheNextHundredEndingAuctionsOfACategoryQueries;
+    public int numberOfSearchAuctionQueries;
+    public int numberOfCountAuctionsQueries;
+    public int numberOfTopTenCitiesByNumberOfCustomersQueries;
+    public int numberOfCountBidsQueries;
+    public int numberOfGetBidQueries;
+    public int numberOfGetUserQueries;
+    public int numberOfGetAllBidsOnAuctionQueries;
+    public int numberOfGetCurrentlyHighestBidOnAuctionQueries;
+    public int totalNumOfPriceBetweenAndNotInCategoryQueries;
+    public int totalNumOfHighestOverallBidQueries;
+    public int totalNumOfTopHundredSellerByNumberOfAuctionsQueries;
 
-    public final int numberOfUsers;
-    public final int numberOfAuctions;
-    public final int numberOfCategories;
-    public final int auctionTitleMinLength;
-    public final int auctionTitleMaxLength;
-    public final int auctionDescriptionMinLength;
-    public final int auctionDescriptionMaxLength;
-    public final int auctionDateMaxYearsInPast;
-    public final int auctionNumberOfDays;
-    public final int minNumberOfBidsPerAuction;
-    public final int maxNumberOfBidsPerAuction;
-    public final int minNumberOfPicturesPerAuction;
-    public final int maxNumberOfPicturesPerAuction;
+    public int numberOfUsers;
+    public int numberOfAuctions;
+    public int numberOfCategories;
+    public int auctionTitleMinLength;
+    public int auctionTitleMaxLength;
+    public int auctionDescriptionMinLength;
+    public int auctionDescriptionMaxLength;
+    public int auctionDateMaxYearsInPast;
+    public int auctionNumberOfDays;
+    public int minNumberOfBidsPerAuction;
+    public int maxNumberOfBidsPerAuction;
+    public int minNumberOfPicturesPerAuction;
+    public int maxNumberOfPicturesPerAuction;
 
-    public final int maxBatchSize;
-    public final boolean usePreparedBatchForDataInsertion;
+    public int maxBatchSize;
+    public boolean usePreparedBatchForDataInsertion;
 
-    public final int numberOfUserGenerationThreads;
-    public final int numberOfAuctionGenerationThreads;
-    public final boolean parallelizeUserGenerationAndAuctionGeneration;
-
-    public final int numberOfWarmUpIterations;
+    public int numberOfUserGenerationThreads;
+    public int numberOfAuctionGenerationThreads;
+    public boolean parallelizeUserGenerationAndAuctionGeneration;
 
 
     public GavelConfig( Properties properties, int multiplier ) {
-        super( "gavel", "polypheny-jdbc" );
-
-        pdbBranch = null;
-        puiBranch = null;
-        buildUi = false;
-        resetCatalog = false;
-        memoryCatalog = false;
-        deployStoresUsingDocker = false;
-
-        dataStores.add( "hsqldb" );
-        planAndImplementationCaching = "Both";
-
-        router = "icarus"; // For old routing, to be removed
-
-        routers = new String[]{ "Simple", "Icarus", "FullPlacement" };
-        newTablePlacementStrategy = "Single";
-        planSelectionStrategy = "Best";
-        preCostRatio = 50;
-        postCostRatio = 50;
-        routingCache = true;
-        postCostAggregation = "onWarmup";
-
-        progressReportBase = getIntProperty( properties, "progressReportBase" );
-        numberOfThreads = getIntProperty( properties, "numberOfThreads" );
-        numberOfWarmUpIterations = getIntProperty( properties, "numberOfWarmUpIterations" );
+        super( "gavel", "polypheny-jdbc", properties );
 
         numberOfAddUserQueries = getIntProperty( properties, "numberOfAddUserQueries" ) * multiplier;
         numberOfChangePasswordQueries = getIntProperty( properties, "numberOfChangePasswordQueries" ) * multiplier;
@@ -147,35 +120,8 @@ public class GavelConfig extends AbstractConfig {
 
 
     public GavelConfig( Map<String, String> cdl ) {
-        super( "gavel", cdl.get( "store" ) );
+        super( "gavel", cdl.get( "store" ), cdl );
 
-        pdbBranch = cdl.get( "pdbBranch" );
-        puiBranch = cdl.get( "puiBranch" );
-        buildUi = Boolean.parseBoolean( cdlGetOrDefault( cdl, "buildUi", "false" ) );
-
-        deployStoresUsingDocker = Boolean.parseBoolean( cdlGetOrDefault( cdl, "deployStoresUsingDocker", "false" ) );
-
-        resetCatalog = Boolean.parseBoolean( cdl.get( "resetCatalog" ) );
-        memoryCatalog = Boolean.parseBoolean( cdl.get( "memoryCatalog" ) );
-
-        numberOfThreads = Integer.parseInt( cdl.get( "numberOfThreads" ) );
-        numberOfWarmUpIterations = Integer.parseInt( cdlGetOrDefault( cdl, "numberOfWarmUpIterations", "4" ) );
-
-        dataStores.addAll( Arrays.asList( cdl.get( "dataStore" ).split( "_" ) ) );
-        planAndImplementationCaching = cdlGetOrDefault( cdl, "planAndImplementationCaching", "Both" );
-
-        router = cdl.get( "router" ); // For old routing, to be removed
-
-        routers = cdlGetOrDefault( cdl, "routers", "Simple_Icarus_FullPlacement" ).split( "_" );
-        newTablePlacementStrategy = cdlGetOrDefault( cdl, "newTablePlacementStrategy", "Single" );
-        planSelectionStrategy = cdlGetOrDefault( cdl, "planSelectionStrategy", "Best" );
-
-        preCostRatio = Integer.parseInt( cdlGetOrDefault( cdl, "preCostRatio", "50%" ).replace( "%", "" ).trim() );
-        postCostRatio = Integer.parseInt( cdlGetOrDefault( cdl, "postCostRatio", "50%" ).replace( "%", "" ).trim() );
-        routingCache = Boolean.parseBoolean( cdlGetOrDefault( cdl, "routingCache", "true" ) );
-        postCostAggregation = cdlGetOrDefault( cdl, "postCostAggregation", "onWarmup" );
-
-        // Benchmark
         numberOfGetAuctionQueries = Integer.parseInt( cdl.get( "numberOfGetAuctionQueries" ) );
         numberOfGetBidQueries = Integer.parseInt( cdl.get( "numberOfGetBidQueries" ) );
         numberOfGetUserQueries = Integer.parseInt( cdl.get( "numberOfGetUserQueries" ) );
@@ -222,8 +168,18 @@ public class GavelConfig extends AbstractConfig {
         numberOfAuctionGenerationThreads = Integer.parseInt( cdl.get( "numberOfAuctionGenerationThreads" ) );
 
         parallelizeUserGenerationAndAuctionGeneration = Boolean.parseBoolean( cdl.get( "parallelizeUserGenerationAndAuctionGeneration" ) );
+    }
 
-        progressReportBase = 100;
+
+    // For MultiBench
+    protected GavelConfig( String scenario, String system, Map<String, String> cdl ) {
+        super( scenario, system, cdl );
+    }
+
+
+    // For MultiBench
+    protected GavelConfig( String scenario, String system, Properties properties ) {
+        super( scenario, system, properties );
     }
 
 

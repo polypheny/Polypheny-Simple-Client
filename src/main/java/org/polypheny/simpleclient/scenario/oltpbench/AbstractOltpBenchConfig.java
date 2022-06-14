@@ -24,7 +24,6 @@
 
 package org.polypheny.simpleclient.scenario.oltpbench;
 
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Properties;
 import org.polypheny.simpleclient.scenario.AbstractConfig;
@@ -40,38 +39,8 @@ public abstract class AbstractOltpBenchConfig extends AbstractConfig {
 
 
     public AbstractOltpBenchConfig( Properties properties, int multiplier, String scenario, String system ) {
-        super( scenario, system );
+        super( scenario, system, properties );
 
-        pdbBranch = null;
-        puiBranch = null;
-        buildUi = false;
-        resetCatalog = false;
-        memoryCatalog = false;
-        deployStoresUsingDocker = false;
-
-        dataStores.add( "hsqldb" );
-        planAndImplementationCaching = "Both";
-
-        router = "icarus"; // For old routing, to be removed
-
-        routers = new String[]{ "Simple", "Icarus", "FullPlacement" };
-        newTablePlacementStrategy = "Single";
-        planSelectionStrategy = "Best";
-        preCostRatio = 50;
-        postCostRatio = 50;
-        routingCache = true;
-        postCostAggregation = "onWarmup";
-
-        progressReportBase = getIntProperty( properties, "progressReportBase" );
-        numberOfThreads = getIntProperty( properties, "numberOfThreads" );
-
-        workloadMonitoringExecutingWorkload = getBooleanProperty( properties, "workloadMonitoringExecutingWorkload" );
-        workloadMonitoringLoadingData = getBooleanProperty( properties, "workloadMonitoringLoadingData" );
-        workloadMonitoringWarmup = getBooleanProperty( properties, "workloadMonitoringWarmup" );
-
-        restartAfterLoadingData = false;
-
-        // OLTPbench settings
         //batchSize = getIntProperty( properties, "batchSize"); // 128
         scaleFactor = multiplier;
         warmupTime = 0;
@@ -80,44 +49,9 @@ public abstract class AbstractOltpBenchConfig extends AbstractConfig {
 
 
     public AbstractOltpBenchConfig( Map<String, String> cdl, String scenario, String system  ) {
-        super( scenario, system );
+        super( scenario, system, cdl );
 
-        pdbBranch = cdl.get( "pdbBranch" );
-        puiBranch = "master";
-        buildUi = false;
-
-        deployStoresUsingDocker = Boolean.parseBoolean( cdl.get( "deployStoresUsingDocker" ) );
-
-        resetCatalog = true;
-        memoryCatalog = Boolean.parseBoolean( cdl.get( "memoryCatalog" ) );
-
-        numberOfThreads = Integer.parseInt( cdl.get( "numberOfThreads" ) );
         warmupTime = Integer.parseInt( cdl.get( "warmupTime" ) );
-
-        dataStores.addAll( Arrays.asList( cdl.get( "dataStore" ).split( "_" ) ) );
-        planAndImplementationCaching = "Both";
-
-        router = "icarus"; // For old routing, to be removed
-        routers = cdl.get( "routers" ).split( "_" );
-        newTablePlacementStrategy = cdl.get( "newTablePlacementStrategy" );
-        planSelectionStrategy = cdl.get( "planSelectionStrategy" );
-
-        preCostRatio = Integer.parseInt( cdlGetOrDefault( cdl, "preCostRatio", "50%" ).replace( "%", "" ).trim() );
-        postCostRatio = Integer.parseInt( cdlGetOrDefault( cdl, "postCostRatio", "50%" ).replace( "%", "" ).trim() );
-        postCostAggregation = cdlGetOrDefault( cdl, "postCostAggregation", "onWarmup" );
-        routingCache = Boolean.parseBoolean( cdl.get( "routingCache" ) );
-
-        progressReportBase = 100;
-        workloadMonitoringExecutingWorkload = Boolean.parseBoolean( cdlGetOrDefault( cdl, "workloadMonitoring", "false" ) );
-        workloadMonitoringLoadingData = Boolean.parseBoolean( cdlGetOrDefault( cdl, "workloadMonitoringLoadingData", "false" ) );
-        workloadMonitoringWarmup = Boolean.parseBoolean( cdlGetOrDefault( cdl, "workloadMonitoringWarmup", "false" ) );
-
-        restartAfterLoadingData = Boolean.parseBoolean( cdlGetOrDefault( cdl, "restartAfterLoadingData", "false" ) );
-        if ( restartAfterLoadingData && dataStores.contains( "hsqldb" ) ) {
-            throw new RuntimeException( "Not allowed to restart Polypheny after loading data if using a non-persistent data store!" );
-        }
-
-        // OLTPbench settings
         scaleFactor = Integer.parseInt( cdl.get( "scaleFactor" ) );
     }
 

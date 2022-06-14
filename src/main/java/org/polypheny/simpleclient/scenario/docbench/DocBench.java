@@ -65,15 +65,15 @@ public class DocBench extends Scenario {
     public static final String NAMESPACE = "docbench";
 
 
-    public DocBench( Executor.ExecutorFactory executorFactory, DocBenchConfig config, boolean commitAfterEveryQuery, boolean dumpQueryList, QueryMode queryMode ) {
-        super( executorFactory, commitAfterEveryQuery, dumpQueryList, queryMode );
+    public DocBench( Executor.ExecutorFactory executorFactory, DocBenchConfig config, boolean commitAfterEveryQuery, boolean dumpQueryList ) {
+        super( executorFactory, commitAfterEveryQuery, dumpQueryList, QueryMode.TABLE );
         this.config = config;
         measuredTimes = Collections.synchronizedList( new LinkedList<>() );
         queryTypes = new HashMap<>();
         measuredTimePerQueryType = new ConcurrentHashMap<>();
         random = new Random( config.seed );
 
-        // Build attributes value pool
+        // Build attribute values pool
         for ( int i = 0; i < config.sizeOfValuesPool; i++ ) {
             int stringLength = DataGenerator.boundedRandom( random, config.valuesStringMinLength, config.valuesStringMaxLength );
             valuesPool.add( DataGenerator.randomString( random, stringLength ) );
@@ -119,7 +119,7 @@ public class DocBench extends Scenario {
         addNumberOfTimes( queryList, new SearchProductQueryBuilder( random, valuesPool, config ), config.numberOfQueries );
         Collections.shuffle( queryList, random );
 
-        // This dumps the cypher queries independent of the selected interface
+        // This dumps the MQL queries independent of the selected interface
         if ( outputDirectory != null && dumpQueryList ) {
             log.info( "Dump query list..." );
             try {

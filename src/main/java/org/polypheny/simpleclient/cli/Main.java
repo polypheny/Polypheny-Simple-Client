@@ -44,6 +44,7 @@ public class Main {
         builder.withCommands( MultimediaCommand.class );
         builder.withCommands( GraphCommand.class );
         builder.withCommands( DocBenchCommand.class );
+        builder.withCommands( MultiBenchCommand.class );
         builder.withCommands( AuctionMarkCommand.class );
         builder.withCommands( SmallBankCommand.class );
         builder.withCommands( TpccCommand.class );
