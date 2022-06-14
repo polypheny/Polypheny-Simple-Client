@@ -57,6 +57,7 @@ import org.polypheny.simpleclient.executor.PolyphenyDbCypherExecutor.PolyphenyDb
 import org.polypheny.simpleclient.executor.PolyphenyDbExecutor.PolyphenyDbInstance;
 import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory;
 import org.polypheny.simpleclient.executor.PolyphenyDbMongoQlExecutor.PolyphenyDbMongoQlExecutorFactory;
+import org.polypheny.simpleclient.executor.PolyphenyDbMultiExecutorFactory;
 import org.polypheny.simpleclient.executor.PolyphenyDbRestExecutor.PolyphenyDbRestExecutorFactory;
 import org.polypheny.simpleclient.executor.PostgresExecutor.PostgresExecutorFactory;
 import org.polypheny.simpleclient.executor.PostgresExecutor.PostgresInstance;
@@ -70,6 +71,8 @@ import org.polypheny.simpleclient.scenario.graph.GraphBench;
 import org.polypheny.simpleclient.scenario.graph.GraphBenchConfig;
 import org.polypheny.simpleclient.scenario.knnbench.KnnBench;
 import org.polypheny.simpleclient.scenario.knnbench.KnnBenchConfig;
+import org.polypheny.simpleclient.scenario.multibench.MultiBench;
+import org.polypheny.simpleclient.scenario.multibench.MultiBenchConfig;
 import org.polypheny.simpleclient.scenario.multimedia.MultimediaBench;
 import org.polypheny.simpleclient.scenario.multimedia.MultimediaConfig;
 import org.polypheny.simpleclient.scenario.oltpbench.auctionmark.AuctionMark;
@@ -176,6 +179,9 @@ public class ChronosAgent extends AbstractChronosAgent {
         // Create Executor Factory
         Executor.ExecutorFactory executorFactory;
         switch ( parsedConfig.get( "store" ) ) {
+            case "polypheny":
+                executorFactory = new PolyphenyDbMultiExecutorFactory( ChronosCommand.hostname );
+                break;
             case "polypheny-jdbc":
                 executorFactory = new PolyphenyDbJdbcExecutorFactory( ChronosCommand.hostname, Boolean.parseBoolean( parsedConfig.get( "prepareStatements" ) ) );
                 break;
@@ -229,6 +235,10 @@ public class ChronosAgent extends AbstractChronosAgent {
             case "docbench":
                 config = new DocBenchConfig( parsedConfig );
                 scenario = new DocBench( executorFactory, (DocBenchConfig) config, true, dumpQueryList );
+                break;
+            case "multibench":
+                config = new MultiBenchConfig( parsedConfig );
+                scenario = new MultiBench( executorFactory, (MultiBenchConfig) config, true, dumpQueryList );
                 break;
             case "auctionmark":
                 config = new AuctionMarkConfig( parsedConfig );
@@ -284,6 +294,7 @@ public class ChronosAgent extends AbstractChronosAgent {
 
         DatabaseInstance databaseInstance;
         switch ( config.system ) {
+            case "polypheny":
             case "polypheny-jdbc":
             case "polypheny-rest":
             case "polypheny-mongoql":

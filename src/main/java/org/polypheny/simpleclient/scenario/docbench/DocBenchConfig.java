@@ -25,55 +25,29 @@
 package org.polypheny.simpleclient.scenario.docbench;
 
 
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Properties;
 import org.polypheny.simpleclient.scenario.AbstractConfig;
 
 public class DocBenchConfig extends AbstractConfig {
 
-    public final long seed;
+    public long seed;
 
-    public final int numberOfWarmUpIterations;
-    public final int batchSize;
-    public final int numberOfQueries;
-    public final int numberOfDocuments;
-    public final int maxNumberOfAttributes;
-    public final int minNumberOfAttributes;
-    public final int sizeOfAttributesPool;
-    public final int sizeOfValuesPool;
-    public final int valuesStringMaxLength;
-    public final int valuesStringMinLength;
+    public int batchSize;
+    public int numberOfQueries;
+    public int numberOfDocuments;
+    public int maxNumberOfAttributes;
+    public int minNumberOfAttributes;
+    public int sizeOfAttributesPool;
+    public int sizeOfValuesPool;
+    public int valuesStringMaxLength;
+    public int valuesStringMinLength;
 
 
     public DocBenchConfig( Properties properties, int multiplier ) {
-        super( "docbench", "polypheny-mongoql" );
-
-        pdbBranch = null;
-        puiBranch = null;
-        buildUi = false;
-        resetCatalog = false;
-        memoryCatalog = false;
-        deployStoresUsingDocker = false;
-
-        dataStores.add( "hsqldb" );
-        planAndImplementationCaching = "Both";
-
-        router = "icarus"; // For old routing, to be removed
-
-        routers = new String[]{ "Simple", "Icarus", "FullPlacement" };
-        newTablePlacementStrategy = "Single";
-        planSelectionStrategy = "Best";
-        preCostRatio = 50;
-        postCostRatio = 50;
-        routingCache = true;
-        postCostAggregation = "onWarmup";
-
-        progressReportBase = getIntProperty( properties, "progressReportBase" );
-        numberOfThreads = getIntProperty( properties, "numberOfThreads" );
+        super( "docbench", "polypheny-mongoql", properties );
 
         seed = getLongProperty( properties, "seed" );
-        numberOfWarmUpIterations = getIntProperty( properties, "numberOfWarmUpIterations" );
         batchSize = getIntProperty( properties, "batchSize" );
 
         numberOfQueries = getIntProperty( properties, "numberOfQueries" );
@@ -89,36 +63,9 @@ public class DocBenchConfig extends AbstractConfig {
 
 
     public DocBenchConfig( Map<String, String> cdl ) {
-        super( "docbench", cdl.get( "store" ) );
-
-        pdbBranch = cdl.get( "pdbBranch" );
-        puiBranch = "master";
-        buildUi = false;
-
-        resetCatalog = true;
-        memoryCatalog = Boolean.parseBoolean( cdl.get( "memoryCatalog" ) );
-
-        dataStores.addAll( Arrays.asList( cdl.get( "dataStore" ).split( "_" ) ) );
-        deployStoresUsingDocker = Boolean.parseBoolean( cdlGetOrDefault( cdl, "deployStoresUsingDocker", "true" ) );
-
-        router = cdl.get( "router" ); // For old routing, to be removed
-
-        routers = cdlGetOrDefault( cdl, "routers", "Simple_Icarus_FullPlacement" ).split( "_" );
-        newTablePlacementStrategy = cdlGetOrDefault( cdl, "newTablePlacementStrategy", "Single" );
-        planSelectionStrategy = cdlGetOrDefault( cdl, "planSelectionStrategy", "Best" );
-
-        preCostRatio = Integer.parseInt( cdlGetOrDefault( cdl, "preCostRatio", "50%" ).replace( "%", "" ).trim() );
-        postCostRatio = Integer.parseInt( cdlGetOrDefault( cdl, "postCostRatio", "50%" ).replace( "%", "" ).trim() );
-        routingCache = Boolean.parseBoolean( cdlGetOrDefault( cdl, "routingCache", "true" ) );
-        postCostAggregation = cdlGetOrDefault( cdl, "postCostAggregation", "onWarmup" );
-
-        planAndImplementationCaching = cdlGetOrDefault( cdl, "planAndImplementationCaching", "Both" );
-
-        progressReportBase = 100;
-        numberOfThreads = Integer.parseInt( cdl.get( "numberOfThreads" ) );
+        super( "docbench", cdl.get( "store" ), cdl );
 
         seed = Integer.parseInt( cdl.get( "seed" ) );
-        numberOfWarmUpIterations = Integer.parseInt( cdl.get( "numberOfWarmUpIterations" ) );
         batchSize = Integer.parseInt( cdl.get( "batchSize" ) );
 
         numberOfQueries = Integer.parseInt( cdl.get( "numberOfQueries" ) );
@@ -130,6 +77,18 @@ public class DocBenchConfig extends AbstractConfig {
         sizeOfValuesPool = Integer.parseInt( cdl.get( "sizeOfValuesPool" ) );
         valuesStringMinLength = Integer.parseInt( cdl.get( "valuesStringMinLength" ) );
         valuesStringMaxLength = Integer.parseInt( cdl.get( "valuesStringMaxLength" ) );
+    }
+
+
+    // For MultiBench
+    protected DocBenchConfig( String scenario, String system, Map<String, String> cdl ) {
+        super( scenario, system, cdl );
+    }
+
+
+    // For MultiBench
+    protected DocBenchConfig( String scenario, String system, Properties properties ) {
+        super( scenario, system, properties );
     }
 
 

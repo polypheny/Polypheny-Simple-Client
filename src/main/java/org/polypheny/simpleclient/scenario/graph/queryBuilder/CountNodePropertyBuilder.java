@@ -39,7 +39,7 @@ public class CountNodePropertyBuilder extends QueryBuilder {
 
 
     public CountNodePropertyBuilder( GraphBenchConfig config ) {
-        int randomSeed = config.seed;
+        long randomSeed = config.seed;
         this.random = new Random( randomSeed );
 
         this.highestLabel = config.maxClusterSize - 1;

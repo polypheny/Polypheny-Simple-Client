@@ -24,7 +24,6 @@
 
 package org.polypheny.simpleclient.scenario.graph;
 
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
@@ -36,58 +35,37 @@ public class GraphBenchConfig extends AbstractConfig {
 
     //public final long randomSeedInsert;
     //public final long randomSeedQuery;
-    public final int clusters;
-    public final int minClusterSize;
-    public final int maxClusterSize;
-    public final int minPathLength;
-    public final int maxPathLength;
-    public final int usedLabels;
-    public final int properties;
-    public final int paths;
-    public final int batchSizeCreates;
-    public final int minClusterConnections;
-    public final int maxClusterConnections;
-    public final int clusterSeed;
-    public final int numberOfEdgeMatchQueries;
-    public final int seed;
-    public final int numberOfPropertyCountQueries;
-    public final int numberOfFindNeighborsQueries;
-    public final int listSize;
-    public final int numberOfUnwindQueries;
-    public final int numberOfNodeFilterQueries;
-    public final int numberOfDifferentLengthQueries;
-    public final int numberOfShortestPathQueries;
-    public final int numberOfSetPropertyQueries;
-    public final int numberOfDeleteQueries;
-    public final int numberOfInsertQueries;
+    public int clusters;
+    public int minClusterSize;
+    public int maxClusterSize;
+    public int minPathLength;
+    public int maxPathLength;
+    public int usedLabels;
+    public int properties;
+    public int paths;
+    public int batchSizeCreates;
+    public int minClusterConnections;
+    public int maxClusterConnections;
+    public long clusterSeed;
+    public int numberOfEdgeMatchQueries;
+    public long seed;
+    public int numberOfPropertyCountQueries;
+    public int numberOfFindNeighborsQueries;
+    public int listSize;
+    public int numberOfUnwindQueries;
+    public int numberOfNodeFilterQueries;
+    public int numberOfDifferentLengthQueries;
+    public int numberOfShortestPathQueries;
+    public int numberOfSetPropertyQueries;
+    public int numberOfDeleteQueries;
+    public int numberOfInsertQueries;
 
-    public final int highestLabel;
-    public final int highestProperty;
-
-    public final int numberOfWarmUpIterations;
+    public int highestLabel;
+    public int highestProperty;
 
 
     public GraphBenchConfig( Properties properties, int multiplier ) {
-        super( "graph", "polypheny-cypher" );
-
-        pdbBranch = null;
-        puiBranch = null;
-        buildUi = false;
-        resetCatalog = false;
-        memoryCatalog = false;
-        deployStoresUsingDocker = false;
-
-        router = "icarus"; // For old routing, to be removed
-
-        routers = new String[]{ "Simple", "Icarus", "FullPlacement" };
-        newTablePlacementStrategy = "Single";
-        planSelectionStrategy = "Best";
-        preCostRatio = 50;
-        postCostRatio = 50;
-        routingCache = true;
-        postCostAggregation = "onWarmup";
-
-        planAndImplementationCaching = "Both";
+        super( "graph", "polypheny-cypher", properties );
 
         clusterSeed = getIntProperty( properties, "clusterSeed" );
         seed = getIntProperty( properties, "seed" );
@@ -106,10 +84,6 @@ public class GraphBenchConfig extends AbstractConfig {
         usedLabels = getIntProperty( properties, "usedLabels" );
         this.properties = getIntProperty( properties, "amountProperties" );
         listSize = getIntProperty( properties, "listSize" );
-
-        progressReportBase = getIntProperty( properties, "progressReportBase" );
-        numberOfThreads = getIntProperty( properties, "numberOfThreads" );
-        numberOfWarmUpIterations = getIntProperty( properties, "numberOfWarmUpIterations" );
 
         numberOfEdgeMatchQueries = getIntProperty( properties, "numberOfEdgeMatchQueries" ) * multiplier;
         numberOfPropertyCountQueries = getIntProperty( properties, "numberOfPropertyCountQueries" ) * multiplier;
@@ -137,34 +111,7 @@ public class GraphBenchConfig extends AbstractConfig {
 
 
     public GraphBenchConfig( Map<String, String> cdl ) {
-        super( "graph", cdl.get( "store" ) );
-
-        pdbBranch = cdl.get( "pdbBranch" );
-        puiBranch = "master";
-        buildUi = false;
-
-        resetCatalog = true;
-        memoryCatalog = Boolean.parseBoolean( cdl.get( "memoryCatalog" ) );
-
-        dataStores.addAll( Arrays.asList( cdl.get( "dataStore" ).split( "_" ) ) );
-        deployStoresUsingDocker = Boolean.parseBoolean( cdlGetOrDefault( cdl, "deployStoresUsingDocker", "false" ) );
-
-        router = cdl.get( "router" ); // For old routing, to be removed
-
-        routers = cdlGetOrDefault( cdl, "routers", "Simple_Icarus_FullPlacement" ).split( "_" );
-        newTablePlacementStrategy = cdlGetOrDefault( cdl, "newTablePlacementStrategy", "Single" );
-        planSelectionStrategy = cdlGetOrDefault( cdl, "planSelectionStrategy", "Best" );
-
-        preCostRatio = Integer.parseInt( cdlGetOrDefault( cdl, "preCostRatio", "50%" ).replace( "%", "" ).trim() );
-        postCostRatio = Integer.parseInt( cdlGetOrDefault( cdl, "postCostRatio", "50%" ).replace( "%", "" ).trim() );
-        routingCache = Boolean.parseBoolean( cdlGetOrDefault( cdl, "routingCache", "true" ) );
-        postCostAggregation = cdlGetOrDefault( cdl, "postCostAggregation", "onWarmup" );
-
-        planAndImplementationCaching = cdlGetOrDefault( cdl, "planAndImplementationCaching", "Both" );
-
-        progressReportBase = 100;
-        numberOfThreads = Integer.parseInt( cdl.get( "numberOfThreads" ) );
-        numberOfWarmUpIterations = Integer.parseInt( cdl.get( "numberOfWarmUpIterations" ) );
+        super( "graph", cdl.get( "store" ), cdl );
 
         clusters = Integer.parseInt( cdl.get( "amountClusters" ) );
         minClusterSize = Integer.parseInt( cdl.get( "minClusterSize" ) );
@@ -205,6 +152,18 @@ public class GraphBenchConfig extends AbstractConfig {
         } else {
             this.highestProperty = usedLabels - 1;
         }
+    }
+
+
+    // For MultiBench
+    protected GraphBenchConfig( String scenario, String system, Map<String, String> cdl ) {
+        super( scenario, system, cdl );
+    }
+
+
+    // For MultiBench
+    protected GraphBenchConfig( String scenario, String system, Properties properties ) {
+        super( scenario, system, properties );
     }
 
 

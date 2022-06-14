@@ -73,7 +73,7 @@ public class DocBench extends Scenario {
         measuredTimePerQueryType = new ConcurrentHashMap<>();
         random = new Random( config.seed );
 
-        // Build attributes value pool
+        // Build attribute values pool
         for ( int i = 0; i < config.sizeOfValuesPool; i++ ) {
             int stringLength = DataGenerator.boundedRandom( random, config.valuesStringMinLength, config.valuesStringMaxLength );
             valuesPool.add( DataGenerator.randomString( random, stringLength ) );
