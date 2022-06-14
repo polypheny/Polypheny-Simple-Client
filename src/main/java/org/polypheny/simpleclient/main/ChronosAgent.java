@@ -179,8 +179,11 @@ public class ChronosAgent extends AbstractChronosAgent {
         // Create Executor Factory
         Executor.ExecutorFactory executorFactory;
         switch ( parsedConfig.get( "store" ) ) {
-            case "polypheny-jdbc":
+            case "polypheny":
                 executorFactory = new PolyphenyDbMultiExecutorFactory( ChronosCommand.hostname );
+                break;
+            case "polypheny-jdbc":
+                executorFactory = new PolyphenyDbJdbcExecutorFactory( ChronosCommand.hostname, Boolean.parseBoolean( parsedConfig.get( "prepareStatements" ) ) );
                 break;
             case "polypheny-rest":
                 executorFactory = new PolyphenyDbRestExecutorFactory( ChronosCommand.hostname );
@@ -291,6 +294,7 @@ public class ChronosAgent extends AbstractChronosAgent {
 
         DatabaseInstance databaseInstance;
         switch ( config.system ) {
+            case "polypheny":
             case "polypheny-jdbc":
             case "polypheny-rest":
             case "polypheny-mongoql":

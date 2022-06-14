@@ -213,6 +213,4 @@ public abstract class PolyphenyDbHttpExecutor implements PolyphenyDbExecutor {
         }
     }
 
-
-
 }
