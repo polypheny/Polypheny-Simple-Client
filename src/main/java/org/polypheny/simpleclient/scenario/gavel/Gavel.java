@@ -226,6 +226,7 @@ public class Gavel extends Scenario {
                 }
                 if ( config.numberOfGetTheNextHundredEndingAuctionsOfACategoryQueries > 0 ) {
                     executor.executeQuery( new SelectTheHundredNextEndingAuctionsOfRandomCategory( numbers.get( "categories" ), config, queryMode ).getNewQuery() );
+                    executor.executeCommit();
                 }
                 if ( config.numberOfSearchAuctionQueries > 0 ) {
                     executor.executeQuery( new SearchAuction( queryMode ).getNewQuery() );
@@ -272,6 +273,7 @@ public class Gavel extends Scenario {
                     executor.executeCommit();
                 }
             } catch ( ExecutorException e ) {
+                e.printStackTrace();
                 throw new RuntimeException( "Error while executing warm-up queries", e );
             } finally {
                 commitAndCloseExecutor( executor );
