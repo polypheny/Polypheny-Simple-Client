@@ -72,7 +72,7 @@ public class MultiBenchConfig extends AbstractConfig {
         seed = Integer.parseInt( cdl.get( "seed" ) );
         batchSize = Integer.parseInt( cdl.get( "batchSize" ) );
 
-        numberOfDocBenchQueries = 100_000;
+        numberOfDocBenchQueries = 1_000_000;
 
         docBenchConfig = new MultiBenchDocBenchConfig( cdl );
         graphBenchConfig = new MultiBenchGraphBenchConfig( cdl );
@@ -107,7 +107,7 @@ public class MultiBenchConfig extends AbstractConfig {
 
             numberOfQueries = MultiBenchConfig.this.numberOfDocBenchQueries;
 
-            numberOfDocuments = 100_000;
+            numberOfDocuments = 1_000_000;
             minNumberOfAttributes = 5;
             maxNumberOfAttributes = 25;
             sizeOfAttributesPool = 500;
@@ -259,7 +259,7 @@ public class MultiBenchConfig extends AbstractConfig {
             numberOfAddUserQueries = 100;
             numberOfAddBidQueries = 100;
 
-            numberOfGetTheNextHundredEndingAuctionsOfACategoryQueries = 20;
+            numberOfGetTheNextHundredEndingAuctionsOfACategoryQueries = 0;
             numberOfCountAuctionsQueries = 20;
             numberOfCountBidsQueries = 20;
 

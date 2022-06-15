@@ -114,7 +114,8 @@ public class SimpleKnnRealFeature extends QueryBuilder {
 
         @Override
         public String getParameterizedSqlQuery() {
-            return SQL_1 + "?" + SQL_2 + "'" + norm + "'" + SQL_3 + limit;
+            return null;
+            //return SQL_1 + "?" + SQL_2 + "'" + norm + "'" + SQL_3 + limit;
         }
 
 

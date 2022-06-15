@@ -99,15 +99,19 @@ public class MultiBench extends Scenario {
     @Override
     public void generateData( ProgressReporter progressReporter ) {
         log.info( "Generating MultiBench data..." );
+        progressReporter.update( 0 );
         System.out.println( "Generating DocBench data..." );
         docBench.generateData( progressReporter );
         System.out.println( "Generating DocBench data... done" );
+        progressReporter.update( 0 );
         System.out.println( "Generating Gavel data..." );
         gavel.generateData( progressReporter );
         System.out.println( "Generating Gavel data... done" );
+        progressReporter.update( 0 );
         System.out.println( "Generating KnnBench data..." );
         knnBench.generateData( progressReporter );
         System.out.println( "Generating KnnBench data... done" );
+        progressReporter.update( 0 );
         System.out.println( "Generating GraphBench data..." );
         graphBench.generateData( progressReporter );
         System.out.println( "Generating GraphBench data... done" );
@@ -128,15 +132,19 @@ public class MultiBench extends Scenario {
     public long execute( ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory, int numberOfThreads ) {
         log.info( "MultiBench workloads..." );
         long runtime = 0;
+        progressReporter.update( 0 );
         System.out.println( "Executing GraphBench..." );
         runtime += graphBench.execute( progressReporter, csvWriter, outputDirectory, numberOfThreads );
         System.out.println( "Executing GraphBench... done" );
+        progressReporter.update( 0 );
         System.out.println( "Executing DocBench..." );
         runtime += docBench.execute( progressReporter, csvWriter, outputDirectory, numberOfThreads );
         System.out.println( "Executing DocBench... done" );
+        progressReporter.update( 0 );
         System.out.println( "Executing KnnBench..." );
         runtime += knnBench.execute( progressReporter, csvWriter, outputDirectory, numberOfThreads );
         System.out.println( "Executing KnnBench... done" );
+        progressReporter.update( 0 );
         System.out.println( "Executing Gavel..." );
         runtime += gavel.execute( progressReporter, csvWriter, outputDirectory, numberOfThreads );
         System.out.println( "Executing Gavel... done" );

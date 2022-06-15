@@ -41,7 +41,7 @@ public class ChronosProgressReporter extends ProgressReporter {
 
 
     @Override
-    protected void update( int progress ) {
+    public void update( int progress ) {
         if ( progress > 100 ) {
             progress = 100;
         }

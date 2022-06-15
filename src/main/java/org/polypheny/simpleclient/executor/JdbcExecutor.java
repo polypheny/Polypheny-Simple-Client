@@ -122,18 +122,24 @@ public abstract class JdbcExecutor implements Executor {
                 }
                 if ( query.isExpectResultSet() ) {
                     ResultSet resultSet = preparedStatement.executeQuery();
+                    List<String> result = new ArrayList<>();
                     while ( resultSet.next() ) {
                         // walk through the whole result set
+                        result.add( resultSet.toString() );
                     }
+                    log.debug( "Number of result rows: " + result.size() );
                 } else {
                     preparedStatement.execute();
                 }
             } else {
                 if ( query.isExpectResultSet() ) {
                     ResultSet resultSet = executeStatement.executeQuery( query.getSql() );
+                    List<String> result = new ArrayList<>();
                     while ( resultSet.next() ) {
                         // walk through the whole result set
+                        result.add( resultSet.toString() );
                     }
+                    log.debug( "Number of result rows: " + result.size() );
                 } else {
                     executeStatement.execute( query.getSql() );
                 }
@@ -146,6 +152,7 @@ public abstract class JdbcExecutor implements Executor {
             }
             return time;
         } catch ( SQLException | FileNotFoundException e ) {
+            log.error( "Error while executing: " + query.getSql() );
             throw new ExecutorException( e );
         }
     }

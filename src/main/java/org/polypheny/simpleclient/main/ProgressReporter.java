@@ -51,7 +51,7 @@ public abstract class ProgressReporter {
     }
 
 
-    protected abstract void update( int progress );
+    public abstract void update( int progress );
 
 
     protected void update( int done, int totalNumber ) {

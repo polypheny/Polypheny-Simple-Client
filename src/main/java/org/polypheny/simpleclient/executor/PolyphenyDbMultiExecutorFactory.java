@@ -52,7 +52,7 @@ public class PolyphenyDbMultiExecutorFactory extends ExecutorFactory {
 
     public PolyphenyDbMultiExecutorFactory( String host ) {
         this.host = host;
-        jdbcExecutorFactory = new PolyphenyDbJdbcExecutorFactory( host, false );
+        jdbcExecutorFactory = new PolyphenyDbJdbcExecutorFactory( host, true );
         mongoQlExecutorFactory = new PolyphenyDbMongoQlExecutorFactory( host );
         cypherExecutorFactory = new PolyphenyDbCypherExecutorFactory( host );
         restExecutorFactory = new PolyphenyDbRestExecutorFactory( host );

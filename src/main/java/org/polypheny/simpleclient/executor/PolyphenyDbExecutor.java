@@ -308,7 +308,7 @@ public interface PolyphenyDbExecutor extends Executor {
             executor = (PolyphenyDbExecutor) executorFactory.createExecutorInstance();
             try {
                 // Disable statistics (active tracking)
-                //executor.setConfig( "statistics/activeTracking", "false" );
+                executor.setConfig( "statistics/activeTracking", "false" );
                 // Set router
                 if ( config.pdbBranch.equalsIgnoreCase( "old-routing" ) ) { // Old routing, to be removed
                     switch ( config.router ) {
