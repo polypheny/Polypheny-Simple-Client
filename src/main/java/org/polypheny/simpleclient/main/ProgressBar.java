@@ -84,7 +84,7 @@ public class ProgressBar extends ProgressReporter {
      * @param progress Progress in thousandth
      */
     @Override
-    protected void update( int progress ) {
+    public void update( int progress ) {
         update( progress, base );
     }
 

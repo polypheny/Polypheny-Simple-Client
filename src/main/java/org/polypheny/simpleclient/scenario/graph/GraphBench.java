@@ -223,7 +223,7 @@ public class GraphBench extends Scenario {
 
         for ( int i = 0; i < config.numberOfWarmUpIterations; i++ ) {
             try {
-                executor = executorFactory.createExecutorInstance(null, GRAPH_NAMESPACE);
+                executor = executorFactory.createExecutorInstance( null, GRAPH_NAMESPACE );
                 if ( config.numberOfEdgeMatchQueries > 0 ) {
                     executor.executeQuery( edgeMatch.getNewQuery() );
                 }

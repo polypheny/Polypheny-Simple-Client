@@ -47,6 +47,8 @@ public class DataGenerator {
 
     private final Random random;
 
+    private final ProgressReporter progressReporter;
+
     private final List<String> valuesPool;
 
 
@@ -56,6 +58,7 @@ public class DataGenerator {
         batchList = new LinkedList<>();
         aborted = false;
         this.valuesPool = valuesPool;
+        this.progressReporter = progressReporter;
         this.random = random;
     }
 
@@ -92,12 +95,16 @@ public class DataGenerator {
 
 
     void generateData() throws ExecutorException {
+        int mod = config.numberOfDocuments / (progressReporter.base * config.numberOfThreads);
         PutProductQueryBuilder queryBuilder = new PutProductQueryBuilder( random, valuesPool, config );
         for ( int i = 0; i < config.numberOfDocuments; i++ ) {
             if ( aborted ) {
                 break;
             }
             addToInsertList( queryBuilder.getNewQuery() );
+            if ( (i % mod) == 0 ) {
+                progressReporter.updateProgress();
+            }
         }
         executeInsertList();
     }

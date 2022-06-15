@@ -202,57 +202,74 @@ public class Gavel extends Scenario {
                 executor = executorFactory.createExecutorInstance();
                 if ( config.numberOfAddUserQueries > 0 ) {
                     executor.executeQuery( new InsertUser().getNewQuery() );
+                    executor.executeCommit();
                 }
                 if ( config.numberOfChangePasswordQueries > 0 ) {
                     executor.executeQuery( new ChangePasswordOfRandomUser( numbers.get( "users" ) ).getNewQuery() );
+                    executor.executeCommit();
                 }
                 if ( config.numberOfAddAuctionQueries > 0 ) {
                     executor.executeQuery( new InsertRandomAuction( numbers.get( "users" ), numbers.get( "categories" ), config ).getNewQuery() );
+                    executor.executeCommit();
                 }
                 if ( config.numberOfAddBidQueries > 0 ) {
                     executor.executeQuery( new InsertRandomBid( numbers.get( "auctions" ), numbers.get( "users" ) ).getNewQuery() );
+                    executor.executeCommit();
                 }
                 if ( config.numberOfChangeAuctionQueries > 0 ) {
                     executor.executeQuery( new ChangeRandomAuction( numbers.get( "auctions" ), config ).getNewQuery() );
+                    executor.executeCommit();
                 }
                 if ( config.numberOfGetAuctionQueries > 0 ) {
                     executor.executeQuery( new SelectRandomAuction( numbers.get( "auctions" ), queryMode ).getNewQuery() );
+                    executor.executeCommit();
                 }
                 if ( config.numberOfGetTheNextHundredEndingAuctionsOfACategoryQueries > 0 ) {
                     executor.executeQuery( new SelectTheHundredNextEndingAuctionsOfRandomCategory( numbers.get( "categories" ), config, queryMode ).getNewQuery() );
                 }
                 if ( config.numberOfSearchAuctionQueries > 0 ) {
                     executor.executeQuery( new SearchAuction( queryMode ).getNewQuery() );
+                    executor.executeCommit();
                 }
                 if ( config.numberOfCountAuctionsQueries > 0 ) {
                     executor.executeQuery( new CountAuction( queryMode ).getNewQuery() );
+                    executor.executeCommit();
                 }
                 if ( config.numberOfTopTenCitiesByNumberOfCustomersQueries > 0 ) {
                     executor.executeQuery( new SelectTopTenCitiesByNumberOfCustomers( queryMode ).getNewQuery() );
+                    executor.executeCommit();
                 }
                 if ( config.numberOfCountBidsQueries > 0 ) {
                     executor.executeQuery( new CountBid( queryMode ).getNewQuery() );
+                    executor.executeCommit();
                 }
                 if ( config.numberOfGetBidQueries > 0 ) {
                     executor.executeQuery( new SelectRandomBid( numbers.get( "bids" ), queryMode ).getNewQuery() );
+                    executor.executeCommit();
                 }
                 if ( config.numberOfGetUserQueries > 0 ) {
                     executor.executeQuery( new SelectRandomUser( numbers.get( "users" ), queryMode ).getNewQuery() );
+                    executor.executeCommit();
                 }
                 if ( config.numberOfGetAllBidsOnAuctionQueries > 0 ) {
                     executor.executeQuery( new SelectAllBidsOnRandomAuction( numbers.get( "auctions" ), queryMode ).getNewQuery() );
+                    executor.executeCommit();
                 }
                 if ( config.numberOfGetCurrentlyHighestBidOnAuctionQueries > 0 ) {
                     executor.executeQuery( new SelectHighestBidOnRandomAuction( numbers.get( "auctions" ), queryMode ).getNewQuery() );
+                    executor.executeCommit();
                 }
                 if ( config.totalNumOfPriceBetweenAndNotInCategoryQueries > 0 ) {
                     executor.executeQuery( new SelectPriceBetweenAndNotInCategory( queryMode ).getNewQuery() );
+                    executor.executeCommit();
                 }
                 if ( config.totalNumOfTopHundredSellerByNumberOfAuctionsQueries > 0 ) {
                     executor.executeQuery( new SelectTopHundredSellerByNumberOfAuctions( queryMode ).getNewQuery() );
+                    executor.executeCommit();
                 }
                 if ( config.totalNumOfHighestOverallBidQueries > 0 ) {
                     executor.executeQuery( new SelectHighestOverallBid( queryMode ).getNewQuery() );
+                    executor.executeCommit();
                 }
             } catch ( ExecutorException e ) {
                 throw new RuntimeException( "Error while executing warm-up queries", e );
