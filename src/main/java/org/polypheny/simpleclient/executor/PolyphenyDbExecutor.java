@@ -141,7 +141,7 @@ public interface PolyphenyDbExecutor extends Executor {
     }
 
     default void deployNeo4j() throws ExecutorException {
-        String config = "{\"mode\":\"docker\",\"instanceId\":\"0\",\"port\":\"" + nextPort.getAndIncrement() + "\",\"persistent\":\"false\",\"trxLifetimeLimit\":\"1209600\"}";
+        String config = "{\"mode\":\"docker\",\"instanceId\":\"0\",\"port\":\"" + nextPort.getAndIncrement() + "\"}";
         deployStore(
                 "neo4j" + storeCounter.getAndIncrement(),
                 "org.polypheny.db.adapter.neo4j.Neo4jStore",
