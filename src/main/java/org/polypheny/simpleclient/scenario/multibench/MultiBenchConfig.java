@@ -33,6 +33,7 @@ import org.polypheny.simpleclient.scenario.gavel.GavelConfig;
 import org.polypheny.simpleclient.scenario.graph.GraphBenchConfig;
 import org.polypheny.simpleclient.scenario.knnbench.KnnBenchConfig;
 
+
 public class MultiBenchConfig extends AbstractConfig {
 
     @Getter
@@ -57,7 +58,7 @@ public class MultiBenchConfig extends AbstractConfig {
         seed = getLongProperty( properties, "seed" );
         batchSize = getIntProperty( properties, "batchSize" );
 
-        numberOfDocBenchQueries = 1_000_000;
+        numberOfDocBenchQueries = 10_000;
 
         docBenchConfig = new MultiBenchDocBenchConfig( properties, multiplier );
         graphBenchConfig = new MultiBenchGraphBenchConfig( properties, multiplier );
@@ -72,7 +73,7 @@ public class MultiBenchConfig extends AbstractConfig {
         seed = Integer.parseInt( cdl.get( "seed" ) );
         batchSize = Integer.parseInt( cdl.get( "batchSize" ) );
 
-        numberOfDocBenchQueries = 1_000_000;
+        numberOfDocBenchQueries = 10_000;
 
         docBenchConfig = new MultiBenchDocBenchConfig( cdl );
         graphBenchConfig = new MultiBenchGraphBenchConfig( cdl );
@@ -271,7 +272,7 @@ public class MultiBenchConfig extends AbstractConfig {
 
             // Data Generation
             numberOfUsers = 1_000;
-            numberOfAuctions = 10_000;
+            numberOfAuctions = 1_000;
             numberOfCategories = 35;
             auctionTitleMinLength = 2;
             auctionTitleMaxLength = 8;

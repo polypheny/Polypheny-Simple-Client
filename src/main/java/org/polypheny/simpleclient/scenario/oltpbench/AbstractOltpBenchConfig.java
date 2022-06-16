@@ -48,11 +48,19 @@ public abstract class AbstractOltpBenchConfig extends AbstractConfig {
     }
 
 
-    public AbstractOltpBenchConfig( Map<String, String> cdl, String scenario, String system  ) {
-        super( scenario, system, cdl );
+    public AbstractOltpBenchConfig( Map<String, String> cdl, String scenario, String system ) {
+        super( scenario, system, updateCdl( cdl ) );
 
         warmupTime = Integer.parseInt( cdl.get( "warmupTime" ) );
         scaleFactor = Integer.parseInt( cdl.get( "scaleFactor" ) );
+    }
+
+
+    private static Map<String, String> updateCdl( Map<String, String> cdl ) {
+        if ( !cdl.containsKey( "numberOfWarmUpIterations" ) ) {
+            cdl.put( "numberOfWarmUpIterations", "1" );
+        }
+        return cdl;
     }
 
 
