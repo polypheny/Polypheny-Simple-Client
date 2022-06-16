@@ -300,24 +300,24 @@ public class ChronosAgent extends AbstractChronosAgent {
             case "polypheny-mongoql":
             case "polypheny-cypher":
                 databaseInstance = new PolyphenyDbInstance( polyphenyControlConnector, executorFactory, outputDirectory, config );
-                scenario.createSchema( true );
+                scenario.createSchema( databaseInstance, true );
                 break;
             case "oltpbench-polypheny":
                 databaseInstance = new OltpBenchPolyphenyInstance( polyphenyControlConnector, executorFactory, outputDirectory, config );
-                scenario.createSchema( true );
+                scenario.createSchema( databaseInstance, true );
                 break;
             case "postgres":
             case "oltpbench-postgres":
                 databaseInstance = new PostgresInstance();
-                scenario.createSchema( false );
+                scenario.createSchema( databaseInstance, false );
                 break;
             case "monetdb":
                 databaseInstance = new MonetdbInstance();
-                scenario.createSchema( false );
+                scenario.createSchema( databaseInstance, false );
                 break;
             case "cottontail":
                 databaseInstance = new CottontailInstance();
-                scenario.createSchema( false );
+                scenario.createSchema( databaseInstance, false );
                 break;
             default:
                 throw new RuntimeException( "Unknown system: " + config.system );
@@ -364,7 +364,7 @@ public class ChronosAgent extends AbstractChronosAgent {
                 ((PolyphenyDbInstance) databaseInstance).setWorkloadMonitoring( config.workloadMonitoringWarmup );
 
                 // Enable icarus training -- to be removed
-                if ( config.router.equals( "icarus" ) && config.pdbBranch.equalsIgnoreCase( "old-routing" ) ) {
+                if ( config.router != null && config.router.equals( "icarus" ) && config.pdbBranch.equalsIgnoreCase( "old-routing" ) ) {
                     ((PolyphenyDbInstance) databaseInstance).setIcarusRoutingTraining( true );
                 }
 
@@ -402,7 +402,7 @@ public class ChronosAgent extends AbstractChronosAgent {
                 }
 
                 // Disable icarus training  -- to be removed
-                if ( config.router.equals( "icarus" ) && config.pdbBranch.equalsIgnoreCase( "old-routing" ) ) {
+                if ( config.router != null && config.router.equals( "icarus" ) && config.pdbBranch.equalsIgnoreCase( "old-routing" ) ) {
                     ((PolyphenyDbInstance) databaseInstance).setIcarusRoutingTraining( false );
                 }
             }

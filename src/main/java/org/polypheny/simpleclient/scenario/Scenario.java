@@ -37,6 +37,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.executor.Executor;
+import org.polypheny.simpleclient.executor.Executor.DatabaseInstance;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
 import org.polypheny.simpleclient.executor.ExecutorException;
 import org.polypheny.simpleclient.main.ChronosAgent;
@@ -62,7 +63,7 @@ public abstract class Scenario {
     }
 
 
-    public abstract void createSchema( boolean includingKeys );
+    public abstract void createSchema( DatabaseInstance databaseInstance, boolean includingKeys );
 
     public abstract void generateData( ProgressReporter progressReporter );
 

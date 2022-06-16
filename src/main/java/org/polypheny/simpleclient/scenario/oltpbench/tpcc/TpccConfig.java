@@ -53,6 +53,8 @@ public class TpccConfig extends AbstractOltpBenchConfig {
     public int deliveryWeight;
     public int stockLevelWeight;
 
+    public boolean partitionItemTable;
+
 
     public TpccConfig( Properties properties, int multiplier ) {
         super( properties, multiplier, "tpcc", "oltpbench-polypheny" );
@@ -66,6 +68,8 @@ public class TpccConfig extends AbstractOltpBenchConfig {
         orderStatusWeight = getIntProperty( properties, "orderStatusWeight" );
         deliveryWeight = getIntProperty( properties, "deliveryWeight" );
         stockLevelWeight = getIntProperty( properties, "stockLevelWeight" );
+
+        partitionItemTable = getBooleanProperty( properties, "partitionItemTable" );
     }
 
 
@@ -81,6 +85,8 @@ public class TpccConfig extends AbstractOltpBenchConfig {
         orderStatusWeight = Integer.parseInt( cdl.get( "orderStatusWeight" ) );
         deliveryWeight = Integer.parseInt( cdl.get( "deliveryWeight" ) );
         stockLevelWeight = Integer.parseInt( cdl.get( "stockLevelWeight" ) );
+
+        partitionItemTable = Boolean.parseBoolean( cdl.get( "partitionItemTable" ) );
     }
 
 

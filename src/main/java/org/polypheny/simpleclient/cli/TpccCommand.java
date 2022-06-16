@@ -43,7 +43,7 @@ public class TpccCommand extends AbstractOltpBenchCommand {
     protected void schema( ExecutorFactory executorFactory ) {
         TpccConfig config = new TpccConfig( getProperties( "tpcc.properties" ), 1 );
         Tpcc tpcc = new Tpcc( executorFactory, config, false, QueryMode.TABLE );
-        tpcc.createSchema( true );
+        tpcc.createSchema( null, true );
     }
 
 

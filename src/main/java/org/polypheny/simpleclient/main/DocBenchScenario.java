@@ -40,7 +40,7 @@ public class DocBenchScenario {
     public static void schema( ExecutorFactory executorFactory, boolean commitAfterEveryQuery ) {
         DocBenchConfig config = new DocBenchConfig( getProperties(), 1 );
         DocBench DocBench = new DocBench( executorFactory, config, commitAfterEveryQuery, false );
-        DocBench.createSchema( true );
+        DocBench.createSchema( null, true );
     }
 
 

@@ -44,7 +44,7 @@ public class MultiBenchScenario {
         }
         MultiBenchConfig config = new MultiBenchConfig( getProperties(), 1 );
         MultiBench MultiBench = new MultiBench( executorFactory, config, commitAfterEveryQuery, false );
-        MultiBench.createSchema( true );
+        MultiBench.createSchema( null, true );
     }
 
 

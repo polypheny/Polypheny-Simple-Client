@@ -44,6 +44,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.executor.Executor;
+import org.polypheny.simpleclient.executor.Executor.DatabaseInstance;
 import org.polypheny.simpleclient.executor.ExecutorException;
 import org.polypheny.simpleclient.executor.JdbcExecutor;
 import org.polypheny.simpleclient.executor.MonetdbExecutor.MonetdbExecutorFactory;
@@ -413,7 +414,7 @@ public class Gavel extends Scenario {
 
 
     @Override
-    public void createSchema( boolean includingKeys ) {
+    public void createSchema( DatabaseInstance databaseInstance, boolean includingKeys ) {
         log.info( "Creating schema..." );
         InputStream file;
         if ( executorFactory instanceof PolyphenyDbMongoQlExecutorFactory ) {
@@ -475,7 +476,7 @@ public class Gavel extends Scenario {
             executor = executorFactory.createExecutorInstance();
             String line = bf.readLine();
             while ( line != null ) {
-                executor.executeQuery( new RawQuery( line, null, false ) );
+                executor.executeQuery( RawQuery.builder().sql( line ).expectResultSet( false ).build() );
                 line = bf.readLine();
             }
         } catch ( IOException | ExecutorException e ) {

@@ -30,6 +30,7 @@ import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.executor.Executor;
+import org.polypheny.simpleclient.executor.Executor.DatabaseInstance;
 import org.polypheny.simpleclient.executor.PolyphenyDbMultiExecutorFactory;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.main.ProgressReporter;
@@ -87,12 +88,12 @@ public class MultiBench extends Scenario {
 
 
     @Override
-    public void createSchema( boolean includingKeys ) {
+    public void createSchema( DatabaseInstance databaseInstance, boolean includingKeys ) {
         log.info( "Creating MultiBench schemas..." );
-        docBench.createSchema( includingKeys );
-        gavel.createSchema( includingKeys );
-        graphBench.createSchema( includingKeys );
-        knnBench.createSchema( includingKeys );
+        docBench.createSchema( databaseInstance, includingKeys );
+        gavel.createSchema( databaseInstance, includingKeys );
+        graphBench.createSchema( databaseInstance, includingKeys );
+        knnBench.createSchema( databaseInstance, includingKeys );
     }
 
 

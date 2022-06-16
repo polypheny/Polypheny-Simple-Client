@@ -40,7 +40,7 @@ public class KnnBenchScenario {
     public static void schema( ExecutorFactory executorFactory, boolean commitAfterEveryQuery ) {
         KnnBenchConfig config = new KnnBenchConfig( getProperties(), 1 );
         KnnBench knnBench = new KnnBench( executorFactory, config, commitAfterEveryQuery, false );
-        knnBench.createSchema( true );
+        knnBench.createSchema( null, true );
     }
 
 

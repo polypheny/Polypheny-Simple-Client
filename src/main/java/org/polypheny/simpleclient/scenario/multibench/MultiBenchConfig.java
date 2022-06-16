@@ -146,13 +146,13 @@ public class MultiBenchConfig extends AbstractConfig {
             dimensionFeatureVectors = 10;
             numberOfEntries = 100000;
 
-            numberOfSimpleKnnIntFeatureQueries = 10;
-            numberOfSimpleKnnRealFeatureQueries = 10;
-            numberOfSimpleMetadataQueries = 10;
-            numberOfSimpleKnnIdIntFeatureQueries = 10;
-            numberOfSimpleKnnIdRealFeatureQueries = 10;
-            numberOfMetadataKnnIntFeatureQueries = 10;
-            numberOfMetadataKnnRealFeatureQueries = 10;
+            numberOfSimpleKnnIntFeatureQueries = 100;
+            numberOfSimpleKnnRealFeatureQueries = 0;
+            numberOfSimpleMetadataQueries = 100;
+            numberOfSimpleKnnIdIntFeatureQueries = 100;
+            numberOfSimpleKnnIdRealFeatureQueries = 0;
+            numberOfMetadataKnnIntFeatureQueries = 100;
+            numberOfMetadataKnnRealFeatureQueries = 0;
 
             limitKnnQueries = 10;
             distanceNorm = "L2";
@@ -245,19 +245,19 @@ public class MultiBenchConfig extends AbstractConfig {
 
 
         private void settings() {
-            numberOfGetAuctionQueries = 2000;
-            numberOfGetBidQueries = 2000;
-            numberOfGetUserQueries = 2000;
+            numberOfGetAuctionQueries = 200;
+            numberOfGetBidQueries = 200;
+            numberOfGetUserQueries = 200;
             numberOfGetAllBidsOnAuctionQueries = 20;
-            numberOfGetCurrentlyHighestBidOnAuctionQueries = 2000;
+            numberOfGetCurrentlyHighestBidOnAuctionQueries = 200;
             numberOfSearchAuctionQueries = 20;
 
-            numberOfChangePasswordQueries = 100;
-            numberOfChangeAuctionQueries = 100;
+            numberOfChangePasswordQueries = 20;
+            numberOfChangeAuctionQueries = 20;
 
-            numberOfAddAuctionQueries = 1000;
-            numberOfAddUserQueries = 100;
-            numberOfAddBidQueries = 100;
+            numberOfAddAuctionQueries = 100;
+            numberOfAddUserQueries = 10;
+            numberOfAddBidQueries = 10;
 
             numberOfGetTheNextHundredEndingAuctionsOfACategoryQueries = 0;
             numberOfCountAuctionsQueries = 20;

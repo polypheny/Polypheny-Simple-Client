@@ -36,6 +36,7 @@ import java.util.Map;
 import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.QueryMode;
+import org.polypheny.simpleclient.executor.Executor.DatabaseInstance;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
 import org.polypheny.simpleclient.executor.ExecutorException;
 import org.polypheny.simpleclient.executor.OltpBenchExecutor;
@@ -48,23 +49,23 @@ import org.polypheny.simpleclient.scenario.Scenario;
 @Slf4j
 public abstract class AbstractOltpBenchScenario extends Scenario {
 
-    private final AbstractOltpBenchConfig config;
-    private final OltpBenchExecutorFactory executorFactory;
+    protected final AbstractOltpBenchConfig config;
+    protected final OltpBenchExecutorFactory executorFactory;
 
 
     public AbstractOltpBenchScenario( ExecutorFactory executorFactory, AbstractOltpBenchConfig config, boolean dumpQueryList, QueryMode queryMode ) {
         super( executorFactory, true, dumpQueryList, queryMode );
         this.config = config;
-        if (executorFactory instanceof OltpBenchExecutorFactory) {
+        if ( executorFactory instanceof OltpBenchExecutorFactory ) {
             this.executorFactory = (OltpBenchExecutorFactory) executorFactory;
         } else {
-            throw new RuntimeException("Unsupported executor factory: " + executorFactory.getClass().getName());
+            throw new RuntimeException( "Unsupported executor factory: " + executorFactory.getClass().getName() );
         }
     }
 
 
     @Override
-    public void createSchema( boolean includingKeys ) {
+    public void createSchema( DatabaseInstance databaseInstance, boolean includingKeys ) {
         if ( queryMode != QueryMode.TABLE ) {
             throw new UnsupportedOperationException( "Unsupported query mode: " + queryMode.name() );
         }

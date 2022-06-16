@@ -43,7 +43,7 @@ public class SmallBankCommand extends AbstractOltpBenchCommand {
     protected void schema( ExecutorFactory executorFactory ) {
         SmallBankConfig config = new SmallBankConfig( getProperties( "smallbank.properties" ), 1 );
         SmallBank smallBank = new SmallBank( executorFactory, config, false, QueryMode.TABLE );
-        smallBank.createSchema( true );
+        smallBank.createSchema( null, true );
     }
 
 

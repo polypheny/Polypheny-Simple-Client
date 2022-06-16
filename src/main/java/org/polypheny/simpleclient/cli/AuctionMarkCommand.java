@@ -43,7 +43,7 @@ public class AuctionMarkCommand extends AbstractOltpBenchCommand {
     protected void schema( ExecutorFactory executorFactory ) {
         AuctionMarkConfig config = new AuctionMarkConfig( getProperties( "auctionmark.properties" ), 1 );
         AuctionMark auctionMark = new AuctionMark( executorFactory, config, false, QueryMode.TABLE );
-        auctionMark.createSchema( true );
+        auctionMark.createSchema( null, true );
     }
 
 
