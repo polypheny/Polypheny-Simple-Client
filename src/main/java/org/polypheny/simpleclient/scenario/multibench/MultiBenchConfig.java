@@ -45,11 +45,17 @@ public class MultiBenchConfig extends AbstractConfig {
     @Getter
     private final MultiBenchGavelConfig gavelConfig;
 
+
     public final long seed;
 
     public final int batchSize;
 
+    public double writeRatio;
+
     public final int numberOfDocBenchQueries;
+    public final int numberOfKnnBenchQueries;
+    public final int numberOfGraphBenchQueries;
+    public final int numberOfGavelQueries;
 
 
     public MultiBenchConfig( Properties properties, int multiplier ) {
@@ -58,12 +64,33 @@ public class MultiBenchConfig extends AbstractConfig {
         seed = getLongProperty( properties, "seed" );
         batchSize = getIntProperty( properties, "batchSize" );
 
-        numberOfDocBenchQueries = 10_000;
+        writeRatio = Double.parseDouble( properties.getProperty( "writeRatio" ) ) / 100.0;
 
-        docBenchConfig = new MultiBenchDocBenchConfig( properties, multiplier );
-        graphBenchConfig = new MultiBenchGraphBenchConfig( properties, multiplier );
-        knnBenchConfig = new MultiBenchKnnBenchConfig( properties, multiplier );
-        gavelConfig = new MultiBenchGavelConfig( properties, multiplier );
+        numberOfDocBenchQueries = getIntProperty( properties, "numberOfDocBenchQueries" );
+        numberOfGraphBenchQueries = getIntProperty( properties, "numberOfGraphBenchQueries" );
+        numberOfKnnBenchQueries = getIntProperty( properties, "numberOfKnnBenchQueries" );
+        numberOfGavelQueries = getIntProperty( properties, "numberOfGavelQueries" );
+
+        if ( numberOfDocBenchQueries > 0 ) {
+            docBenchConfig = new MultiBenchDocBenchConfig( properties, multiplier );
+        } else {
+            docBenchConfig = null;
+        }
+        if ( numberOfGraphBenchQueries > 0 ) {
+            graphBenchConfig = new MultiBenchGraphBenchConfig( properties, multiplier );
+        } else {
+            graphBenchConfig = null;
+        }
+        if ( numberOfKnnBenchQueries > 0 ) {
+            knnBenchConfig = new MultiBenchKnnBenchConfig( properties, multiplier );
+        } else {
+            knnBenchConfig = null;
+        }
+        if ( numberOfGavelQueries > 0 ) {
+            gavelConfig = new MultiBenchGavelConfig( properties, multiplier );
+        } else {
+            gavelConfig = null;
+        }
     }
 
 
@@ -73,12 +100,33 @@ public class MultiBenchConfig extends AbstractConfig {
         seed = Integer.parseInt( cdl.get( "seed" ) );
         batchSize = Integer.parseInt( cdl.get( "batchSize" ) );
 
-        numberOfDocBenchQueries = 10_000;
+        writeRatio = Double.parseDouble( cdl.get( "writeRatio" ) ) / 100.0;
 
-        docBenchConfig = new MultiBenchDocBenchConfig( cdl );
-        graphBenchConfig = new MultiBenchGraphBenchConfig( cdl );
-        knnBenchConfig = new MultiBenchKnnBenchConfig( cdl );
-        gavelConfig = new MultiBenchGavelConfig( cdl );
+        numberOfDocBenchQueries = Integer.parseInt( cdl.get( "numberOfDocBenchQueries" ) );
+        numberOfGraphBenchQueries = Integer.parseInt( cdl.get( "numberOfGraphBenchQueries" ) );
+        numberOfKnnBenchQueries = Integer.parseInt( cdl.get( "numberOfKnnBenchQueries" ) );
+        numberOfGavelQueries = Integer.parseInt( cdl.get( "numberOfGavelQueries" ) );
+
+        if ( numberOfDocBenchQueries > 0 ) {
+            docBenchConfig = new MultiBenchDocBenchConfig( cdl );
+        } else {
+            docBenchConfig = null;
+        }
+        if ( numberOfGraphBenchQueries > 0 ) {
+            graphBenchConfig = new MultiBenchGraphBenchConfig( cdl );
+        } else {
+            graphBenchConfig = null;
+        }
+        if ( numberOfKnnBenchQueries > 0 ) {
+            knnBenchConfig = new MultiBenchKnnBenchConfig( cdl );
+        } else {
+            knnBenchConfig = null;
+        }
+        if ( numberOfGavelQueries > 0 ) {
+            gavelConfig = new MultiBenchGavelConfig( cdl );
+        } else {
+            gavelConfig = null;
+        }
     }
 
 
@@ -106,7 +154,8 @@ public class MultiBenchConfig extends AbstractConfig {
             seed = MultiBenchConfig.this.seed;
             batchSize = MultiBenchConfig.this.batchSize;
 
-            numberOfQueries = MultiBenchConfig.this.numberOfDocBenchQueries;
+            numberOfUpdateQueries = Double.valueOf( MultiBenchConfig.this.numberOfDocBenchQueries * writeRatio ).intValue();
+            numberOfFindQueries = numberOfDocBenchQueries - numberOfUpdateQueries;
 
             numberOfDocuments = 1_000_000;
             minNumberOfAttributes = 5;
@@ -147,12 +196,12 @@ public class MultiBenchConfig extends AbstractConfig {
             dimensionFeatureVectors = 10;
             numberOfEntries = 100000;
 
-            numberOfSimpleKnnIntFeatureQueries = 100;
+            numberOfSimpleKnnIntFeatureQueries = numberOfKnnBenchQueries / 4;
             numberOfSimpleKnnRealFeatureQueries = 0;
-            numberOfSimpleMetadataQueries = 100;
-            numberOfSimpleKnnIdIntFeatureQueries = 100;
+            numberOfSimpleMetadataQueries = numberOfKnnBenchQueries / 4;
+            numberOfSimpleKnnIdIntFeatureQueries = numberOfKnnBenchQueries / 4;
             numberOfSimpleKnnIdRealFeatureQueries = 0;
-            numberOfMetadataKnnIntFeatureQueries = 100;
+            numberOfMetadataKnnIntFeatureQueries = numberOfKnnBenchQueries - (numberOfSimpleKnnIntFeatureQueries + numberOfSimpleMetadataQueries + numberOfSimpleKnnIdIntFeatureQueries);
             numberOfMetadataKnnRealFeatureQueries = 0;
 
             limitKnnQueries = 10;
@@ -200,20 +249,24 @@ public class MultiBenchConfig extends AbstractConfig {
             this.properties = 3;
             listSize = 3;
 
-            // queries
-            numberOfNodeFilterQueries = 30;
-            numberOfEdgeMatchQueries = 30;
+            int numberOfWriteQueries = Double.valueOf( MultiBenchConfig.this.numberOfGraphBenchQueries * writeRatio ).intValue();
+            int numberOfReadQueries = numberOfGraphBenchQueries - numberOfWriteQueries;
 
-            numberOfPropertyCountQueries = 30;
+            // queries
+            numberOfNodeFilterQueries = numberOfReadQueries / 4;
+            numberOfEdgeMatchQueries = numberOfReadQueries / 4;
+
+            numberOfPropertyCountQueries = numberOfReadQueries / 4;
             numberOfUnwindQueries = 0;
 
-            numberOfFindNeighborsQueries = 30;
+            numberOfFindNeighborsQueries = numberOfReadQueries - (numberOfNodeFilterQueries + numberOfEdgeMatchQueries + numberOfPropertyCountQueries);
             numberOfDifferentLengthQueries = 0;
             numberOfShortestPathQueries = 0;
 
-            numberOfSetPropertyQueries = 20;
-            numberOfDeleteQueries = 5;
-            numberOfInsertQueries = 10;
+            // DML
+            numberOfDeleteQueries = numberOfWriteQueries / 2;
+            numberOfDeleteQueries = numberOfWriteQueries / 4;
+            numberOfInsertQueries = numberOfWriteQueries - (numberOfDeleteQueries + numberOfDeleteQueries);
 
             if ( maxPathLength - 1 <= 0 ) {
                 this.highestLabel = 1;
@@ -246,29 +299,35 @@ public class MultiBenchConfig extends AbstractConfig {
 
 
         private void settings() {
-            numberOfGetAuctionQueries = 200;
-            numberOfGetBidQueries = 200;
-            numberOfGetUserQueries = 200;
-            numberOfGetAllBidsOnAuctionQueries = 20;
-            numberOfGetCurrentlyHighestBidOnAuctionQueries = 200;
-            numberOfSearchAuctionQueries = 20;
+            int numberOfWriteQueries = Double.valueOf( MultiBenchConfig.this.numberOfGavelQueries * writeRatio ).intValue();
+            int numberOfReadQueries = numberOfGavelQueries - numberOfWriteQueries;
 
-            numberOfChangePasswordQueries = 20;
-            numberOfChangeAuctionQueries = 20;
+            numberOfGetAuctionQueries = numberOfReadQueries / 5;
+            numberOfGetBidQueries = numberOfReadQueries / 5;
+            numberOfGetUserQueries = numberOfReadQueries / 5;
+            numberOfGetCurrentlyHighestBidOnAuctionQueries = numberOfReadQueries / 5;
 
-            numberOfAddAuctionQueries = 100;
-            numberOfAddUserQueries = 10;
-            numberOfAddBidQueries = 10;
+            int remaining = numberOfReadQueries - (numberOfGetAuctionQueries + numberOfGetBidQueries + numberOfGetUserQueries + numberOfGetCurrentlyHighestBidOnAuctionQueries);
+
+            numberOfGetAllBidsOnAuctionQueries = remaining / 8;
+            numberOfSearchAuctionQueries = remaining / 8;
 
             numberOfGetTheNextHundredEndingAuctionsOfACategoryQueries = 0;
-            numberOfCountAuctionsQueries = 20;
-            numberOfCountBidsQueries = 20;
+            numberOfCountAuctionsQueries = remaining / 8;
+            numberOfCountBidsQueries = remaining / 8;
+            numberOfTopTenCitiesByNumberOfCustomersQueries = remaining / 8;
 
-            numberOfTopTenCitiesByNumberOfCustomersQueries = 20;
+            totalNumOfPriceBetweenAndNotInCategoryQueries = remaining / 8;
+            totalNumOfHighestOverallBidQueries = remaining / 8;
+            totalNumOfTopHundredSellerByNumberOfAuctionsQueries = remaining - (numberOfGetAllBidsOnAuctionQueries + numberOfSearchAuctionQueries + numberOfCountAuctionsQueries + numberOfCountBidsQueries + numberOfTopTenCitiesByNumberOfCustomersQueries + totalNumOfPriceBetweenAndNotInCategoryQueries + totalNumOfHighestOverallBidQueries);
 
-            totalNumOfPriceBetweenAndNotInCategoryQueries = 20;
-            totalNumOfHighestOverallBidQueries = 5;
-            totalNumOfTopHundredSellerByNumberOfAuctionsQueries = 5;
+            // DML
+            numberOfAddAuctionQueries = (numberOfWriteQueries / 4) * 3;
+            remaining = numberOfWriteQueries - numberOfAddAuctionQueries;
+            numberOfChangePasswordQueries = remaining / 4;
+            numberOfChangeAuctionQueries = remaining / 4;
+            numberOfAddUserQueries = remaining / 4;
+            numberOfAddBidQueries = remaining - (numberOfChangePasswordQueries + numberOfChangeAuctionQueries + numberOfAddUserQueries + numberOfAddBidQueries);
 
             // Data Generation
             numberOfUsers = 1_000;

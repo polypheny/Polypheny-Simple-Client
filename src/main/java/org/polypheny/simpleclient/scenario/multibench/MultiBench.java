@@ -59,96 +59,148 @@ public class MultiBench extends Scenario {
         PolyphenyDbMultiExecutorFactory executorFactory = (PolyphenyDbMultiExecutorFactory) multiExecutorFactory;
 
         // Initialize underlying benchmarks
-        gavel = new Gavel(
-                executorFactory.getJdbcExecutorFactory(),
-                config.getGavelConfig(),
-                commitAfterEveryQuery,
-                dumpQueryList,
-                QueryMode.TABLE
-        );
-        graphBench = new GraphBench(
-                executorFactory.getCypherExecutorFactory(),
-                config.getGraphBenchConfig(),
-                commitAfterEveryQuery,
-                dumpQueryList
-        );
-        docBench = new DocBench(
-                executorFactory.getMongoQlExecutorFactory(),
-                config.getDocBenchConfig(),
-                commitAfterEveryQuery,
-                dumpQueryList
-        );
-        knnBench = new KnnBench(
-                executorFactory.getJdbcExecutorFactory(),
-                config.getKnnBenchConfig(),
-                commitAfterEveryQuery,
-                dumpQueryList
-        );
+        if ( config.numberOfGavelQueries > 0 ) {
+            gavel = new Gavel(
+                    executorFactory.getJdbcExecutorFactory(),
+                    config.getGavelConfig(),
+                    commitAfterEveryQuery,
+                    dumpQueryList,
+                    QueryMode.TABLE
+            );
+        } else {
+            gavel = null;
+        }
+        if ( config.numberOfGraphBenchQueries > 0 ) {
+            graphBench = new GraphBench(
+                    executorFactory.getCypherExecutorFactory(),
+                    config.getGraphBenchConfig(),
+                    commitAfterEveryQuery,
+                    dumpQueryList
+            );
+        } else {
+            graphBench = null;
+        }
+        if ( config.numberOfDocBenchQueries > 0 ) {
+            docBench = new DocBench(
+                    executorFactory.getMongoQlExecutorFactory(),
+                    config.getDocBenchConfig(),
+                    commitAfterEveryQuery,
+                    dumpQueryList
+            );
+        } else {
+            docBench = null;
+        }
+        if ( config.numberOfKnnBenchQueries > 0 ) {
+            knnBench = new KnnBench(
+                    executorFactory.getJdbcExecutorFactory(),
+                    config.getKnnBenchConfig(),
+                    commitAfterEveryQuery,
+                    dumpQueryList
+            );
+        } else {
+            knnBench = null;
+        }
     }
 
 
     @Override
     public void createSchema( DatabaseInstance databaseInstance, boolean includingKeys ) {
         log.info( "Creating MultiBench schemas..." );
-        docBench.createSchema( databaseInstance, includingKeys );
-        gavel.createSchema( databaseInstance, includingKeys );
-        graphBench.createSchema( databaseInstance, includingKeys );
-        knnBench.createSchema( databaseInstance, includingKeys );
+        if ( docBench != null ) {
+            docBench.createSchema( databaseInstance, includingKeys );
+        }
+        if ( gavel != null ) {
+            gavel.createSchema( databaseInstance, includingKeys );
+        }
+        if ( graphBench != null ) {
+            graphBench.createSchema( databaseInstance, includingKeys );
+        }
+        if ( knnBench != null ) {
+            knnBench.createSchema( databaseInstance, includingKeys );
+        }
     }
 
 
     @Override
     public void generateData( DatabaseInstance databaseInstance, ProgressReporter progressReporter ) {
-        log.info( "Generating MultiBench data..." );
-        progressReporter.update( 0 );
-        System.out.println( "Generating DocBench data..." );
-        docBench.generateData( databaseInstance, progressReporter );
-        System.out.println( "Generating DocBench data... done" );
-        progressReporter.update( 0 );
-        System.out.println( "Generating Gavel data..." );
-        gavel.generateData( databaseInstance, progressReporter );
-        System.out.println( "Generating Gavel data... done" );
-        progressReporter.update( 0 );
-        System.out.println( "Generating KnnBench data..." );
-        knnBench.generateData( databaseInstance, progressReporter );
-        System.out.println( "Generating KnnBench data... done" );
-        progressReporter.update( 0 );
-        System.out.println( "Generating GraphBench data..." );
-        graphBench.generateData( databaseInstance, progressReporter );
-        System.out.println( "Generating GraphBench data... done" );
+        if ( docBench != null ) {
+            progressReporter.update( 0 );
+            log.info( "Generating DocBench data..." );
+            docBench.generateData( databaseInstance, progressReporter );
+        }
+
+        if ( gavel != null ) {
+            progressReporter.update( 0 );
+            log.info( "Generating Gavel data..." );
+            gavel.generateData( databaseInstance, progressReporter );
+        }
+
+        if ( knnBench != null ) {
+            progressReporter.update( 0 );
+            log.info( "Generating KnnBench data..." );
+            knnBench.generateData( databaseInstance, progressReporter );
+        }
+
+        if ( graphBench != null ) {
+            progressReporter.update( 0 );
+            log.info( "Generating GraphBench data..." );
+            graphBench.generateData( databaseInstance, progressReporter );
+        }
     }
 
 
     @Override
     public void warmUp( ProgressReporter progressReporter ) {
-        log.info( "MultiBench Warm-up..." );
-        docBench.warmUp( progressReporter );
-        knnBench.warmUp( progressReporter );
-        gavel.warmUp( progressReporter );
-        graphBench.warmUp( progressReporter );
+        if ( docBench != null ) {
+            log.info( "DocBench Warm-up..." );
+            docBench.warmUp( progressReporter );
+        }
+
+        if ( knnBench != null ) {
+            log.info( "KnnBench Warm-up..." );
+            knnBench.warmUp( progressReporter );
+        }
+
+        if ( gavel != null ) {
+            log.info( "Gavel Warm-up..." );
+            gavel.warmUp( progressReporter );
+        }
+
+        if ( graphBench != null ) {
+            log.info( "GraphBench Warm-up..." );
+            graphBench.warmUp( progressReporter );
+        }
     }
 
 
     @Override
     public long execute( ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory, int numberOfThreads ) {
-        log.info( "MultiBench workloads..." );
         long runtime = 0;
-        progressReporter.update( 0 );
-        System.out.println( "Executing GraphBench..." );
-        runtime += graphBench.execute( progressReporter, csvWriter, outputDirectory, numberOfThreads );
-        System.out.println( "Executing GraphBench... done" );
-        progressReporter.update( 0 );
-        System.out.println( "Executing DocBench..." );
-        runtime += docBench.execute( progressReporter, csvWriter, outputDirectory, numberOfThreads );
-        System.out.println( "Executing DocBench... done" );
-        progressReporter.update( 0 );
-        System.out.println( "Executing KnnBench..." );
-        runtime += knnBench.execute( progressReporter, csvWriter, outputDirectory, numberOfThreads );
-        System.out.println( "Executing KnnBench... done" );
-        progressReporter.update( 0 );
-        System.out.println( "Executing Gavel..." );
-        runtime += gavel.execute( progressReporter, csvWriter, outputDirectory, numberOfThreads );
-        System.out.println( "Executing Gavel... done" );
+
+        if ( graphBench != null ) {
+            progressReporter.update( 0 );
+            log.info( "Executing GraphBench..." );
+            runtime += graphBench.execute( progressReporter, csvWriter, outputDirectory, numberOfThreads );
+        }
+
+        if ( docBench != null ) {
+            progressReporter.update( 0 );
+            log.info( "Executing DocBench..." );
+            runtime += docBench.execute( progressReporter, csvWriter, outputDirectory, numberOfThreads );
+        }
+
+        if ( knnBench != null ) {
+            progressReporter.update( 0 );
+            log.info( "Executing KnnBench..." );
+            runtime += knnBench.execute( progressReporter, csvWriter, outputDirectory, numberOfThreads );
+        }
+
+        if ( gavel != null ) {
+            progressReporter.update( 0 );
+            log.info( "Executing Gavel..." );
+            runtime += gavel.execute( progressReporter, csvWriter, outputDirectory, numberOfThreads );
+        }
+
         return runtime;
     }
 
@@ -158,31 +210,39 @@ public class MultiBench extends Scenario {
         log.info( "MultiBench Analyze..." );
 
         // DocBench
-        Properties docBenchResults = new Properties();
-        docBench.analyze( docBenchResults, new File( outputDirectory, "docbench" ) );
-        for ( Map.Entry<Object, Object> entry : docBenchResults.entrySet() ) {
-            properties.put( "docbench." + entry.getKey(), entry.getValue() );
+        if ( docBench != null ) {
+            Properties docBenchResults = new Properties();
+            docBench.analyze( docBenchResults, new File( outputDirectory, "docbench" ) );
+            for ( Map.Entry<Object, Object> entry : docBenchResults.entrySet() ) {
+                properties.put( "docbench." + entry.getKey(), entry.getValue() );
+            }
         }
 
         // GraphBench
-        Properties graphBenchResults = new Properties();
-        graphBench.analyze( graphBenchResults, new File( outputDirectory, "graphbench" ) );
-        for ( Map.Entry<Object, Object> entry : graphBenchResults.entrySet() ) {
-            properties.put( "graphbench." + entry.getKey(), entry.getValue() );
+        if ( graphBench != null ) {
+            Properties graphBenchResults = new Properties();
+            graphBench.analyze( graphBenchResults, new File( outputDirectory, "graphbench" ) );
+            for ( Map.Entry<Object, Object> entry : graphBenchResults.entrySet() ) {
+                properties.put( "graphbench." + entry.getKey(), entry.getValue() );
+            }
         }
 
         // KnnhBench
-        Properties knnBenchResults = new Properties();
-        knnBench.analyze( knnBenchResults, new File( outputDirectory, "knnbench" ) );
-        for ( Map.Entry<Object, Object> entry : knnBenchResults.entrySet() ) {
-            properties.put( "knnbench." + entry.getKey(), entry.getValue() );
+        if ( knnBench != null ) {
+            Properties knnBenchResults = new Properties();
+            knnBench.analyze( knnBenchResults, new File( outputDirectory, "knnbench" ) );
+            for ( Map.Entry<Object, Object> entry : knnBenchResults.entrySet() ) {
+                properties.put( "knnbench." + entry.getKey(), entry.getValue() );
+            }
         }
 
         // Gavel
-        Properties gavelResults = new Properties();
-        gavel.analyze( gavelResults, new File( outputDirectory, "gavel" ) );
-        for ( Map.Entry<Object, Object> entry : gavelResults.entrySet() ) {
-            properties.put( "gavel." + entry.getKey(), entry.getValue() );
+        if ( gavel != null ) {
+            Properties gavelResults = new Properties();
+            gavel.analyze( gavelResults, new File( outputDirectory, "gavel" ) );
+            for ( Map.Entry<Object, Object> entry : gavelResults.entrySet() ) {
+                properties.put( "gavel." + entry.getKey(), entry.getValue() );
+            }
         }
     }
 

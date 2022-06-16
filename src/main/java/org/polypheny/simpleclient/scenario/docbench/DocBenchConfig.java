@@ -34,7 +34,8 @@ public class DocBenchConfig extends AbstractConfig {
     public long seed;
 
     public int batchSize;
-    public int numberOfQueries;
+
+    // Data
     public int numberOfDocuments;
     public int maxNumberOfAttributes;
     public int minNumberOfAttributes;
@@ -43,6 +44,10 @@ public class DocBenchConfig extends AbstractConfig {
     public int valuesStringMaxLength;
     public int valuesStringMinLength;
 
+    // Workload
+    public int numberOfFindQueries;
+    public int numberOfUpdateQueries;
+
 
     public DocBenchConfig( Properties properties, int multiplier ) {
         super( "docbench", "polypheny-mongoql", properties );
@@ -50,7 +55,8 @@ public class DocBenchConfig extends AbstractConfig {
         seed = getLongProperty( properties, "seed" );
         batchSize = getIntProperty( properties, "batchSize" );
 
-        numberOfQueries = getIntProperty( properties, "numberOfQueries" );
+        numberOfFindQueries = getIntProperty( properties, "numberOfFindQueries" );
+        numberOfUpdateQueries = getIntProperty( properties, "numberOfUpdateQueries" );
 
         numberOfDocuments = getIntProperty( properties, "numberOfDocuments" );
         minNumberOfAttributes = getIntProperty( properties, "minNumberOfAttributes" );
@@ -68,7 +74,8 @@ public class DocBenchConfig extends AbstractConfig {
         seed = Integer.parseInt( cdl.get( "seed" ) );
         batchSize = Integer.parseInt( cdl.get( "batchSize" ) );
 
-        numberOfQueries = Integer.parseInt( cdl.get( "numberOfQueries" ) );
+        numberOfFindQueries = Integer.parseInt( cdl.get( "numberOfFindQueries" ) );
+        numberOfUpdateQueries = Integer.parseInt( cdl.get( "numberOfUpdateQueries" ) );
 
         numberOfDocuments = Integer.parseInt( cdl.get( "numberOfDocuments" ) );
         minNumberOfAttributes = Integer.parseInt( cdl.get( "minNumberOfAttributes" ) );
