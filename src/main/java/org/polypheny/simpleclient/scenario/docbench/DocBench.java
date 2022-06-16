@@ -51,6 +51,7 @@ import org.polypheny.simpleclient.query.QueryListEntry;
 import org.polypheny.simpleclient.query.RawQuery;
 import org.polypheny.simpleclient.scenario.Scenario;
 import org.polypheny.simpleclient.scenario.docbench.queryBuilder.SearchProductQueryBuilder;
+import org.polypheny.simpleclient.scenario.docbench.queryBuilder.UpdateProductQueryBuilder;
 
 
 @Slf4j
@@ -117,7 +118,8 @@ public class DocBench extends Scenario {
     public long execute( ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory, int numberOfThreads ) {
         log.info( "Preparing query list for the benchmark..." );
         List<QueryListEntry> queryList = new Vector<>();
-        addNumberOfTimes( queryList, new SearchProductQueryBuilder( random, valuesPool, config ), config.numberOfQueries );
+        addNumberOfTimes( queryList, new SearchProductQueryBuilder( random, valuesPool, config ), config.numberOfFindQueries );
+        addNumberOfTimes( queryList, new UpdateProductQueryBuilder( random, valuesPool, config ), config.numberOfUpdateQueries );
         Collections.shuffle( queryList, random );
 
         // This dumps the MQL queries independent of the selected interface
@@ -183,10 +185,12 @@ public class DocBench extends Scenario {
         log.info( "Warm-up..." );
         Executor executor = null;
         SearchProductQueryBuilder searchProduct = new SearchProductQueryBuilder( random, valuesPool, config );
+        UpdateProductQueryBuilder updateProduct = new UpdateProductQueryBuilder( random, valuesPool, config );
         for ( int i = 0; i < config.numberOfWarmUpIterations; i++ ) {
             try {
                 executor = executorFactory.createExecutorInstance( null, NAMESPACE );
                 executor.executeQuery( searchProduct.getNewQuery() );
+                executor.executeQuery( updateProduct.getNewQuery() );
             } catch ( ExecutorException e ) {
                 throw new RuntimeException( "Error while executing warm-up queries", e );
             } finally {
