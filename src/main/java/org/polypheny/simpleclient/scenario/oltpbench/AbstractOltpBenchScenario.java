@@ -73,16 +73,32 @@ public abstract class AbstractOltpBenchScenario extends Scenario {
         log.info( "Creating schema using OLTPbench..." );
         OltpBenchExecutor executor;
         try {
+            preSchemaCreationTasks( databaseInstance, executorFactory );
             executor = executorFactory.createExecutorInstance();
-            executor.createSchema( config );
+            try {
+                executor.createSchema( config );
+            } finally {
+                commitAndCloseExecutor( executor );
+            }
+            postSchemaCreationTasks( databaseInstance, executorFactory );
         } catch ( ExecutorException e ) {
             throw new RuntimeException( "Exception while creating schema", e );
         }
     }
 
 
+    protected void preSchemaCreationTasks( DatabaseInstance databaseInstance, ExecutorFactory executorFactory ) throws ExecutorException {
+        // Do nothing
+    }
+
+
+    protected void postSchemaCreationTasks( DatabaseInstance databaseInstance, ExecutorFactory executorFactory ) throws ExecutorException {
+        // Do nothing
+    }
+
+
     @Override
-    public void generateData( ProgressReporter progressReporter ) {
+    public void generateData( DatabaseInstance databaseInstance, ProgressReporter progressReporter ) {
         if ( queryMode != QueryMode.TABLE ) {
             throw new UnsupportedOperationException( "Unsupported query mode: " + queryMode.name() );
         }
@@ -91,10 +107,26 @@ public abstract class AbstractOltpBenchScenario extends Scenario {
         OltpBenchExecutor executor;
         try {
             executor = executorFactory.createExecutorInstance();
-            executor.loadData( config );
+            preDataGenerationTasks( databaseInstance, executorFactory );
+            try {
+                executor.loadData( config );
+            } finally {
+                commitAndCloseExecutor( executor );
+            }
+            postDataGenerationTasks( databaseInstance, executorFactory );
         } catch ( ExecutorException e ) {
             throw new RuntimeException( "Exception while loading data", e );
         }
+    }
+
+
+    protected void preDataGenerationTasks( DatabaseInstance databaseInstance, ExecutorFactory executorFactory ) throws ExecutorException {
+        // Do nothing
+    }
+
+
+    protected void postDataGenerationTasks( DatabaseInstance databaseInstance, ExecutorFactory executorFactory ) throws ExecutorException {
+        // Do nothing
     }
 
 

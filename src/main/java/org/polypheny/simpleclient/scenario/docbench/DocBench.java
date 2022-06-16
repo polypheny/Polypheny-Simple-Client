@@ -99,7 +99,7 @@ public class DocBench extends Scenario {
 
 
     @Override
-    public void generateData( ProgressReporter progressReporter ) {
+    public void generateData( DatabaseInstance databaseInstance, ProgressReporter progressReporter ) {
         log.info( "Generating data..." );
         Executor executor = executorFactory.createExecutorInstance( null, NAMESPACE );
         DataGenerator dataGenerator = new DataGenerator( random, executor, config, progressReporter, valuesPool );

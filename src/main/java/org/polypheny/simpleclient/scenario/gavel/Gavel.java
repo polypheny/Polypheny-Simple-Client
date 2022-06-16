@@ -488,7 +488,7 @@ public class Gavel extends Scenario {
 
 
     @Override
-    public void generateData( ProgressReporter progressReporter ) {
+    public void generateData( DatabaseInstance databaseInstance, ProgressReporter progressReporter ) {
         log.info( "Generating data..." );
 
         DataGenerationThreadMonitor threadMonitor = new DataGenerationThreadMonitor();

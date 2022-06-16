@@ -52,7 +52,7 @@ public class AuctionMarkCommand extends AbstractOltpBenchCommand {
         AuctionMarkConfig config = new AuctionMarkConfig( getProperties( "auctionmark.properties" ), multiplier );
         AuctionMark auctionMark = new AuctionMark( executorFactory, config, false, QueryMode.TABLE );
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
-        auctionMark.generateData( progressReporter );
+        auctionMark.generateData( null, progressReporter );
     }
 
 

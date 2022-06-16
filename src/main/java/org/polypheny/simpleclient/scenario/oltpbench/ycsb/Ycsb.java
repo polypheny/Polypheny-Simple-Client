@@ -24,9 +24,17 @@
 
 package org.polypheny.simpleclient.scenario.oltpbench.ycsb;
 
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.QueryMode;
+import org.polypheny.simpleclient.executor.Executor;
+import org.polypheny.simpleclient.executor.Executor.DatabaseInstance;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
+import org.polypheny.simpleclient.executor.ExecutorException;
+import org.polypheny.simpleclient.executor.PolyphenyDbExecutor;
+import org.polypheny.simpleclient.executor.PolyphenyDbExecutor.PolyphenyDbInstance;
+import org.polypheny.simpleclient.query.RawQuery;
 import org.polypheny.simpleclient.scenario.oltpbench.AbstractOltpBenchScenario;
 
 
@@ -35,6 +43,67 @@ public class Ycsb extends AbstractOltpBenchScenario {
 
     public Ycsb( ExecutorFactory executorFactory, YcsbConfig config, boolean dumpQueryList, QueryMode queryMode ) {
         super( executorFactory, config, dumpQueryList, queryMode );
+    }
+
+
+    @Override
+    protected void preSchemaCreationTasks( DatabaseInstance databaseInstance, ExecutorFactory executorFactory ) throws ExecutorException {
+        Executor executor = executorFactory.createExecutorInstance();
+        try {
+            // Set table placement strategy
+            if ( databaseInstance instanceof PolyphenyDbInstance && ((YcsbConfig) config).partitionTable ) {
+                if ( config.dataStores.size() > 1 ) {
+                    ((PolyphenyDbExecutor) executor).setConfig( "routing/createPlacementStrategy", "org.polypheny.db.routing.strategies.CreateAllPlacementStrategy" );
+                }
+            }
+        } finally {
+            commitAndCloseExecutor( executor );
+        }
+    }
+
+
+    @Override
+    protected void postSchemaCreationTasks( DatabaseInstance databaseInstance, ExecutorFactory executorFactory ) throws ExecutorException {
+        Executor executor = executorFactory.createExecutorInstance();
+        try {
+            // Partition usertable table
+            if ( databaseInstance instanceof PolyphenyDbInstance && ((YcsbConfig) config).partitionTable ) {
+                if ( config.dataStores.size() > 1 ) {
+                    List<String> storeNames = ((PolyphenyDbExecutor) executor).storeNames;
+                    String partitionNames = storeNames.stream()
+                            .map( obj -> "p_" + obj )
+                            .collect( Collectors.joining( "," ) );
+                    executor.executeQuery( RawQuery.builder()
+                            .sql( "ALTER TABLE usertable PARTITION BY HASH (YCSB_KEY) WITH (" + partitionNames + ")" )
+                            .expectResultSet( false )
+                            .build() );
+                }
+            }
+        } finally {
+            commitAndCloseExecutor( executor );
+        }
+    }
+
+
+    @Override
+    protected void postDataGenerationTasks( DatabaseInstance databaseInstance, ExecutorFactory executorFactory ) throws ExecutorException {
+        Executor executor = executorFactory.createExecutorInstance();
+        try {
+            // Partition usertable
+            if ( databaseInstance instanceof PolyphenyDbInstance && ((YcsbConfig) config).partitionTable ) {
+                if ( config.dataStores.size() > 1 ) {
+                    List<String> storeNames = ((PolyphenyDbExecutor) executor).storeNames;
+                    for ( String storeName : storeNames ) {
+                        executor.executeQuery( RawQuery.builder()
+                                .sql( "ALTER TABLE usertable MODIFY PARTITIONS (p_" + storeName + ") ON STORE " + storeName )
+                                .expectResultSet( false )
+                                .build() );
+                    }
+                }
+            }
+        } finally {
+            commitAndCloseExecutor( executor );
+        }
     }
 
 }

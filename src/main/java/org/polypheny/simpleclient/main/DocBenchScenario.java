@@ -49,7 +49,7 @@ public class DocBenchScenario {
         DocBench DocBench = new DocBench( executorFactory, config, commitAfterEveryQuery, false );
 
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
-        DocBench.generateData( progressReporter );
+        DocBench.generateData( null, progressReporter );
     }
 
 

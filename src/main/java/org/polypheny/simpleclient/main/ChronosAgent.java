@@ -54,6 +54,7 @@ import org.polypheny.simpleclient.executor.OltpBenchPolyphenyDbExecutor.OltpBenc
 import org.polypheny.simpleclient.executor.OltpBenchPolyphenyDbExecutor.OltpBenchPolyphenyInstance;
 import org.polypheny.simpleclient.executor.OltpBenchPostgresExecutor.OltpBenchPostgresExecutorFactory;
 import org.polypheny.simpleclient.executor.PolyphenyDbCypherExecutor.PolyphenyDbCypherExecutorFactory;
+import org.polypheny.simpleclient.executor.PolyphenyDbExecutor;
 import org.polypheny.simpleclient.executor.PolyphenyDbExecutor.PolyphenyDbInstance;
 import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory;
 import org.polypheny.simpleclient.executor.PolyphenyDbMongoQlExecutor.PolyphenyDbMongoQlExecutorFactory;
@@ -299,10 +300,12 @@ public class ChronosAgent extends AbstractChronosAgent {
             case "polypheny-rest":
             case "polypheny-mongoql":
             case "polypheny-cypher":
+                PolyphenyDbExecutor.storeNames.clear();
                 databaseInstance = new PolyphenyDbInstance( polyphenyControlConnector, executorFactory, outputDirectory, config );
                 scenario.createSchema( databaseInstance, true );
                 break;
             case "oltpbench-polypheny":
+                PolyphenyDbExecutor.storeNames.clear();
                 databaseInstance = new OltpBenchPolyphenyInstance( polyphenyControlConnector, executorFactory, outputDirectory, config );
                 scenario.createSchema( databaseInstance, true );
                 break;
@@ -336,7 +339,7 @@ public class ChronosAgent extends AbstractChronosAgent {
                 scenario.getNumberOfInsertThreads(),
                 config.progressReportBase );
         try {
-            scenario.generateData( progressReporter );
+            scenario.generateData( databaseInstance, progressReporter );
         } catch ( Exception e ) {
             databaseInstance.tearDown();
             throw e;

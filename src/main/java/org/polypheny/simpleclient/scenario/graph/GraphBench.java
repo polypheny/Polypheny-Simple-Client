@@ -114,7 +114,7 @@ public class GraphBench extends Scenario {
 
 
     @Override
-    public void generateData( ProgressReporter progressReporter ) {
+    public void generateData( DatabaseInstance databaseInstance, ProgressReporter progressReporter ) {
         log.info( "Generating data..." );
         Executor executor1 = executorFactory.createExecutorInstance( null, GRAPH_NAMESPACE );
         assert executor1 instanceof PolyphenyDbCypherExecutor;

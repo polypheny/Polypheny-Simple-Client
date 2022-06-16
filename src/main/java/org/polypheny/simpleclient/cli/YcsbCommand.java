@@ -52,7 +52,7 @@ public class YcsbCommand extends AbstractOltpBenchCommand {
         YcsbConfig config = new YcsbConfig( getProperties( "ycsb.properties" ), multiplier );
         Ycsb ycsb = new Ycsb( executorFactory, config, false, QueryMode.TABLE );
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
-        ycsb.generateData( progressReporter );
+        ycsb.generateData( null, progressReporter );
     }
 
 

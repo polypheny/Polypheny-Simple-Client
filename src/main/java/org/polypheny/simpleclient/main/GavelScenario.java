@@ -50,7 +50,7 @@ public class GavelScenario {
         Gavel gavel = new Gavel( executorFactory, config, commitAfterEveryQuery, false, queryMode );
 
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
-        gavel.generateData( progressReporter );
+        gavel.generateData( null, progressReporter );
     }
 
 
