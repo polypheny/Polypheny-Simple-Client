@@ -49,7 +49,7 @@ public class GraphBenchScenario {
         GraphBench graphBench = new GraphBench( executorFactory, config, commitAfterEveryQuery, false );
 
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
-        graphBench.generateData( progressReporter );
+        graphBench.generateData( null, progressReporter );
     }
 
 

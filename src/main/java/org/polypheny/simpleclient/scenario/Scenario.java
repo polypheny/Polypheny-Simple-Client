@@ -65,7 +65,7 @@ public abstract class Scenario {
 
     public abstract void createSchema( DatabaseInstance databaseInstance, boolean includingKeys );
 
-    public abstract void generateData( ProgressReporter progressReporter );
+    public abstract void generateData( DatabaseInstance databaseInstance, ProgressReporter progressReporter );
 
     public abstract long execute( ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory, int numberOfThreads );
 

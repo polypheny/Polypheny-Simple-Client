@@ -98,23 +98,23 @@ public class MultiBench extends Scenario {
 
 
     @Override
-    public void generateData( ProgressReporter progressReporter ) {
+    public void generateData( DatabaseInstance databaseInstance, ProgressReporter progressReporter ) {
         log.info( "Generating MultiBench data..." );
         progressReporter.update( 0 );
         System.out.println( "Generating DocBench data..." );
-        docBench.generateData( progressReporter );
+        docBench.generateData( databaseInstance, progressReporter );
         System.out.println( "Generating DocBench data... done" );
         progressReporter.update( 0 );
         System.out.println( "Generating Gavel data..." );
-        gavel.generateData( progressReporter );
+        gavel.generateData( databaseInstance, progressReporter );
         System.out.println( "Generating Gavel data... done" );
         progressReporter.update( 0 );
         System.out.println( "Generating KnnBench data..." );
-        knnBench.generateData( progressReporter );
+        knnBench.generateData( databaseInstance, progressReporter );
         System.out.println( "Generating KnnBench data... done" );
         progressReporter.update( 0 );
         System.out.println( "Generating GraphBench data..." );
-        graphBench.generateData( progressReporter );
+        graphBench.generateData( databaseInstance, progressReporter );
         System.out.println( "Generating GraphBench data... done" );
     }
 

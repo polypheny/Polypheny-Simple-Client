@@ -49,7 +49,7 @@ public class MultimediaScenario {
         MultimediaBench multimediaBench = new MultimediaBench( executorFactory, config, commitAfterEveryQuery, false );
 
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
-        multimediaBench.generateData( progressReporter );
+        multimediaBench.generateData( null, progressReporter );
     }
 
 

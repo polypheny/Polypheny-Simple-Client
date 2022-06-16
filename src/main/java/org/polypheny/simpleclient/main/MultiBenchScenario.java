@@ -56,7 +56,7 @@ public class MultiBenchScenario {
         MultiBench MultiBench = new MultiBench( executorFactory, config, commitAfterEveryQuery, false );
 
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
-        MultiBench.generateData( progressReporter );
+        MultiBench.generateData( null, progressReporter );
     }
 
 

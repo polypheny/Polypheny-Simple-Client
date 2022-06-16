@@ -49,7 +49,7 @@ public class KnnBenchScenario {
         KnnBench knnBench = new KnnBench( executorFactory, config, commitAfterEveryQuery, false );
 
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
-        knnBench.generateData( progressReporter );
+        knnBench.generateData( null, progressReporter );
     }
 
 

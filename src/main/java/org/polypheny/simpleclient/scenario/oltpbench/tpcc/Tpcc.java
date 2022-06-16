@@ -28,10 +28,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.QueryMode;
+import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.executor.Executor.DatabaseInstance;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
 import org.polypheny.simpleclient.executor.ExecutorException;
-import org.polypheny.simpleclient.executor.OltpBenchExecutor;
 import org.polypheny.simpleclient.executor.PolyphenyDbExecutor;
 import org.polypheny.simpleclient.executor.PolyphenyDbExecutor.PolyphenyDbInstance;
 import org.polypheny.simpleclient.query.RawQuery;
@@ -47,26 +47,25 @@ public class Tpcc extends AbstractOltpBenchScenario {
 
 
     @Override
-    public void createSchema( DatabaseInstance databaseInstance, boolean includingKeys ) {
-        if ( queryMode != QueryMode.TABLE ) {
-            throw new UnsupportedOperationException( "Unsupported query mode: " + queryMode.name() );
-        }
-
-        log.info( "Creating schema using OLTPbench..." );
-        OltpBenchExecutor executor;
+    protected void preSchemaCreationTasks( DatabaseInstance databaseInstance, ExecutorFactory executorFactory ) throws ExecutorException {
+        Executor executor = executorFactory.createExecutorInstance();
         try {
-            executor = executorFactory.createExecutorInstance();
-
             // Set table placement strategy
             if ( databaseInstance instanceof PolyphenyDbInstance && ((TpccConfig) config).partitionItemTable ) {
                 if ( config.dataStores.size() > 1 ) {
                     ((PolyphenyDbExecutor) executor).setConfig( "routing/createPlacementStrategy", "org.polypheny.db.routing.strategies.CreateAllPlacementStrategy" );
                 }
             }
+        } finally {
+            commitAndCloseExecutor( executor );
+        }
+    }
 
-            // Create schema
-            executor.createSchema( config );
 
+    @Override
+    protected void postSchemaCreationTasks( DatabaseInstance databaseInstance, ExecutorFactory executorFactory ) throws ExecutorException {
+        Executor executor = executorFactory.createExecutorInstance();
+        try {
             // Partition item table
             if ( databaseInstance instanceof PolyphenyDbInstance && ((TpccConfig) config).partitionItemTable ) {
                 if ( config.dataStores.size() > 1 ) {
@@ -78,6 +77,22 @@ public class Tpcc extends AbstractOltpBenchScenario {
                             .sql( "ALTER TABLE item PARTITION BY HASH (i_id) WITH (" + partitionNames + ")" )
                             .expectResultSet( false )
                             .build() );
+                }
+            }
+        } finally {
+            commitAndCloseExecutor( executor );
+        }
+    }
+
+
+    @Override
+    protected void postDataGenerationTasks( DatabaseInstance databaseInstance, ExecutorFactory executorFactory ) throws ExecutorException {
+        Executor executor = executorFactory.createExecutorInstance();
+        try {
+            // Partition item table
+            if ( databaseInstance instanceof PolyphenyDbInstance && ((TpccConfig) config).partitionItemTable ) {
+                if ( config.dataStores.size() > 1 ) {
+                    List<String> storeNames = ((PolyphenyDbExecutor) executor).storeNames;
                     for ( String storeName : storeNames ) {
                         executor.executeQuery( RawQuery.builder()
                                 .sql( "ALTER TABLE item MODIFY PARTITIONS (p_" + storeName + ") ON STORE " + storeName )
@@ -86,8 +101,8 @@ public class Tpcc extends AbstractOltpBenchScenario {
                     }
                 }
             }
-        } catch ( ExecutorException e ) {
-            throw new RuntimeException( "Exception while creating schema", e );
+        } finally {
+            commitAndCloseExecutor( executor );
         }
     }
 

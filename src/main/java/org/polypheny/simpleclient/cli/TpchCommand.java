@@ -52,7 +52,7 @@ public class TpchCommand extends AbstractOltpBenchCommand {
         TpchConfig config = new TpchConfig( getProperties( "tpch.properties" ), multiplier );
         Tpch tpch = new Tpch( executorFactory, config, false, QueryMode.TABLE );
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
-        tpch.generateData( progressReporter );
+        tpch.generateData( null, progressReporter );
     }
 
 

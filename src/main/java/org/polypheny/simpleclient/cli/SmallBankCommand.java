@@ -52,7 +52,7 @@ public class SmallBankCommand extends AbstractOltpBenchCommand {
         SmallBankConfig config = new SmallBankConfig( getProperties( "smallbank.properties" ), multiplier );
         SmallBank smallBank = new SmallBank( executorFactory, config, false, QueryMode.TABLE );
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
-        smallBank.generateData( progressReporter );
+        smallBank.generateData( null, progressReporter );
     }
 
 

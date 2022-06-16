@@ -53,6 +53,8 @@ public class YcsbConfig extends AbstractOltpBenchConfig {
     public int deleteRecordWeight;
     public int readModifyWriteRecordWeight;
 
+    public boolean partitionTable;
+
 
     public YcsbConfig( Properties properties, int multiplier ) {
         super( properties, multiplier, "ycsb", "oltpbench-polypheny" );
@@ -67,6 +69,8 @@ public class YcsbConfig extends AbstractOltpBenchConfig {
         updateRecordWeight = getIntProperty( properties, "updateRecordWeight" );
         deleteRecordWeight = getIntProperty( properties, "deleteRecordWeight" );
         readModifyWriteRecordWeight = getIntProperty( properties, "readModifyWriteRecordWeight" );
+
+        partitionTable = getBooleanProperty( properties, "partitionTable" );
     }
 
 
@@ -83,6 +87,8 @@ public class YcsbConfig extends AbstractOltpBenchConfig {
         updateRecordWeight = Integer.parseInt( cdl.get( "updateRecordWeight" ) );
         deleteRecordWeight = Integer.parseInt( cdl.get( "deleteRecordWeight" ) );
         readModifyWriteRecordWeight = Integer.parseInt( cdl.get( "readModifyWriteRecordWeight" ) );
+
+        partitionTable = Boolean.parseBoolean( cdl.get( "partitionTable" ) );
     }
 
 

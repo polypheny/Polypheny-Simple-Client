@@ -140,7 +140,7 @@ public class MultimediaBench extends Scenario {
 
 
     @Override
-    public void generateData( ProgressReporter progressReporter ) {
+    public void generateData( DatabaseInstance databaseInstance, ProgressReporter progressReporter ) {
         log.info( "Generating data..." );
         Executor executor1 = executorFactory.createExecutorInstance();
         DataGenerator dataGenerator = new DataGenerator( executor1, config, progressReporter );
