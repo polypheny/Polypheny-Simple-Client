@@ -291,7 +291,10 @@ public abstract class JdbcExecutor implements Executor {
                 stringBuilder.append( "," ).append( rowExpression );
             }
         }
-        executeQuery( new RawQuery( stringBuilder.toString(), null, false ) );
+        executeQuery( RawQuery.builder()
+                .sql( stringBuilder.toString() )
+                .expectResultSet( false )
+                .build() );
     }
 
 

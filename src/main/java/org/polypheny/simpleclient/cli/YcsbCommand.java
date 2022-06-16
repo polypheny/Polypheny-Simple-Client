@@ -43,7 +43,7 @@ public class YcsbCommand extends AbstractOltpBenchCommand {
     protected void schema( ExecutorFactory executorFactory ) {
         YcsbConfig config = new YcsbConfig( getProperties( "ycsb.properties" ), 1 );
         Ycsb ycsb = new Ycsb( executorFactory, config, false, QueryMode.TABLE );
-        ycsb.createSchema( true );
+        ycsb.createSchema( null, true );
     }
 
 

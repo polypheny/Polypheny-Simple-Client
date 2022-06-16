@@ -40,7 +40,7 @@ public class GraphBenchScenario {
     public static void schema( ExecutorFactory executorFactory, boolean commitAfterEveryQuery ) {
         GraphBenchConfig config = new GraphBenchConfig( getProperties(), 1 );
         GraphBench graphBench = new GraphBench( executorFactory, config, commitAfterEveryQuery, false );
-        graphBench.createSchema( true );
+        graphBench.createSchema( null, true );
     }
 
 

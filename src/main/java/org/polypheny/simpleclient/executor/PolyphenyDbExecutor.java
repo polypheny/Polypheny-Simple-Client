@@ -50,6 +50,8 @@ public interface PolyphenyDbExecutor extends Executor {
     AtomicInteger storeCounter = new AtomicInteger();
     AtomicInteger nextPort = new AtomicInteger( 3300 );
 
+    List<String> storeNames = new ArrayList<>();
+
 
     void dropStore( String name ) throws ExecutorException;
 
@@ -57,15 +59,18 @@ public interface PolyphenyDbExecutor extends Executor {
     void deployStore( String name, String clazz, String config ) throws ExecutorException;
 
 
-    default void deployHsqldb() throws ExecutorException {
+    default String deployHsqldb() throws ExecutorException {
+        String storeName = "hsqldb" + storeCounter.getAndIncrement();
         deployStore(
-                "hsqldb" + storeCounter.getAndIncrement(),
+                storeName,
                 "org.polypheny.db.adapter.jdbc.stores.HsqldbStore",
                 "{maxConnections:\"25\",trxControlMode:locks,trxIsolationLevel:read_committed,type:Memory,tableType:Memory,mode:embedded}" );
+        storeNames.add( storeName );
+        return storeName;
     }
 
 
-    default void deployMonetDb( boolean deployStoresUsingDocker ) throws ExecutorException {
+    default String deployMonetDb( boolean deployStoresUsingDocker ) throws ExecutorException {
         String config;
         String name;
         if ( deployStoresUsingDocker ) {
@@ -79,10 +84,12 @@ public interface PolyphenyDbExecutor extends Executor {
                 name,
                 "org.polypheny.db.adapter.jdbc.stores.MonetdbStore",
                 config );
+        storeNames.add( name );
+        return name;
     }
 
 
-    default void deployPostgres( boolean deployStoresUsingDocker ) throws ExecutorException {
+    default String deployPostgres( boolean deployStoresUsingDocker ) throws ExecutorException {
         String config;
         String name;
         if ( deployStoresUsingDocker ) {
@@ -96,10 +103,12 @@ public interface PolyphenyDbExecutor extends Executor {
                 name,
                 "org.polypheny.db.adapter.jdbc.stores.PostgresqlStore",
                 config );
+        storeNames.add( name );
+        return name;
     }
 
 
-    default void deployCassandra( boolean deployStoresUsingDocker ) throws ExecutorException {
+    default String deployCassandra( boolean deployStoresUsingDocker ) throws ExecutorException {
         String config;
         String name;
         if ( deployStoresUsingDocker ) {
@@ -113,39 +122,53 @@ public interface PolyphenyDbExecutor extends Executor {
                 name,
                 "org.polypheny.db.adapter.cassandra.CassandraStore",
                 config );
+        storeNames.add( name );
+        return name;
     }
 
 
-    default void deployFileStore() throws ExecutorException {
+    default String deployFileStore() throws ExecutorException {
+        String storeName = "file" + storeCounter.getAndIncrement();
         deployStore(
-                "file" + storeCounter.getAndIncrement(),
+                storeName,
                 "org.polypheny.db.adapter.file.FileStore",
                 "{\"mode\":\"embedded\"}" );
+        storeNames.add( storeName );
+        return storeName;
     }
 
 
-    default void deployCottontail() throws ExecutorException {
+    default String deployCottontail() throws ExecutorException {
+        String storeName = "cottontail" + storeCounter.getAndIncrement();
         deployStore(
-                "cottontail" + storeCounter.getAndIncrement(),
+                storeName,
                 "org.polypheny.db.adapter.cottontail.CottontailStore",
                 "{\"type\":\"Embedded\",\"host\":\"localhost\",\"port\":\"" + nextPort.getAndIncrement() + "\",\"database\":\"cottontail\",\"engine\":\"MAPDB\",\"mode\":\"embedded\"}" );
+        storeNames.add( storeName );
+        return storeName;
     }
 
 
-    default void deployMongoDb() throws ExecutorException {
+    default String deployMongoDb() throws ExecutorException {
+        String storeName = "mongodb" + storeCounter.getAndIncrement();
         String config = "{\"mode\":\"docker\",\"instanceId\":\"0\",\"port\":\"" + nextPort.getAndIncrement() + "\",\"persistent\":\"false\",\"trxLifetimeLimit\":\"1209600\"}";
         deployStore(
-                "mongodb" + storeCounter.getAndIncrement(),
+                storeName,
                 "org.polypheny.db.adapter.mongodb.MongoStore",
                 config );
+        storeNames.add( storeName );
+        return storeName;
     }
 
-    default void deployNeo4j() throws ExecutorException {
+    default String deployNeo4j() throws ExecutorException {
+        String storeName = "neo4j" + storeCounter.getAndIncrement();
         String config = "{\"mode\":\"docker\",\"instanceId\":\"0\",\"port\":\"" + nextPort.getAndIncrement() + "\"}";
         deployStore(
-                "neo4j" + storeCounter.getAndIncrement(),
+                storeName,
                 "org.polypheny.db.adapter.neo4j.Neo4jStore",
                 config );
+        storeNames.add( storeName );
+        return storeName;
     }
 
 

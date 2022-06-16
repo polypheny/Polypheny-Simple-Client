@@ -64,10 +64,10 @@ public class MonetdbExecutor extends JdbcExecutor {
         try {
             List<String> tables = getListOfTables();
             for ( String table : tables ) {
-                executeQuery( new RawQuery( "DROP TABLE IF EXISTS \"" + table + "\";", null, false ) );
-                executeQuery( new RawQuery( "DROP TABLE IF EXISTS \"public\".\"" + table + "\";", null, false ) );
+                executeQuery( RawQuery.builder().sql( "DROP TABLE IF EXISTS \"" + table + "\";" ).expectResultSet( false ).build() );
+                executeQuery( RawQuery.builder().sql( "DROP TABLE IF EXISTS \"public\".\"" + table + "\";" ).expectResultSet( false ).build() );
             }
-            executeQuery( new RawQuery( "CREATE SCHEMA IF NOT EXISTS \"public\";", null, false ) );
+            executeQuery( RawQuery.builder().sql( "CREATE SCHEMA IF NOT EXISTS \"public\";" ).expectResultSet( false ).build() );
         } catch ( SQLException e ) {
             throw new ExecutorException( e );
         }

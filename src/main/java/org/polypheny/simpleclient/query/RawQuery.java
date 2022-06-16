@@ -26,6 +26,7 @@ package org.polypheny.simpleclient.query;
 
 import java.util.Map;
 import kong.unirest.HttpRequest;
+import lombok.Builder;
 import lombok.Getter;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
@@ -50,6 +51,7 @@ public class RawQuery extends Query {
     }
 
 
+    @Builder
     public RawQuery( String sql, HttpRequest<?> rest, String mongoQl, String cypher, boolean expectResultSet ) {
         super( expectResultSet );
         this.sql = sql;

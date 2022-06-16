@@ -42,6 +42,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.executor.Executor;
+import org.polypheny.simpleclient.executor.Executor.DatabaseInstance;
 import org.polypheny.simpleclient.executor.ExecutorException;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.main.ProgressReporter;
@@ -82,7 +83,7 @@ public class DocBench extends Scenario {
 
 
     @Override
-    public void createSchema( boolean includingKeys ) {
+    public void createSchema( DatabaseInstance databaseInstance, boolean includingKeys ) {
         log.info( "Creating schema..." );
         Executor executor = null;
         try {
