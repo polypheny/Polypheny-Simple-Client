@@ -48,6 +48,7 @@ import org.polypheny.simpleclient.executor.Executor.DatabaseInstance;
 import org.polypheny.simpleclient.executor.ExecutorException;
 import org.polypheny.simpleclient.executor.JdbcExecutor;
 import org.polypheny.simpleclient.executor.MonetdbExecutor.MonetdbExecutorFactory;
+import org.polypheny.simpleclient.executor.PolyphenyDbExecutor;
 import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory;
 import org.polypheny.simpleclient.executor.PolyphenyDbMongoQlExecutor.PolyphenyDbMongoQlExecutorFactory;
 import org.polypheny.simpleclient.executor.PostgresExecutor.PostgresExecutorFactory;
@@ -427,18 +428,35 @@ public class Gavel extends Scenario {
             } else {
                 file = ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/gavel/schema-without-keys-and-constraints.sql" );
             }
+
+            String onStore = "";
+            if ( config.newTablePlacementStrategy.equalsIgnoreCase( "Optimized" ) && config.dataStores.size() > 1 ) {
+                for ( String storeName : PolyphenyDbExecutor.storeNames ) {
+                    if ( storeName.toLowerCase().startsWith( "postgres" ) || storeName.toLowerCase().startsWith( "hsqldb" ) ||
+                            storeName.toLowerCase().startsWith( "monetdb" ) ) {
+                        onStore = storeName;
+                        break;
+                    }
+                }
+                if ( onStore.equals( "" ) ) {
+                    throw new RuntimeException( "No suitable data store found for optimized placing of Gavel tables." );
+                } else {
+                    onStore = " ON STORE " + onStore;
+                }
+            }
+
             // Check if file != null
-            executeSchema( file );
+            executeSchema( file, onStore );
 
             // Create Views / Materialized Views
             if ( queryMode == QueryMode.VIEW ) {
                 log.info( "Creating Views ..." );
                 file = ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/gavel/view.sql" );
-                executeSchema( file );
+                executeSchema( file, "" );
             } else if ( queryMode == QueryMode.MATERIALIZED ) {
                 log.info( "Creating Materialized Views ..." );
                 file = ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/gavel/materialized.sql" );
-                executeSchema( file );
+                executeSchema( file, "" );
             }
         } else {
             throw new RuntimeException( "Unsupported executor factory: " + executorFactory.getClass().getName() );
@@ -467,15 +485,19 @@ public class Gavel extends Scenario {
     }
 
 
-    private void executeSchema( InputStream file ) {
+    private void executeSchema( InputStream file, String onStore ) {
         Executor executor = null;
         if ( file == null ) {
             throw new RuntimeException( "Unable to load schema definition file" );
         }
+
         try ( BufferedReader bf = new BufferedReader( new InputStreamReader( file ) ) ) {
             executor = executorFactory.createExecutorInstance();
             String line = bf.readLine();
             while ( line != null ) {
+                if ( line.toLowerCase().startsWith( "create table" ) ) {
+                    line = line + onStore;
+                }
                 executor.executeQuery( RawQuery.builder().sql( line ).expectResultSet( false ).build() );
                 line = bf.readLine();
             }
