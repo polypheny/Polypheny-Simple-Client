@@ -79,7 +79,7 @@ public class YcsbConfig extends AbstractOltpBenchConfig {
 
         time = Long.parseLong( cdl.get( "time" ) );
         rate = cdl.get( "rate" );
-        batchSize = 128;
+        batchSize = 60;
 
         readRecordWeight = Integer.parseInt( cdl.get( "readRecordWeight" ) );
         insertRecordWeight = Integer.parseInt( cdl.get( "insertRecordWeight" ) );
