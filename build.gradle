@@ -62,7 +62,7 @@ dependencies {
     implementation group: 'org.polypheny', name: 'control-connector', version: '1.2.6'  // License: Apache 2.0
 
     // Chronos
-    implementation group: 'org.chronos-eaas', name: 'chronos-agent', version: '2.4' // License: MIT
+    implementation group: 'org.chronos-eaas', name: 'chronos-agent', version: '2.4.1' // License: MIT
 
     // REST
     implementation group: 'com.konghq', name: 'unirest-java', version: '3.13.10' // License: MIT
