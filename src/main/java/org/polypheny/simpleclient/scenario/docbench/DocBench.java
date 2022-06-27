@@ -146,7 +146,7 @@ public class DocBench extends Scenario {
 
         ArrayList<EvaluationThread> threads = new ArrayList<>();
         for ( int i = 0; i < numberOfThreads; i++ ) {
-            threads.add( new EvaluationThread( queryList, executorFactory.createExecutorInstance( csvWriter ) ) );
+            threads.add( new EvaluationThread( queryList, executorFactory.createExecutorInstance( csvWriter, NAMESPACE ) ) );
         }
 
         EvaluationThreadMonitor threadMonitor = new EvaluationThreadMonitor( threads );

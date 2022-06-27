@@ -79,7 +79,11 @@ public class YcsbConfig extends AbstractOltpBenchConfig {
 
         time = Long.parseLong( cdl.get( "time" ) );
         rate = cdl.get( "rate" );
-        batchSize = 60;
+        if ( dataStores.size() > 1 && dataStores.contains( "neo4j" ) ) {
+            batchSize = 1;
+        } else {
+            batchSize = 128;
+        }
 
         readRecordWeight = Integer.parseInt( cdl.get( "readRecordWeight" ) );
         insertRecordWeight = Integer.parseInt( cdl.get( "insertRecordWeight" ) );
