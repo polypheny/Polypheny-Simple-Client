@@ -75,6 +75,7 @@ public class GraphBench extends Scenario {
     private final GraphBenchConfig config;
 
     private final List<Long> measuredTimes;
+    private long executeRuntime;
     private final Map<Integer, String> queryTypes;
     private final Map<Integer, List<Long>> measuredTimePerQueryType;
 
@@ -190,7 +191,7 @@ public class GraphBench extends Scenario {
             }
         }
 
-        long runTime = System.nanoTime() - startTime;
+        executeRuntime = System.nanoTime() - startTime;
 
         for ( EvaluationThread thread : threads ) {
             thread.closeExecutor();
@@ -200,9 +201,9 @@ public class GraphBench extends Scenario {
             throw new RuntimeException( "Exception while executing benchmark", threadMonitor.exception );
         }
 
-        log.info( "run time: {} s", runTime / 1000000000 );
+        log.info( "run time: {} s", executeRuntime / 1000000000 );
 
-        return runTime;
+        return executeRuntime;
     }
 
 
@@ -397,6 +398,9 @@ public class GraphBench extends Scenario {
             calculateResults( queryTypes, properties, templateId, time );
         } );
         properties.put( "queryTypes_maxId", queryTypes.size() );
+        properties.put( "executeRuntime", executeRuntime / 1000000000.0 );
+        properties.put( "numberOfQueries", measuredTimes.size() );
+        properties.put( "throughput", measuredTimes.size() / (executeRuntime / 1000000000.0) );
     }
 
 
