@@ -208,6 +208,8 @@ public class MultiBench extends Scenario {
     @Override
     public void analyze( Properties properties, File outputDirectory ) {
         log.info( "MultiBench Analyze..." );
+        double totalExecuteRuntime = 0;
+        long totalNumberOfQueries = 0;
 
         // DocBench
         if ( docBench != null ) {
@@ -216,6 +218,8 @@ public class MultiBench extends Scenario {
             for ( Map.Entry<Object, Object> entry : docBenchResults.entrySet() ) {
                 properties.put( "docbench." + entry.getKey(), entry.getValue() );
             }
+            totalExecuteRuntime += Double.parseDouble( docBenchResults.get( "executeRuntime" ).toString() );
+            totalNumberOfQueries += Long.parseLong( docBenchResults.get( "numberOfQueries" ).toString() );
         }
 
         // GraphBench
@@ -225,6 +229,8 @@ public class MultiBench extends Scenario {
             for ( Map.Entry<Object, Object> entry : graphBenchResults.entrySet() ) {
                 properties.put( "graphbench." + entry.getKey(), entry.getValue() );
             }
+            totalExecuteRuntime += Double.parseDouble( graphBenchResults.get( "executeRuntime" ).toString() );
+            totalNumberOfQueries += Long.parseLong( graphBenchResults.get( "numberOfQueries" ).toString() );
         }
 
         // KnnhBench
@@ -234,6 +240,8 @@ public class MultiBench extends Scenario {
             for ( Map.Entry<Object, Object> entry : knnBenchResults.entrySet() ) {
                 properties.put( "knnbench." + entry.getKey(), entry.getValue() );
             }
+            totalExecuteRuntime += Double.parseDouble( knnBenchResults.get( "executeRuntime" ).toString() );
+            totalNumberOfQueries += Long.parseLong( knnBenchResults.get( "numberOfQueries" ).toString() );
         }
 
         // Gavel
@@ -243,7 +251,14 @@ public class MultiBench extends Scenario {
             for ( Map.Entry<Object, Object> entry : gavelResults.entrySet() ) {
                 properties.put( "gavel." + entry.getKey(), entry.getValue() );
             }
+            totalExecuteRuntime += Double.parseDouble( gavelResults.get( "executeRuntime" ).toString() );
+            totalNumberOfQueries += Long.parseLong( gavelResults.get( "numberOfQueries" ).toString() );
         }
+
+        // Calculate mean throughput
+        properties.put( "executeRuntime", totalExecuteRuntime );
+        properties.put( "numberOfQueries", totalNumberOfQueries );
+        properties.put( "throughput", totalNumberOfQueries / totalExecuteRuntime );
     }
 
 
