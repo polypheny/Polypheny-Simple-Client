@@ -31,6 +31,13 @@ import org.polypheny.simpleclient.scenario.graph.GraphInsert;
 
 public class CreateGraphDatabase extends QueryBuilder {
 
+    private final String onStore; // Is either null or contains the name of one data store
+
+
+    public CreateGraphDatabase( String onStore ) {
+        this.onStore = onStore;
+    }
+
 
     @Override
     public Query getNewQuery() {
