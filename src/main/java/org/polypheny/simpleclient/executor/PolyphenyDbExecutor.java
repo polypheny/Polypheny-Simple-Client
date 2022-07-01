@@ -368,6 +368,7 @@ public interface PolyphenyDbExecutor extends Executor {
                     // Configure placement strategy for new tables
                     switch ( config.newTablePlacementStrategy ) {
                         case "Single":
+                        case "Optimized":
                             executor.setConfig( "routing/createPlacementStrategy", "org.polypheny.db.routing.strategies.CreateSinglePlacementStrategy" );
                             break;
                         case "All":

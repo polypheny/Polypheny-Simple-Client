@@ -44,6 +44,7 @@ import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.executor.Executor.DatabaseInstance;
 import org.polypheny.simpleclient.executor.ExecutorException;
+import org.polypheny.simpleclient.executor.PolyphenyDbExecutor;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.main.ProgressReporter;
 import org.polypheny.simpleclient.query.QueryBuilder;
@@ -88,10 +89,26 @@ public class DocBench extends Scenario {
     public void createSchema( DatabaseInstance databaseInstance, boolean includingKeys ) {
         log.info( "Creating schema..." );
         Executor executor = null;
+
+        String onStore = "";
+        if ( config.newTablePlacementStrategy.equalsIgnoreCase( "Optimized" ) && config.dataStores.size() > 1 ) {
+            for ( String storeName : PolyphenyDbExecutor.storeNames ) {
+                if ( storeName.toLowerCase().startsWith( "mongodb" ) ) {
+                    onStore = storeName;
+                    break;
+                }
+            }
+            if ( onStore.equals( "" ) ) {
+                throw new RuntimeException( "No suitable data store found for optimized placing of the DocBench collection." );
+            } else {
+                onStore = ".store(\"" + onStore + "\")";
+            }
+        }
+
         try {
             executor = executorFactory.createExecutorInstance( null, NAMESPACE );
-            executor.executeQuery( new RawQuery( null, null, "use " + NAMESPACE, null, false ) );
-            executor.executeQuery( new RawQuery( null, null, "db.createCollection(product)", null, false ) );
+            executor.executeQuery( RawQuery.builder().mongoQl( "use " + NAMESPACE ).build() );
+            executor.executeQuery( RawQuery.builder().mongoQl( "db.createCollection(product)" + onStore ).build() );
         } catch ( ExecutorException e ) {
             throw new RuntimeException( "Exception while creating schema", e );
         } finally {

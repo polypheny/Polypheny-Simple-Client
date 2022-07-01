@@ -47,6 +47,7 @@ import org.polypheny.simpleclient.executor.Executor.DatabaseInstance;
 import org.polypheny.simpleclient.executor.ExecutorException;
 import org.polypheny.simpleclient.executor.PolyphenyDbCypherExecutor;
 import org.polypheny.simpleclient.executor.PolyphenyDbCypherExecutor.PolyphenyDbCypherExecutorFactory;
+import org.polypheny.simpleclient.executor.PolyphenyDbExecutor;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.main.ProgressReporter;
 import org.polypheny.simpleclient.query.QueryBuilder;
@@ -101,11 +102,26 @@ public class GraphBench extends Scenario {
             throw new UnsupportedOperationException( "Unsupported query mode: " + queryMode.name() );
         }
 
+        String onStore = null;
+        if ( config.newTablePlacementStrategy.equalsIgnoreCase( "Optimized" ) && config.dataStores.size() > 1 ) {
+            for ( String storeName : PolyphenyDbExecutor.storeNames ) {
+                if ( storeName.toLowerCase().startsWith( "neo4j" ) ) {
+                    onStore = storeName;
+                    break;
+                }
+            }
+            if ( onStore == null ) {
+                throw new RuntimeException( "No suitable data store found for optimized placing of the GraphBench graph." );
+            } else {
+                onStore = ".store(\"" + onStore + "\")";
+            }
+        }
+
         log.info( "Creating schema..." );
         Executor executor = null;
         try {
             executor = executorFactory.createExecutorInstance( null, GRAPH_NAMESPACE );
-            executor.executeQuery( new CreateGraphDatabase().getNewQuery() );
+            executor.executeQuery( new CreateGraphDatabase( onStore ).getNewQuery() );
         } catch ( ExecutorException e ) {
             throw new RuntimeException( "Exception while creating schema", e );
         } finally {

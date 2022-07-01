@@ -87,6 +87,15 @@ public class KnnBench extends Scenario {
             throw new UnsupportedOperationException( "Unsupported query mode: " + queryMode.name() );
         }
 
+        if ( config.newTablePlacementStrategy.equalsIgnoreCase( "Optimized" ) && config.dataStores.size() > 1 ) {
+            if ( config.dataStoreMetadata == null ) {
+                throw new RuntimeException( "Optimized placements is selected but 'dataStoreMetadata' is null!" );
+            }
+            if ( config.dataStoreFeature == null ) {
+                throw new RuntimeException( "Optimized placements is selected but 'dataStoreFeature' is null!" );
+            }
+        }
+
         log.info( "Creating schema..." );
         Executor executor = null;
         try {
