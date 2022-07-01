@@ -264,9 +264,9 @@ public class MultiBenchConfig extends AbstractConfig {
             numberOfShortestPathQueries = 0;
 
             // DML
-            numberOfDeleteQueries = numberOfWriteQueries / 2;
+            numberOfSetPropertyQueries = numberOfWriteQueries / 2;
             numberOfDeleteQueries = numberOfWriteQueries / 4;
-            numberOfInsertQueries = numberOfWriteQueries - (numberOfDeleteQueries + numberOfDeleteQueries);
+            numberOfInsertQueries = numberOfWriteQueries - (numberOfSetPropertyQueries + numberOfDeleteQueries);
 
             if ( maxPathLength - 1 <= 0 ) {
                 this.highestLabel = 1;

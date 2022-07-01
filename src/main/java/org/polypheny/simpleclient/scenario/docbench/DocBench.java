@@ -352,7 +352,7 @@ public class DocBench extends Scenario {
         properties.put( "queryTypes_maxId", queryTypes.size() );
         properties.put( "executeRuntime", executeRuntime / 1000000000.0 );
         properties.put( "numberOfQueries", measuredTimes.size() );
-        properties.put( "throughput", (measuredTimes.size() / executeRuntime / 1000000000.0) );
+        properties.put( "throughput", (measuredTimes.size() / (executeRuntime / 1000000000.0)) );
     }
 
 
