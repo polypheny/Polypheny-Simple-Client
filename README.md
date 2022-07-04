@@ -7,6 +7,7 @@ A simple benchmarking and testing client for Polypheny-DB. It includes support f
 * **Multimedia**: This benchmarks produces workload containing or requesting randomly generated BLOBs.
 * **Graph**: A simple synthetic graph benchmark that executes a mixture of DQL and DML Cypher queries against a pseudo-random network.
 * **DocBench**: A simple benchmark for document schemas generating MongoQL queries.
+* **MultiBench**: A benchmark that combines Gavel, Graph, and DocBench.
 * [**AuctionMark**](http://hstore.cs.brown.edu/projects/auctionmark/): A benchmark executing workload that simulates the activities found in a well-known auction site.
 * [**SmallBank**](http://ses.library.usyd.edu.au/bitstream/2123/5353/1/michael-cahill-2009-thesis.pdf): The SmallBank benchmark models a simple banking application.
 * [**TPC-C**](http://www.tpc.org/tpcc/): A well-known on-line transaction processing (OLTP) benchmark.
@@ -69,7 +70,7 @@ Use the `help` command to get an overview on all available parameters for a benc
 java -jar polypheny-simple-client.jar help gavel  
 ```
 
-_BENCHMARK_: `{ gavel | knnbench | multimedia | graph | docbench | auctionmark | smallbank | tpcc | tpch | ycsb }`
+_BENCHMARK_: `{ gavel | knnbench | multimedia | graph | docbench | multibench | auctionmark | smallbank | tpcc | tpch | ycsb }`
 
 _TASK_: `{ schema | data | workload | warmup }`
 
