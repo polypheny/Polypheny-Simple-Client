@@ -51,6 +51,7 @@ import org.polypheny.simpleclient.query.QueryBuilder;
 import org.polypheny.simpleclient.query.QueryListEntry;
 import org.polypheny.simpleclient.query.RawQuery;
 import org.polypheny.simpleclient.scenario.Scenario;
+import org.polypheny.simpleclient.scenario.docbench.queryBuilder.PutProductQueryBuilder;
 import org.polypheny.simpleclient.scenario.docbench.queryBuilder.SearchProductQueryBuilder;
 import org.polypheny.simpleclient.scenario.docbench.queryBuilder.UpdateProductQueryBuilder;
 
@@ -138,6 +139,7 @@ public class DocBench extends Scenario {
         List<QueryListEntry> queryList = new Vector<>();
         addNumberOfTimes( queryList, new SearchProductQueryBuilder( random, valuesPool, config ), config.numberOfFindQueries );
         addNumberOfTimes( queryList, new UpdateProductQueryBuilder( random, valuesPool, config ), config.numberOfUpdateQueries );
+        addNumberOfTimes( queryList, new PutProductQueryBuilder( random, valuesPool, config ), config.numberOfPutQueries );
         Collections.shuffle( queryList, random );
 
         // This dumps the MQL queries independent of the selected interface
@@ -204,11 +206,13 @@ public class DocBench extends Scenario {
         Executor executor = null;
         SearchProductQueryBuilder searchProduct = new SearchProductQueryBuilder( random, valuesPool, config );
         UpdateProductQueryBuilder updateProduct = new UpdateProductQueryBuilder( random, valuesPool, config );
+        PutProductQueryBuilder putProduct = new PutProductQueryBuilder( random, valuesPool, config );
         for ( int i = 0; i < config.numberOfWarmUpIterations; i++ ) {
             try {
                 executor = executorFactory.createExecutorInstance( null, NAMESPACE );
                 executor.executeQuery( searchProduct.getNewQuery() );
                 executor.executeQuery( updateProduct.getNewQuery() );
+                executor.executeQuery( putProduct.getNewQuery() );
             } catch ( ExecutorException e ) {
                 throw new RuntimeException( "Error while executing warm-up queries", e );
             } finally {

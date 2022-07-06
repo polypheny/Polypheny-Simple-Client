@@ -47,6 +47,7 @@ public class DocBenchConfig extends AbstractConfig {
     // Workload
     public int numberOfFindQueries;
     public int numberOfUpdateQueries;
+    public int numberOfPutQueries;
 
 
     public DocBenchConfig( Properties properties, int multiplier ) {
@@ -57,6 +58,7 @@ public class DocBenchConfig extends AbstractConfig {
 
         numberOfFindQueries = getIntProperty( properties, "numberOfFindQueries" );
         numberOfUpdateQueries = getIntProperty( properties, "numberOfUpdateQueries" );
+        numberOfPutQueries = getIntProperty( properties, "numberOfPutQueries" );
 
         numberOfDocuments = getIntProperty( properties, "numberOfDocuments" );
         minNumberOfAttributes = getIntProperty( properties, "minNumberOfAttributes" );
@@ -76,6 +78,7 @@ public class DocBenchConfig extends AbstractConfig {
 
         numberOfFindQueries = Integer.parseInt( cdl.get( "numberOfFindQueries" ) );
         numberOfUpdateQueries = Integer.parseInt( cdl.get( "numberOfUpdateQueries" ) );
+        numberOfPutQueries = Integer.parseInt( cdl.get( "numberOfPutQueries" ) );
 
         numberOfDocuments = Integer.parseInt( cdl.get( "numberOfDocuments" ) );
         minNumberOfAttributes = Integer.parseInt( cdl.get( "minNumberOfAttributes" ) );

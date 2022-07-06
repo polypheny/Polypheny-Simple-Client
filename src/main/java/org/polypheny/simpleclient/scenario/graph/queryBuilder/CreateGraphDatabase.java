@@ -41,7 +41,11 @@ public class CreateGraphDatabase extends QueryBuilder {
 
     @Override
     public Query getNewQuery() {
-        return new GraphInsert( String.format( "CREATE DATABASE %s IF NOT EXISTS", GraphBench.GRAPH_NAMESPACE ) );
+        if ( onStore != null ) {
+            return new GraphInsert( String.format( "CREATE DATABASE %s IF NOT EXISTS ON STORE %s", GraphBench.GRAPH_NAMESPACE, onStore ) );
+        } else {
+            return new GraphInsert( String.format( "CREATE DATABASE %s IF NOT EXISTS", GraphBench.GRAPH_NAMESPACE ) );
+        }
     }
 
 }
