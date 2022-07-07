@@ -112,8 +112,6 @@ public class GraphBench extends Scenario {
             }
             if ( onStore == null ) {
                 throw new RuntimeException( "No suitable data store found for optimized placing of the GraphBench graph." );
-            } else {
-                onStore = "\"" + onStore + "\"";
             }
         }
 
