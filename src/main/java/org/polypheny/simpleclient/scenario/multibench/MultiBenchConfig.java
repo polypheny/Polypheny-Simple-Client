@@ -154,7 +154,7 @@ public class MultiBenchConfig extends AbstractConfig {
             seed = MultiBenchConfig.this.seed;
             batchSize = MultiBenchConfig.this.batchSize;
 
-            int numberOfWriteQueries = Double.valueOf( MultiBenchConfig.this.numberOfGraphBenchQueries * writeRatio ).intValue();
+            int numberOfWriteQueries = Double.valueOf( MultiBenchConfig.this.numberOfDocBenchQueries * writeRatio ).intValue();
 
             //numberOfUpdateQueries = Double.valueOf(numberOfWriteQueries / 20.0 ).intValue();
             numberOfUpdateQueries = 0;
