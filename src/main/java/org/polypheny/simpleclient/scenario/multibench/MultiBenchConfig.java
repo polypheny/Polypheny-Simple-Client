@@ -156,7 +156,8 @@ public class MultiBenchConfig extends AbstractConfig {
 
             int numberOfWriteQueries = Double.valueOf( MultiBenchConfig.this.numberOfGraphBenchQueries * writeRatio ).intValue();
 
-            numberOfUpdateQueries = numberOfWriteQueries / 20;
+            //numberOfUpdateQueries = Double.valueOf(numberOfWriteQueries / 20.0 ).intValue();
+            numberOfUpdateQueries = 0;
             numberOfPutQueries = numberOfWriteQueries - numberOfUpdateQueries;
             numberOfFindQueries = numberOfDocBenchQueries - (numberOfUpdateQueries + numberOfPutQueries);
 
