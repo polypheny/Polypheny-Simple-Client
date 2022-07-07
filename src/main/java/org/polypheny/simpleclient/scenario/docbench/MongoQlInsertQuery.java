@@ -44,7 +44,7 @@ public class MongoQlInsertQuery extends BatchableInsert {
 
     public MongoQlInsertQuery( String collection, String expression, boolean expectResult ) {
         super( expectResult );
-        this.mongoQl = "db." + collection + ".insert({" + expression + ")";
+        this.mongoQl = "db." + collection + ".insert(" + expression + ")";
         this.collection = collection;
         this.expression = expression;
     }
