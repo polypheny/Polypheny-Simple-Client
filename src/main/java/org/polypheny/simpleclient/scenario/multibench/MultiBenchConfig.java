@@ -159,7 +159,7 @@ public class MultiBenchConfig extends AbstractConfig {
             //numberOfUpdateQueries = Double.valueOf(numberOfWriteQueries / 20.0 ).intValue();
             numberOfUpdateQueries = 0;
             numberOfPutQueries = numberOfWriteQueries - numberOfUpdateQueries;
-            numberOfFindQueries = numberOfDocBenchQueries - (numberOfUpdateQueries + numberOfPutQueries);
+            numberOfFindQueries = MultiBenchConfig.this.numberOfDocBenchQueries - (numberOfUpdateQueries + numberOfPutQueries);
 
             numberOfDocuments = 1_000_000;
             minNumberOfAttributes = 5;

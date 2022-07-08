@@ -75,19 +75,26 @@ public abstract class Scenario {
 
 
     protected void calculateResults( Map<Integer, String> queryTypes, Properties properties, int templateId, List<Long> time ) {
-        LongSummaryStatistics summaryStatistics = time.stream().mapToLong( Long::longValue ).summaryStatistics();
-        double mean = summaryStatistics.getAverage();
-        long max = summaryStatistics.getMax();
-        long min = summaryStatistics.getMin();
-        double stddev = calculateSampleStandardDeviation( time, mean );
+        if ( time.size() > 0 ) {
+            LongSummaryStatistics summaryStatistics = time.stream().mapToLong( Long::longValue ).summaryStatistics();
+            double mean = summaryStatistics.getAverage();
+            long max = summaryStatistics.getMax();
+            long min = summaryStatistics.getMin();
+            double stddev = calculateSampleStandardDeviation( time, mean );
 
-        properties.put( "queryTypes_" + templateId + "_mean", processDoubleValue( mean ) );
-        if ( ChronosAgent.STORE_INDIVIDUAL_QUERY_TIMES ) {
-            properties.put( "queryTypes_" + templateId + "_all", Joiner.on( ',' ).join( time ) );
+            properties.put( "queryTypes_" + templateId + "_mean", processDoubleValue( mean ) );
+            if ( ChronosAgent.STORE_INDIVIDUAL_QUERY_TIMES ) {
+                properties.put( "queryTypes_" + templateId + "_all", Joiner.on( ',' ).join( time ) );
+            }
+            properties.put( "queryTypes_" + templateId + "_stddev", processDoubleValue( stddev ) );
+            properties.put( "queryTypes_" + templateId + "_min", min / 1_000_000L );
+            properties.put( "queryTypes_" + templateId + "_max", max / 1_000_000L );
+        } else {
+            properties.put( "queryTypes_" + templateId + "_mean", 0 );
+            properties.put( "queryTypes_" + templateId + "_stddev", 0 );
+            properties.put( "queryTypes_" + templateId + "_min", 0 );
+            properties.put( "queryTypes_" + templateId + "_max", 0 );
         }
-        properties.put( "queryTypes_" + templateId + "_stddev", processDoubleValue( stddev ) );
-        properties.put( "queryTypes_" + templateId + "_min", min / 1_000_000L );
-        properties.put( "queryTypes_" + templateId + "_max", max / 1_000_000L );
         properties.put( "queryTypes_" + templateId + "_example", queryTypes.get( templateId ) );
     }
 

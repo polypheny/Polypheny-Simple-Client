@@ -210,9 +210,15 @@ public class DocBench extends Scenario {
         for ( int i = 0; i < config.numberOfWarmUpIterations; i++ ) {
             try {
                 executor = executorFactory.createExecutorInstance( null, NAMESPACE );
-                executor.executeQuery( searchProduct.getNewQuery() );
-                executor.executeQuery( updateProduct.getNewQuery() );
-                executor.executeQuery( putProduct.getNewQuery() );
+                if ( config.numberOfFindQueries > 0 ) {
+                    executor.executeQuery( searchProduct.getNewQuery() );
+                }
+                if ( config.numberOfUpdateQueries > 0 ) {
+                    executor.executeQuery( updateProduct.getNewQuery() );
+                }
+                if ( config.numberOfPutQueries > 0 ) {
+                    executor.executeQuery( putProduct.getNewQuery() );
+                }
             } catch ( ExecutorException e ) {
                 throw new RuntimeException( "Error while executing warm-up queries", e );
             } finally {
@@ -357,6 +363,9 @@ public class DocBench extends Scenario {
         properties.put( "executeRuntime", executeRuntime / 1000000000.0 );
         properties.put( "numberOfQueries", measuredTimes.size() );
         properties.put( "throughput", (measuredTimes.size() / (executeRuntime / 1000000000.0)) );
+        properties.put( "numberOfFindQueries", measuredTimePerQueryType.get( 1 ).size() );
+        properties.put( "numberOfUpdateQueries", measuredTimePerQueryType.get( 2 ).size() );
+        properties.put( "numberOfPutQueries", measuredTimePerQueryType.get( 3 ).size() );
     }
 
 
