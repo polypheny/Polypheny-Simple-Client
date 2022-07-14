@@ -20,7 +20,6 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- *
  */
 
 package org.polypheny.simpleclient.executor;
@@ -51,8 +50,8 @@ public interface PolyphenyDbExecutor extends Executor {
     AtomicInteger storeCounter = new AtomicInteger();
     AtomicInteger nextPort = new AtomicInteger( 3300 );
 
+    List<String> storeNames = new ArrayList<>();
     Map<String, List<String>> dataStoreNames = new HashMap<>();
-
     default Map<String, List<String>> getDataStoreNames() {
         return dataStoreNames;
     }
@@ -63,15 +62,18 @@ public interface PolyphenyDbExecutor extends Executor {
     void deployStore( String name, String clazz, String config, String store ) throws ExecutorException;
 
 
-    default void deployHsqldb() throws ExecutorException {
+    default String deployHsqldb() throws ExecutorException {
+        String storeName = "hsqldb" + storeCounter.getAndIncrement();
         deployStore(
-                "hsqldb" + storeCounter.getAndIncrement(),
+                storeName,
                 "org.polypheny.db.adapter.jdbc.stores.HsqldbStore",
                 "{maxConnections:\"25\",trxControlMode:locks,trxIsolationLevel:read_committed,type:Memory,tableType:Memory,mode:embedded}",
                 "hsqldb" );
+        storeNames.add( storeName );
+        return storeName;
     }
 
-    default void deployMonetDb( boolean deployStoresUsingDocker ) throws ExecutorException {
+    default String deployMonetDb( boolean deployStoresUsingDocker ) throws ExecutorException {
         String config;
         String name;
         if ( deployStoresUsingDocker ) {
@@ -86,10 +88,12 @@ public interface PolyphenyDbExecutor extends Executor {
                 "org.polypheny.db.adapter.jdbc.stores.MonetdbStore",
                 config,
                 "monetdb" );
+        storeNames.add( name );
+        return name;
     }
 
 
-    default void deployPostgres( boolean deployStoresUsingDocker ) throws ExecutorException {
+    default String deployPostgres( boolean deployStoresUsingDocker ) throws ExecutorException {
         String config;
         String name;
         if ( deployStoresUsingDocker ) {
@@ -104,10 +108,12 @@ public interface PolyphenyDbExecutor extends Executor {
                 "org.polypheny.db.adapter.jdbc.stores.PostgresqlStore",
                 config,
                 "postgres" );
+        storeNames.add( name );
+        return name;
     }
 
 
-    default void deployCassandra( boolean deployStoresUsingDocker ) throws ExecutorException {
+    default String deployCassandra( boolean deployStoresUsingDocker ) throws ExecutorException {
         String config;
         String name;
         if ( deployStoresUsingDocker ) {
@@ -122,43 +128,57 @@ public interface PolyphenyDbExecutor extends Executor {
                 "org.polypheny.db.adapter.cassandra.CassandraStore",
                 config,
                 "cassandra" );
+        storeNames.add( name );
+        return name;
     }
 
 
-    default void deployFileStore() throws ExecutorException {
+    default String deployFileStore() throws ExecutorException {
+        String storeName = "file" + storeCounter.getAndIncrement();
         deployStore(
-                "file" + storeCounter.getAndIncrement(),
+                storeName,
                 "org.polypheny.db.adapter.file.FileStore",
                 "{\"mode\":\"embedded\"}",
                 "file" );
+        storeNames.add( storeName );
+        return storeName;
     }
 
 
-    default void deployCottontail() throws ExecutorException {
+    default String deployCottontail() throws ExecutorException {
+        String storeName = "cottontail" + storeCounter.getAndIncrement();
         deployStore(
-                "cottontail" + storeCounter.getAndIncrement(),
+                storeName,
                 "org.polypheny.db.adapter.cottontail.CottontailStore",
                 "{\"type\":\"Embedded\",\"host\":\"localhost\",\"port\":\"" + nextPort.getAndIncrement() + "\",\"database\":\"cottontail\",\"engine\":\"MAPDB\",\"mode\":\"embedded\"}",
                 "cottontail" );
+        storeNames.add( storeName );
+        return storeName;
     }
 
 
-    default void deployMongoDb() throws ExecutorException {
-        String config = "{\"mode\":\"docker\",\"instanceId\":\"0\",\"port\":\"" + nextPort.getAndIncrement() + "\",\"trxLifetimeLimit\":\"1209600\",\"persistent\":\"false\"}";
+    default String deployMongoDb() throws ExecutorException {
+        String storeName = "mongodb" + storeCounter.getAndIncrement();
+        String config = "{\"mode\":\"docker\",\"instanceId\":\"0\",\"port\":\"" + nextPort.getAndIncrement() + "\",\"persistent\":\"false\",\"trxLifetimeLimit\":\"1209600\"}";
         deployStore(
-                "mongodb" + storeCounter.getAndIncrement(),
+                storeName,
                 "org.polypheny.db.adapter.mongodb.MongoStore",
                 config,
                 "mongodb" );
+        storeNames.add( storeName );
+        return storeName;
     }
 
-    default void deployNeo4j() throws ExecutorException {
-        String config = "{\"mode\":\"docker\",\"instanceId\":\"0\",\"port\":\"" + nextPort.getAndIncrement() + "\",\"persistent\":\"false\",\"trxLifetimeLimit\":\"1209600\"}";
+    default String deployNeo4j() throws ExecutorException {
+        String storeName = "neo4j" + storeCounter.getAndIncrement();
+        String config = "{\"mode\":\"docker\",\"instanceId\":\"0\",\"port\":\"" + nextPort.getAndIncrement() + "\"}";
         deployStore(
-                "neo4j" + storeCounter.getAndIncrement(),
+                storeName,
                 "org.polypheny.db.adapter.neo4j.Neo4jStore",
                 config,
                 "neo4j" );
+        storeNames.add( storeName );
+        return storeName;
     }
 
     // At the moment it is only possible to set Policies for the whole system
@@ -179,53 +199,17 @@ public interface PolyphenyDbExecutor extends Executor {
             this.polyphenyControlConnector = polyphenyControlConnector;
             this.config = config;
 
-            // Update settings
-            Map<String, String> conf = new HashMap<>();
-            conf.put( "pcrtl.pdbms.branch", config.pdbBranch.trim() );
-            conf.put( "pcrtl.ui.branch", config.puiBranch.trim() );
-            conf.put( "pcrtl.java.heap", "10" );
-            if ( config.buildUi ) {
-                conf.put( "pcrtl.buildmode", "both" );
-            } else {
-                conf.put( "pcrtl.buildmode", "pdb" );
-            }
-            conf.put( "pcrtl.clean.mode", "branchChange" );
-            String args = "";
-            if ( config.resetCatalog ) {
-                args += "-resetCatalog ";
-            }
-            if ( config.memoryCatalog ) {
-                args += "-memoryCatalog ";
-            }
-            conf.put( "pcrtl.pdbms.args", args.trim() );
-            polyphenyControlConnector.setConfig( conf );
+            // Stop Polypheny
+            stopPolypheny( polyphenyControlConnector );
+
+            // Update Polypheny Control settings
+            configurePolyphenyControl( polyphenyControlConnector, config, config.resetCatalog );
 
             // Pull branch and update polypheny
             polyphenyControlConnector.updatePolypheny();
 
             // Start Polypheny
-            polyphenyControlConnector.startPolypheny();
-            // Try for 300 seconds (30 times)
-            for ( int i = 0; i <= 30; i++ ) {
-                if ( isReady() ) {
-                    break;
-                }
-                try {
-                    TimeUnit.SECONDS.sleep( 10 );
-                } catch ( InterruptedException e ) {
-                    // ignore
-                }
-                if ( i >= 30 ) {
-                    throw new RuntimeException( "System not ready. Aborting" );
-                }
-            }
-
-            // Wait another five seconds for post-startup process to finish
-            try {
-                TimeUnit.SECONDS.sleep( 5 );
-            } catch ( InterruptedException e ) {
-                throw new RuntimeException( "Unexpected interrupt", e );
-            }
+            startPolypheny( polyphenyControlConnector );
 
             // Store Polypheny version for documentation
             try {
@@ -249,13 +233,79 @@ public interface PolyphenyDbExecutor extends Executor {
 
             // Update polypheny config
             PolyphenyDbExecutor executor = (PolyphenyDbExecutor) executorFactory.createExecutorInstance();
+
+            pushConfiguration( executorFactory, config );
+
+            // Wait 5 seconds to let the config changes take effect
             try {
-                // Disable active tracking (dynamic querying)
-                if ( config.statisticActiveTracking ) {
-                    executor.setConfig( "statistics/activeTracking", "true" );
-                } else {
-                    executor.setConfig( "statistics/activeTracking", "false" );
+                TimeUnit.SECONDS.sleep( 5 );
+            } catch ( InterruptedException e ) {
+                throw new RuntimeException( "Unexpected interrupt", e );
+            }
+        }
+
+
+        private void stopPolypheny( PolyphenyControlConnector polyphenyControlConnector ) {
+            polyphenyControlConnector.stopPolypheny();
+            try {
+                TimeUnit.SECONDS.sleep( 3 );
+            } catch ( InterruptedException e ) {
+                throw new RuntimeException( "Unexpected interrupt", e );
+            }
+        }
+
+
+        private void startPolypheny( PolyphenyControlConnector polyphenyControlConnector ) {
+            polyphenyControlConnector.startPolypheny();
+            // Try for 300 seconds (30 times)
+            for ( int i = 0; i <= 30; i++ ) {
+                if ( isReady() ) {
+                    break;
                 }
+                try {
+                    TimeUnit.SECONDS.sleep( 10 );
+                } catch ( InterruptedException e ) {
+                    // ignore
+                }
+                if ( i >= 30 ) {
+                    throw new RuntimeException( "System not ready. Aborting" );
+                }
+            }
+            // Wait another five seconds for post-startup process to finish
+            try {
+                TimeUnit.SECONDS.sleep( 5 );
+            } catch ( InterruptedException e ) {
+                throw new RuntimeException( "Unexpected interrupt", e );
+            }
+        }
+
+
+        public void restartPolypheny() {
+            // Stop Polypheny
+            stopPolypheny( polyphenyControlConnector );
+
+            // Update Polypheny Control settings
+            configurePolyphenyControl( polyphenyControlConnector, config, false );
+
+            // Start Polypheny
+            startPolypheny( polyphenyControlConnector );
+
+            // Wait a minute for statistics to be gathered
+            try {
+                TimeUnit.SECONDS.sleep( 60 );
+            } catch ( InterruptedException e ) {
+                throw new RuntimeException( "Unexpected interrupt", e );
+            }
+        }
+
+
+        protected void pushConfiguration( ExecutorFactory executorFactory, AbstractConfig config ) {
+            PolyphenyDbExecutor executor;
+            // Update polypheny config
+            executor = (PolyphenyDbExecutor) executorFactory.createExecutorInstance();
+            try {
+                // Disable statistics (active tracking)
+                executor.setConfig( "statistics/activeTracking", "false" );
                 // Set router
                 if ( config.pdbBranch.equalsIgnoreCase( "old-routing" ) ) { // Old routing, to be removed
                     switch ( config.router ) {
@@ -292,6 +342,7 @@ public interface PolyphenyDbExecutor extends Executor {
                     // Configure placement strategy for new tables
                     switch ( config.newTablePlacementStrategy ) {
                         case "Single":
+                        case "Optimized":
                             executor.setConfig( "routing/createPlacementStrategy", "org.polypheny.db.routing.strategies.CreateSinglePlacementStrategy" );
                             break;
                         case "All":
@@ -367,24 +418,39 @@ public interface PolyphenyDbExecutor extends Executor {
                     }
                 }
             }
-
-            // Wait 5 seconds to let the the config changes take effect
-            try {
-                TimeUnit.SECONDS.sleep( 5 );
-            } catch ( InterruptedException e ) {
-                throw new RuntimeException( "Unexpected interrupt", e );
-            }
         }
 
 
-        public static void deployStores( Boolean useDocker, ExecutorFactory executorFactory, List<String> dataStores ) {
+        protected void configurePolyphenyControl( PolyphenyControlConnector polyphenyControlConnector, AbstractConfig config, boolean resetCatalog ) {
+            Map<String, String> conf = new HashMap<>();
+            conf.put( "pcrtl.pdbms.branch", config.pdbBranch.trim() );
+            conf.put( "pcrtl.ui.branch", config.puiBranch.trim() );
+            conf.put( "pcrtl.java.heap", "10" );
+            if ( config.buildUi ) {
+                conf.put( "pcrtl.buildmode", "both" );
+            } else {
+                conf.put( "pcrtl.buildmode", "pdb" );
+            }
+            conf.put( "pcrtl.clean.mode", "branchChange" );
+            String args = "";
+            if ( resetCatalog ) {
+                args += "-resetCatalog ";
+            }
+            if ( config.memoryCatalog ) {
+                args += "-memoryCatalog ";
+            }
+            conf.put( "pcrtl.pdbms.args", args.trim() );
+            polyphenyControlConnector.setConfig( conf );
+        }
+
+
+        public static void deployStores( Boolean useDocker, ExecutorFactory executorFactory,  List<String> dataStores ) {
             // Configure data stores
             PolyphenyDbExecutor executor = (PolyphenyDbExecutor) executorFactory.createExecutorInstance();
 
             try {
                 // Remove hsqldb store
                 executor.dropStore( "hsqldb" );
-
                 // Deploy stores
                 for ( String store : dataStores ) {
                     switch ( store ) {
@@ -401,7 +467,7 @@ public interface PolyphenyDbExecutor extends Executor {
                             if ( !useDocker ) {
                                 MonetdbInstance.reset();
                             }
-                            executor.deployMonetDb( useDocker );
+                            executor.deployMonetDb( useDocker);
                             break;
                         case "cassandra":
                             executor.deployCassandra( useDocker );
@@ -437,12 +503,7 @@ public interface PolyphenyDbExecutor extends Executor {
 
         @Override
         public void tearDown() {
-            polyphenyControlConnector.stopPolypheny();
-            try {
-                TimeUnit.SECONDS.sleep( 3 );
-            } catch ( InterruptedException e ) {
-                throw new RuntimeException( "Unexpected interrupt", e );
-            }
+            stopPolypheny( polyphenyControlConnector );
             for ( String store : config.dataStores ) {
                 switch ( store ) {
                     case "hsqldb":
@@ -476,7 +537,7 @@ public interface PolyphenyDbExecutor extends Executor {
 
         private boolean isReady() {
             try {
-                HttpResponse<String> response = Unirest.get( "http://" + ChronosCommand.hostname + ":8080/getTypeInfo" ).asString();
+                HttpResponse<String> response = Unirest.get( "http://" + ChronosCommand.hostname + ":8080/product" ).asString();
                 if ( response.isSuccess() ) {
                     return true;
                 }
@@ -515,6 +576,23 @@ public interface PolyphenyDbExecutor extends Executor {
             PolyphenyDbExecutor executor = (PolyphenyDbExecutor) new PolyphenyDbJdbcExecutorFactory( ChronosCommand.hostname, false ).createExecutorInstance();
             try {
                 executor.setConfig( "routing/postCostAggregationActive", b ? "true" : "false" );
+                executor.executeCommit();
+            } catch ( ExecutorException e ) {
+                throw new RuntimeException( "Exception while updating polypheny config", e );
+            } finally {
+                try {
+                    executor.closeConnection();
+                } catch ( ExecutorException e ) {
+                    log.error( "Exception while closing connection", e );
+                }
+            }
+        }
+
+
+        public void setWorkloadMonitoring( boolean b ) {
+            PolyphenyDbExecutor executor = (PolyphenyDbExecutor) new PolyphenyDbJdbcExecutorFactory( ChronosCommand.hostname, false ).createExecutorInstance();
+            try {
+                executor.setConfig( "runtime/monitoringQueueActive", b ? "true" : "false" );
                 executor.executeCommit();
             } catch ( ExecutorException e ) {
                 throw new RuntimeException( "Exception while updating polypheny config", e );

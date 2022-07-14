@@ -20,11 +20,9 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- *
  */
 
 package org.polypheny.simpleclient.main;
-
 
 import ch.unibas.dmi.dbis.chronos.agent.ChronosJob;
 
@@ -43,7 +41,7 @@ public class ChronosProgressReporter extends ProgressReporter {
 
 
     @Override
-    protected void update( int progress ) {
+    public void update( int progress ) {
         if ( progress > 100 ) {
             progress = 100;
         }

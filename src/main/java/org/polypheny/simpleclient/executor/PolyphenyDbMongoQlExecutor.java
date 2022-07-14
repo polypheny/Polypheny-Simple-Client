@@ -20,12 +20,11 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- *
  */
 
 package org.polypheny.simpleclient.executor;
 
-import static org.polypheny.simpleclient.executor.PolyphenyDbRestExecutor.commitAndCloseJdbcExecutor;
+import static org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.commitAndCloseJdbcExecutor;
 
 import com.google.gson.JsonObject;
 import java.io.IOException;
@@ -40,7 +39,6 @@ import kong.unirest.Unirest;
 import kong.unirest.UnirestException;
 import kong.unirest.json.JSONArray;
 import lombok.extern.slf4j.Slf4j;
-import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.query.BatchableInsert;
 import org.polypheny.simpleclient.query.MultipartInsert;
@@ -50,22 +48,14 @@ import org.polypheny.simpleclient.scenario.AbstractConfig;
 
 
 @Slf4j
-public class PolyphenyDbMongoQlExecutor implements PolyphenyDbExecutor {
+public class PolyphenyDbMongoQlExecutor extends PolyphenyDbHttpExecutor {
 
-    private final PolyphenyDbJdbcExecutorFactory jdbcExecutorFactory;
-
-    private final CsvWriter csvWriter;
+    public static final String DEFAULT_NAMESPACE = "test";
 
 
-    public PolyphenyDbMongoQlExecutor( String host, CsvWriter csvWriter ) {
-        this.csvWriter = csvWriter;
-        this.jdbcExecutorFactory = new PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory( host, false );
-    }
-
-
-    @Override
-    public void reset() throws ExecutorException {
-        throw new RuntimeException( "Unsupported operation" );
+    public PolyphenyDbMongoQlExecutor( String host, CsvWriter csvWriter, String namespace ) {
+        super( "Mongo", Query::getMongoQl, host, csvWriter );
+        this.namespace = namespace;
     }
 
 
@@ -79,7 +69,7 @@ public class PolyphenyDbMongoQlExecutor implements PolyphenyDbExecutor {
         }
         long time;
 
-        HttpRequest<?> request = getRequest( query.getMongoQl() );
+        HttpRequest<?> request = getRequest( query.getMongoQl(), namespace );
         log.debug( request.getUrl() );
         try {
             long start = System.nanoTime();
@@ -128,7 +118,7 @@ public class PolyphenyDbMongoQlExecutor implements PolyphenyDbExecutor {
             throw new RuntimeException( "not supported" );
         }
 
-        HttpRequest<?> request = getRequest( query.getMongoQl() );
+        HttpRequest<?> request = getRequest( query.getMongoQl(), namespace );
         log.debug( request.getUrl() );
         try {
             long start = System.nanoTime();
@@ -149,7 +139,6 @@ public class PolyphenyDbMongoQlExecutor implements PolyphenyDbExecutor {
         } catch ( UnirestException e ) {
             throw new ExecutorException( e );
         }
-
     }
 
 
@@ -173,25 +162,25 @@ public class PolyphenyDbMongoQlExecutor implements PolyphenyDbExecutor {
 
     @Override
     public void executeInsertList( List<BatchableInsert> batchList, AbstractConfig config ) throws ExecutorException {
-        String currentTable = null;
-        List<String> rows = new ArrayList<>();
+        String currentDocument = null;
+        List<String> documents = new ArrayList<>();
         for ( BatchableInsert query : batchList ) {
             query.debug();
             if ( query instanceof MultipartInsert ) {
                 continue;
             }
-            if ( currentTable == null ) {
-                currentTable = query.getTable();
+            if ( currentDocument == null ) {
+                currentDocument = query.getEntity();
             }
 
-            if ( currentTable.equals( query.getTable() ) ) {
-                rows.add( Objects.requireNonNull( query.getMongoQlRowExpression() ) );
+            if ( currentDocument.equals( query.getEntity() ) ) {
+                documents.add( Objects.requireNonNull( query.getMongoQlRowExpression() ) );
             } else {
                 throw new RuntimeException( "Different tables in multi-inserts. This should not happen!" );
             }
         }
-        if ( rows.size() > 0 ) {
-            executeQuery( new RawQuery( null, null, Query.buildMongoQlManyInsert( currentTable, rows ), false ) );
+        if ( documents.size() > 0 ) {
+            executeQuery( new RawQuery( null, null, Query.buildMongoQlManyInsert( currentDocument, documents ), null, false ) );
         }
     }
 
@@ -282,7 +271,13 @@ public class PolyphenyDbMongoQlExecutor implements PolyphenyDbExecutor {
 
         @Override
         public PolyphenyDbMongoQlExecutor createExecutorInstance( CsvWriter csvWriter ) {
-            return new PolyphenyDbMongoQlExecutor( host, csvWriter );
+            return new PolyphenyDbMongoQlExecutor( host, csvWriter, DEFAULT_NAMESPACE );
+        }
+
+
+        @Override
+        public Executor createExecutorInstance( CsvWriter csvWriter, String namespace ) {
+            return new PolyphenyDbMongoQlExecutor( host, csvWriter, namespace );
         }
 
 
@@ -292,6 +287,5 @@ public class PolyphenyDbMongoQlExecutor implements PolyphenyDbExecutor {
         }
 
     }
-
 
 }

@@ -20,11 +20,9 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- *
  */
 
 package org.polypheny.simpleclient.cli;
-
 
 import com.github.rvesse.airline.Cli;
 import com.github.rvesse.airline.builder.CliBuilder;
@@ -44,6 +42,14 @@ public class Main {
         builder.withCommands( GavelCommand.class );
         builder.withCommands( KnnCommand.class );
         builder.withCommands( MultimediaCommand.class );
+        builder.withCommands( GraphCommand.class );
+        builder.withCommands( DocBenchCommand.class );
+        builder.withCommands( MultiBenchCommand.class );
+        builder.withCommands( AuctionMarkCommand.class );
+        builder.withCommands( SmallBankCommand.class );
+        builder.withCommands( TpccCommand.class );
+        builder.withCommands( TpchCommand.class );
+        builder.withCommands( YcsbCommand.class );
         builder.withCommands( DumpCommand.class );
         builder.withCommands( HelpCommand.class );
         builder.withCommands( GavelNGCommand.class );

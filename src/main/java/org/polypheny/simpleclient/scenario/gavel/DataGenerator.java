@@ -25,7 +25,6 @@
 
 package org.polypheny.simpleclient.scenario.gavel;
 
-
 import com.devskiller.jfairy.Fairy;
 import com.devskiller.jfairy.producer.DateProducer;
 import com.devskiller.jfairy.producer.text.TextProducer;
@@ -207,7 +206,6 @@ class DataGenerator {
             }
             executeInsertList();
         }
-
     }
 
 

@@ -20,7 +20,6 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- *
  */
 
 package org.polypheny.simpleclient.main;
@@ -85,7 +84,7 @@ public class ProgressBar extends ProgressReporter {
      * @param progress Progress in thousandth
      */
     @Override
-    protected void update( int progress ) {
+    public void update( int progress ) {
         update( progress, base );
     }
 

@@ -20,7 +20,6 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- *
  */
 
 package org.polypheny.simpleclient.main;
@@ -41,7 +40,7 @@ public class KnnBenchScenario {
     public static void schema( ExecutorFactory executorFactory, boolean commitAfterEveryQuery ) {
         KnnBenchConfig config = new KnnBenchConfig( getProperties(), 1 );
         KnnBench knnBench = new KnnBench( executorFactory, config, commitAfterEveryQuery, false );
-        knnBench.createSchema( true );
+        knnBench.createSchema( null, true );
     }
 
 
@@ -50,7 +49,7 @@ public class KnnBenchScenario {
         KnnBench knnBench = new KnnBench( executorFactory, config, commitAfterEveryQuery, false );
 
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
-        knnBench.generateData( progressReporter );
+        knnBench.generateData( null, progressReporter );
     }
 
 
@@ -75,7 +74,7 @@ public class KnnBenchScenario {
         KnnBench knnBench = new KnnBench( executorFactory, config, commitAfterEveryQuery, dumpQueryList );
 
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
-        knnBench.warmUp( progressReporter, config.numberOfWarmUpIterations );
+        knnBench.warmUp( progressReporter );
     }
 
 

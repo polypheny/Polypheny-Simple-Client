@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019-2021 The Polypheny Project
+ * Copyright (c) 2019-2022 The Polypheny Project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"), to deal
@@ -20,7 +20,6 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- *
  */
 
 package org.polypheny.simpleclient.main;
@@ -42,7 +41,7 @@ public class GavelScenario {
     public static void schema( ExecutorFactory executorFactory, boolean commitAfterEveryQuery, QueryMode queryMode ) {
         GavelConfig config = new GavelConfig( getProperties(), 1 );
         Gavel gavel = new Gavel( executorFactory, config, commitAfterEveryQuery, false, queryMode );
-        gavel.createSchema( true );
+        gavel.createSchema( null, true );
     }
 
 
@@ -51,7 +50,7 @@ public class GavelScenario {
         Gavel gavel = new Gavel( executorFactory, config, commitAfterEveryQuery, false, queryMode );
 
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
-        gavel.generateData( progressReporter );
+        gavel.generateData( null, progressReporter );
     }
 
 
@@ -75,7 +74,7 @@ public class GavelScenario {
         Gavel gavel = new Gavel( executorFactory, config, commitAfterEveryQuery, dumpQueryList, queryMode );
 
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
-        gavel.warmUp( progressReporter, config.numberOfWarmUpIterations );
+        gavel.warmUp( progressReporter );
     }
 
 

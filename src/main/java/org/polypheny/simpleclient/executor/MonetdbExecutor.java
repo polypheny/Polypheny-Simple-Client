@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019-2021 The Polypheny Project
+ * Copyright (c) 2019-2022 The Polypheny Project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"), to deal
@@ -20,7 +20,6 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- *
  */
 
 package org.polypheny.simpleclient.executor;
@@ -65,10 +64,10 @@ public class MonetdbExecutor extends JdbcExecutor {
         try {
             List<String> tables = getListOfTables();
             for ( String table : tables ) {
-                executeQuery( new RawQuery( "DROP TABLE IF EXISTS \"" + table + "\";", null, false ) );
-                executeQuery( new RawQuery( "DROP TABLE IF EXISTS \"public\".\"" + table + "\";", null, false ) );
+                executeQuery( RawQuery.builder().sql( "DROP TABLE IF EXISTS \"" + table + "\";" ).expectResultSet( false ).build() );
+                executeQuery( RawQuery.builder().sql( "DROP TABLE IF EXISTS \"public\".\"" + table + "\";" ).expectResultSet( false ).build() );
             }
-            executeQuery( new RawQuery( "CREATE SCHEMA IF NOT EXISTS \"public\";", null, false ) );
+            executeQuery( RawQuery.builder().sql( "CREATE SCHEMA IF NOT EXISTS \"public\";" ).expectResultSet( false ).build() );
         } catch ( SQLException e ) {
             throw new ExecutorException( e );
         }

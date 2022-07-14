@@ -31,6 +31,7 @@ import com.github.rvesse.airline.annotations.Arguments;
 import com.github.rvesse.airline.annotations.Command;
 import com.github.rvesse.airline.annotations.Option;
 import com.google.api.client.util.store.DataStore;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -72,7 +73,10 @@ public class GavelNGCommand implements CliRunnable {
             System.exit( 1 );
         }
 
-        List<String> datastores = Collections.singletonList( "hsqldb,mongodb" );
+        List<String> datastores = new ArrayList<String>(){{
+            add("hsqldb");
+            add("mongodb");
+        }};
         QueryMode queryMode = QueryMode.TABLE;
         int multiplier = 1;
         if ( args.size() > 1 ) {

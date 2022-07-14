@@ -20,11 +20,9 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- *
  */
 
 package org.polypheny.simpleclient.main;
-
 
 import ch.unibas.dmi.dbis.chronos.agent.AbstractChronosAgent;
 import ch.unibas.dmi.dbis.chronos.agent.ChronosHttpClient.ChronosLogHandler;
@@ -52,23 +50,45 @@ import org.polypheny.simpleclient.executor.Executor.DatabaseInstance;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
 import org.polypheny.simpleclient.executor.MonetdbExecutor.MonetdbExecutorFactory;
 import org.polypheny.simpleclient.executor.MonetdbExecutor.MonetdbInstance;
+import org.polypheny.simpleclient.executor.OltpBenchPolyphenyDbExecutor.OltpBenchPolyphenyDbExecutorFactory;
+import org.polypheny.simpleclient.executor.OltpBenchPolyphenyDbExecutor.OltpBenchPolyphenyInstance;
+import org.polypheny.simpleclient.executor.OltpBenchPostgresExecutor.OltpBenchPostgresExecutorFactory;
+import org.polypheny.simpleclient.executor.PolyphenyDbCypherExecutor.PolyphenyDbCypherExecutorFactory;
+import org.polypheny.simpleclient.executor.PolyphenyDbExecutor;
 import org.polypheny.simpleclient.executor.PolyphenyDbExecutor.PolyphenyDbInstance;
 import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory;
 import org.polypheny.simpleclient.executor.PolyphenyDbMongoQlExecutor.PolyphenyDbMongoQlExecutorFactory;
+import org.polypheny.simpleclient.executor.PolyphenyDbMultiExecutorFactory;
 import org.polypheny.simpleclient.executor.PolyphenyDbRestExecutor.PolyphenyDbRestExecutorFactory;
 import org.polypheny.simpleclient.executor.PostgresExecutor.PostgresExecutorFactory;
 import org.polypheny.simpleclient.executor.PostgresExecutor.PostgresInstance;
 import org.polypheny.simpleclient.scenario.AbstractConfig;
 import org.polypheny.simpleclient.scenario.Scenario;
+import org.polypheny.simpleclient.scenario.docbench.DocBench;
+import org.polypheny.simpleclient.scenario.docbench.DocBenchConfig;
 import org.polypheny.simpleclient.scenario.gavel.Gavel;
 import org.polypheny.simpleclient.scenario.gavel.GavelConfig;
 import org.polypheny.simpleclient.scenario.gavelNG.GavelNG;
 import org.polypheny.simpleclient.scenario.gavelNG.GavelNGConfig;
 import org.polypheny.simpleclient.scenario.gavelNG.GavelNGProfile;
+import org.polypheny.simpleclient.scenario.graph.GraphBench;
+import org.polypheny.simpleclient.scenario.graph.GraphBenchConfig;
 import org.polypheny.simpleclient.scenario.knnbench.KnnBench;
 import org.polypheny.simpleclient.scenario.knnbench.KnnBenchConfig;
+import org.polypheny.simpleclient.scenario.multibench.MultiBench;
+import org.polypheny.simpleclient.scenario.multibench.MultiBenchConfig;
 import org.polypheny.simpleclient.scenario.multimedia.MultimediaBench;
 import org.polypheny.simpleclient.scenario.multimedia.MultimediaConfig;
+import org.polypheny.simpleclient.scenario.oltpbench.auctionmark.AuctionMark;
+import org.polypheny.simpleclient.scenario.oltpbench.auctionmark.AuctionMarkConfig;
+import org.polypheny.simpleclient.scenario.oltpbench.smallbank.SmallBank;
+import org.polypheny.simpleclient.scenario.oltpbench.smallbank.SmallBankConfig;
+import org.polypheny.simpleclient.scenario.oltpbench.tpcc.Tpcc;
+import org.polypheny.simpleclient.scenario.oltpbench.tpcc.TpccConfig;
+import org.polypheny.simpleclient.scenario.oltpbench.tpch.Tpch;
+import org.polypheny.simpleclient.scenario.oltpbench.tpch.TpchConfig;
+import org.polypheny.simpleclient.scenario.oltpbench.ycsb.Ycsb;
+import org.polypheny.simpleclient.scenario.oltpbench.ycsb.YcsbConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -169,6 +189,9 @@ public class ChronosAgent extends AbstractChronosAgent {
         } else {
             switch ( parsedConfig.get( "store" ) ) {
                 case "polypheny":
+                    executorFactory = new PolyphenyDbMultiExecutorFactory( ChronosCommand.hostname );
+                    break;
+                case "polypheny-jdbc":
                     executorFactory = new PolyphenyDbJdbcExecutorFactory( ChronosCommand.hostname, Boolean.parseBoolean( parsedConfig.get( "prepareStatements" ) ) );
                     break;
                 case "polypheny-rest":
@@ -177,6 +200,9 @@ public class ChronosAgent extends AbstractChronosAgent {
                 case "polypheny-mongoql":
                     executorFactory = new PolyphenyDbMongoQlExecutorFactory( ChronosCommand.hostname );
                     break;
+                case "polypheny-cypher":
+                    executorFactory = new PolyphenyDbCypherExecutorFactory( ChronosCommand.hostname );
+                    break;
                 case "postgres":
                     executorFactory = new PostgresExecutorFactory( ChronosCommand.hostname, Boolean.parseBoolean( parsedConfig.get( "prepareStatements" ) ) );
                     break;
@@ -184,7 +210,13 @@ public class ChronosAgent extends AbstractChronosAgent {
                     executorFactory = new MonetdbExecutorFactory( ChronosCommand.hostname, Boolean.parseBoolean( parsedConfig.get( "prepareStatements" ) ) );
                     break;
                 case "cottontail":
-                    executorFactory = new CottontailExecutorFactory();
+                    executorFactory = new CottontailExecutorFactory( ChronosCommand.hostname );
+                    break;
+                case "oltpbench-polypheny":
+                    executorFactory = new OltpBenchPolyphenyDbExecutorFactory( ChronosCommand.hostname );
+                    break;
+                case "oltpbench-postgres":
+                    executorFactory = new OltpBenchPostgresExecutorFactory( ChronosCommand.hostname );
                     break;
                 default:
                     throw new RuntimeException( "Unknown system: " + parsedConfig.get( "store" ) );
@@ -210,6 +242,38 @@ public class ChronosAgent extends AbstractChronosAgent {
             case "multimedia":
                 config = new MultimediaConfig( parsedConfig );
                 scenario = new MultimediaBench( executorFactory, (MultimediaConfig) config, true, dumpQueryList );
+                break;
+            case "graph":
+                config = new GraphBenchConfig( parsedConfig );
+                scenario = new GraphBench( executorFactory, (GraphBenchConfig) config, true, dumpQueryList );
+                break;
+            case "docbench":
+                config = new DocBenchConfig( parsedConfig );
+                scenario = new DocBench( executorFactory, (DocBenchConfig) config, true, dumpQueryList );
+                break;
+            case "multibench":
+                config = new MultiBenchConfig( parsedConfig );
+                scenario = new MultiBench( executorFactory, (MultiBenchConfig) config, true, dumpQueryList );
+                break;
+            case "auctionmark":
+                config = new AuctionMarkConfig( parsedConfig );
+                scenario = new AuctionMark( executorFactory, (AuctionMarkConfig) config, dumpQueryList, queryMode );
+                break;
+            case "smallbank":
+                config = new SmallBankConfig( parsedConfig );
+                scenario = new SmallBank( executorFactory, (SmallBankConfig) config, dumpQueryList, queryMode );
+                break;
+            case "tpcc":
+                config = new TpccConfig( parsedConfig );
+                scenario = new Tpcc( executorFactory, (TpccConfig) config, dumpQueryList, queryMode );
+                break;
+            case "tpch":
+                config = new TpchConfig( parsedConfig );
+                scenario = new Tpch( executorFactory, (TpchConfig) config, dumpQueryList, queryMode );
+                break;
+            case "ycsb":
+                config = new YcsbConfig( parsedConfig );
+                scenario = new Ycsb( executorFactory, (YcsbConfig) config, dumpQueryList, queryMode );
                 break;
             default:
                 throw new RuntimeException( "Unknown scenario: " + parsedConfig.get( "scenario" ) );
@@ -246,35 +310,57 @@ public class ChronosAgent extends AbstractChronosAgent {
         DatabaseInstance databaseInstance;
         switch ( config.system ) {
             case "polypheny":
+            case "polypheny-jdbc":
             case "polypheny-rest":
             case "polypheny-mongoql":
+            case "polypheny-cypher":
+                PolyphenyDbExecutor.storeNames.clear();
                 databaseInstance = new PolyphenyDbInstance( polyphenyControlConnector, executorFactory, outputDirectory, config );
-                scenario.createSchema( true );
+                scenario.createSchema( databaseInstance, true );
+                break;
+            case "oltpbench-polypheny":
+                PolyphenyDbExecutor.storeNames.clear();
+                databaseInstance = new OltpBenchPolyphenyInstance( polyphenyControlConnector, executorFactory, outputDirectory, config );
+                scenario.createSchema( databaseInstance, true );
                 break;
             case "postgres":
+            case "oltpbench-postgres":
                 databaseInstance = new PostgresInstance();
-                scenario.createSchema( false );
+                scenario.createSchema( databaseInstance, false );
                 break;
             case "monetdb":
                 databaseInstance = new MonetdbInstance();
-                scenario.createSchema( false );
+                scenario.createSchema( databaseInstance, false );
                 break;
             case "cottontail":
                 databaseInstance = new CottontailInstance();
-                scenario.createSchema( false );
+                scenario.createSchema( databaseInstance, false );
                 break;
             default:
                 throw new RuntimeException( "Unknown system: " + config.system );
         }
 
+        // Set workload monitoring
+        if ( databaseInstance instanceof PolyphenyDbInstance ) {
+            ((PolyphenyDbInstance) databaseInstance).setWorkloadMonitoring( config.workloadMonitoringLoadingData );
+        }
+
         // Insert data
         log.info( "Inserting data..." );
-        ProgressReporter progressReporter = new ChronosProgressReporter( chronosJob, this, scenario.getNumberOfInsertThreads(), config.progressReportBase );
+        ProgressReporter progressReporter = new ChronosProgressReporter(
+                chronosJob,
+                this,
+                scenario.getNumberOfInsertThreads(),
+                config.progressReportBase );
         try {
-            scenario.generateData( progressReporter );
+            scenario.generateData( databaseInstance, progressReporter );
         } catch ( Exception e ) {
             databaseInstance.tearDown();
             throw e;
+        }
+
+        if ( databaseInstance instanceof PolyphenyDbInstance && config.restartAfterLoadingData ) {
+            ((PolyphenyDbInstance) databaseInstance).restartPolypheny();
         }
 
         return new ImmutableTriple<>( scenario, config, databaseInstance );
@@ -283,43 +369,59 @@ public class ChronosAgent extends AbstractChronosAgent {
 
     @Override
     protected Object warmUp( ChronosJob chronosJob, final File inputDirectory, final File outputDirectory, Properties properties, Object o ) {
-        @SuppressWarnings("unchecked") Scenario scenario = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getLeft();
-        @SuppressWarnings("unchecked") AbstractConfig config = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getMiddle();
-        @SuppressWarnings("unchecked") DatabaseInstance databaseInstance = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getRight();
+        @SuppressWarnings("unchecked")
+        Scenario scenario = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getLeft();
+        @SuppressWarnings("unchecked")
+        AbstractConfig config = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getMiddle();
+        @SuppressWarnings("unchecked")
+        DatabaseInstance databaseInstance = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getRight();
         try {
-            // Enable icarus training -- to be removed
-            if ( config.system.equals( "polypheny" ) && config.router.equals( "icarus" ) && config.pdbBranch.equalsIgnoreCase( "old-routing" ) ) {
-                ((PolyphenyDbInstance) databaseInstance).setIcarusRoutingTraining( true );
-            }
+            if ( databaseInstance instanceof PolyphenyDbInstance ) {
+                // Set workload monitoring
+                ((PolyphenyDbInstance) databaseInstance).setWorkloadMonitoring( config.workloadMonitoringWarmup );
 
-            // Enable Post Cost Aggregation
-            if ( config.system.equals( "polypheny" ) && config.postCostAggregation.equals( "onWarmup" ) && !config.pdbBranch.equalsIgnoreCase( "old-routing" ) ) {
-                // Wait a few seconds to give Polypheny-DB the chance to process all data points from data insertion
+                // Enable icarus training -- to be removed
+                if ( config.router != null && config.router.equals( "icarus" ) && config.pdbBranch.equalsIgnoreCase( "old-routing" ) ) {
+                    ((PolyphenyDbInstance) databaseInstance).setIcarusRoutingTraining( true );
+                }
+
+                // Enable Post Cost Aggregation
+                if ( config.postCostAggregation.equals( "onWarmup" ) && !config.pdbBranch.equalsIgnoreCase( "old-routing" ) ) {
+                    ((PolyphenyDbInstance) databaseInstance).setPostCostAggregation( true );
+                }
+
+                // Wait a moment to give Polypheny-DB the chance to process all data points from data insertion
                 try {
                     TimeUnit.MINUTES.sleep( 2 );
                 } catch ( InterruptedException e ) {
                     throw new RuntimeException( "Unexpected interrupt", e );
                 }
-                ((PolyphenyDbInstance) databaseInstance).setPostCostAggregation( true );
             }
 
-            ProgressReporter progressReporter = new ChronosProgressReporter( chronosJob, this, 1, config.progressReportBase );
-            scenario.warmUp( progressReporter, config.numberOfWarmUpIterations );
+            ProgressReporter progressReporter = new ChronosProgressReporter(
+                    chronosJob,
+                    this,
+                    1,
+                    config.progressReportBase );
+            scenario.warmUp( progressReporter );
 
-            // Disable Post Cost Aggregation
-            if ( config.system.equals( "polypheny" ) && config.postCostAggregation.equals( "onWarmup" ) && !config.pdbBranch.equalsIgnoreCase( "old-routing" ) ) {
-                // Wait a few seconds to give Polypheny-DB the chance to process the data points
+            if ( databaseInstance instanceof PolyphenyDbInstance ) {
+                // Wait a moment to give Polypheny-DB the chance to process all data points from warmup
                 try {
-                    TimeUnit.SECONDS.sleep( 10 );
+                    TimeUnit.MINUTES.sleep( 1 );
                 } catch ( InterruptedException e ) {
                     throw new RuntimeException( "Unexpected interrupt", e );
                 }
-                ((PolyphenyDbInstance) databaseInstance).setPostCostAggregation( false );
-            }
 
-            // Disable icarus training  -- to be removed
-            if ( config.system.equals( "polypheny" ) && config.router.equals( "icarus" ) && config.pdbBranch.equalsIgnoreCase( "old-routing" ) ) {
-                ((PolyphenyDbInstance) databaseInstance).setIcarusRoutingTraining( false );
+                // Disable Post Cost Aggregation
+                if ( config.postCostAggregation.equals( "onWarmup" ) && !config.pdbBranch.equalsIgnoreCase( "old-routing" ) ) {
+                    ((PolyphenyDbInstance) databaseInstance).setPostCostAggregation( false );
+                }
+
+                // Disable icarus training  -- to be removed
+                if ( config.router != null && config.router.equals( "icarus" ) && config.pdbBranch.equalsIgnoreCase( "old-routing" ) ) {
+                    ((PolyphenyDbInstance) databaseInstance).setIcarusRoutingTraining( false );
+                }
             }
         } catch ( Exception e ) {
             databaseInstance.tearDown();
@@ -331,15 +433,23 @@ public class ChronosAgent extends AbstractChronosAgent {
 
     @Override
     protected Object execute( ChronosJob chronosJob, final File inputDirectory, final File outputDirectory, Properties properties, Object o ) {
-        @SuppressWarnings("unchecked") Scenario scenario = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getLeft();
-        @SuppressWarnings("unchecked") AbstractConfig config = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getMiddle();
-        @SuppressWarnings("unchecked") DatabaseInstance databaseInstance = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getRight();
+        @SuppressWarnings("unchecked")
+        Scenario scenario = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getLeft();
+        @SuppressWarnings("unchecked")
+        AbstractConfig config = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getMiddle();
+        @SuppressWarnings("unchecked")
+        DatabaseInstance databaseInstance = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getRight();
 
         final CsvWriter csvWriter;
         if ( writeCsv ) {
             csvWriter = new CsvWriter( outputDirectory.getPath() + File.separator + "results.csv" );
         } else {
             csvWriter = null;
+        }
+
+        // Set workload monitoring
+        if ( databaseInstance instanceof PolyphenyDbInstance ) {
+            ((PolyphenyDbInstance) databaseInstance).setWorkloadMonitoring( config.workloadMonitoringExecutingWorkload );
         }
 
         int numberOfThreads = config.numberOfThreads;
@@ -349,7 +459,11 @@ public class ChronosAgent extends AbstractChronosAgent {
             log.warn( "Limiting number of executor threads to {} threads (instead of {} as specified by the job)", numberOfThreads, config.numberOfThreads );
         }
         try {
-            ProgressReporter progressReporter = new ChronosProgressReporter( chronosJob, this, numberOfThreads, config.progressReportBase );
+            ProgressReporter progressReporter = new ChronosProgressReporter(
+                    chronosJob,
+                    this,
+                    numberOfThreads,
+                    config.progressReportBase );
             long runtime = scenario.execute( progressReporter, csvWriter, outputDirectory, numberOfThreads );
             properties.put( "runtime", runtime );
         } catch ( Exception e ) {
@@ -362,12 +476,15 @@ public class ChronosAgent extends AbstractChronosAgent {
 
     @Override
     protected Object analyze( ChronosJob chronosJob, final File inputDirectory, final File outputDirectory, Properties properties, Object o ) {
-        @SuppressWarnings("unchecked") Scenario scenario = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getLeft();
-        @SuppressWarnings("unchecked") AbstractConfig config = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getMiddle();
-        @SuppressWarnings("unchecked") DatabaseInstance databaseInstance = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getRight();
+        @SuppressWarnings("unchecked")
+        Scenario scenario = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getLeft();
+        @SuppressWarnings("unchecked")
+        AbstractConfig config = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getMiddle();
+        @SuppressWarnings("unchecked")
+        DatabaseInstance databaseInstance = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getRight();
 
         try {
-            scenario.analyze( properties );
+            scenario.analyze( properties, outputDirectory );
         } catch ( Exception e ) {
             databaseInstance.tearDown();
             throw e;
@@ -379,9 +496,13 @@ public class ChronosAgent extends AbstractChronosAgent {
 
     @Override
     protected Object clean( ChronosJob chronosJob, final File inputDirectory, final File outputDirectory, Properties properties, Object o ) {
-        @SuppressWarnings("unchecked") Scenario scenario = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getLeft();
-        @SuppressWarnings("unchecked") AbstractConfig config = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getMiddle();
-        @SuppressWarnings("unchecked") DatabaseInstance databaseInstance = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getRight();
+        @SuppressWarnings("unchecked")
+        Scenario scenario = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getLeft();
+        @SuppressWarnings("unchecked")
+        AbstractConfig config = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getMiddle();
+        @SuppressWarnings("unchecked")
+        DatabaseInstance databaseInstance = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getRight();
+
         databaseInstance.tearDown();
         return null;
     }

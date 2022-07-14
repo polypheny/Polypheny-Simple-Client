@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019-2021 The Polypheny Project
+ * Copyright (c) 2019-2022 The Polypheny Project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"), to deal
@@ -20,13 +20,13 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- *
  */
 
 package org.polypheny.simpleclient.query;
 
 import java.util.Map;
 import kong.unirest.HttpRequest;
+import lombok.Builder;
 import lombok.Getter;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
@@ -42,17 +42,22 @@ public class RawQuery extends Query {
     @Getter
     private final String mongoQl;
 
+    @Getter
+    private final String cypher;
+
 
     public RawQuery( String sql, HttpRequest<?> rest, boolean expectResultSet ) {
-        this( sql, rest, null, expectResultSet );
+        this( sql, rest, null, null, expectResultSet );
     }
 
 
-    public RawQuery( String sql, HttpRequest<?> rest, String mongoQl, boolean expectResultSet ) {
+    @Builder
+    public RawQuery( String sql, HttpRequest<?> rest, String mongoQl, String cypher, boolean expectResultSet ) {
         super( expectResultSet );
         this.sql = sql;
         this.rest = rest;
         this.mongoQl = mongoQl;
+        this.cypher = cypher;
     }
 
 

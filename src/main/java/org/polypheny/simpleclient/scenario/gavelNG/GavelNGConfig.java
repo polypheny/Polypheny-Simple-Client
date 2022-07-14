@@ -60,31 +60,7 @@ public class GavelNGConfig extends AbstractConfig {
 
 
     public GavelNGConfig( Properties properties, int multiplier ) {
-        super( "gavel", "polypheny" );
-
-        pdbBranch = null;
-        puiBranch = null;
-        buildUi = false;
-        resetCatalog = true;
-        memoryCatalog = false;
-        deployStoresUsingDocker = false;
-
-        dataStores.add( "hsqldb" );
-        planAndImplementationCaching = "Both";
-
-        router = "icarus"; // For old routing, to be removed
-
-        routers = new String[]{ "Simple", "Icarus", "FullPlacement" };
-        newTablePlacementStrategy = "Single";
-        planSelectionStrategy = "Best";
-        preCostRatio = 50;
-        postCostRatio = 50;
-        routingCache = true;
-        postCostAggregation = "onWarmup";
-
-        progressReportBase = getIntProperty( properties, "progressReportBase" );
-        numberOfThreads = getIntProperty( properties, "numberOfThreads" );
-        numberOfWarmUpIterations = getIntProperty( properties, "numberOfWarmUpIterations" );
+        super( "gavel", "polypheny", properties );
 
         numberOfUsers = getIntProperty( properties, "numberOfUsers" ) * multiplier;
         numberOfAuctions = getIntProperty( properties, "numberOfAuctions" ) * multiplier;
@@ -111,33 +87,8 @@ public class GavelNGConfig extends AbstractConfig {
 
 
     public GavelNGConfig( Map<String, String> cdl ) {
-        super( "gavelng", cdl.get( "store" ) );
+        super( "gavelng", cdl.get( "store" ), cdl );
 
-        pdbBranch = cdl.get( "pdbBranch" );
-        puiBranch = cdl.get( "puiBranch" );
-        buildUi = Boolean.parseBoolean( cdlGetOrDefault( cdl, "buildUi", "false" ) );
-
-        deployStoresUsingDocker = Boolean.parseBoolean( cdlGetOrDefault( cdl, "deployStoresUsingDocker", "false" ) );
-
-        resetCatalog = Boolean.parseBoolean( cdl.get( "resetCatalog" ) );
-        memoryCatalog = Boolean.parseBoolean( cdl.get( "memoryCatalog" ) );
-
-        numberOfThreads = Integer.parseInt( cdl.get( "numberOfThreads" ) );
-        numberOfWarmUpIterations = Integer.parseInt( cdlGetOrDefault( cdl, "numberOfWarmUpIterations", "4" ) );
-
-        dataStores.addAll( Arrays.asList( cdl.get( "dataStore" ).split( "_" ) ) );
-        planAndImplementationCaching = cdlGetOrDefault( cdl, "planAndImplementationCaching", "Both" );
-
-        router = cdl.get( "router" ); // For old routing, to be removed
-
-        routers = cdlGetOrDefault( cdl, "routers", "Simple_Icarus_FullPlacement" ).split( "_" );
-        newTablePlacementStrategy = cdlGetOrDefault( cdl, "newTablePlacementStrategy", "Single" );
-        planSelectionStrategy = cdlGetOrDefault( cdl, "planSelectionStrategy", "Best" );
-
-        preCostRatio = Integer.parseInt( cdlGetOrDefault( cdl, "preCostRatio", "50%" ).replace( "%", "" ).trim() );
-        postCostRatio = Integer.parseInt( cdlGetOrDefault( cdl, "postCostRatio", "50%" ).replace( "%", "" ).trim() );
-        routingCache = Boolean.parseBoolean( cdlGetOrDefault( cdl, "routingCache", "true" ) );
-        postCostAggregation = cdlGetOrDefault( cdl, "postCostAggregation", "onWarmup" );
 
         // Data Generation
         numberOfUsers = Integer.parseInt( cdl.get( "numberOfUsers" ) );
@@ -162,8 +113,7 @@ public class GavelNGConfig extends AbstractConfig {
         numberOfAuctionGenerationThreads = Integer.parseInt( cdl.get( "numberOfAuctionGenerationThreads" ) );
 
         parallelizeUserGenerationAndAuctionGeneration = Boolean.parseBoolean( cdl.get( "parallelizeUserGenerationAndAuctionGeneration" ) );
-
-        progressReportBase = 100;
+        
 
         // Policy Settings
         storePolicies.addAll( Arrays.asList( cdl.get( "storePolicy" ).split( "," ) ) );

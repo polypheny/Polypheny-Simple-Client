@@ -143,7 +143,7 @@ public class InsertPicture extends QueryBuilder {
 
 
         @Override
-        public String getTable() {
+        public String getEntity() {
             return "public.picture";
         }
 

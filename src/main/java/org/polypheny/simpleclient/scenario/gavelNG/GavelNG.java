@@ -49,6 +49,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.executor.Executor;
+import org.polypheny.simpleclient.executor.Executor.DatabaseInstance;
 import org.polypheny.simpleclient.executor.ExecutorException;
 import org.polypheny.simpleclient.executor.JdbcExecutor;
 import org.polypheny.simpleclient.executor.PolyphenyDbExecutor;
@@ -269,7 +270,7 @@ public class GavelNG extends Scenario {
 
 
     @Override
-    public void warmUp( ProgressReporter progressReporter, int iterations ) {
+    public void warmUp( ProgressReporter progressReporter  ) {
         log.info( "Analyzing currently stored data..." );
         Map<String, Integer> numbers = getNumbers();
 
@@ -279,7 +280,7 @@ public class GavelNG extends Scenario {
         log.info( "Warm-up..." );
         Executor jdbcExecutorFactory = null;
         Executor mqlExecutorFactory = null;
-        for ( int i = 0; i < iterations; i++ ) {
+        for ( int i = 0; i < config.numberOfWarmUpIterations; i++ ) {
             try {
                 jdbcExecutorFactory = executorFactory.createExecutorInstance();
                 mqlExecutorFactory = this.mqlExecutorFactory.createExecutorInstance();
@@ -474,7 +475,7 @@ public class GavelNG extends Scenario {
 
 
     @Override
-    public void createSchema( boolean includingKeys ) {
+    public void createSchema( DatabaseInstance databaseInstance, boolean includingKeys ) {
         log.info( "Creating schema..." );
         InputStream file;
 
@@ -507,7 +508,7 @@ public class GavelNG extends Scenario {
         try ( BufferedReader bf = new BufferedReader( new InputStreamReader( file ) ) ) {
             executor = mqlExecutorFactory.createExecutorInstance();
             String line = bf.readLine();
-            executor.executeQuery( new RawQuery( null, null, "use test", false ) );
+            executor.executeQuery( new RawQuery( null, null, "use test", null, false ) );
             while ( line != null ) {
                 if ( !gavelNGSettings.tableStores.isEmpty() ) {
                     List<Pair<String, String>> tableStores = gavelNGSettings.tableStores;
@@ -517,7 +518,7 @@ public class GavelNG extends Scenario {
                         }
                     }
                 }
-                executor.executeQuery( new RawQuery( null, null, "db.createCollection(" + line + ")", false ) );
+                executor.executeQuery( new RawQuery( null, null, "db.createCollection(" + line + ")", null, false ) );
                 line = bf.readLine();
             }
         } catch ( IOException | ExecutorException e ) {
@@ -557,7 +558,7 @@ public class GavelNG extends Scenario {
 
 
     @Override
-    public void generateData( ProgressReporter progressReporter ) {
+    public void generateData( DatabaseInstance databaseInstance, ProgressReporter progressReporter ) {
         log.info( "Generating data..." );
 
         DataGenerationThreadMonitor threadMonitor = new DataGenerationThreadMonitor();
@@ -749,7 +750,7 @@ public class GavelNG extends Scenario {
 
 
     @Override
-    public void analyze( Properties properties ) {
+    public void analyze( Properties properties, File outputDirectory ) {
         properties.put( "measuredTime", calculateMean( measuredTimes ) );
 
         measuredTimePerQueryType.forEach( ( templateId, time ) -> {
@@ -793,7 +794,7 @@ public class GavelNG extends Scenario {
     }
 
 
-    private void commitAndCloseExecutor( Executor executor ) {
+    public void commitAndCloseExecutor( Executor executor ) {
         if ( executor != null ) {
             try {
                 executor.executeCommit();

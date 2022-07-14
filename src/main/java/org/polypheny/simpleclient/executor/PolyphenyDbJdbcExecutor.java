@@ -20,11 +20,9 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- *
  */
 
 package org.polypheny.simpleclient.executor;
-
 
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -104,6 +102,27 @@ public class PolyphenyDbJdbcExecutor extends JdbcExecutor implements PolyphenyDb
             executeQuery( new RawQuery( "ALTER CONFIG '" + key + "' SET '" + value + "'", null, false ) );
         } catch ( ExecutorException e ) {
             log.error( "Exception while setting config \"" + key + "\"!", e );
+        }
+    }
+
+
+    public static void commitAndCloseJdbcExecutor( JdbcExecutor executor ) throws ExecutorException {
+        if ( executor != null ) {
+            try {
+                executor.executeCommit();
+            } catch ( ExecutorException e ) {
+                try {
+                    executor.executeRollback();
+                } catch ( ExecutorException ex ) {
+                    log.error( "Error while rollback connection", e );
+                }
+            } finally {
+                try {
+                    executor.closeConnection();
+                } catch ( ExecutorException e ) {
+                    log.error( "Error while closing connection", e );
+                }
+            }
         }
     }
 

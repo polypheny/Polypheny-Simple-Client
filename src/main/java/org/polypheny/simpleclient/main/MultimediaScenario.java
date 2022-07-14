@@ -20,11 +20,9 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- *
  */
 
 package org.polypheny.simpleclient.main;
-
 
 import java.io.File;
 import java.io.IOException;
@@ -42,7 +40,7 @@ public class MultimediaScenario {
     public static void schema( ExecutorFactory executorFactory, boolean commitAfterEveryQuery ) {
         MultimediaConfig config = new MultimediaConfig( getProperties(), 1 );
         MultimediaBench multimediaBench = new MultimediaBench( executorFactory, config, commitAfterEveryQuery, false );
-        multimediaBench.createSchema( true );
+        multimediaBench.createSchema( null, true );
     }
 
 
@@ -51,7 +49,7 @@ public class MultimediaScenario {
         MultimediaBench multimediaBench = new MultimediaBench( executorFactory, config, commitAfterEveryQuery, false );
 
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
-        multimediaBench.generateData( progressReporter );
+        multimediaBench.generateData( null, progressReporter );
     }
 
 
@@ -76,7 +74,7 @@ public class MultimediaScenario {
         MultimediaBench multimediaBench = new MultimediaBench( executorFactory, config, commitAfterEveryQuery, dumpQueryList );
 
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
-        multimediaBench.warmUp( progressReporter, config.numberOfWarmUpIterations );
+        multimediaBench.warmUp( progressReporter );
     }
 
 

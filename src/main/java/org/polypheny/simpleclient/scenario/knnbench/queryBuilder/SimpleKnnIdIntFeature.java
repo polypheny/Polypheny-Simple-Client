@@ -116,7 +116,8 @@ public class SimpleKnnIdIntFeature extends QueryBuilder {
 
         @Override
         public String getParameterizedSqlQuery() {
-            return SQL_1 + "?" + SQL_2 + "'" + norm + "'" + SQL_3 + limit + SQL_4;
+            return null;
+            //return SQL_1 + "?" + SQL_2 + "'" + norm + "'" + SQL_3 + limit + SQL_4;
         }
 
 

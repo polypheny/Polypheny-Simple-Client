@@ -153,7 +153,7 @@ public class InsertMedia extends QueryBuilder {
         @Override
         public JsonObject getRestRowExpression() {
             JsonObject set = new JsonObject();
-            String table = getTable() + ".";
+            String table = getEntity() + ".";
             set.add( table + "id", new JsonPrimitive( id ) );
             set.add( table + "timestamp", new JsonPrimitive( timestamp.toLocalDateTime().format( DateTimeFormatter.ISO_LOCAL_DATE_TIME ) ) );
             set.add( table + "album_id", new JsonPrimitive( album_id ) );
@@ -165,7 +165,7 @@ public class InsertMedia extends QueryBuilder {
 
 
         @Override
-        public String getTable() {
+        public String getEntity() {
             return "public.media";
         }
 

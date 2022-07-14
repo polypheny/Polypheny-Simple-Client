@@ -35,59 +35,36 @@ import org.polypheny.simpleclient.scenario.AbstractConfig;
 @Slf4j
 public class KnnBenchConfig extends AbstractConfig {
 
-    public final String dataStoreFeature;
-    public final String dataStoreMetadata;
+    public String dataStoreFeature;
+    public String dataStoreMetadata;
 
-    public final long randomSeedInsert;
-    public final long randomSeedQuery;
+    public long randomSeedInsert;
+    public long randomSeedQuery;
 
-    public final int dimensionFeatureVectors;
-    public final int batchSizeInserts;
-    public final int batchSizeQueries;
+    public int dimensionFeatureVectors;
+    public int batchSizeInserts;
+    public int batchSizeQueries;
 
-    public final int numberOfEntries;
-    public final int numberOfSimpleKnnIntFeatureQueries;
-    public final int numberOfSimpleKnnRealFeatureQueries;
-    public final int numberOfSimpleMetadataQueries;
-    public final int numberOfSimpleKnnIdIntFeatureQueries;
-    public final int numberOfSimpleKnnIdRealFeatureQueries;
-    public final int numberOfMetadataKnnIntFeatureQueries;
-    public final int numberOfMetadataKnnRealFeatureQueries;
+    public int numberOfEntries;
+    public int numberOfSimpleKnnIntFeatureQueries;
+    public int numberOfSimpleKnnRealFeatureQueries;
+    public int numberOfSimpleMetadataQueries;
+    public int numberOfSimpleKnnIdIntFeatureQueries;
+    public int numberOfSimpleKnnIdRealFeatureQueries;
+    public int numberOfMetadataKnnIntFeatureQueries;
+    public int numberOfMetadataKnnRealFeatureQueries;
 //    public final int numberOfCombinedQueries;
 
-    public final int limitKnnQueries;
-    public final String distanceNorm;
+    public int limitKnnQueries;
+    public String distanceNorm;
 
 
     public KnnBenchConfig( Properties properties, int multiplier ) {
-        super( "knnBench", "polypheny" );
-
-        pdbBranch = null;
-        puiBranch = null;
-        buildUi = false;
-        resetCatalog = false;
-        memoryCatalog = false;
-        deployStoresUsingDocker = false;
-
-        router = "icarus"; // For old routing, to be removed
-
-        routers = new String[]{ "Simple", "Icarus", "FullPlacement" };
-        newTablePlacementStrategy = "Single";
-        planSelectionStrategy = "Best";
-        preCostRatio = 50;
-        postCostRatio = 50;
-        routingCache = true;
-        postCostAggregation = "onWarmup";
-
-        planAndImplementationCaching = "Both";
+        super( "knnBench", "polypheny-jdbc", properties );
 
         dataStoreFeature = null;
         dataStoreMetadata = null;
         //dataStores.add( "cottontail" );
-
-        progressReportBase = getIntProperty( properties, "progressReportBase" );
-        numberOfThreads = getIntProperty( properties, "numberOfThreads" );
-        numberOfWarmUpIterations = getIntProperty( properties, "numberOfWarmUpIterations" );
 
         if ( getBooleanProperty( properties, "useRandomSeeds" ) ) {
             Random tempRand = new Random();
@@ -116,15 +93,7 @@ public class KnnBenchConfig extends AbstractConfig {
 
 
     public KnnBenchConfig( Map<String, String> cdl ) {
-        super( "gavel", cdl.get( "store" ) );
-
-        pdbBranch = cdl.get( "pdbBranch" );
-        puiBranch = cdl.get( "puiBranch" );
-        buildUi = Boolean.parseBoolean( cdlGetOrDefault( cdl, "buildUi", "false" ) );
-        resetCatalog = Boolean.parseBoolean( cdl.get( "resetCatalog" ) );
-        memoryCatalog = Boolean.parseBoolean( cdl.get( "memoryCatalog" ) );
-
-        deployStoresUsingDocker = Boolean.parseBoolean( cdlGetOrDefault( cdl, "deployStoresUsingDocker", "false" ) );
+        super( "gavel", cdl.get( "store" ), cdl );
 
         dataStoreFeature = cdl.get( "dataStoreFeature" );
         dataStoreMetadata = cdl.get( "dataStoreMetadata" );
@@ -134,23 +103,6 @@ public class KnnBenchConfig extends AbstractConfig {
             dataStores.add( dataStoreFeature );
             dataStores.add( dataStoreMetadata );
         }
-
-        router = cdl.get( "router" ); // For old routing, to be removed
-
-        routers = cdlGetOrDefault( cdl, "routers", "Simple_Icarus_FullPlacement" ).split( "_" );
-        newTablePlacementStrategy = cdlGetOrDefault( cdl, "newTablePlacementStrategy", "Single" );
-        planSelectionStrategy = cdlGetOrDefault( cdl, "planSelectionStrategy", "Best" );
-
-        preCostRatio = Integer.parseInt( cdlGetOrDefault( cdl, "preCostRatio", "50%" ).replace( "%", "" ).trim() );
-        postCostRatio = Integer.parseInt( cdlGetOrDefault( cdl, "postCostRatio", "50%" ).replace( "%", "" ).trim() );
-        routingCache = Boolean.parseBoolean( cdlGetOrDefault( cdl, "routingCache", "true" ) );
-        postCostAggregation = cdlGetOrDefault( cdl, "postCostAggregation", "onWarmup" );
-
-        planAndImplementationCaching = cdlGetOrDefault( cdl, "planAndImplementationCaching", "Both" );
-
-        progressReportBase = 100;
-        numberOfThreads = Integer.parseInt( cdl.get( "numberOfThreads" ) );
-        numberOfWarmUpIterations = Integer.parseInt( cdl.get( "numberOfWarmUpIterations" ) );
 
         if ( Boolean.parseBoolean( cdl.get( "useRandomSeeds" ) ) ) {
             Random tempRand = new Random();
@@ -176,6 +128,18 @@ public class KnnBenchConfig extends AbstractConfig {
 //        numberOfCombinedQueries = getIntProperty( properties, "numberOfCombinedQueries" ) * multiplier;
         limitKnnQueries = Integer.parseInt( cdl.get( "limitKnnQueries" ) );
         distanceNorm = cdl.get( "distanceNorm" ).trim();
+    }
+
+
+    // For MultiBench
+    protected KnnBenchConfig( String scenario, String system, Map<String, String> cdl ) {
+        super( scenario, system, cdl );
+    }
+
+
+    // For MultiBench
+    protected KnnBenchConfig( String scenario, String system, Properties properties ) {
+        super( scenario, system, properties );
     }
 
 

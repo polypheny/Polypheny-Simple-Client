@@ -157,7 +157,7 @@ public class InsertBid extends QueryBuilder {
 
 
         @Override
-        public String getTable() {
+        public String getEntity() {
             return "public.bid";
         }
 

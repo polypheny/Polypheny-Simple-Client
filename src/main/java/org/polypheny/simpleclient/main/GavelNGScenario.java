@@ -45,7 +45,7 @@ public class GavelNGScenario {
         GavelNGProfile profile = new GavelNGProfile( getProfileProperties() );
 
         GavelNG gavelNG = new GavelNG( jdbcExecutorFactory, mqlExecutorFactory, config, profile, commitAfterEveryQuery, false, queryMode);
-        gavelNG.createSchema( true );
+        gavelNG.createSchema( null, true );
     }
 
 
@@ -55,7 +55,7 @@ public class GavelNGScenario {
         GavelNG gavelNG = new GavelNG( jdbcExecutorFactory, mqlExecutorFactory, config, profile, commitAfterEveryQuery, false, queryMode );
 
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
-        gavelNG.generateData( progressReporter );
+        gavelNG.generateData( null, progressReporter );
     }
 
 
@@ -83,7 +83,7 @@ public class GavelNGScenario {
 
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
 
-        gavelNG.warmUp( progressReporter, config.numberOfWarmUpIterations );
+        gavelNG.warmUp( progressReporter );
     }
 
 

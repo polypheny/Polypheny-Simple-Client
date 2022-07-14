@@ -5,6 +5,14 @@ A simple benchmarking and testing client for Polypheny-DB. It includes support f
 * **Gavel**: The Gavel benchmark simulates the workload of a fictional auction house.
 * **kNN-Bench**: A benchmark tailored towards typical workloads of multimedia retrieval applications and especially k-Nearest-Neighbor search.
 * **Multimedia**: This benchmarks produces workload containing or requesting randomly generated BLOBs.
+* **Graph**: A simple synthetic graph benchmark that executes a mixture of DQL and DML Cypher queries against a pseudo-random network.
+* **DocBench**: A simple benchmark for document schemas generating MongoQL queries.
+* **MultiBench**: A benchmark that combines Gavel, Graph, and DocBench.
+* [**AuctionMark**](http://hstore.cs.brown.edu/projects/auctionmark/): A benchmark executing workload that simulates the activities found in a well-known auction site.
+* [**SmallBank**](http://ses.library.usyd.edu.au/bitstream/2123/5353/1/michael-cahill-2009-thesis.pdf): The SmallBank benchmark models a simple banking application.
+* [**TPC-C**](http://www.tpc.org/tpcc/): A well-known on-line transaction processing (OLTP) benchmark.
+* [**TPC-H**](http://www.tpc.org/tpch/): A decision support benchmark consisting of a suite of business oriented ad-hoc queries and concurrent data modifications.
+* [**YCSB**](https://github.com/brianfrankcooper/YCSB): Benchmark for evaluating the performance of "key-value" and "cloud" serving stores.
 
 This benchmarking client contains a [Chronos](https://chronos-eaas.org/) connector. This allows to easily execute evaluation campaigns.
 
@@ -50,19 +58,19 @@ OPTIONS
 
 ### Stand-alone
 
-This client can be used by specifying the name of the benchmark as first parameter (`gavel`, `knnbench`, `multimedia`). Use the `help` command to get an overview on all available parameters for this benchmark. For example:
-
-```
-java -jar polypheny-simple-client.jar help gavel  
-```
-
-The general syntax is identical for all three benchmarks:
+This client can be used by specifying the name of the benchmark as first parameter and the task as second parameter. Optionally, it is also possible to specify a multiplier for the data and workload (integer > 0). The general syntax is identical for all benchmarks:
 
 ```
 java -jar polypheny-simple-client.jar  BENCHMARK  TASK  [ MULTIPLIER ] 
 ```
 
-_BENCHMARK_: `{ gavel | knnbench | multimedia }`
+Use the `help` command to get an overview on all available parameters for a benchmark. For example:
+
+```
+java -jar polypheny-simple-client.jar help gavel  
+```
+
+_BENCHMARK_: `{ gavel | knnbench | multimedia | graph | docbench | multibench | auctionmark | smallbank | tpcc | tpch | ycsb }`
 
 _TASK_: `{ schema | data | workload | warmup }`
 
