@@ -26,6 +26,9 @@ package org.polypheny.simpleclient.executor;
 
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.main.CsvWriter;
@@ -34,7 +37,6 @@ import org.polypheny.simpleclient.query.RawQuery;
 
 @Slf4j
 public class PolyphenyDbJdbcExecutor extends JdbcExecutor implements PolyphenyDbExecutor {
-
 
     private PolyphenyDbJdbcExecutor( String polyphenyHost, CsvWriter csvWriter, boolean prepareStatements ) {
         super( csvWriter, prepareStatements );
@@ -73,8 +75,24 @@ public class PolyphenyDbJdbcExecutor extends JdbcExecutor implements PolyphenyDb
 
 
     @Override
-    public void deployStore( String name, String clazz, String config ) throws ExecutorException {
+    public void deployStore( String name, String clazz, String config, String store ) throws ExecutorException {
+
+        if ( dataStoreNames.containsKey( store ) ) {
+            List<String> stringNames = new ArrayList<>( dataStoreNames.get( store ) );
+            stringNames.add( name );
+            dataStoreNames.put( store, stringNames );
+        } else {
+            dataStoreNames.put( store, Collections.singletonList( name ) );
+        }
+
         executeQuery( new RawQuery( "ALTER ADAPTERS ADD \"" + name + "\" USING '" + clazz + "' WITH '" + config + "'", null, false ) );
+    }
+
+
+    // At the moment it is only possible to set Policies for Polypheny
+    @Override
+    public void setPolicies( String clauseName, String value ) throws ExecutorException {
+        executeQuery( new RawQuery( "ALTER POLICY " + clauseName + " SET " + value, null, false ) );
     }
 
 

@@ -97,6 +97,12 @@ public class PolyphenyDbCypherExecutor extends PolyphenyDbHttpExecutor {
     }
 
 
+    @Override
+    public void setPolicies( String clauseName, String value ) throws ExecutorException {
+        //NoOp
+    }
+
+
     public static class PolyphenyDbCypherExecutorFactory extends ExecutorFactory {
 
         private final String host;

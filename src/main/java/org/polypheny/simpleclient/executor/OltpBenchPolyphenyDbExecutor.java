@@ -94,11 +94,17 @@ public class OltpBenchPolyphenyDbExecutor extends OltpBenchExecutor implements P
 
 
     @Override
-    public void deployStore( String name, String clazz, String config ) throws ExecutorException {
+    public void setPolicies( String clauseName, String value ) throws ExecutorException {
+
+    }
+
+
+    @Override
+    public void deployStore( String name, String clazz, String config, String store ) throws ExecutorException {
         PolyphenyDbJdbcExecutor executor = null;
         try {
             executor = jdbcExecutorFactory.createExecutorInstance( null );
-            executor.deployStore( name, clazz, config );
+            executor.deployStore( name, clazz, config, store );
             executor.executeCommit();
         } catch ( ExecutorException e ) {
             throw new ExecutorException( "Error while executing query via JDBC", e );

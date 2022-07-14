@@ -46,8 +46,8 @@ import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.cli.ChronosCommand;
 import org.polypheny.simpleclient.executor.CottontaildbExecutor.CottontailExecutorFactory;
 import org.polypheny.simpleclient.executor.CottontaildbExecutor.CottontailInstance;
-import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.executor.Executor.DatabaseInstance;
+import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
 import org.polypheny.simpleclient.executor.MonetdbExecutor.MonetdbExecutorFactory;
 import org.polypheny.simpleclient.executor.MonetdbExecutor.MonetdbInstance;
 import org.polypheny.simpleclient.executor.OltpBenchPolyphenyDbExecutor.OltpBenchPolyphenyDbExecutorFactory;
@@ -68,6 +68,9 @@ import org.polypheny.simpleclient.scenario.docbench.DocBench;
 import org.polypheny.simpleclient.scenario.docbench.DocBenchConfig;
 import org.polypheny.simpleclient.scenario.gavel.Gavel;
 import org.polypheny.simpleclient.scenario.gavel.GavelConfig;
+import org.polypheny.simpleclient.scenario.gavelNG.GavelNG;
+import org.polypheny.simpleclient.scenario.gavelNG.GavelNGConfig;
+import org.polypheny.simpleclient.scenario.gavelNG.GavelNGProfile;
 import org.polypheny.simpleclient.scenario.graph.GraphBench;
 import org.polypheny.simpleclient.scenario.graph.GraphBenchConfig;
 import org.polypheny.simpleclient.scenario.knnbench.KnnBench;
@@ -178,40 +181,46 @@ public class ChronosAgent extends AbstractChronosAgent {
         }
 
         // Create Executor Factory
-        Executor.ExecutorFactory executorFactory;
-        switch ( parsedConfig.get( "store" ) ) {
-            case "polypheny":
-                executorFactory = new PolyphenyDbMultiExecutorFactory( ChronosCommand.hostname );
-                break;
-            case "polypheny-jdbc":
-                executorFactory = new PolyphenyDbJdbcExecutorFactory( ChronosCommand.hostname, Boolean.parseBoolean( parsedConfig.get( "prepareStatements" ) ) );
-                break;
-            case "polypheny-rest":
-                executorFactory = new PolyphenyDbRestExecutorFactory( ChronosCommand.hostname );
-                break;
-            case "polypheny-mongoql":
-                executorFactory = new PolyphenyDbMongoQlExecutorFactory( ChronosCommand.hostname );
-                break;
-            case "polypheny-cypher":
-                executorFactory = new PolyphenyDbCypherExecutorFactory( ChronosCommand.hostname );
-                break;
-            case "postgres":
-                executorFactory = new PostgresExecutorFactory( ChronosCommand.hostname, Boolean.parseBoolean( parsedConfig.get( "prepareStatements" ) ) );
-                break;
-            case "monetdb":
-                executorFactory = new MonetdbExecutorFactory( ChronosCommand.hostname, Boolean.parseBoolean( parsedConfig.get( "prepareStatements" ) ) );
-                break;
-            case "cottontail":
-                executorFactory = new CottontailExecutorFactory( ChronosCommand.hostname );
-                break;
-            case "oltpbench-polypheny":
-                executorFactory = new OltpBenchPolyphenyDbExecutorFactory( ChronosCommand.hostname );
-                break;
-            case "oltpbench-postgres":
-                executorFactory = new OltpBenchPostgresExecutorFactory( ChronosCommand.hostname );
-                break;
-            default:
-                throw new RuntimeException( "Unknown system: " + parsedConfig.get( "store" ) );
+        ExecutorFactory executorFactory;
+        ExecutorFactory executorFactoryMONGODB = null;
+        if ( parsedConfig.get( "scenario" ).equals( "gavelng" ) ) {
+            executorFactory = new PolyphenyDbJdbcExecutorFactory( ChronosCommand.hostname, Boolean.parseBoolean( parsedConfig.get( "prepareStatements" ) ) );
+            executorFactoryMONGODB = new PolyphenyDbMongoQlExecutorFactory( ChronosCommand.hostname );
+        } else {
+            switch ( parsedConfig.get( "store" ) ) {
+                case "polypheny":
+                    executorFactory = new PolyphenyDbMultiExecutorFactory( ChronosCommand.hostname );
+                    break;
+                case "polypheny-jdbc":
+                    executorFactory = new PolyphenyDbJdbcExecutorFactory( ChronosCommand.hostname, Boolean.parseBoolean( parsedConfig.get( "prepareStatements" ) ) );
+                    break;
+                case "polypheny-rest":
+                    executorFactory = new PolyphenyDbRestExecutorFactory( ChronosCommand.hostname );
+                    break;
+                case "polypheny-mongoql":
+                    executorFactory = new PolyphenyDbMongoQlExecutorFactory( ChronosCommand.hostname );
+                    break;
+                case "polypheny-cypher":
+                    executorFactory = new PolyphenyDbCypherExecutorFactory( ChronosCommand.hostname );
+                    break;
+                case "postgres":
+                    executorFactory = new PostgresExecutorFactory( ChronosCommand.hostname, Boolean.parseBoolean( parsedConfig.get( "prepareStatements" ) ) );
+                    break;
+                case "monetdb":
+                    executorFactory = new MonetdbExecutorFactory( ChronosCommand.hostname, Boolean.parseBoolean( parsedConfig.get( "prepareStatements" ) ) );
+                    break;
+                case "cottontail":
+                    executorFactory = new CottontailExecutorFactory( ChronosCommand.hostname );
+                    break;
+                case "oltpbench-polypheny":
+                    executorFactory = new OltpBenchPolyphenyDbExecutorFactory( ChronosCommand.hostname );
+                    break;
+                case "oltpbench-postgres":
+                    executorFactory = new OltpBenchPostgresExecutorFactory( ChronosCommand.hostname );
+                    break;
+                default:
+                    throw new RuntimeException( "Unknown system: " + parsedConfig.get( "store" ) );
+            }
         }
 
         Scenario scenario;
@@ -220,6 +229,11 @@ public class ChronosAgent extends AbstractChronosAgent {
             case "gavel":
                 config = new GavelConfig( parsedConfig );
                 scenario = new Gavel( executorFactory, (GavelConfig) config, true, dumpQueryList, queryMode );
+                break;
+            case "gavelng":
+                config = new GavelNGConfig( parsedConfig );
+                GavelNGProfile profile = new GavelNGProfile( parsedConfig );
+                scenario = new GavelNG( executorFactory, executorFactoryMONGODB, (GavelNGConfig) config, profile, true, dumpQueryList, queryMode );
                 break;
             case "knnBench":
                 config = new KnnBenchConfig( parsedConfig );

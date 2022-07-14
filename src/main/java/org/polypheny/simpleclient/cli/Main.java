@@ -52,6 +52,7 @@ public class Main {
         builder.withCommands( YcsbCommand.class );
         builder.withCommands( DumpCommand.class );
         builder.withCommands( HelpCommand.class );
+        builder.withCommands( GavelNGCommand.class );
         builder.withDefaultCommand( HelpCommand.class );
 
         CliRunnable cmd = builder.build().parse( args );

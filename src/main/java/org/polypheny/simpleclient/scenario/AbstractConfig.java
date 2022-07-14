@@ -70,6 +70,13 @@ public abstract class AbstractConfig {
 
     public final int progressReportBase = 100;
 
+    // Only used for GavelNG
+    public List<String> multipleDataStores = new ArrayList<>();
+    public final List<String> storePolicies = new ArrayList<>();
+    public final List<String> selfAdaptingPolicies = new ArrayList<>();
+    public String usePolicies = null;
+    public boolean statisticActiveTracking = false;
+
 
     protected AbstractConfig( String scenario, String system, Properties properties ) {
         this.scenario = scenario;

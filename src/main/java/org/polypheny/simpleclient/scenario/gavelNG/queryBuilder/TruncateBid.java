@@ -20,37 +20,66 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
+ *
  */
 
-package org.polypheny.simpleclient.query;
+package org.polypheny.simpleclient.scenario.gavelNG.queryBuilder;
 
 
-import lombok.Getter;
-import org.polypheny.simpleclient.scenario.gavelNG.GavelNG.QueryLanguage;
-
-public class QueryListEntry {
-
-    public final Query query;
-    public final int templateId;
-    public final long delay;
-    @Getter
-    public final QueryLanguage queryLanguage;
+import java.util.Map;
+import kong.unirest.HttpRequest;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.polypheny.simpleclient.query.Query;
+import org.polypheny.simpleclient.query.QueryBuilder;
 
 
-    public QueryListEntry( Query query, int templateId ) {
-        this.query = query;
-        this.templateId = templateId;
-        this.delay = 0;
-        this.queryLanguage = QueryLanguage.SQL;
+public class TruncateBid extends QueryBuilder {
+
+    private static final boolean EXPECT_RESULT = false;
+
+
+    @Override
+    public Query getNewQuery() {
+        return new TruncateBidQuery();
     }
 
 
-    public QueryListEntry( Query query, int templateId, int delay, QueryLanguage queryLanguage ) {
-        this.query = query;
-        this.templateId = templateId;
-        this.delay = delay * 1000L;
-        this.queryLanguage = queryLanguage;
-    }
+    private static class TruncateBidQuery extends Query {
 
+        public TruncateBidQuery() {
+            super( EXPECT_RESULT );
+        }
+
+
+        @Override
+        public String getSql() {
+            return "TRUNCATE TABLE bid";
+        }
+
+
+        @Override
+        public String getParameterizedSqlQuery() {
+            return null;
+        }
+
+
+        @Override
+        public Map<Integer, ImmutablePair<DataTypes, Object>> getParameterValues() {
+            return null;
+        }
+
+
+        @Override
+        public HttpRequest<?> getRest() {
+            return null;
+        }
+
+
+        @Override
+        public String getMongoQl() {
+            return "db.bid.deleteMany({})";
+        }
+
+    }
 
 }

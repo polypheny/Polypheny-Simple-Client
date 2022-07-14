@@ -24,12 +24,18 @@
 
 package org.polypheny.simpleclient.executor;
 
+import static org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.commitAndCloseJdbcExecutor;
+
+import com.google.gson.JsonObject;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import kong.unirest.HttpRequest;
 import kong.unirest.HttpResponse;
 import kong.unirest.JsonNode;
+import kong.unirest.Unirest;
 import kong.unirest.UnirestException;
 import kong.unirest.json.JSONArray;
 import lombok.extern.slf4j.Slf4j;
@@ -73,13 +79,35 @@ public class PolyphenyDbMongoQlExecutor extends PolyphenyDbHttpExecutor {
             }
             time = System.nanoTime() - start;
             if ( csvWriter != null ) {
-                csvWriter.appendToCsv( request.getUrl(), time );
+                csvWriter.appendToCsv( query.getMongoQl(), time );
             }
         } catch ( UnirestException e ) {
             throw new ExecutorException( e );
         }
 
         return time;
+    }
+
+
+    private HttpRequest<?> buildQuery( String mql ) {
+        JsonObject data = new JsonObject();
+        data.addProperty( "query", mql );
+        data.addProperty( "database", "test" );
+
+        return Unirest.post( "{protocol}://{host}:{port}/mongo" )
+                .header( "Content-Type", "application/json" )
+                .body( data );
+
+    }
+
+
+    private HttpRequest<?> getRequest( String mql ) {
+        HttpRequest<?> request = buildQuery( mql );
+        request.basicAuth( "pa", "" );
+        request.routeParam( "protocol", "http" );
+        request.routeParam( "host", "127.0.0.1" );
+        request.routeParam( "port", "13137" );
+        return request;
     }
 
 
@@ -99,7 +127,7 @@ public class PolyphenyDbMongoQlExecutor extends PolyphenyDbHttpExecutor {
                 throw new ExecutorException( "Error while executing MongoQl query. Message: " + result.getStatusText() + "  |  URL: " + request.getUrl() );
             }
             if ( csvWriter != null ) {
-                csvWriter.appendToCsv( request.getUrl(), System.nanoTime() - start );
+                csvWriter.appendToCsv( query.getMongoQl(), System.nanoTime() - start );
             }
             // Get result of a count query
             JSONArray res = result.getBody().getObject().getJSONArray( "data" );
@@ -153,6 +181,80 @@ public class PolyphenyDbMongoQlExecutor extends PolyphenyDbHttpExecutor {
         }
         if ( documents.size() > 0 ) {
             executeQuery( new RawQuery( null, null, Query.buildMongoQlManyInsert( currentDocument, documents ), null, false ) );
+        }
+    }
+
+
+    @Override
+    public void flushCsvWriter() {
+        if ( csvWriter != null ) {
+            try {
+                csvWriter.flush();
+            } catch ( IOException e ) {
+                log.warn( "Exception while flushing csv writer", e );
+            }
+        }
+    }
+
+
+    @Override
+    public void dropStore( String name ) throws ExecutorException {
+        PolyphenyDbJdbcExecutor executor = null;
+        try {
+            executor = jdbcExecutorFactory.createExecutorInstance( csvWriter );
+            executor.dropStore( name );
+            executor.executeCommit();
+        } catch ( ExecutorException e ) {
+            throw new ExecutorException( "Error while executing query via JDBC", e );
+        } finally {
+            commitAndCloseJdbcExecutor( executor );
+        }
+    }
+
+
+    @Override
+    public void deployStore( String name, String clazz, String config, String store ) throws ExecutorException {
+        if ( dataStoreNames.containsKey( store ) ) {
+            List<String> stringNames = new ArrayList<>( dataStoreNames.get( store ) );
+            stringNames.add( name );
+            dataStoreNames.put( store, stringNames );
+        } else {
+            dataStoreNames.put( store, Collections.singletonList( name ) );
+        }
+        PolyphenyDbJdbcExecutor executor = null;
+        try {
+            executor = jdbcExecutorFactory.createExecutorInstance( csvWriter );
+            executor.deployStore( name, clazz, config, store );
+            executor.executeCommit();
+        } catch ( ExecutorException e ) {
+            throw new ExecutorException( "Error while executing query via JDBC", e );
+        } finally {
+            commitAndCloseJdbcExecutor( executor );
+        }
+    }
+
+
+    @Override
+    public void setPolicies( String clauseName, String value ) throws ExecutorException {
+        // NoOp
+    }
+
+
+    @Override
+    public void setConfig( String key, String value ) {
+        PolyphenyDbJdbcExecutor executor = null;
+        try {
+            executor = jdbcExecutorFactory.createExecutorInstance( csvWriter );
+            executor.setConfig( key, value );
+            executor.executeCommit();
+        } catch ( ExecutorException e ) {
+            log.error( "Exception while setting config \"" + key + "\"!", e );
+        } finally {
+            try {
+                commitAndCloseJdbcExecutor( executor );
+            } catch ( ExecutorException e ) {
+                log.error( "Exception while closing JDBC executor", e );
+            }
         }
     }
 

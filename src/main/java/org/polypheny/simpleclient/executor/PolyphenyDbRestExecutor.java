@@ -27,6 +27,7 @@ package org.polypheny.simpleclient.executor;
 import com.google.gson.JsonObject;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -232,17 +233,30 @@ public class PolyphenyDbRestExecutor implements PolyphenyDbExecutor {
 
 
     @Override
-    public void deployStore( String name, String clazz, String config ) throws ExecutorException {
+    public void deployStore( String name, String clazz, String config, String store ) throws ExecutorException {
+        if ( dataStoreNames.containsKey( store ) ) {
+            List<String> stringNames = new ArrayList<>( dataStoreNames.get( store ) );
+            stringNames.add( name );
+            dataStoreNames.put( store, stringNames );
+        } else {
+            dataStoreNames.put( store, Collections.singletonList( name ) );
+        }
         PolyphenyDbJdbcExecutor executor = null;
         try {
             executor = jdbcExecutorFactory.createExecutorInstance( csvWriter );
-            executor.deployStore( name, clazz, config );
+            executor.deployStore( name, clazz, config, store );
             executor.executeCommit();
         } catch ( ExecutorException e ) {
             throw new ExecutorException( "Error while executing query via JDBC", e );
         } finally {
             PolyphenyDbJdbcExecutor.commitAndCloseJdbcExecutor( executor );
         }
+    }
+
+
+    @Override
+    public void setPolicies( String clauseName, String value ) throws ExecutorException {
+        // NoOp
     }
 
 

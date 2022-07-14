@@ -51,12 +51,15 @@ public interface PolyphenyDbExecutor extends Executor {
     AtomicInteger nextPort = new AtomicInteger( 3300 );
 
     List<String> storeNames = new ArrayList<>();
-
+    Map<String, List<String>> dataStoreNames = new HashMap<>();
+    default Map<String, List<String>> getDataStoreNames() {
+        return dataStoreNames;
+    }
 
     void dropStore( String name ) throws ExecutorException;
 
 
-    void deployStore( String name, String clazz, String config ) throws ExecutorException;
+    void deployStore( String name, String clazz, String config, String store ) throws ExecutorException;
 
 
     default String deployHsqldb() throws ExecutorException {
@@ -64,11 +67,11 @@ public interface PolyphenyDbExecutor extends Executor {
         deployStore(
                 storeName,
                 "org.polypheny.db.adapter.jdbc.stores.HsqldbStore",
-                "{maxConnections:\"25\",trxControlMode:locks,trxIsolationLevel:read_committed,type:Memory,tableType:Memory,mode:embedded}" );
+                "{maxConnections:\"25\",trxControlMode:locks,trxIsolationLevel:read_committed,type:Memory,tableType:Memory,mode:embedded}",
+                "hsqldb" );
         storeNames.add( storeName );
         return storeName;
     }
-
 
     default String deployMonetDb( boolean deployStoresUsingDocker ) throws ExecutorException {
         String config;
@@ -83,7 +86,8 @@ public interface PolyphenyDbExecutor extends Executor {
         deployStore(
                 name,
                 "org.polypheny.db.adapter.jdbc.stores.MonetdbStore",
-                config );
+                config,
+                "monetdb" );
         storeNames.add( name );
         return name;
     }
@@ -102,7 +106,8 @@ public interface PolyphenyDbExecutor extends Executor {
         deployStore(
                 name,
                 "org.polypheny.db.adapter.jdbc.stores.PostgresqlStore",
-                config );
+                config,
+                "postgres" );
         storeNames.add( name );
         return name;
     }
@@ -121,7 +126,8 @@ public interface PolyphenyDbExecutor extends Executor {
         deployStore(
                 name,
                 "org.polypheny.db.adapter.cassandra.CassandraStore",
-                config );
+                config,
+                "cassandra" );
         storeNames.add( name );
         return name;
     }
@@ -132,7 +138,8 @@ public interface PolyphenyDbExecutor extends Executor {
         deployStore(
                 storeName,
                 "org.polypheny.db.adapter.file.FileStore",
-                "{\"mode\":\"embedded\"}" );
+                "{\"mode\":\"embedded\"}",
+                "file" );
         storeNames.add( storeName );
         return storeName;
     }
@@ -143,7 +150,8 @@ public interface PolyphenyDbExecutor extends Executor {
         deployStore(
                 storeName,
                 "org.polypheny.db.adapter.cottontail.CottontailStore",
-                "{\"type\":\"Embedded\",\"host\":\"localhost\",\"port\":\"" + nextPort.getAndIncrement() + "\",\"database\":\"cottontail\",\"engine\":\"MAPDB\",\"mode\":\"embedded\"}" );
+                "{\"type\":\"Embedded\",\"host\":\"localhost\",\"port\":\"" + nextPort.getAndIncrement() + "\",\"database\":\"cottontail\",\"engine\":\"MAPDB\",\"mode\":\"embedded\"}",
+                "cottontail" );
         storeNames.add( storeName );
         return storeName;
     }
@@ -155,7 +163,8 @@ public interface PolyphenyDbExecutor extends Executor {
         deployStore(
                 storeName,
                 "org.polypheny.db.adapter.mongodb.MongoStore",
-                config );
+                config,
+                "mongodb" );
         storeNames.add( storeName );
         return storeName;
     }
@@ -166,10 +175,14 @@ public interface PolyphenyDbExecutor extends Executor {
         deployStore(
                 storeName,
                 "org.polypheny.db.adapter.neo4j.Neo4jStore",
-                config );
+                config,
+                "neo4j" );
         storeNames.add( storeName );
         return storeName;
     }
+
+    // At the moment it is only possible to set Policies for the whole system
+    void setPolicies( String clauseName, String value ) throws ExecutorException;
 
 
     void setConfig( String key, String value );
@@ -207,58 +220,19 @@ public interface PolyphenyDbExecutor extends Executor {
                 log.error( "Error while logging polypheny version", e );
             }
 
-            // Configure data stores
-            PolyphenyDbExecutor executor = (PolyphenyDbExecutor) executorFactory.createExecutorInstance();
-            try {
-                // Remove hsqldb store
-                executor.dropStore( "hsqldb" );
-                // Deploy stores
-                for ( String store : config.dataStores ) {
-                    switch ( store ) {
-                        case "hsqldb":
-                            executor.deployHsqldb();
-                            break;
-                        case "postgres":
-                            if ( !config.deployStoresUsingDocker ) {
-                                PostgresInstance.reset();
-                            }
-                            executor.deployPostgres( config.deployStoresUsingDocker );
-                            break;
-                        case "monetdb":
-                            if ( !config.deployStoresUsingDocker ) {
-                                MonetdbInstance.reset();
-                            }
-                            executor.deployMonetDb( config.deployStoresUsingDocker );
-                            break;
-                        case "cassandra":
-                            executor.deployCassandra( config.deployStoresUsingDocker );
-                            break;
-                        case "file":
-                            executor.deployFileStore();
-                            break;
-                        case "cottontail":
-                            executor.deployCottontail();
-                            break;
-                        case "mongodb":
-                            executor.deployMongoDb();
-                            break;
-                        case "neo4j":
-                            executor.deployNeo4j();
-                            break;
-                        default:
-                            throw new RuntimeException( "Unknown data store: " + store );
-                    }
-                }
-                executor.executeCommit();
-            } catch ( ExecutorException e ) {
-                throw new RuntimeException( "Exception while configuring stores", e );
-            } finally {
-                try {
-                    executor.closeConnection();
-                } catch ( ExecutorException e ) {
-                    log.error( "Exception while closing connection", e );
-                }
+            // Deploy Stores
+            List<String> datastores;
+            if ( !config.multipleDataStores.isEmpty() ) {
+                datastores = config.multipleDataStores;
+            } else {
+                datastores = config.dataStores;
             }
+            boolean useDocker = config.deployStoresUsingDocker;
+
+            deployStores( useDocker, executorFactory, datastores );
+
+            // Update polypheny config
+            PolyphenyDbExecutor executor = (PolyphenyDbExecutor) executorFactory.createExecutorInstance();
 
             pushConfiguration( executorFactory, config );
 
@@ -418,6 +392,32 @@ public interface PolyphenyDbExecutor extends Executor {
                     log.error( "Exception while closing connection", e );
                 }
             }
+
+            // Set Policies
+            if ( config.usePolicies != null && config.usePolicies.equals( "PolicyAndSelfAdaptiveness" ) ) {
+                executor = (PolyphenyDbExecutor) executorFactory.createExecutorInstance();
+                try {
+                    for ( String storePolicy : config.storePolicies ) {
+                        if ( storePolicy != null && !storePolicy.equals( "NONE" ) ) {
+                            executor.setPolicies( storePolicy, "true" );
+                        }
+                    }
+                    for ( String selfAdaptingPolicy : config.selfAdaptingPolicies ) {
+                        if ( selfAdaptingPolicy != null && !selfAdaptingPolicy.equals( "NONE" ) ) {
+                            executor.setPolicies( selfAdaptingPolicy, "true" );
+                        }
+                    }
+                    executor.executeCommit();
+                } catch ( ExecutorException e ) {
+                    throw new RuntimeException( "Not possible to set Policies", e );
+                } finally {
+                    try {
+                        executor.closeConnection();
+                    } catch ( ExecutorException e ) {
+                        log.error( "Exception while closing connection", e );
+                    }
+                }
+            }
         }
 
 
@@ -441,6 +441,63 @@ public interface PolyphenyDbExecutor extends Executor {
             }
             conf.put( "pcrtl.pdbms.args", args.trim() );
             polyphenyControlConnector.setConfig( conf );
+        }
+
+
+        public static void deployStores( Boolean useDocker, ExecutorFactory executorFactory,  List<String> dataStores ) {
+            // Configure data stores
+            PolyphenyDbExecutor executor = (PolyphenyDbExecutor) executorFactory.createExecutorInstance();
+
+            try {
+                // Remove hsqldb store
+                executor.dropStore( "hsqldb" );
+                // Deploy stores
+                for ( String store : dataStores ) {
+                    switch ( store ) {
+                        case "hsqldb":
+                            executor.deployHsqldb();
+                            break;
+                        case "postgres":
+                            if ( !useDocker ) {
+                                PostgresInstance.reset();
+                            }
+                            executor.deployPostgres( useDocker );
+                            break;
+                        case "monetdb":
+                            if ( !useDocker ) {
+                                MonetdbInstance.reset();
+                            }
+                            executor.deployMonetDb( useDocker);
+                            break;
+                        case "cassandra":
+                            executor.deployCassandra( useDocker );
+                            break;
+                        case "file":
+                            executor.deployFileStore();
+                            break;
+                        case "cottontail":
+                            executor.deployCottontail();
+                            break;
+                        case "mongodb":
+                            executor.deployMongoDb();
+                            break;
+                        case "neo4j":
+                            executor.deployNeo4j();
+                            break;
+                        default:
+                            throw new RuntimeException( "Unknown data store: " + store );
+                    }
+                }
+                executor.executeCommit();
+            } catch ( ExecutorException e ) {
+                throw new RuntimeException( "Exception while configuring stores", e );
+            } finally {
+                try {
+                    executor.closeConnection();
+                } catch ( ExecutorException e ) {
+                    log.error( "Exception while closing connection", e );
+                }
+            }
         }
 
 

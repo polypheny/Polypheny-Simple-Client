@@ -101,11 +101,11 @@ public abstract class PolyphenyDbHttpExecutor implements PolyphenyDbExecutor {
 
 
     @Override
-    public void deployStore( String name, String clazz, String config ) throws ExecutorException {
+    public void deployStore( String name, String clazz, String config, String store ) throws ExecutorException {
         PolyphenyDbJdbcExecutor executor = null;
         try {
             executor = jdbcExecutorFactory.createExecutorInstance( csvWriter );
-            executor.deployStore( name, clazz, config );
+            executor.deployStore( name, clazz, config, store );
             executor.executeCommit();
         } catch ( ExecutorException e ) {
             throw new ExecutorException( "Error while executing query via JDBC", e );
