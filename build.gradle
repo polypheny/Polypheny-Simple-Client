@@ -59,7 +59,7 @@ dependencies {
     implementation group: 'commons-io', name: 'commons-io', version: '2.11.0'  // License: Apache 2.0
 
     // Polypheny Control Connector
-    implementation group: 'org.polypheny', name: 'control-connector', version: '1.2.6'  // License: Apache 2.0
+    implementation group: 'org.polypheny', name: 'control-connector', version: '1.3.0'  // License: Apache 2.0
 
     // Chronos
     implementation group: 'org.chronos-eaas', name: 'chronos-agent', version: '2.4.1' // License: MIT
