@@ -25,14 +25,7 @@
 package org.polypheny.simpleclient.executor;
 
 import com.google.gson.JsonObject;
-import java.io.IOException;
-import java.util.Locale;
-import java.util.function.Function;
-import kong.unirest.HttpRequest;
-import kong.unirest.HttpResponse;
-import kong.unirest.JsonNode;
-import kong.unirest.Unirest;
-import kong.unirest.UnirestException;
+import kong.unirest.*;
 import kong.unirest.json.JSONArray;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -41,6 +34,10 @@ import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.query.MultipartInsert;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.RawQuery;
+
+import java.io.IOException;
+import java.util.Locale;
+import java.util.function.Function;
 
 
 @Slf4j
@@ -58,11 +55,13 @@ public abstract class PolyphenyDbHttpExecutor implements PolyphenyDbExecutor {
     protected final PolyphenyDbJdbcExecutorFactory jdbcExecutorFactory;
     protected final CsvWriter csvWriter;
 
+    private boolean useNewDeploySyntax = false;
 
-    public PolyphenyDbHttpExecutor( String name, Function<Query, String> queryAccessor, String host, CsvWriter csvWriter ) {
+
+    public PolyphenyDbHttpExecutor(String name, Function<Query, String> queryAccessor, String host, CsvWriter csvWriter) {
         this.name = name;
         this.queryAccessor = queryAccessor;
-        this.jdbcExecutorFactory = new PolyphenyDbJdbcExecutorFactory( host, false );
+        this.jdbcExecutorFactory = new PolyphenyDbJdbcExecutorFactory(host, false);
         this.csvWriter = csvWriter;
     }
 
@@ -104,25 +103,40 @@ public abstract class PolyphenyDbHttpExecutor implements PolyphenyDbExecutor {
     public void deployStore( String name, String clazz, String config ) throws ExecutorException {
         PolyphenyDbJdbcExecutor executor = null;
         try {
-            executor = jdbcExecutorFactory.createExecutorInstance( csvWriter );
-            executor.deployStore( name, clazz, config );
+            executor = jdbcExecutorFactory.createExecutorInstance(csvWriter);
+            executor.deployStore(name, clazz, config);
             executor.executeCommit();
-        } catch ( ExecutorException e ) {
-            throw new ExecutorException( "Error while executing query via JDBC", e );
+        } catch (ExecutorException e) {
+            throw new ExecutorException("Error while executing query via JDBC", e);
         } finally {
-            PolyphenyDbJdbcExecutor.commitAndCloseJdbcExecutor( executor );
+            PolyphenyDbJdbcExecutor.commitAndCloseJdbcExecutor(executor);
         }
     }
 
 
     @Override
-    public void setConfig( String key, String value ) {
+    public void deployAdapter(String name, String adapterIdentifier, String type, String config) throws ExecutorException {
         PolyphenyDbJdbcExecutor executor = null;
         try {
-            executor = jdbcExecutorFactory.createExecutorInstance( csvWriter );
-            executor.setConfig( key, value );
+            executor = jdbcExecutorFactory.createExecutorInstance(csvWriter);
+            executor.deployAdapter(name, adapterIdentifier, type, config);
             executor.executeCommit();
-        } catch ( ExecutorException e ) {
+        } catch (ExecutorException e) {
+            throw new ExecutorException("Error while executing query via JDBC", e);
+        } finally {
+            PolyphenyDbJdbcExecutor.commitAndCloseJdbcExecutor(executor);
+        }
+    }
+
+
+    @Override
+    public void setConfig(String key, String value) {
+        PolyphenyDbJdbcExecutor executor = null;
+        try {
+            executor = jdbcExecutorFactory.createExecutorInstance(csvWriter);
+            executor.setConfig(key, value);
+            executor.executeCommit();
+        } catch (ExecutorException e) {
             log.error( "Exception while setting config \"" + key + "\"!", e );
         } finally {
             try {
@@ -173,24 +187,34 @@ public abstract class PolyphenyDbHttpExecutor implements PolyphenyDbExecutor {
     }
 
 
-    HttpRequest<?> getRequest( String query, String namespace ) {
-        HttpRequest<?> request = buildQuery( query, namespace );
-        request.basicAuth( "pa", "" );
-        request.routeParam( "protocol", "http" );
-        request.routeParam( "host", "127.0.0.1" );
-        request.routeParam( "port", "13137" );
+    HttpRequest<?> getRequest(String query, String namespace) {
+        HttpRequest<?> request = buildQuery(query, namespace);
+        request.basicAuth("pa", "");
+        request.routeParam("protocol", "http");
+        request.routeParam("host", "127.0.0.1");
+        request.routeParam("port", "13137");
         return request;
     }
 
 
+    public void setNewDeploySyntax(boolean useNewDeploySyntax) {
+        this.useNewDeploySyntax = useNewDeploySyntax;
+    }
+
     @Override
-    public long executeQueryAndGetNumber( Query query ) throws ExecutorException {
+    public boolean useNewDeploySyntax() {
+        return useNewDeploySyntax;
+    }
+
+
+    @Override
+    public long executeQueryAndGetNumber(Query query) throws ExecutorException {
         query.debug();
-        if ( query instanceof MultipartInsert ) {
-            throw new RuntimeException( "not supported" );
+        if (query instanceof MultipartInsert) {
+            throw new RuntimeException("not supported");
         }
 
-        HttpRequest<?> request = getRequest( queryAccessor.apply( query ), namespace );
+        HttpRequest<?> request = getRequest(queryAccessor.apply(query), namespace);
 
         try {
             long start = System.nanoTime();

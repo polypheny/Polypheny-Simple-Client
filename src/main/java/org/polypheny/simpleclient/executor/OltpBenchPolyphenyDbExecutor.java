@@ -24,7 +24,6 @@
 
 package org.polypheny.simpleclient.executor;
 
-import java.io.File;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.control.client.PolyphenyControlConnector;
 import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory;
@@ -32,12 +31,15 @@ import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.scenario.AbstractConfig;
 import org.polypheny.simpleclient.scenario.oltpbench.AbstractOltpBenchConfig;
 
+import java.io.File;
+
 
 @Slf4j
 public class OltpBenchPolyphenyDbExecutor extends OltpBenchExecutor implements PolyphenyDbExecutor {
 
     private final PolyphenyDbJdbcExecutorFactory jdbcExecutorFactory;
     private final String host;
+    private boolean useNewDeploySyntax = false;
 
 
     public OltpBenchPolyphenyDbExecutor( String host ) {
@@ -97,40 +99,65 @@ public class OltpBenchPolyphenyDbExecutor extends OltpBenchExecutor implements P
     public void deployStore( String name, String clazz, String config ) throws ExecutorException {
         PolyphenyDbJdbcExecutor executor = null;
         try {
-            executor = jdbcExecutorFactory.createExecutorInstance( null );
-            executor.deployStore( name, clazz, config );
+            executor = jdbcExecutorFactory.createExecutorInstance(null);
+            executor.deployStore(name, clazz, config);
             executor.executeCommit();
-        } catch ( ExecutorException e ) {
-            throw new ExecutorException( "Error while executing query via JDBC", e );
+        } catch (ExecutorException e) {
+            throw new ExecutorException("Error while executing query via JDBC", e);
         } finally {
-            PolyphenyDbJdbcExecutor.commitAndCloseJdbcExecutor( executor );
+            PolyphenyDbJdbcExecutor.commitAndCloseJdbcExecutor(executor);
         }
     }
 
 
     @Override
-    public void setConfig( String key, String value ) {
+    public void deployAdapter(String name, String adapterIdentifier, String type, String config) throws ExecutorException {
         PolyphenyDbJdbcExecutor executor = null;
         try {
-            executor = jdbcExecutorFactory.createExecutorInstance( null );
-            executor.setConfig( key, value );
+            executor = jdbcExecutorFactory.createExecutorInstance(null);
+            executor.deployAdapter(name, adapterIdentifier, type, config);
             executor.executeCommit();
-        } catch ( ExecutorException e ) {
-            log.error( "Exception while setting config \"" + key + "\"!", e );
+        } catch (ExecutorException e) {
+            throw new ExecutorException("Error while executing query via JDBC", e);
+        } finally {
+            PolyphenyDbJdbcExecutor.commitAndCloseJdbcExecutor(executor);
+        }
+    }
+
+
+    @Override
+    public void setConfig(String key, String value) {
+        PolyphenyDbJdbcExecutor executor = null;
+        try {
+            executor = jdbcExecutorFactory.createExecutorInstance(null);
+            executor.setConfig(key, value);
+            executor.executeCommit();
+        } catch (ExecutorException e) {
+            log.error("Exception while setting config \"" + key + "\"!", e);
         } finally {
             try {
-                PolyphenyDbJdbcExecutor.commitAndCloseJdbcExecutor( executor );
-            } catch ( ExecutorException e ) {
-                log.error( "Exception while closing JDBC executor", e );
+                PolyphenyDbJdbcExecutor.commitAndCloseJdbcExecutor(executor);
+            } catch (ExecutorException e) {
+                log.error("Exception while closing JDBC executor", e);
             }
         }
+    }
+
+    @Override
+    public void setNewDeploySyntax(boolean useNewDeploySyntax) {
+        this.useNewDeploySyntax = useNewDeploySyntax;
+    }
+
+    @Override
+    public boolean useNewDeploySyntax() {
+        return useNewDeploySyntax;
     }
 
 
     public static class OltpBenchPolyphenyInstance extends PolyphenyDbInstance {
 
-        public OltpBenchPolyphenyInstance( PolyphenyControlConnector polyphenyControlConnector, ExecutorFactory executorFactory, File outputDirectory, AbstractConfig config ) {
-            super( polyphenyControlConnector, executorFactory, outputDirectory, config );
+        public OltpBenchPolyphenyInstance(PolyphenyControlConnector polyphenyControlConnector, ExecutorFactory executorFactory, File outputDirectory, AbstractConfig config) {
+            super(polyphenyControlConnector, executorFactory, outputDirectory, config);
         }
 
     }

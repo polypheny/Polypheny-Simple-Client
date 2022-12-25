@@ -25,11 +25,6 @@
 package org.polypheny.simpleclient.executor;
 
 import com.google.gson.JsonObject;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
 import kong.unirest.HttpRequest;
 import kong.unirest.HttpResponse;
 import kong.unirest.JsonNode;
@@ -44,6 +39,12 @@ import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.RawQuery;
 import org.polypheny.simpleclient.scenario.AbstractConfig;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+
 
 @Slf4j
 public class PolyphenyDbRestExecutor implements PolyphenyDbExecutor {
@@ -53,12 +54,14 @@ public class PolyphenyDbRestExecutor implements PolyphenyDbExecutor {
 
     private final CsvWriter csvWriter;
 
+    private boolean useNewDeploySyntax = false;
 
-    public PolyphenyDbRestExecutor( String host, CsvWriter csvWriter ) {
+
+    public PolyphenyDbRestExecutor(String host, CsvWriter csvWriter) {
         super();
         this.host = host;
         this.csvWriter = csvWriter;
-        jdbcExecutorFactory = new PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory( host, false );
+        jdbcExecutorFactory = new PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory(host, false);
     }
 
 
@@ -235,43 +238,67 @@ public class PolyphenyDbRestExecutor implements PolyphenyDbExecutor {
     public void deployStore( String name, String clazz, String config ) throws ExecutorException {
         PolyphenyDbJdbcExecutor executor = null;
         try {
-            executor = jdbcExecutorFactory.createExecutorInstance( csvWriter );
-            executor.deployStore( name, clazz, config );
+            executor = jdbcExecutorFactory.createExecutorInstance(csvWriter);
+            executor.deployStore(name, clazz, config);
             executor.executeCommit();
-        } catch ( ExecutorException e ) {
-            throw new ExecutorException( "Error while executing query via JDBC", e );
+        } catch (ExecutorException e) {
+            throw new ExecutorException("Error while executing query via JDBC", e);
         } finally {
-            PolyphenyDbJdbcExecutor.commitAndCloseJdbcExecutor( executor );
+            PolyphenyDbJdbcExecutor.commitAndCloseJdbcExecutor(executor);
+        }
+    }
+
+    @Override
+    public void deployAdapter(String name, String adapterIdentifier, String type, String config) throws ExecutorException {
+        PolyphenyDbJdbcExecutor executor = null;
+        try {
+            executor = jdbcExecutorFactory.createExecutorInstance(csvWriter);
+            executor.deployAdapter(name, adapterIdentifier, type, config);
+            executor.executeCommit();
+        } catch (ExecutorException e) {
+            throw new ExecutorException("Error while executing query via JDBC", e);
+        } finally {
+            PolyphenyDbJdbcExecutor.commitAndCloseJdbcExecutor(executor);
         }
     }
 
 
     @Override
-    public void setConfig( String key, String value ) {
+    public void setConfig(String key, String value) {
         PolyphenyDbJdbcExecutor executor = null;
         try {
-            executor = jdbcExecutorFactory.createExecutorInstance( csvWriter );
-            executor.setConfig( key, value );
+            executor = jdbcExecutorFactory.createExecutorInstance(csvWriter);
+            executor.setConfig(key, value);
             executor.executeCommit();
-        } catch ( ExecutorException e ) {
-            log.error( "Exception while setting config \"" + key + "\"!", e );
+        } catch (ExecutorException e) {
+            log.error("Exception while setting config \"" + key + "\"!", e);
         } finally {
             try {
-                PolyphenyDbJdbcExecutor.commitAndCloseJdbcExecutor( executor );
-            } catch ( ExecutorException e ) {
-                log.error( "Exception while closing JDBC executor", e );
+                PolyphenyDbJdbcExecutor.commitAndCloseJdbcExecutor(executor);
+            } catch (ExecutorException e) {
+                log.error("Exception while closing JDBC executor", e);
             }
         }
+    }
+
+    @Override
+    public void setNewDeploySyntax(boolean useNewDeploySyntax) {
+        this.useNewDeploySyntax = useNewDeploySyntax;
+    }
+
+    @Override
+    public boolean useNewDeploySyntax() {
+        return useNewDeploySyntax;
     }
 
 
     @Override
     public void flushCsvWriter() {
-        if ( csvWriter != null ) {
+        if (csvWriter != null) {
             try {
                 csvWriter.flush();
-            } catch ( IOException e ) {
-                log.warn( "Exception while flushing csv writer", e );
+            } catch (IOException e) {
+                log.warn("Exception while flushing csv writer", e);
             }
         }
     }
