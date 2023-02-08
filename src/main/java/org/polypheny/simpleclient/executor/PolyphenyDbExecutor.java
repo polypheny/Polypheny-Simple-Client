@@ -25,16 +25,6 @@
 package org.polypheny.simpleclient.executor;
 
 import com.google.gson.Gson;
-import kong.unirest.HttpResponse;
-import kong.unirest.Unirest;
-import lombok.extern.slf4j.Slf4j;
-import org.polypheny.control.client.PolyphenyControlConnector;
-import org.polypheny.simpleclient.cli.ChronosCommand;
-import org.polypheny.simpleclient.executor.MonetdbExecutor.MonetdbInstance;
-import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory;
-import org.polypheny.simpleclient.executor.PostgresExecutor.PostgresInstance;
-import org.polypheny.simpleclient.scenario.AbstractConfig;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -44,6 +34,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import kong.unirest.HttpResponse;
+import kong.unirest.Unirest;
+import lombok.extern.slf4j.Slf4j;
+import org.polypheny.control.client.PolyphenyControlConnector;
+import org.polypheny.simpleclient.cli.ChronosCommand;
+import org.polypheny.simpleclient.executor.MonetdbExecutor.MonetdbInstance;
+import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory;
+import org.polypheny.simpleclient.executor.PostgresExecutor.PostgresInstance;
+import org.polypheny.simpleclient.scenario.AbstractConfig;
 
 
 public interface PolyphenyDbExecutor extends Executor {
@@ -281,7 +280,7 @@ public interface PolyphenyDbExecutor extends Executor {
 
             // Configure data stores
             PolyphenyDbExecutor executor = (PolyphenyDbExecutor) executorFactory.createExecutorInstance();
-            executor.setNewDeploySyntax(config.pdbBranch.equalsIgnoreCase("plugin-refactor"));
+            executor.setNewDeploySyntax( !config.pdbBranch.equalsIgnoreCase( "old-routing" ) );
             try {
                 // Remove hsqldb store
                 executor.dropStore( "hsqldb" );
