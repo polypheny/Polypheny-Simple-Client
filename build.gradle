@@ -21,6 +21,8 @@ buildscript {
         classpath group: "io.freefair.gradle", name: "lombok-plugin", version: "6.4.3"
         // https://plugins.gradle.org/plugin/org.jetbrains.gradle.plugin.idea-ext
         classpath group: "gradle.plugin.org.jetbrains.gradle.plugin.idea-ext", name: "gradle-idea-ext", version: "1.1.4"
+        // licensee plugin
+        classpath group: "app.cash.licensee", name: "licensee-gradle-plugin", version: "1.6.0"
     }
 }
 
@@ -35,6 +37,7 @@ apply plugin: "java-library"
 apply plugin: "org.jetbrains.gradle.plugin.idea-ext"
 apply plugin: "io.freefair.lombok"
 apply plugin: "com.github.johnrengelman.shadow"
+apply plugin: 'app.cash.licensee'
 
 
 tasks.withType(JavaCompile) {
@@ -105,8 +108,36 @@ dependencies {
 }
 
 
+/**
+ * License check
+ */
+licensee {
+    // Category A
+    allow('Apache-2.0')
+    allow('MIT')
+    allow('BSD-2-Clause')
+    allow('BSD-3-Clause')
+
+    allowDependency('aopalliance', 'aopalliance', '1.0') { because 'Public Domain' }
+    allowDependency('javax.annotation', 'javax.annotation-api', '1.2') { because 'CDDL license' }
+    allowDependency('org.jcodec', 'jcodec', '0.2.5') { because 'BSD 2-Clause' }
+    allowDependency('org.jcodec', 'jcodec-javase', '0.2.5') { because 'BSD 2-Clause' }
+    allowDependency('org.java-websocket', 'Java-WebSocket', '1.5.3') { because 'MIT License' }
+    allowDependency('org.bouncycastle', 'bcpkix-jdk15on', '1.61') { because 'MIT License' }
+    allowDependency('org.bouncycastle', 'bcprov-jdk15on', '1.61') { because 'MIT License' }
+    allowDependency('org.postgresql', 'postgresql', '42.3.3') { because 'BSD 2-Clause' }
+    allowDependency('org.vitrivr', 'cottontaildb', '0.10.5') { because 'MIT License' }
+    allowDependency('org.vitrivr', 'cottontaildb-proto', '0.10.3') { because 'MIT License' }
+    allowDependency('com.google.re2j', 're2j', '1.2') { because 'BSD 3-Clause' }
+
+    // Category B
+    allow('EPL-1.0')
+    allow('MPL-2.0')
+}
+
+
 javadoc {
-    if(JavaVersion.current().isJava9Compatible()) {
+    if (JavaVersion.current().isJava9Compatible()) {
         options.addBooleanOption("html5", true)
     }
     // suppress most of the warnings
