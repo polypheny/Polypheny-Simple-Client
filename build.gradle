@@ -23,6 +23,8 @@ buildscript {
         classpath group: "gradle.plugin.org.jetbrains.gradle.plugin.idea-ext", name: "gradle-idea-ext", version: "1.1.4"
         // licensee plugin
         classpath group: "app.cash.licensee", name: "licensee-gradle-plugin", version: "1.6.0"
+        // license report
+        classpath group: "com.jaredsburrows", name: "gradle-license-plugin", version: "0.9.0"
     }
 }
 
@@ -38,6 +40,7 @@ apply plugin: "org.jetbrains.gradle.plugin.idea-ext"
 apply plugin: "io.freefair.lombok"
 apply plugin: "com.github.johnrengelman.shadow"
 apply plugin: 'app.cash.licensee'
+apply plugin: "com.jaredsburrows.license"
 
 
 tasks.withType(JavaCompile) {
@@ -104,7 +107,7 @@ dependencies {
     implementation group: 'net.lingala.zip4j', name: 'zip4j', version: '2.10.0'
 
     // Testing
-    testImplementation group: 'junit', name: 'junit', version: '4.13'
+    testImplementation group: 'junit', name: 'junit', version: '4.13.1'
 }
 
 
