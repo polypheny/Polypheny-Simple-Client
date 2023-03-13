@@ -30,6 +30,7 @@ import java.util.Random;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.executor.Executor;
+import org.polypheny.simpleclient.executor.Executor.DatabaseInstance;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
 import org.polypheny.simpleclient.executor.ExecutorException;
 import org.polypheny.simpleclient.main.CsvWriter;
@@ -45,15 +46,17 @@ public class Coms extends Scenario {
     private final ComsConfig config;
 
 
-    protected Coms( ComsConfig config, ExecutorFactory executorFactory, boolean commitAfterEveryQuery, boolean dumpQueryList, QueryMode queryMode ) {
+    public Coms( ExecutorFactory executorFactory, ComsConfig config,  boolean commitAfterEveryQuery, boolean dumpQueryList, QueryMode queryMode ) {
         super( executorFactory, commitAfterEveryQuery, dumpQueryList, queryMode );
         this.random = new Random( config.seed );
         this.config = config;
     }
 
 
+
+
     @Override
-    public void createSchema( boolean includingKeys ) {
+    public void createSchema( DatabaseInstance databaseInstance, boolean includingKeys ) {
         log.info( "Generating data..." );
         Executor executor = executorFactory.createExecutorInstance( null, NAMESPACE );
         org.polypheny.simpleclient.scenario.coms.DataGenerator dataGenerator = new DataGenerator();
@@ -67,8 +70,9 @@ public class Coms extends Scenario {
     }
 
 
+
     @Override
-    public void generateData( ProgressReporter progressReporter ) {
+    public void generateData( DatabaseInstance databaseInstance, ProgressReporter progressReporter ) {
 
     }
 

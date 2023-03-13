@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019-3/11/23, 11:18 AM The Polypheny Project
+ * Copyright (c) 2019-3/13/23, 5:13 PM The Polypheny Project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"), to deal
@@ -22,44 +22,31 @@
  * SOFTWARE.
  */
 
-package org.polypheny.simpleclient.scenario.coms;
+package org.polypheny.simpleclient.executor;
 
-import java.util.Map;
-import java.util.Properties;
-import lombok.EqualsAndHashCode;
-import lombok.Value;
-import org.polypheny.simpleclient.scenario.AbstractConfig;
+import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
+import org.polypheny.simpleclient.main.CsvWriter;
 
-@EqualsAndHashCode(callSuper = true)
-@Value
-public class ComsConfig extends AbstractConfig {
+public class SurrealDBExecutor {
 
-    public long seed;
-    public int networkScale;
+    public static class SurrealDBExecutorFactory extends ExecutorFactory {
+
+        public SurrealDBExecutorFactory( String hostname, boolean prepareStatements ) {
+
+        }
 
 
-    public ComsConfig( String scenario, String system, Properties properties ) {
-        super( scenario, system, properties );
-
-        seed = getLongProperty( properties, "seed" );
-
-        networkScale = getIntProperty( properties, "networkScale" );
-
-    }
+        @Override
+        public Executor createExecutorInstance( CsvWriter csvWriter ) {
+            return null;
+        }
 
 
-    public ComsConfig( Map<String, String> parsedConfig ) {
-        super( "coms", parsedConfig.get( "store" ), parsedConfig );
+        @Override
+        public int getMaxNumberOfThreads() {
+            return 0;
+        }
 
-        seed = Long.parseLong( parsedConfig.get( "seed" ) );
-
-        networkScale = Integer.parseInt( parsedConfig.get( "networkScale" ) );
-    }
-
-
-    @Override
-    public boolean usePreparedBatchForDataInsertion() {
-        return false;
     }
 
 }

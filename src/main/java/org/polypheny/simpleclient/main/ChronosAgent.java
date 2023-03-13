@@ -62,8 +62,11 @@ import org.polypheny.simpleclient.executor.PolyphenyDbMultiExecutorFactory;
 import org.polypheny.simpleclient.executor.PolyphenyDbRestExecutor.PolyphenyDbRestExecutorFactory;
 import org.polypheny.simpleclient.executor.PostgresExecutor.PostgresExecutorFactory;
 import org.polypheny.simpleclient.executor.PostgresExecutor.PostgresInstance;
+import org.polypheny.simpleclient.executor.SurrealDBExecutor.SurrealDBExecutorFactory;
 import org.polypheny.simpleclient.scenario.AbstractConfig;
 import org.polypheny.simpleclient.scenario.Scenario;
+import org.polypheny.simpleclient.scenario.coms.Coms;
+import org.polypheny.simpleclient.scenario.coms.ComsConfig;
 import org.polypheny.simpleclient.scenario.docbench.DocBench;
 import org.polypheny.simpleclient.scenario.docbench.DocBenchConfig;
 import org.polypheny.simpleclient.scenario.gavel.Gavel;
@@ -195,6 +198,9 @@ public class ChronosAgent extends AbstractChronosAgent {
             case "polypheny-cypher":
                 executorFactory = new PolyphenyDbCypherExecutorFactory( ChronosCommand.hostname );
                 break;
+            case "surrealdb":
+                executorFactory = new SurrealDBExecutorFactory( ChronosCommand.hostname, Boolean.parseBoolean( parsedConfig.get( "prepareStatements" ) ) );
+                break;
             case "postgres":
                 executorFactory = new PostgresExecutorFactory( ChronosCommand.hostname, Boolean.parseBoolean( parsedConfig.get( "prepareStatements" ) ) );
                 break;
@@ -221,6 +227,9 @@ public class ChronosAgent extends AbstractChronosAgent {
                 config = new GavelConfig( parsedConfig );
                 scenario = new Gavel( executorFactory, (GavelConfig) config, true, dumpQueryList, queryMode );
                 break;
+            case "coms":
+                config = new ComsConfig( parsedConfig );
+                scenario = new Coms(executorFactory, (ComsConfig) config, true, dumpQueryList, queryMode );
             case "knnBench":
                 config = new KnnBenchConfig( parsedConfig );
                 scenario = new KnnBench( executorFactory, (KnnBenchConfig) config, true, dumpQueryList );

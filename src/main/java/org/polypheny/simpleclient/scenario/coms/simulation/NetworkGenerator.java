@@ -26,7 +26,10 @@ package org.polypheny.simpleclient.scenario.coms.simulation;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.BiFunction;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import org.polypheny.simpleclient.scenario.coms.ComsConfig;
@@ -65,11 +68,14 @@ public class NetworkGenerator {
     @Value
     public static class Network {
 
+        public static AtomicLong idBuilder = new AtomicLong();
         public static long SERVERS = 5;
 
         public static long CLIENTS = 100;
 
         public static double OS_DISTRIBUTION = 0.7;
+
+        public static double MOBILE_DISTRIBUTION = 0.4;
 
         public static long MOBILES = 400;
 
@@ -88,6 +94,10 @@ public class NetworkGenerator {
         List<PC> pcs = new ArrayList<>();
 
         List<Mac> macs = new ArrayList<>();
+
+        List<Lan> lans = new ArrayList<>();
+
+        List<WLan> wlans = new ArrayList<>();
         int scale;
 
 
@@ -102,8 +112,25 @@ public class NetworkGenerator {
             generateObject( CLIENTS * OS_DISTRIBUTION, () -> pcs.add( new PC( random ) ) );
             generateObject( CLIENTS * (1 - OS_DISTRIBUTION), () -> macs.add( new Mac( random ) ) );
 
-            generateObject( MOBILES * OS_DISTRIBUTION, () -> mobiles.add( new Mobile( random ) ) );
-            generateObject( MOBILES * (1 - OS_DISTRIBUTION), () -> ioTs.add( new IoT( random ) ) );
+            generateObject( MOBILES * MOBILE_DISTRIBUTION, () -> mobiles.add( new Mobile( random ) ) );
+            generateObject( MOBILES * (1 - MOBILE_DISTRIBUTION), () -> ioTs.add( new IoT( random ) ) );
+
+            generateConnection( this.servers, this.servers, 2, Connection.LAN );
+
+            generateConnection( this.servers, this.switches, 2, Connection.LAN );
+
+            generateConnection( this.switches, this.pcs, 2, Connection.LAN );
+            generateConnection( this.switches, this.macs, 2, Connection.LAN );
+
+            generateConnection( this.servers, this.aps, 2, Connection.LAN );
+
+            generateConnection( this.aps, this.mobiles, 2, Connection.WLAN );
+            generateConnection( this.aps, this.ioTs, 2, Connection.WLAN );
+        }
+
+
+        private <L extends GraphElement, R extends GraphElement> void generateConnection( List<L> fromElements, List<R> toElements, int max, Connection connection ) {
+
         }
 
 
@@ -196,7 +223,11 @@ public class NetworkGenerator {
     @Value
     public static class Lan extends Edge {
 
+
         Random random;
+
+
+
 
     }
 
@@ -205,8 +236,14 @@ public class NetworkGenerator {
     @Value
     public static class WLan extends Edge {
 
+
         Random random;
 
+    }
+
+    enum Connection{
+        WLAN,
+        LAN
     }
 
 }

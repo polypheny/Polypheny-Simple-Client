@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019-3/11/23, 11:18 AM The Polypheny Project
+ * Copyright (c) 2019-3/13/23, 10:52 AM The Polypheny Project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"), to deal
@@ -22,44 +22,20 @@
  * SOFTWARE.
  */
 
-package org.polypheny.simpleclient.scenario.coms;
+package org.polypheny.simpleclient.scenario.coms.simulation;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
-import java.util.Properties;
-import lombok.EqualsAndHashCode;
-import lombok.Value;
-import org.polypheny.simpleclient.scenario.AbstractConfig;
 
-@EqualsAndHashCode(callSuper = true)
-@Value
-public class ComsConfig extends AbstractConfig {
+public interface GraphElement {
 
-    public long seed;
-    public int networkScale;
+    long getId();
 
-
-    public ComsConfig( String scenario, String system, Properties properties ) {
-        super( scenario, system, properties );
-
-        seed = getLongProperty( properties, "seed" );
-
-        networkScale = getIntProperty( properties, "networkScale" );
-
+    default List<String> getLabels() {
+        return Collections.singletonList( getClass().getSimpleName() );
     }
 
-
-    public ComsConfig( Map<String, String> parsedConfig ) {
-        super( "coms", parsedConfig.get( "store" ), parsedConfig );
-
-        seed = Long.parseLong( parsedConfig.get( "seed" ) );
-
-        networkScale = Integer.parseInt( parsedConfig.get( "networkScale" ) );
-    }
-
-
-    @Override
-    public boolean usePreparedBatchForDataInsertion() {
-        return false;
-    }
+    Map<String, String> getProperties();
 
 }

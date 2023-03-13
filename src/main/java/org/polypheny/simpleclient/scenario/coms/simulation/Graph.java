@@ -24,9 +24,10 @@
 
 package org.polypheny.simpleclient.scenario.coms.simulation;
 
-import java.util.List;
 import java.util.Map;
 import lombok.Value;
+import lombok.experimental.NonFinal;
+import org.polypheny.simpleclient.scenario.coms.simulation.NetworkGenerator.Network;
 
 @Value
 public class Graph {
@@ -36,19 +37,28 @@ public class Graph {
 
 
     @Value
-    public static class Node {
+    @NonFinal
+    public static class Node implements GraphElement {
 
-        List<String> labels;
-        Map<Object, String> properties;
+        long id = Network.idBuilder.getAndIncrement();
+
+        Map<String, String> properties;
+
+
+        public Node( Map<String, String> properties ) {
+            this.properties = properties;
+        }
 
     }
 
 
     @Value
-    public static class Edge {
+    @NonFinal
+    public static class Edge implements GraphElement {
 
-        List<String> labels;
-        Map<Object, String> properties;
+        long id = Network.idBuilder.getAndIncrement();
+
+        Map<String, String> properties;
         long from;
         long to;
         boolean directed;
