@@ -74,7 +74,7 @@ public class ComsScenario {
     private static Properties getProperties() {
         Properties props = new Properties();
         try {
-            props.load( Objects.requireNonNull( ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/graph/graph.properties" ) ) );
+            props.load( Objects.requireNonNull( ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/coms/coms.properties" ) ) );
         } catch ( IOException e ) {
             log.error( "Exception while reading properties file", e );
         }

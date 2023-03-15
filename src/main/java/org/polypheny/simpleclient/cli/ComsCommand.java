@@ -42,7 +42,7 @@ import org.polypheny.simpleclient.main.ComsScenario;
 import org.polypheny.simpleclient.main.CsvWriter;
 
 @Slf4j
-@Command(name = "coms", description = "Mode for testing the Coms-Benchmark")
+@Command(name = "coms", description = "Mode for testing the Coms-Benchmark.")
 public class ComsCommand implements CliRunnable {
 
     @SuppressWarnings("SpringAutowiredFieldsWarningInspection")
@@ -104,7 +104,7 @@ public class ComsCommand implements CliRunnable {
                         new MongoQlExecutorFactory( mongoDB ) );
                 break;
             case SURREAL_DB:
-                executorFactory = new SurrealDBExecutorFactory( polyphenyDbHost );
+                executorFactory = new SurrealDBExecutorFactory( surrealHost );
                 break;
             default:
                 throw new IllegalArgumentException();

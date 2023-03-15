@@ -25,15 +25,34 @@
 package org.polypheny.simpleclient.scenario.coms;
 
 import org.polypheny.simpleclient.executor.ExecutorException;
+import org.polypheny.simpleclient.scenario.coms.simulation.Graph;
+import org.polypheny.simpleclient.scenario.coms.simulation.NetworkGenerator;
 
 public class DataGenerator {
 
-    public void generateData() throws ExecutorException {
+    public void generateData( ComsConfig config ) throws ExecutorException {
         // generate network (simulation)
-        // -> generate structure of network -> nodes
-        // -> generate parameters per nodes
-        // -> generate configs depending on type of node
-        // -> generate logs?
+        // -> generate structure of network -> nodes, edges
+        // -> generate parameters per nodes -> fixed & dynamic
+        // -> generate configs depending on type of node/edge
+        // -> generate logs, execute 5% untimed
+        // -> generate queries on network, execute 5%
+
+        // generate simulation setting
+        NetworkGenerator generator = new NetworkGenerator( config );
+        Graph graph = generator.network.toGraph();
+
+        graph.getGraphQueries();
+        graph.getDocQueries();
+        graph.getRelQueries();
+
+        // -> generate logs
+
+        // -> generate queries for simulation
+
+        // -> generate %5 of log queries
+
+        // -> genrate 5% of logs for simulation
 
     }
 

@@ -43,7 +43,7 @@ public class NetworkGenerator {
 
     public final ComsConfig config;
     private final Random random;
-    private final Network network;
+    public final Network network;
 
 
     /**
@@ -157,7 +157,7 @@ public class NetworkGenerator {
         }
 
 
-        Graph toGraph() {
+        public Graph toGraph() {
             Map<Long, Node> nodes = new HashMap<>();
             collectNodes( servers, nodes );
             collectNodes( pcs, nodes );
@@ -226,9 +226,22 @@ public class NetworkGenerator {
                         break;
                 }
 
+                properties.put( entry.getKey(), value.toString() );
+
 
             }
             return properties;
+        }
+
+
+        public static Map<String, String> generateNestedProperties( Random random, int nestingDepth ) {
+            Map<String, String> map = new HashMap<>();
+            for ( int i = 0; i < random.nextInt( 10 ); i++ ) {
+                StringBuilder value = new StringBuilder();
+                for ( int j = 0; j < random.nextInt( nestingDepth ); j++ ) {
+
+                }
+            }
         }
 
     }
@@ -254,7 +267,8 @@ public class NetworkGenerator {
             super(
                     types,
                     Network.generateFixedTypedProperties( random, types ),
-                    Network.generateProperties( random, network.config.switchConfigs ) );
+                    Network.generateProperties( random, network.config.switchConfigs ),
+                    Network.generateNestedProperties( random, network.config.nestingDepth ) );
             this.random = random;
         }
 
@@ -281,7 +295,8 @@ public class NetworkGenerator {
             super(
                     types,
                     Network.generateFixedTypedProperties( random, types ),
-                    Network.generateProperties( random, network.config.switchConfigs ) );
+                    Network.generateProperties( random, network.config.switchConfigs ),
+                    Network.generateNestedProperties( random, network.config.nestingDepth ) );
             this.random = random;
         }
 
@@ -305,7 +320,8 @@ public class NetworkGenerator {
         public AP( Network network, Random random ) {
             super( types,
                     Network.generateFixedTypedProperties( random, types ),
-                    Network.generateProperties( random, network.config.apDynConfigs ) );
+                    Network.generateProperties( random, network.config.apDynConfigs ),
+                    Network.generateNestedProperties( random, network.config.nestingDepth ) );
             this.random = random;
         }
 
@@ -331,7 +347,8 @@ public class NetworkGenerator {
         public IoT( Network network, Random random ) {
             super( types,
                     Network.generateFixedTypedProperties( random, types ),
-                    Network.generateProperties( random, network.config.mobileDynConfigsMax ) );
+                    Network.generateProperties( random, network.config.mobileDynConfigsMax ),
+                    Network.generateNestedProperties( random, network.config.nestingDepth ) );
             this.random = random;
         }
 
@@ -355,7 +372,8 @@ public class NetworkGenerator {
         public Mobile( Network network, Random random ) {
             super( types,
                     Network.generateFixedTypedProperties( random, types ),
-                    Network.generateProperties( random, network.config.mobileDynConfigsMax ) );
+                    Network.generateProperties( random, network.config.mobileDynConfigsMax ),
+                    Network.generateNestedProperties( random, network.config.nestingDepth ) );
             this.random = random;
         }
 
@@ -379,7 +397,8 @@ public class NetworkGenerator {
         public PC( Network network, Random random ) {
             super( types,
                     Network.generateFixedTypedProperties( random, types ),
-                    Network.generateProperties( random, network.config.pcDynConfigsMax ) );
+                    Network.generateProperties( random, network.config.pcDynConfigsMax ),
+                    Network.generateNestedProperties( random, network.config.nestingDepth ) );
             this.random = random;
         }
 
@@ -404,7 +423,8 @@ public class NetworkGenerator {
         public Mac( Network network, Random random ) {
             super( types,
                     Network.generateFixedTypedProperties( random, types ),
-                    Network.generateProperties( random, network.config.pcDynConfigsMax ) );
+                    Network.generateProperties( random, network.config.pcDynConfigsMax ),
+                    Network.generateNestedProperties( random, network.config.nestingDepth ) );
             this.random = random;
         }
 

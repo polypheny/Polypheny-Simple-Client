@@ -37,12 +37,29 @@ public class Graph {
     Map<Long, Edge> edges;
 
 
+    public List<String> getGraphQueries() {
+    }
+
+
+    public List<String> getDocQueries() {
+    }
+
+
+    public List<String> getRelQueries() {
+        return null;
+    }
+
+
     @EqualsAndHashCode(callSuper = true)
     @Value
     @NonFinal
     public static class Node extends GraphElement {
 
-        public Node( Map<String, PropertyType> types, Map<String, String> fixedProperties, Map<String, String> dynProperties ) {
+        public Node(
+                Map<String, PropertyType> types,
+                Map<String, String> fixedProperties,
+                Map<String, String> dynProperties,
+                Map<String, String> nestedQueries ) {
             super( types, fixedProperties, dynProperties );
         }
 

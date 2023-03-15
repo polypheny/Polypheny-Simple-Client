@@ -36,14 +36,13 @@ public class ComsConfig extends AbstractConfig {
 
     public long seed;
     public int networkScale;
-    public int pcFixedConfigs;
     public int pcDynConfigsMax;
     public int switchConfigs;
-    public int mobileFixedConfigs;
     public int mobileDynConfigsMax;
 
     public int connectionConfigs;
     public int apDynConfigs;
+    public int nestingDepth;
 
 
     public ComsConfig( String system, Properties properties ) {
@@ -52,15 +51,15 @@ public class ComsConfig extends AbstractConfig {
         seed = getLongProperty( properties, "seed" );
 
         networkScale = getIntProperty( properties, "networkScale" );
-        pcFixedConfigs = getIntProperty( properties, "pcFixedConfigs" );
         pcDynConfigsMax = getIntProperty( properties, "pcDynConfigsMax" );
         switchConfigs = getIntProperty( properties, "switchConfigs" );
-        mobileFixedConfigs = getIntProperty( properties, "mobileFixedConfigs" );
         mobileDynConfigsMax = getIntProperty( properties, "mobileDynConfigsMax" );
 
         connectionConfigs = getIntProperty( properties, "connectionConfigs" );
 
         apDynConfigs = getIntProperty( properties, "connectionConfigs" );
+
+        nestingDepth = getIntProperty( properties, "nestingDepth" );
 
     }
 
@@ -71,15 +70,15 @@ public class ComsConfig extends AbstractConfig {
         seed = Long.parseLong( parsedConfig.get( "seed" ) );
 
         networkScale = Integer.parseInt( parsedConfig.get( "networkScale" ) );
-        pcFixedConfigs = Integer.parseInt( parsedConfig.get( "pcFixedConfigs" ) );
         pcDynConfigsMax = Integer.parseInt( parsedConfig.get( "pcDynConfigsMax" ) );
         switchConfigs = Integer.parseInt( parsedConfig.get( "switchConfigs" ) );
-        mobileFixedConfigs = Integer.parseInt( parsedConfig.get( "mobileFixedConfigs" ) );
         mobileDynConfigsMax = Integer.parseInt( parsedConfig.get( "mobileDynConfigsMax" ) );
 
         connectionConfigs = Integer.parseInt( parsedConfig.get( "connectionConfigs" ) );
 
         apDynConfigs = Integer.parseInt( parsedConfig.get( "apDynConfigs" ) );
+
+        nestingDepth = Integer.parseInt( parsedConfig.get( "nestingDepth" ) );
     }
 
 

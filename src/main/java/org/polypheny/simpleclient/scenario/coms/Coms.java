@@ -57,23 +57,23 @@ public class Coms extends Scenario {
 
     @Override
     public void createSchema( DatabaseInstance databaseInstance, boolean includingKeys ) {
-        log.info( "Generating data..." );
-        Executor executor = executorFactory.createExecutorInstance( null, NAMESPACE );
-        org.polypheny.simpleclient.scenario.coms.DataGenerator dataGenerator = new DataGenerator();
-        try {
-            dataGenerator.generateData();
-        } catch ( ExecutorException e ) {
-            throw new RuntimeException( "Exception while generating data", e );
-        } finally {
-            commitAndCloseExecutor( executor );
-        }
+
     }
 
 
 
     @Override
     public void generateData( DatabaseInstance databaseInstance, ProgressReporter progressReporter ) {
-
+        log.info( "Generating data..." );
+        Executor executor = null;//executorFactory.createExecutorInstance( null, NAMESPACE );
+        org.polypheny.simpleclient.scenario.coms.DataGenerator dataGenerator = new DataGenerator();
+        try {
+            dataGenerator.generateData( config );
+        } catch ( ExecutorException e ) {
+            throw new RuntimeException( "Exception while generating data", e );
+        } finally {
+            commitAndCloseExecutor( executor );
+        }
     }
 
 
