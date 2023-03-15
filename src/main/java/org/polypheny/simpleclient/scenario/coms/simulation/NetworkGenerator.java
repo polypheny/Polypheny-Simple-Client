@@ -25,18 +25,21 @@
 package org.polypheny.simpleclient.scenario.coms.simulation;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.BiFunction;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import org.polypheny.simpleclient.scenario.coms.ComsConfig;
 import org.polypheny.simpleclient.scenario.coms.simulation.Graph.Edge;
 import org.polypheny.simpleclient.scenario.coms.simulation.Graph.Node;
+import org.polypheny.simpleclient.scenario.coms.simulation.PropertyType.Type;
 
 public class NetworkGenerator {
+
 
     public final ComsConfig config;
     private final Random random;
@@ -60,7 +63,7 @@ public class NetworkGenerator {
         // -> generate configs depending on type of node
         // -> generate logs?
 
-        this.network = new Network( random, config.networkScale );
+        this.network = new Network( random, config );
 
     }
 
@@ -98,22 +101,24 @@ public class NetworkGenerator {
         List<Lan> lans = new ArrayList<>();
 
         List<WLan> wlans = new ArrayList<>();
+        ComsConfig config;
         int scale;
 
 
-        public Network( Random random, int scale ) {
+        public Network( Random random, ComsConfig config ) {
             this.random = random;
-            this.scale = scale;
+            this.scale = config.networkScale;
+            this.config = config;
 
-            generateObject( SERVERS, () -> servers.add( new Server( random ) ) );
-            generateObject( SWITCHES, () -> switches.add( new Switch( random ) ) );
-            generateObject( APS, () -> aps.add( new AP( random ) ) );
+            generateObject( SERVERS, () -> servers.add( new Server( this, random ) ) );
+            generateObject( SWITCHES, () -> switches.add( new Switch( this, random ) ) );
+            generateObject( APS, () -> aps.add( new AP( this, random ) ) );
 
-            generateObject( CLIENTS * OS_DISTRIBUTION, () -> pcs.add( new PC( random ) ) );
-            generateObject( CLIENTS * (1 - OS_DISTRIBUTION), () -> macs.add( new Mac( random ) ) );
+            generateObject( CLIENTS * OS_DISTRIBUTION, () -> pcs.add( new PC( this, random ) ) );
+            generateObject( CLIENTS * (1 - OS_DISTRIBUTION), () -> macs.add( new Mac( this, random ) ) );
 
-            generateObject( MOBILES * MOBILE_DISTRIBUTION, () -> mobiles.add( new Mobile( random ) ) );
-            generateObject( MOBILES * (1 - MOBILE_DISTRIBUTION), () -> ioTs.add( new IoT( random ) ) );
+            generateObject( MOBILES * MOBILE_DISTRIBUTION, () -> mobiles.add( new Mobile( this, random ) ) );
+            generateObject( MOBILES * (1 - MOBILE_DISTRIBUTION), () -> ioTs.add( new IoT( this, random ) ) );
 
             generateConnection( this.servers, this.servers, 2, Connection.LAN );
 
@@ -131,6 +136,17 @@ public class NetworkGenerator {
 
         private <L extends GraphElement, R extends GraphElement> void generateConnection( List<L> fromElements, List<R> toElements, int max, Connection connection ) {
 
+            for ( int i = 0; i < random.nextInt( max ); i++ ) {
+                L from = fromElements.get( random.nextInt( fromElements.size() ) );
+                R to = toElements.get( random.nextInt( toElements.size() ) );
+
+                if ( connection == Connection.WLAN ) {
+                    this.wlans.add( new WLan( this, from.getId(), to.getId(), false, random ) );
+                } else if ( connection == Connection.LAN ) {
+                    this.lans.add( new Lan( this, from.getId(), to.getId(), false, random ) );
+                }
+            }
+
         }
 
 
@@ -142,7 +158,77 @@ public class NetworkGenerator {
 
 
         Graph toGraph() {
-            return null;
+            Map<Long, Node> nodes = new HashMap<>();
+            collectNodes( servers, nodes );
+            collectNodes( pcs, nodes );
+            collectNodes( macs, nodes );
+            collectNodes( switches, nodes );
+            collectNodes( mobiles, nodes );
+            collectNodes( aps, nodes );
+
+            Map<Long, Edge> edges = new HashMap<>();
+            collectEdges( lans, edges );
+            collectEdges( wlans, edges );
+
+            return new Graph( nodes, edges );
+        }
+
+
+        private void collectNodes( List<? extends Node> source, Map<Long, Node> target ) {
+            for ( Node element : source ) {
+                target.put( element.getId(), element );
+            }
+        }
+
+
+        private void collectEdges( List<? extends Edge> source, Map<Long, Edge> target ) {
+            for ( Edge element : source ) {
+                target.put( element.getId(), element );
+            }
+        }
+
+
+        public static Map<String, String> generateProperties( Random random, int amount ) {
+            Map<String, String> properties = new HashMap<>();
+
+            for ( int i = 0; i < amount; i++ ) {
+                StringBuilder value = new StringBuilder( String.valueOf( random.nextInt( 10 ) ) );
+                if ( random.nextBoolean() ) {
+                    value = new StringBuilder( "\"value" + value + "\"" );
+                }
+                properties.put( "key" + i, value.toString() );
+            }
+            return properties;
+        }
+
+
+        public static Map<String, String> generateFixedTypedProperties( Random random, Map<String, PropertyType> types ) {
+            Map<String, String> properties = new HashMap<>();
+
+            for ( Entry<String, PropertyType> entry : types.entrySet() ) {
+                StringBuilder value = new StringBuilder( String.valueOf( random.nextInt( 10 ) ) );
+                switch ( entry.getValue().getType() ) {
+                    case CHAR:
+                        value = new StringBuilder( "\"value" + value + "\"" );
+                        break;
+                    case NUMBER:
+                        break;
+                    case FLOAT:
+                        value.append( random.nextInt( 10 ) );
+                        break;
+                    case ARRAY:
+                        value = new StringBuilder( "[" + value );
+                        for ( int j = 0; j < entry.getValue().getLength(); j++ ) {
+                            value.append( ", " );
+                            random.nextInt( 10 );
+                        }
+                        value.append( "]" );
+                        break;
+                }
+
+
+            }
+            return properties;
         }
 
     }
@@ -156,6 +242,22 @@ public class NetworkGenerator {
 
         Random random;
 
+        public static Map<String, PropertyType> types = new HashMap<String, PropertyType>() {{
+            put( "id", new PropertyType( 3, Type.NUMBER ) );
+            put( "manufactureId", new PropertyType( 12, Type.NUMBER ) );
+            put( "manufactureName", new PropertyType( 12, Type.CHAR ) );
+            put( "entry", new PropertyType( 12, Type.NUMBER ) );
+        }};
+
+
+        public Server( Network network, Random random ) {
+            super(
+                    types,
+                    Network.generateFixedTypedProperties( random, types ),
+                    Network.generateProperties( random, network.config.switchConfigs ) );
+            this.random = random;
+        }
+
     }
 
     //// Distributors
@@ -167,6 +269,22 @@ public class NetworkGenerator {
 
         Random random;
 
+        public static Map<String, PropertyType> types = new HashMap<String, PropertyType>() {{
+            put( "id", new PropertyType( 3, Type.NUMBER ) );
+            put( "manufactureId", new PropertyType( 12, Type.NUMBER ) );
+            put( "manufactureName", new PropertyType( 12, Type.CHAR ) );
+            put( "entry", new PropertyType( 12, Type.NUMBER ) );
+        }};
+
+
+        public Switch( Network network, Random random ) {
+            super(
+                    types,
+                    Network.generateFixedTypedProperties( random, types ),
+                    Network.generateProperties( random, network.config.switchConfigs ) );
+            this.random = random;
+        }
+
     }
 
 
@@ -175,6 +293,21 @@ public class NetworkGenerator {
     public static class AP extends Node {
 
         Random random;
+
+        public static Map<String, PropertyType> types = new HashMap<String, PropertyType>() {{
+            put( "id", new PropertyType( 3, Type.NUMBER ) );
+            put( "manufactureId", new PropertyType( 12, Type.NUMBER ) );
+            put( "manufactureName", new PropertyType( 12, Type.CHAR ) );
+            put( "entry", new PropertyType( 12, Type.NUMBER ) );
+        }};
+
+
+        public AP( Network network, Random random ) {
+            super( types,
+                    Network.generateFixedTypedProperties( random, types ),
+                    Network.generateProperties( random, network.config.apDynConfigs ) );
+            this.random = random;
+        }
 
     }
 
@@ -187,6 +320,21 @@ public class NetworkGenerator {
 
         Random random;
 
+        public static Map<String, PropertyType> types = new HashMap<String, PropertyType>() {{
+            put( "id", new PropertyType( 3, Type.NUMBER ) );
+            put( "manufactureId", new PropertyType( 12, Type.NUMBER ) );
+            put( "manufactureName", new PropertyType( 12, Type.CHAR ) );
+            put( "entry", new PropertyType( 12, Type.NUMBER ) );
+        }};
+
+
+        public IoT( Network network, Random random ) {
+            super( types,
+                    Network.generateFixedTypedProperties( random, types ),
+                    Network.generateProperties( random, network.config.mobileDynConfigsMax ) );
+            this.random = random;
+        }
+
     }
 
 
@@ -195,6 +343,21 @@ public class NetworkGenerator {
     public static class Mobile extends Node {
 
         Random random;
+
+        public static Map<String, PropertyType> types = new HashMap<String, PropertyType>() {{
+            put( "id", new PropertyType( 3, Type.NUMBER ) );
+            put( "manufactureId", new PropertyType( 12, Type.NUMBER ) );
+            put( "manufactureName", new PropertyType( 12, Type.CHAR ) );
+            put( "entry", new PropertyType( 12, Type.NUMBER ) );
+        }};
+
+
+        public Mobile( Network network, Random random ) {
+            super( types,
+                    Network.generateFixedTypedProperties( random, types ),
+                    Network.generateProperties( random, network.config.mobileDynConfigsMax ) );
+            this.random = random;
+        }
 
     }
 
@@ -205,6 +368,22 @@ public class NetworkGenerator {
 
         Random random;
 
+        public static Map<String, PropertyType> types = new HashMap<String, PropertyType>() {{
+            put( "id", new PropertyType( 3, Type.NUMBER ) );
+            put( "manufactureId", new PropertyType( 12, Type.NUMBER ) );
+            put( "manufactureName", new PropertyType( 12, Type.CHAR ) );
+            put( "entry", new PropertyType( 12, Type.NUMBER ) );
+        }};
+
+
+        public PC( Network network, Random random ) {
+            super( types,
+                    Network.generateFixedTypedProperties( random, types ),
+                    Network.generateProperties( random, network.config.pcDynConfigsMax ) );
+            this.random = random;
+        }
+
+
     }
 
 
@@ -213,6 +392,21 @@ public class NetworkGenerator {
     public static class Mac extends Node {
 
         Random random;
+
+        public static Map<String, PropertyType> types = new HashMap<String, PropertyType>() {{
+            put( "id", new PropertyType( 3, Type.NUMBER ) );
+            put( "manufactureId", new PropertyType( 12, Type.NUMBER ) );
+            put( "manufactureName", new PropertyType( 12, Type.CHAR ) );
+            put( "entry", new PropertyType( 12, Type.NUMBER ) );
+        }};
+
+
+        public Mac( Network network, Random random ) {
+            super( types,
+                    Network.generateFixedTypedProperties( random, types ),
+                    Network.generateProperties( random, network.config.pcDynConfigsMax ) );
+            this.random = random;
+        }
 
     }
 
@@ -223,10 +417,26 @@ public class NetworkGenerator {
     @Value
     public static class Lan extends Edge {
 
-
         Random random;
 
+        public static Map<String, PropertyType> types = new HashMap<String, PropertyType>() {{
+            put( "id", new PropertyType( 3, Type.NUMBER ) );
+            put( "manufactureId", new PropertyType( 12, Type.NUMBER ) );
+            put( "manufactureName", new PropertyType( 12, Type.CHAR ) );
+            put( "entry", new PropertyType( 12, Type.NUMBER ) );
+        }};
 
+
+        public Lan( Network network, long from, long to, boolean directed, Random random ) {
+            super(
+                    types,
+                    Network.generateFixedTypedProperties( random, types ),
+                    Network.generateProperties( random, network.config.connectionConfigs ),
+                    from,
+                    to,
+                    directed );
+            this.random = random;
+        }
 
 
     }
@@ -236,12 +446,32 @@ public class NetworkGenerator {
     @Value
     public static class WLan extends Edge {
 
-
         Random random;
+
+        public static Map<String, PropertyType> types = new HashMap<String, PropertyType>() {{
+            put( "id", new PropertyType( 3, Type.NUMBER ) );
+            put( "manufactureId", new PropertyType( 12, Type.NUMBER ) );
+            put( "manufactureName", new PropertyType( 12, Type.CHAR ) );
+            put( "entry", new PropertyType( 12, Type.NUMBER ) );
+        }};
+
+
+        public WLan( Network network, long from, long to, boolean directed, Random random ) {
+            super(
+                    types,
+                    Network.generateFixedTypedProperties( random, types ),
+                    Network.generateProperties( random, network.config.connectionConfigs ),
+                    from,
+                    to,
+                    directed );
+            this.random = random;
+        }
+
 
     }
 
-    enum Connection{
+
+    enum Connection {
         WLAN,
         LAN
     }

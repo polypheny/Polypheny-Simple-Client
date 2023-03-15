@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019-3/13/23, 10:52 AM The Polypheny Project
+ * Copyright (c) 2019-3/15/23, 4:32 PM The Polypheny Project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"), to deal
@@ -22,30 +22,8 @@
  * SOFTWARE.
  */
 
-package org.polypheny.simpleclient.scenario.coms.simulation;
+package org.polypheny.simpleclient.cli;
 
-import java.util.Map;
-import lombok.Value;
-import lombok.experimental.NonFinal;
-import org.polypheny.simpleclient.scenario.coms.simulation.NetworkGenerator.Network;
-
-@Value
-@NonFinal
-public abstract class GraphElement {
-
-    public long id = Network.idBuilder.getAndIncrement();
-
-    public Map<String, String> fixedProperties;
-
-    public Map<String, String> dynProperties;
-    public Map<String, PropertyType> types;
-
-
-    public GraphElement( Map<String, PropertyType> types, Map<String, String> fixedProperties, Map<String, String> dynProperties ) {
-        this.fixedProperties = fixedProperties;
-        this.dynProperties = dynProperties;
-        this.types = types;
-    }
-
-
+public enum Mode {
+    POLYPHENY, NATIVE, SURREAL_DB;
 }

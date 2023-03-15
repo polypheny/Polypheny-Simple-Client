@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019-2022 The Polypheny Project
+ * Copyright (c) 2019-3/15/23, 4:40 PM The Polypheny Project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"), to deal
@@ -24,41 +24,26 @@
 
 package org.polypheny.simpleclient.executor;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
+import org.polypheny.simpleclient.cli.ComsCommand.MongoQlExecutorFactory;
+import org.polypheny.simpleclient.cli.ComsCommand.NeoExecutorFactory;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
-import org.polypheny.simpleclient.executor.PolyphenyDbCypherExecutor.PolyphenyDbCypherExecutorFactory;
-import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory;
-import org.polypheny.simpleclient.executor.PolyphenyDbMongoQlExecutor.PolyphenyDbMongoQlExecutorFactory;
-import org.polypheny.simpleclient.executor.PolyphenyDbRestExecutor.PolyphenyDbRestExecutorFactory;
+import org.polypheny.simpleclient.executor.PostgresExecutor.PostgresExecutorFactory;
 import org.polypheny.simpleclient.main.CsvWriter;
 
+@AllArgsConstructor
+@Getter
+public class MultiExecutorFactory extends ExecutorFactory {
 
-@Slf4j
-public class PolyphenyDbMultiExecutorFactory extends ExecutorFactory {
-
-
-    private final String host;
-
-    @Getter
-    private final PolyphenyDbJdbcExecutorFactory jdbcExecutorFactory;
-    @Getter
-    private final PolyphenyDbMongoQlExecutorFactory mongoQlExecutorFactory;
-    @Getter
-    private final PolyphenyDbCypherExecutorFactory cypherExecutorFactory;
-
-
-    public PolyphenyDbMultiExecutorFactory( String host ) {
-        this.host = host;
-        jdbcExecutorFactory = new PolyphenyDbJdbcExecutorFactory( host, true );
-        mongoQlExecutorFactory = new PolyphenyDbMongoQlExecutorFactory( host );
-        cypherExecutorFactory = new PolyphenyDbCypherExecutorFactory( host );
-    }
+    private final PostgresExecutorFactory relational;
+    private final NeoExecutorFactory graph;
+    private final MongoQlExecutorFactory document;
 
 
     @Override
     public Executor createExecutorInstance( CsvWriter csvWriter ) {
-        return jdbcExecutorFactory.createExecutorInstance( csvWriter );
+        throw new UnsupportedOperationException();
     }
 
 

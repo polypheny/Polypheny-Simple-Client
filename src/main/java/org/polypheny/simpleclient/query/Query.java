@@ -64,6 +64,11 @@ public abstract class Query {
     public abstract String getMongoQl();
 
 
+    public String getSurrealQl() {
+        return null;
+    }
+
+
     public String getCypher() {
         return null;
     }
@@ -143,5 +148,6 @@ public abstract class Query {
         }
         return o.toString();
     }
+
 
 }

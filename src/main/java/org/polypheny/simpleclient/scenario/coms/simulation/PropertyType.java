@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019-3/11/23, 11:54 AM The Polypheny Project
+ * Copyright (c) 2019-3/15/23, 1:24 PM The Polypheny Project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"), to deal
@@ -24,48 +24,19 @@
 
 package org.polypheny.simpleclient.scenario.coms.simulation;
 
-import java.util.List;
-import java.util.Map;
-import lombok.EqualsAndHashCode;
 import lombok.Value;
-import lombok.experimental.NonFinal;
 
 @Value
-public class Graph {
+public class PropertyType {
 
-    Map<Long, Node> nodes;
-    Map<Long, Edge> edges;
+    int length;
+
+    Type type;
 
 
-    @EqualsAndHashCode(callSuper = true)
-    @Value
-    @NonFinal
-    public static class Node extends GraphElement {
-
-        public Node( Map<String, PropertyType> types, Map<String, String> fixedProperties, Map<String, String> dynProperties ) {
-            super( types, fixedProperties, dynProperties );
-        }
-
+    public enum Type {
+        CHAR, FLOAT, NUMBER, ARRAY;
     }
 
-
-    @EqualsAndHashCode(callSuper = true)
-    @Value
-    @NonFinal
-    public static class Edge extends GraphElement {
-
-        public Edge( Map<String, PropertyType> types, Map<String, String> fixedProperties, Map<String, String> dynProperties, long from, long to, boolean directed ) {
-            super( types, fixedProperties, dynProperties );
-            this.from = from;
-            this.to = to;
-            this.directed = directed;
-        }
-
-
-        long from;
-        long to;
-        boolean directed;
-
-    }
 
 }

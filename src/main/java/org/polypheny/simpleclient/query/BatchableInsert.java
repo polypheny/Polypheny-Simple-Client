@@ -42,6 +42,10 @@ public abstract class BatchableInsert extends Query {
 
     public abstract JsonObject getRestRowExpression();
 
+    public List<String> getRowValues(){
+        return null;
+    }
+
 
     public String getMongoQlRowExpression() {
         List<String> fields = new ArrayList<>();

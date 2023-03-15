@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019-3/11/23, 11:54 AM The Polypheny Project
+ * Copyright (c) 2019-3/15/23, 4:47 PM The Polypheny Project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"), to deal
@@ -22,50 +22,62 @@
  * SOFTWARE.
  */
 
-package org.polypheny.simpleclient.scenario.coms.simulation;
+package org.polypheny.simpleclient.executor;
 
 import java.util.List;
-import java.util.Map;
-import lombok.EqualsAndHashCode;
-import lombok.Value;
-import lombok.experimental.NonFinal;
+import org.polypheny.simpleclient.query.BatchableInsert;
+import org.polypheny.simpleclient.query.Query;
+import org.polypheny.simpleclient.scenario.AbstractConfig;
 
-@Value
-public class Graph {
+public class NeoExecutor implements Executor {
 
-    Map<Long, Node> nodes;
-    Map<Long, Edge> edges;
-
-
-    @EqualsAndHashCode(callSuper = true)
-    @Value
-    @NonFinal
-    public static class Node extends GraphElement {
-
-        public Node( Map<String, PropertyType> types, Map<String, String> fixedProperties, Map<String, String> dynProperties ) {
-            super( types, fixedProperties, dynProperties );
-        }
+    @Override
+    public void reset() throws ExecutorException {
 
     }
 
 
-    @EqualsAndHashCode(callSuper = true)
-    @Value
-    @NonFinal
-    public static class Edge extends GraphElement {
-
-        public Edge( Map<String, PropertyType> types, Map<String, String> fixedProperties, Map<String, String> dynProperties, long from, long to, boolean directed ) {
-            super( types, fixedProperties, dynProperties );
-            this.from = from;
-            this.to = to;
-            this.directed = directed;
-        }
+    @Override
+    public long executeQuery( Query query ) throws ExecutorException {
+        return 0;
+    }
 
 
-        long from;
-        long to;
-        boolean directed;
+    @Override
+    public long executeQueryAndGetNumber( Query query ) throws ExecutorException {
+        return 0;
+    }
+
+
+    @Override
+    public void executeCommit() throws ExecutorException {
 
     }
+
+
+    @Override
+    public void executeRollback() throws ExecutorException {
+
+    }
+
+
+    @Override
+    public void closeConnection() throws ExecutorException {
+
+    }
+
+
+    @Override
+    public void executeInsertList( List<BatchableInsert> batchList, AbstractConfig config ) throws ExecutorException {
+
+    }
+
+
+    @Override
+    public void flushCsvWriter() {
+
+    }
+
+
 
 }
