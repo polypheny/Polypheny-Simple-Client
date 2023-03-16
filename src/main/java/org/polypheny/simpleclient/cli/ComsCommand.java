@@ -60,7 +60,7 @@ public class ComsCommand implements CliRunnable {
     public String polyphenyDbHost = "127.0.0.1";
 
     @Option(name = { "-s", "--surreal" }, title = "IP or Hostname + Port", arity = 1, description = "IP or Hostname of the SurrealDB server (default: 127.0.0.1).")
-    public String surrealHost = "127.0.0.1:8000/rpc";
+    public String surrealHost = "127.0.0.1:8000";
     @Option(name = { "-n", "--neo4j" }, title = "IP or Hostname + Port", arity = 1, description = "IP or Hostname of the Neo4j server (default: 127.0.0.1).")
     public String neo4j = "127.0.0.1";
     @Option(name = { "-m", "--mongo" }, title = "IP or Hostname + Port", arity = 1, description = "IP or Hostname of the MongoDB server (default: 127.0.0.1).")

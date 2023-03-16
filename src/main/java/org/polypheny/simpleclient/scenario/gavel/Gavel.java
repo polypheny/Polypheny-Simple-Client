@@ -473,9 +473,9 @@ public class Gavel extends Scenario {
         try ( BufferedReader bf = new BufferedReader( new InputStreamReader( file ) ) ) {
             executor = executorFactory.createExecutorInstance();
             String line = bf.readLine();
-            executor.executeQuery( new RawQuery( null, null, "use test", null, false ) );
+            executor.executeQuery( RawQuery.builder().mongoQl( "use test" ).build() );
             while ( line != null ) {
-                executor.executeQuery( new RawQuery( null, null, "db.createCollection(" + line + ")", null, false ) );
+                executor.executeQuery( RawQuery.builder().mongoQl( "db.createCollection(" + line + ")" ).build() );
                 line = bf.readLine();
             }
         } catch ( IOException | ExecutorException e ) {

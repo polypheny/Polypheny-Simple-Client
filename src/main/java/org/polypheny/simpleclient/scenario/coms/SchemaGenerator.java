@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019-3/11/23, 11:19 AM The Polypheny Project
+ * Copyright (c) 2019-3/16/23, 4:28 PM The Polypheny Project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"), to deal
@@ -25,53 +25,48 @@
 package org.polypheny.simpleclient.scenario.coms;
 
 import java.util.List;
-import lombok.extern.slf4j.Slf4j;
+import java.util.Random;
 import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.executor.ExecutorException;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.scenario.coms.simulation.Graph;
-import org.polypheny.simpleclient.scenario.coms.simulation.NetworkGenerator;
+import org.polypheny.simpleclient.scenario.coms.simulation.NetworkGenerator.Network;
 
-@Slf4j
-public class DataGenerator {
+public class SchemaGenerator {
 
-    public void generateData( ComsConfig config, Executor executor ) throws ExecutorException {
+    private ComsConfig config;
+    private Random random;
+    private Network network;
+
+
+    public void generateSchema( ComsConfig config, Executor executor, String namespace, String onStore ) throws ExecutorException {
+        this.config = config;
+        this.random = new Random( config.seed );
+        this.network = new Network( random, config );
+
         // generateSchema network (simulation)
-        // -> generateSchema structure of network -> nodes, edges
-        // -> generateSchema parameters per nodes -> fixed & dynamic
-        // -> generateSchema configs depending on type of node/edge
-        // -> generateSchema logs, execute 5% untimed
-        // -> generateSchema queries on network, execute 5%
+        // -> generateSchema structure of network -> nodes
+        // -> generateSchema parameters per nodes
+        // -> generateSchema configs depending on type of node
+        // -> generateSchema logs?
 
-        // generateSchema simulation setting
-        NetworkGenerator generator = new NetworkGenerator( config );
-        Graph graph = generator.network.toGraph();
+        Graph graph = this.network.toGraph();
 
-        // insert into db
-        List<Query> graphQueries = graph.getGraphQueries( config.graphCreateBatch );
-        List<Query> docQueries = graph.getDocQueries( config.docCreateBatch );
-        List<Query> relQueries = graph.getRelQueries( config.relCreateBatch );
+        List<Query> graphQueries = graph.getSchemaGraphQueries( onStore, namespace );
+        List<Query> docQueries = graph.getSchemaDocQueries( onStore, namespace );
+        List<Query> relQueries = graph.getSchemaRelQueries( onStore, namespace );
 
         for ( Query query : graphQueries ) {
             executor.executeQuery( query );
         }
+
         for ( Query query : docQueries ) {
             executor.executeQuery( query );
         }
+
         for ( Query query : relQueries ) {
             executor.executeQuery( query );
         }
-
-        log.warn( "finished" );
-
-        // -> generateSchema logs
-
-        // -> generateSchema queries for simulation
-
-        // -> generateSchema %5 of log queries
-
-        // -> genrate 5% of logs for simulation
-
     }
 
 }

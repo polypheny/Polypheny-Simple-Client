@@ -58,11 +58,11 @@ public class NetworkGenerator {
         this.config = config;
         this.random = new Random( config.seed );
 
-        // generate network (simulation)
-        // -> generate structure of network -> nodes
-        // -> generate parameters per nodes
-        // -> generate configs depending on type of node
-        // -> generate logs?
+        // generateSchema network (simulation)
+        // -> generateSchema structure of network -> nodes
+        // -> generateSchema parameters per nodes
+        // -> generateSchema configs depending on type of node
+        // -> generateSchema logs?
 
         this.network = new Network( random, config );
 
@@ -121,23 +121,28 @@ public class NetworkGenerator {
             generateObject( MOBILES * MOBILE_DISTRIBUTION, () -> mobiles.add( new Mobile( this, random ) ) );
             generateObject( MOBILES * (1 - MOBILE_DISTRIBUTION), () -> ioTs.add( new IoT( this, random ) ) );
 
-            generateConnection( this.servers, this.servers, 2, Connection.LAN );
+            generateConnection( this.servers, this.servers, this.servers.size() / 4, Connection.LAN );
 
-            generateConnection( this.servers, this.switches, 2, Connection.LAN );
+            generateConnection( this.servers, this.switches, this.switches.size(), Connection.LAN );
 
-            generateConnection( this.switches, this.pcs, 2, Connection.LAN );
-            generateConnection( this.switches, this.macs, 2, Connection.LAN );
+            generateConnection( this.switches, this.pcs, this.switches.size(), Connection.LAN );
+            generateConnection( this.switches, this.macs, this.switches.size(), Connection.LAN );
 
-            generateConnection( this.servers, this.aps, 2, Connection.LAN );
+            generateConnection( this.servers, this.aps, this.aps.size(), Connection.LAN );
 
-            generateConnection( this.aps, this.mobiles, 2, Connection.WLAN );
-            generateConnection( this.aps, this.ioTs, 2, Connection.WLAN );
+            generateConnection( this.aps, this.mobiles, this.mobiles.size(), Connection.WLAN );
+            generateConnection( this.aps, this.ioTs, this.ioTs.size(), Connection.WLAN );
         }
 
 
         private <L extends GraphElement, R extends GraphElement> void generateConnection( List<L> fromElements, List<R> toElements, int max, Connection connection ) {
+            generateConnection( fromElements, toElements, 0, max, connection );
+        }
 
-            for ( int i = 0; i < random.nextInt( max ); i++ ) {
+
+        private <L extends GraphElement, R extends GraphElement> void generateConnection( List<L> fromElements, List<R> toElements, int min, int max, Connection connection ) {
+
+            for ( int i = 0; i < min + random.nextInt( max - min ); i++ ) {
                 L from = fromElements.get( random.nextInt( fromElements.size() ) );
                 R to = toElements.get( random.nextInt( toElements.size() ) );
 
@@ -194,7 +199,7 @@ public class NetworkGenerator {
 
             for ( int i = 0; i < amount; i++ ) {
                 Type type = Type.getRandom( random, Type.OBJECT );
-                properties.put( "key" + i,  type.asString( random ) );
+                properties.put( "key" + i, type.asString( random, 3, Type.OBJECT ) );
             }
             return properties;
         }

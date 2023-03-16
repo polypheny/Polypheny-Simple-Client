@@ -24,9 +24,11 @@
 
 package org.polypheny.simpleclient.scenario.coms.simulation;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import lombok.Value;
 import lombok.experimental.NonFinal;
 import org.polypheny.simpleclient.scenario.coms.simulation.NetworkGenerator.Network;
@@ -54,5 +56,31 @@ public abstract class GraphElement {
         this.types = types;
     }
 
+
+    public String asMongo() {
+        List<String> query = new ArrayList<>();
+        for ( Entry<String, String> entry : dynProperties.entrySet() ) {
+            query.add( entry.getKey() + ":" + entry.getValue() );
+        }
+        return String.join( ",", query );
+    }
+
+
+    public String asDynSurreal() {
+        List<String> query = new ArrayList<>();
+        for ( Entry<String, String> entry : dynProperties.entrySet() ) {
+            query.add( entry.getKey() + ":" + entry.getValue() );
+        }
+        return String.join( ",", query );
+    }
+
+
+    public String asSql() {
+        List<String> query = new ArrayList<>();
+        for ( Entry<String, String> entry : fixedProperties.entrySet() ) {
+            query.add( entry.getValue() );
+        }
+        return String.join( ",", query );
+    }
 
 }

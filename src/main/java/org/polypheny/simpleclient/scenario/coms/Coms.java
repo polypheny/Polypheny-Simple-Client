@@ -33,6 +33,7 @@ import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.executor.Executor.DatabaseInstance;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
 import org.polypheny.simpleclient.executor.ExecutorException;
+import org.polypheny.simpleclient.executor.PolyphenyDbExecutor;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.main.ProgressReporter;
 import org.polypheny.simpleclient.scenario.Scenario;
@@ -46,29 +47,53 @@ public class Coms extends Scenario {
     private final ComsConfig config;
 
 
-    public Coms( ExecutorFactory executorFactory, ComsConfig config,  boolean commitAfterEveryQuery, boolean dumpQueryList, QueryMode queryMode ) {
+    public Coms( ExecutorFactory executorFactory, ComsConfig config, boolean commitAfterEveryQuery, boolean dumpQueryList, QueryMode queryMode ) {
         super( executorFactory, commitAfterEveryQuery, dumpQueryList, queryMode );
         this.random = new Random( config.seed );
         this.config = config;
     }
 
 
-
-
     @Override
     public void createSchema( DatabaseInstance databaseInstance, boolean includingKeys ) {
+        if ( queryMode != QueryMode.TABLE ) {
+            throw new UnsupportedOperationException( "Unsupported query mode: " + queryMode.name() );
+        }
 
+        String onStore = null;
+        if ( config.newTablePlacementStrategy.equalsIgnoreCase( "Optimized" ) && config.dataStores.size() > 1 ) {
+            for ( String storeName : PolyphenyDbExecutor.storeNames ) {
+                if ( storeName.toLowerCase().startsWith( "neo4j" ) ) {
+                    onStore = storeName;
+                    break;
+                }
+            }
+            if ( onStore == null ) {
+                throw new RuntimeException( "No suitable data store found for optimized placing of the GraphBench graph." );
+            }
+        }
+
+        log.info( "Creating schema..." );
+        Executor executor = null;
+        try {
+            executor = executorFactory.createExecutorInstance( null, NAMESPACE );
+            SchemaGenerator generator = new SchemaGenerator();
+            generator.generateSchema( config, executor, NAMESPACE, onStore );
+        } catch ( ExecutorException e ) {
+            throw new RuntimeException( "Exception while creating schema", e );
+        } finally {
+            commitAndCloseExecutor( executor );
+        }
     }
-
 
 
     @Override
     public void generateData( DatabaseInstance databaseInstance, ProgressReporter progressReporter ) {
         log.info( "Generating data..." );
         Executor executor = executorFactory.createExecutorInstance( null, NAMESPACE );
-        org.polypheny.simpleclient.scenario.coms.DataGenerator dataGenerator = new DataGenerator();
+        DataGenerator dataGenerator = new DataGenerator();
         try {
-            dataGenerator.generateData( config );
+            dataGenerator.generateData( config, executor );
         } catch ( ExecutorException e ) {
             throw new RuntimeException( "Exception while generating data", e );
         } finally {

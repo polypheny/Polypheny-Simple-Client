@@ -44,6 +44,8 @@ public class ComsConfig extends AbstractConfig {
     public int apDynConfigs;
     public int nestingDepth;
     public int graphCreateBatch;
+    public int docCreateBatch;
+    public int relCreateBatch;
 
 
     public ComsConfig( String system, Properties properties ) {
@@ -63,6 +65,9 @@ public class ComsConfig extends AbstractConfig {
         nestingDepth = getIntProperty( properties, "nestingDepth" );
 
         graphCreateBatch = getIntProperty( properties, "graphCreateBatch" );
+
+        docCreateBatch = getIntProperty( properties, "docCreateBatch" );
+        relCreateBatch = getIntProperty( properties, "relCreateBatch" );
 
     }
 
@@ -84,6 +89,10 @@ public class ComsConfig extends AbstractConfig {
         nestingDepth = Integer.parseInt( parsedConfig.get( "nestingDepth" ) );
 
         graphCreateBatch = Integer.parseInt( parsedConfig.get( "graphCreateBatch" ) );
+
+        docCreateBatch = Integer.parseInt( parsedConfig.get( "docCreateBatch" ) );
+
+        relCreateBatch = Integer.parseInt( parsedConfig.get( "relCreateBatch" ) );
     }
 
 

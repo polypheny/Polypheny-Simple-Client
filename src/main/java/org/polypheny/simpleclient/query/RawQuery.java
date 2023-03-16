@@ -45,19 +45,23 @@ public class RawQuery extends Query {
     @Getter
     private final String cypher;
 
+    @Getter
+    private final String surrealQl;
+
 
     public RawQuery( String sql, HttpRequest<?> rest, boolean expectResultSet ) {
-        this( sql, rest, null, null, expectResultSet );
+        this( sql, rest, null, null, null, expectResultSet );
     }
 
 
     @Builder
-    public RawQuery( String sql, HttpRequest<?> rest, String mongoQl, String cypher, boolean expectResultSet ) {
+    public RawQuery( String sql, HttpRequest<?> rest, String mongoQl, String cypher, String surrealQl, boolean expectResultSet ) {
         super( expectResultSet );
         this.sql = sql;
         this.rest = rest;
         this.mongoQl = mongoQl;
         this.cypher = cypher;
+        this.surrealQl = surrealQl;
     }
 
 

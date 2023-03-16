@@ -43,8 +43,33 @@ public class PropertyType {
     Type type;
 
 
+    public String asSql() {
+        return type.asSql( length );
+    }
+
+
+    public String asSurreal() {
+        return type.asSurreal();
+    }
+
+
     public enum Type {
-        CHAR, FLOAT, NUMBER, ARRAY, OBJECT;
+        CHAR( "VARCHAR(", ")" ), FLOAT( "FLOAT(", ")" ), NUMBER( "INT" ), ARRAY( "ARRAY" ), OBJECT( "" );
+
+
+        private final String start;
+        private final String end;
+
+
+        Type( String start ) {
+            this( start, null );
+        }
+
+
+        Type( String start, String end ) {
+            this.start = start;
+            this.end = end;
+        }
 
 
         public JsonElement asJson( Random random, int nestingDepth ) {
@@ -83,12 +108,15 @@ public class PropertyType {
         }
 
 
-        public String asString( Random random, Type... excepts ) {
+        public String asString( Random random, int maxDepth, Type... excepts ) {
+            if ( maxDepth <= 0 ) {
+                excepts = new Type[]{ OBJECT, ARRAY };
+            }
             switch ( this ) {
                 case CHAR:
                     return "\"value" + random.nextInt() + "\"";
                 case FLOAT:
-                    return String.valueOf( random.nextFloat() );
+                    return String.valueOf( random.nextFloat( 5 ) );
                 case NUMBER:
                     return String.valueOf( random.nextInt() );
                 case ARRAY:
@@ -96,13 +124,37 @@ public class PropertyType {
                     int fill = random.nextInt( 10 );
                     for ( int i = 0; i < fill; i++ ) {
                         Type type = getRandom( random, excepts );
-                        array.add( type.asString( random, excepts ) );
+                        array.add( type.asString( random, maxDepth - 1, excepts ) );
                     }
                     return "[" + String.join( ", ", array ) + "]";
                 case OBJECT:
                     throw new UnsupportedOperationException();
             }
 
+            throw new RuntimeException();
+        }
+
+
+        public String asSql( int length ) {
+            if ( end == null ) {
+                return start;
+            }
+            return start + length + end;
+        }
+
+
+        public String asSurreal() {
+            switch ( this ) {
+                case CHAR:
+                    return "string";
+                case FLOAT:
+                    return "float";
+                case NUMBER:
+                    return "int";
+                case ARRAY:
+                case OBJECT:
+                    throw new RuntimeException();
+            }
             throw new RuntimeException();
         }
     }

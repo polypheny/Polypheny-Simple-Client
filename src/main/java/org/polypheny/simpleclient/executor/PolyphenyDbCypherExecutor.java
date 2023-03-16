@@ -92,7 +92,7 @@ public class PolyphenyDbCypherExecutor extends PolyphenyDbHttpExecutor {
             rows.add( Objects.requireNonNull( query.getCypherRowExpression() ) );
         }
         if ( rows.size() > 0 ) {
-            executeQuery( new RawQuery( null, null, null, Query.buildCypherManyInsert( rows ), false ) );
+            executeQuery( RawQuery.builder().mongoQl( Query.buildCypherManyInsert( rows ) ).build() );
         }
     }
 

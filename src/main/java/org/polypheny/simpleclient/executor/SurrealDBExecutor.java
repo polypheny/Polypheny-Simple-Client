@@ -25,18 +25,16 @@
 package org.polypheny.simpleclient.executor;
 
 import java.io.IOException;
-import java.net.URI;
 import java.util.List;
-import java.util.concurrent.Future;
+import kong.unirest.HttpResponse;
+import kong.unirest.JsonNode;
+import kong.unirest.RequestBodyEntity;
+import kong.unirest.Unirest;
 import lombok.extern.slf4j.Slf4j;
-import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.websocket.api.RemoteEndpoint;
 import org.eclipse.jetty.websocket.api.Session;
-import org.eclipse.jetty.websocket.api.WriteCallback;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
 import org.eclipse.jetty.websocket.api.annotations.WebSocket;
-import org.eclipse.jetty.websocket.client.WebSocketClient;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.query.BatchableInsert;
 import org.polypheny.simpleclient.query.Query;
@@ -47,45 +45,47 @@ public class SurrealDBExecutor implements Executor {
 
     private final String host;
     private final CsvWriter csvWriter;
-    private final HttpClient httpClient;
-    private final WebSocketClient webSocketClient;
-    private final Future<Session> clientSessionPromise;
-    private final ClientEndPoint clientEndPoint;
-    private final Session session;
 
 
     public SurrealDBExecutor( String host, CsvWriter csvWriter ) throws Exception {
         this.host = host;
         this.csvWriter = csvWriter;
 
-        // Instantiate and configure HttpClient.
-        this.httpClient = new HttpClient();
+        // floatDB(); 855 ms -> 2.1s -> 2.8s
 
-        // Instantiate WebSocketClient, passing HttpClient to the constructor.
-        this.webSocketClient = new WebSocketClient( httpClient );
-        // Configure WebSocketClient, for example:
-        webSocketClient.setMaxTextMessageSize( 8 * 1024 );
+    }
 
-        // Start WebSocketClient; this implicitly starts also HttpClient.
-        webSocketClient.start();
 
-        // The client-side WebSocket EndPoint that
-        // receives WebSocket messages from the server.
-        this.clientEndPoint = new ClientEndPoint();
-        // The server URI to connect to.
-        URI serverURI = URI.create( "ws:" + host );
+    private void floatDB() {
 
-        // Connect the client EndPoint to the server.
-        this.clientSessionPromise = webSocketClient.connect( clientEndPoint, serverURI );
-        this.session = this.clientSessionPromise.get();
+        for ( int i = 0; i < 1; i++ ) {
+            String data = "CREATE person CONTENT {\n"
+                    + "\tname: 'Tobie',\n"
+                    + "\tcompany: 'SurrealDB',\n"
+                    + "\tskills: ['Rust', 'Go', 'JavaScript'],\n"
+                    + "};";
+
+            RequestBodyEntity request = Unirest.post( "http://" + host + "/sql" )
+                    .body( data )
+                    .header( "Accept", "application/json" )
+                    .header( "NS", "test" )
+                    .header( "DB", "test" )
+                    .basicAuth( "root", "root" );
+
+            HttpResponse<JsonNode> response = request.asJson();
+            if ( i % 10000 == 0 ) {
+                log.warn( "At " + i );
+            }
+        }
+        log.warn( "success" );
+
     }
 
 
     @Override
     public void reset() throws ExecutorException {
         try {
-            webSocketClient.stop();
-            webSocketClient.start();
+
         } catch ( Exception e ) {
             throw new ExecutorException( e );
         }
@@ -104,7 +104,16 @@ public class SurrealDBExecutor implements Executor {
 
 
     private void execute( String query ) {
-        clientEndPoint.onText( session, query );
+
+        RequestBodyEntity request = Unirest.post( "http://" + host + "/sql" )
+                .body( query )
+                .header( "Accept", "application/json" )
+                .header( "NS", "test" )
+                .header( "DB", "test" )
+                .basicAuth( "root", "root" );
+
+        HttpResponse<JsonNode> response = request.asJson();
+
     }
 
 
@@ -128,11 +137,7 @@ public class SurrealDBExecutor implements Executor {
 
     @Override
     public void closeConnection() throws ExecutorException {
-        try {
-            this.webSocketClient.stop();
-        } catch ( Exception e ) {
-            throw new ExecutorException( e );
-        }
+
     }
 
 
@@ -203,22 +208,21 @@ public class SurrealDBExecutor implements Executor {
             session.setMaxTextMessageSize( 16 * 1024 );
 
             // You may immediately send a message to the remote peer.
-            session.getRemote().sendString( "connected", WriteCallback.NOOP );
+            //session.getRemote().sendString( "connected", WriteCallback.NOOP );
         }
 
 
         @OnWebSocketMessage
         public void onText( Session session, String text ) {
-            // Obtain the RemoteEndpoint APIs.
-            RemoteEndpoint remote = session.getRemote();
+            log.warn( text );
+        }
 
+
+        public void sendMsg( String text ) {
             try {
-                // Send textual data to the remote peer.
-                remote.sendString( "data" );
-
-            } catch ( IOException x ) {
-                // No need to rethrow or close the session.
-                log.warn( "could not send data", x );
+                this.session.getRemote().sendString( text );
+            } catch ( IOException e ) {
+                throw new RuntimeException( e );
             }
         }
 
