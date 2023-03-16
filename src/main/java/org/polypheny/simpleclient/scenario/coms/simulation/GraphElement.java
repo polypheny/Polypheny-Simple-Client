@@ -24,6 +24,8 @@
 
 package org.polypheny.simpleclient.scenario.coms.simulation;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import lombok.Value;
 import lombok.experimental.NonFinal;
@@ -39,6 +41,11 @@ public abstract class GraphElement {
 
     public Map<String, String> dynProperties;
     public Map<String, PropertyType> types;
+
+
+    public List<String> getLabels() {
+        return Collections.singletonList( getClass().getSimpleName() );
+    }
 
 
     public GraphElement( Map<String, PropertyType> types, Map<String, String> fixedProperties, Map<String, String> dynProperties ) {

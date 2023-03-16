@@ -53,14 +53,14 @@ public class ComsCommand implements CliRunnable {
     private List<String> args;
 
     @Option(name = { "--mode" }, arity = 0, description = "Which stack to use, either a native stack(Neo4j, MongoDB, PostgreSQL), Polypheny or SurrealDB (default:Polypheny).")
-    public static Mode mode = Mode.POLYPHENY;
+    public static Mode mode = Mode.SURREAL_DB;
 
 
     @Option(name = { "-p", "--polypheny" }, title = "IP or Hostname", arity = 1, description = "IP or Hostname of the server (default: 127.0.0.1).")
     public String polyphenyDbHost = "127.0.0.1";
 
     @Option(name = { "-s", "--surreal" }, title = "IP or Hostname + Port", arity = 1, description = "IP or Hostname of the SurrealDB server (default: 127.0.0.1).")
-    public String surrealHost = "127.0.0.1";
+    public String surrealHost = "127.0.0.1:8000/rpc";
     @Option(name = { "-n", "--neo4j" }, title = "IP or Hostname + Port", arity = 1, description = "IP or Hostname of the Neo4j server (default: 127.0.0.1).")
     public String neo4j = "127.0.0.1";
     @Option(name = { "-m", "--mongo" }, title = "IP or Hostname + Port", arity = 1, description = "IP or Hostname of the MongoDB server (default: 127.0.0.1).")

@@ -38,10 +38,19 @@ public class GraphQuery extends Query {
     @Getter
     private final String cypher;
 
+    @Getter
+    private final String surrealQl;
+
 
     public GraphQuery( String cypher ) {
+        this( cypher, null );
+    }
+
+
+    public GraphQuery( String cypher, String surrealDB ) {
         super( GraphBench.EXPECTED_RESULT );
         this.cypher = cypher;
+        this.surrealQl = surrealDB;
     }
 
 

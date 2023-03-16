@@ -24,11 +24,19 @@
 
 package org.polypheny.simpleclient.scenario.coms.simulation;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Streams;
+import com.google.gson.JsonObject;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import jdk.internal.net.http.common.Pair;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.experimental.NonFinal;
+import org.polypheny.simpleclient.query.Query;
+import org.polypheny.simpleclient.scenario.graph.GraphQuery;
 
 @Value
 public class Graph {
@@ -37,16 +45,61 @@ public class Graph {
     Map<Long, Edge> edges;
 
 
-    public List<String> getGraphQueries() {
+    public List<Query> getGraphQueries( int graphCreateBatch ) {
+
+        Pair<List<String>, List<String>> nodes = buildNodeQueries( graphCreateBatch );
+        //Pair<List<String>, List<String>> edges = buildN
+
+        return Streams.zip( nodes.first.stream(), nodes.second.stream(), GraphQuery::new ).collect( Collectors.toList() );
     }
 
 
-    public List<String> getDocQueries() {
+    Pair<List<String>, List<String>> buildNodeQueries( int graphCreateBatch ) {
+        List<String> cyphers = new ArrayList<>();
+        List<String> surrealDBs = new ArrayList<>();
+        StringBuilder cypher;
+        StringBuilder surreal;
+        for ( List<Node> nodes : Lists.partition( new ArrayList<>( this.nodes.values() ), graphCreateBatch ) ) {
+            cypher = new StringBuilder( "CREATE " );
+            surreal = new StringBuilder( "INSERT INTO node [" );
+            int i = 0;
+            for ( Node node : nodes ) {
+                if ( i != 0 ) {
+                    cypher.append( ", " );
+                    surreal.append( ", " );
+                }
+                //// Cypher CREATE (n:[label][:label] {})
+                cypher.append( String.format(
+                        "(n%d:%s{%s})",
+                        i, String.join( ":", node.getLabels() ),
+                        node.dynProperties.entrySet().stream().map( e -> e.getKey() + ":" + e.getValue() ).collect( Collectors.joining( "," ) ) ) );
+
+                //// SurrealDB INSERT INTO dev [{name: 'Amy'}, {name: 'Mary', id: 'Mary'}];
+                surreal.append( String.format(
+                        "{ labels: [ %s ], %s }",
+                        String.join( ",", node.getLabels() ),
+                        node.dynProperties.entrySet().stream().map( e -> e.getKey() + ":" + e.getValue() ).collect( Collectors.joining( "," ) ) ) );
+
+                i++;
+            }
+            cyphers.add( cypher.toString() );
+            surrealDBs.add( surreal.append( "]" ).toString() );
+        }
+        return Pair.pair( cyphers, surrealDBs );
     }
 
 
-    public List<String> getRelQueries() {
-        return null;
+    public List<Query> getDocQueries() {
+        List<Query> queries = new ArrayList<>();
+
+        return queries;
+    }
+
+
+    public List<Query> getRelQueries() {
+        List<Query> queries = new ArrayList<>();
+
+        return queries;
     }
 
 
@@ -55,12 +108,16 @@ public class Graph {
     @NonFinal
     public static class Node extends GraphElement {
 
+        public JsonObject nestedQueries;
+
+
         public Node(
                 Map<String, PropertyType> types,
                 Map<String, String> fixedProperties,
                 Map<String, String> dynProperties,
-                Map<String, String> nestedQueries ) {
+                JsonObject nestedQueries ) {
             super( types, fixedProperties, dynProperties );
+            this.nestedQueries = nestedQueries;
         }
 
     }

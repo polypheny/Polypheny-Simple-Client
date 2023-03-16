@@ -65,7 +65,7 @@ public class Coms extends Scenario {
     @Override
     public void generateData( DatabaseInstance databaseInstance, ProgressReporter progressReporter ) {
         log.info( "Generating data..." );
-        Executor executor = null;//executorFactory.createExecutorInstance( null, NAMESPACE );
+        Executor executor = executorFactory.createExecutorInstance( null, NAMESPACE );
         org.polypheny.simpleclient.scenario.coms.DataGenerator dataGenerator = new DataGenerator();
         try {
             dataGenerator.generateData( config );

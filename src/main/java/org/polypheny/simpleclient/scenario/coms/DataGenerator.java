@@ -24,7 +24,9 @@
 
 package org.polypheny.simpleclient.scenario.coms;
 
+import java.util.List;
 import org.polypheny.simpleclient.executor.ExecutorException;
+import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.scenario.coms.simulation.Graph;
 import org.polypheny.simpleclient.scenario.coms.simulation.NetworkGenerator;
 
@@ -42,9 +44,10 @@ public class DataGenerator {
         NetworkGenerator generator = new NetworkGenerator( config );
         Graph graph = generator.network.toGraph();
 
-        graph.getGraphQueries();
-        graph.getDocQueries();
-        graph.getRelQueries();
+        // insert into db
+        List<Query> graphQueries = graph.getGraphQueries( config.graphCreateBatch);
+        List<Query> docQueries = graph.getDocQueries();
+        List<Query> relQueries = graph.getRelQueries();
 
         // -> generate logs
 

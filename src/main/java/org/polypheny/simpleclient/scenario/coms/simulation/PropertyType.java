@@ -24,6 +24,15 @@
 
 package org.polypheny.simpleclient.scenario.coms.simulation;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
+import java.util.stream.Collectors;
 import lombok.Value;
 
 @Value
@@ -35,7 +44,67 @@ public class PropertyType {
 
 
     public enum Type {
-        CHAR, FLOAT, NUMBER, ARRAY;
+        CHAR, FLOAT, NUMBER, ARRAY, OBJECT;
+
+
+        public JsonElement asJson( Random random, int nestingDepth ) {
+            switch ( this ) {
+                case CHAR:
+                    return new JsonPrimitive( "value" + random.nextInt() );
+                case FLOAT:
+                    return new JsonPrimitive( random.nextFloat() );
+                case NUMBER:
+                    return new JsonPrimitive( random.nextInt() );
+                case ARRAY:
+                    JsonArray array = new JsonArray();
+                    int fill = random.nextInt( 10 );
+                    for ( int i = 0; i < fill; i++ ) {
+                        Type child = getRandom( random, OBJECT, ARRAY );
+                        array.add( child.asJson( random, nestingDepth ) );
+                    }
+                    return array;
+                case OBJECT:
+                    JsonObject object = new JsonObject();
+                    int f = random.nextInt( 10 );
+                    for ( int i = 0; i < f; i++ ) {
+                        Type child = nestingDepth <= 0 ? getRandom( random, OBJECT ) : getRandom( random );
+                        object.add( "key" + i, child.asJson( random, nestingDepth - 1 ) );
+                    }
+                    return object;
+            }
+
+            throw new RuntimeException();
+        }
+
+
+        public static Type getRandom( Random random, Type... excepts ) {
+            List<Type> typesExcepts = Arrays.stream( Type.values() ).filter( t -> !Arrays.asList( excepts ).contains( t ) ).collect( Collectors.toList() );
+            return typesExcepts.get( random.nextInt( typesExcepts.size() ) );
+        }
+
+
+        public String asString( Random random, Type... excepts ) {
+            switch ( this ) {
+                case CHAR:
+                    return "\"value" + random.nextInt() + "\"";
+                case FLOAT:
+                    return String.valueOf( random.nextFloat() );
+                case NUMBER:
+                    return String.valueOf( random.nextInt() );
+                case ARRAY:
+                    List<String> array = new ArrayList<>();
+                    int fill = random.nextInt( 10 );
+                    for ( int i = 0; i < fill; i++ ) {
+                        Type type = getRandom( random, excepts );
+                        array.add( type.asString( random, excepts ) );
+                    }
+                    return "[" + String.join( ", ", array ) + "]";
+                case OBJECT:
+                    throw new UnsupportedOperationException();
+            }
+
+            throw new RuntimeException();
+        }
     }
 
 

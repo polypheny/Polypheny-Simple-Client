@@ -64,7 +64,7 @@ public class SurrealDBExecutor implements Executor {
         // Instantiate WebSocketClient, passing HttpClient to the constructor.
         this.webSocketClient = new WebSocketClient( httpClient );
         // Configure WebSocketClient, for example:
-        webSocketClient.setMaxTextMessageBufferSize( 8 * 1024 );
+        webSocketClient.setMaxTextMessageSize( 8 * 1024 );
 
         // Start WebSocketClient; this implicitly starts also HttpClient.
         webSocketClient.start();

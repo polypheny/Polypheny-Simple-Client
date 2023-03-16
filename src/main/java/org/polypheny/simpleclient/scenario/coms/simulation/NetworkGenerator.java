@@ -24,6 +24,7 @@
 
 package org.polypheny.simpleclient.scenario.coms.simulation;
 
+import com.google.gson.JsonObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -192,11 +193,8 @@ public class NetworkGenerator {
             Map<String, String> properties = new HashMap<>();
 
             for ( int i = 0; i < amount; i++ ) {
-                StringBuilder value = new StringBuilder( String.valueOf( random.nextInt( 10 ) ) );
-                if ( random.nextBoolean() ) {
-                    value = new StringBuilder( "\"value" + value + "\"" );
-                }
-                properties.put( "key" + i, value.toString() );
+                Type type = Type.getRandom( random, Type.OBJECT );
+                properties.put( "key" + i,  type.asString( random ) );
             }
             return properties;
         }
@@ -234,14 +232,16 @@ public class NetworkGenerator {
         }
 
 
-        public static Map<String, String> generateNestedProperties( Random random, int nestingDepth ) {
-            Map<String, String> map = new HashMap<>();
-            for ( int i = 0; i < random.nextInt( 10 ); i++ ) {
-                StringBuilder value = new StringBuilder();
-                for ( int j = 0; j < random.nextInt( nestingDepth ); j++ ) {
+        public static JsonObject generateNestedProperties( Random random, int nestingDepth ) {
+            JsonObject object = new JsonObject();
 
-                }
+            for ( int i = 0; i < random.nextInt( 10 ); i++ ) {
+                String key = "key" + random.nextInt( 10 );
+                Type type = Type.getRandom( random );
+                object.add( key, type.asJson( random, nestingDepth ) );
             }
+
+            return object;
         }
 
     }
