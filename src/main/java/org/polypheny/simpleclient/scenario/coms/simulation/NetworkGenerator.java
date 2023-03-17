@@ -26,19 +26,26 @@ package org.polypheny.simpleclient.scenario.coms.simulation;
 
 import com.google.gson.JsonObject;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.EqualsAndHashCode;
+import lombok.NonNull;
 import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
+import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.scenario.coms.ComsConfig;
 import org.polypheny.simpleclient.scenario.coms.simulation.Graph.Edge;
 import org.polypheny.simpleclient.scenario.coms.simulation.Graph.Node;
 import org.polypheny.simpleclient.scenario.coms.simulation.PropertyType.Type;
 
+@Slf4j
 public class NetworkGenerator {
 
 
@@ -249,6 +256,78 @@ public class NetworkGenerator {
             return object;
         }
 
+
+        public List<Query> simulateRun() {
+            return Stream.concat(
+                    simulateDevices().stream(),
+                    simulateLogs().stream() ).collect( Collectors.toList() );
+
+        }
+
+
+        private List<Query> simulateLogs() {
+            return null;
+        }
+
+
+        private List<Query> simulateDevices() {
+            List<Query> queries = new ArrayList<>();
+
+            //// remove old devices
+            // remove Mobile devices (lot)
+            queries.addAll( pickRandom( mobiles, mobiles.size() / 10f ).stream().flatMap( e -> removeElement( e, mobiles ).stream() ).collect( Collectors.toList() ) );
+
+            // remove Iot devices (small)
+            queries.addAll( pickRandom( ioTs, ioTs.size() / 25f ).stream().flatMap( e -> removeElement( e, ioTs ).stream() ).collect( Collectors.toList() ) );
+
+            // remove PC and Macs (small)
+            queries.addAll( pickRandom( pcs, pcs.size() / 25f ).stream().flatMap( e -> removeElement( e, pcs ).stream() ).collect( Collectors.toList() ) );
+            queries.addAll( pickRandom( macs, macs.size() / 25f ).stream().flatMap( e -> removeElement( e, macs ).stream() ).collect( Collectors.toList() ) );
+
+            // remove AP (really small)
+            queries.addAll( pickRandom( aps, aps.size() / 10f ).stream().flatMap( e -> removeElement( e, aps ).stream() ).collect( Collectors.toList() ) );
+
+            // remove Server (nearly none)
+            queries.addAll( pickRandom( aps, aps.size() / 10f ).stream().flatMap( e -> removeElement( e, aps ).stream() ).collect( Collectors.toList() ) );
+
+            //// add new devices
+            // add Mobile devices (lot)
+
+            // add PC and Macs (small)
+
+            // add AP (really small)
+
+            // add Server (nearly none)
+            //// change properties of devices
+
+            return queries;
+        }
+
+
+        private <T extends GraphElement> List<Query> removeElement( T element, List<T> elements ) {
+            elements.remove( element );
+            return element.getRemoveQuery();
+        }
+
+
+        @NonNull
+        private <T extends GraphElement> List<T> pickRandom( List<T> elements, float picks ) {
+            if ( picks < 0.5 ) {
+                log.debug( "do nothing" );
+                return Collections.emptyList();
+            }
+            int roundedPicks = (int) picks;
+
+            List<T> picked = new ArrayList<>();
+
+            for ( int i = 0; i < roundedPicks; i++ ) {
+                picked.add( elements.get( random.nextInt( elements.size() ) ) );
+            }
+
+            return picked;
+
+        }
+
     }
 
     //// Backbone
@@ -329,6 +408,7 @@ public class NetworkGenerator {
                     Network.generateNestedProperties( random, network.config.nestingDepth ) );
             this.random = random;
         }
+
 
     }
 

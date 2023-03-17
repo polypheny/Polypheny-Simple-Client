@@ -24,13 +24,19 @@
 
 package org.polypheny.simpleclient.scenario.coms.simulation;
 
+import static org.polypheny.simpleclient.scenario.coms.simulation.Graph.DOC_POSTFIX;
+import static org.polypheny.simpleclient.scenario.coms.simulation.Graph.REL_POSTFIX;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import lombok.Value;
 import lombok.experimental.NonFinal;
+import org.polypheny.simpleclient.query.Query;
+import org.polypheny.simpleclient.query.RawQuery;
 import org.polypheny.simpleclient.scenario.coms.simulation.NetworkGenerator.Network;
 
 @Value
@@ -81,6 +87,24 @@ public abstract class GraphElement {
             query.add( entry.getValue() );
         }
         return String.join( ",", query );
+    }
+
+
+    public List<Query> getRemoveQuery() {
+        String cypher = String.format( "MATCH (n {_id: %s}) DELETE n", getId() );
+        String mongo = String.format( "db.%s.remove({_id: %s})", getLabels().get( 0 ) + DOC_POSTFIX, getId() );
+        String sql = String.format( "DELETE %s WHERE _id = %s;", getLabels().get( 0 ) + REL_POSTFIX, getId() );
+
+        String surrealGraph = String.format( "DELETE node WHERE _id = %s;", getId() );
+        String surrealDoc = String.format( "DELETE %s WHERE _id = %s;", getLabels().get( 0 ) + DOC_POSTFIX, getId() );
+        String surrealRel = String.format( "DELETE %s WHERE _id = %s;", getLabels().get( 0 ) + REL_POSTFIX, getId() );
+
+        return Arrays.asList(
+                RawQuery.builder().cypher( cypher ).surrealQl( surrealGraph ).build(),
+                RawQuery.builder().mongoQl( mongo ).surrealQl( surrealDoc ).build(),
+                RawQuery.builder().sql( sql ).surrealQl( surrealRel ).build()
+        );
+
     }
 
 }

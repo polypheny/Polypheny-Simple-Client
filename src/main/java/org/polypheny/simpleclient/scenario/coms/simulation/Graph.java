@@ -49,6 +49,8 @@ import org.polypheny.simpleclient.scenario.graph.GraphQuery;
 @Value
 public class Graph {
 
+    public static final String DOC_POSTFIX = "_doc";
+    public static final String REL_POSTFIX = "_rel";
     Map<Long, Node> nodes;
     Map<Long, Edge> edges;
 
@@ -77,7 +79,7 @@ public class Graph {
                 if ( i != 0 ) {
                     cypher.append( ", " );
                 }
-                //// Cypher CREATE (n:[label][:label] {})
+                //// Cypher CREATE (n1 {})-[]-(n2 {})
                 cypher.append( String.format(
                         "(n%s_%s{_id:%s})-[r%d:%s{%s}]-(n%s_%s{_id:%s})",
                         edge.from, edge.from,
@@ -90,7 +92,7 @@ public class Graph {
 
                 //// SurrealDB INSERT INTO dev [{name: 'Amy'}, {name: 'Mary', id: 'Mary'}]; ARE ALWAYS DIRECTED
                 surreal.append( String.format(
-                        " (SELECT * FROM node WHERE _id = %s)->write->(SELECT * FROM node WHERE _id = %s) CONTENT{ labels= [ %s ], %s ",
+                        " (SELECT * FROM node WHERE _id = %s)->write->(SELECT * FROM node WHERE _id = %s) CONTENT{ labels: [ %s ], %s ",
                         edge.from,
                         edge.to,
                         edge.getLabels().stream().map( l -> "\"" + l + "\"" ).collect( Collectors.joining( "," ) ),
@@ -132,7 +134,7 @@ public class Graph {
                 //// SurrealDB INSERT INTO dev [{name: 'Amy'}, {name: 'Mary', id: 'Mary'}];
                 surreal.append( String.format(
                         "{ labels: [ %s ], %s }",
-                        String.join( ",", node.getLabels() ),
+                        node.getLabels().stream().map( l -> "\"" + l + "\"" ).collect( Collectors.joining( "," ) ),
                         Stream.concat(
                                 node.dynProperties.entrySet().stream().map( e -> e.getKey() + ":" + e.getValue() ),
                                 Stream.of( "_id: " + node.getId() ) ).collect( Collectors.joining( "," ) ) ) );
@@ -150,7 +152,8 @@ public class Graph {
         List<Query> queries = new ArrayList<>();
 
         for ( List<Node> nodes : Lists.partition( new ArrayList<>( this.nodes.values() ), docCreateBatch ) ) {
-            StringBuilder mongo = new StringBuilder( "db." + nodes.get( 0 ).getLabels().get( 0 ) + ".insertMany(" );
+            String collection = nodes.get( 0 ).getLabels().get( 0 ) + DOC_POSTFIX;
+            StringBuilder mongo = new StringBuilder( "db." + collection + ".insertMany(" );
             StringBuilder surreal = new StringBuilder( "CREATE " );
             for ( Node node : nodes ) {
                 mongo.append( "{" );
@@ -175,6 +178,7 @@ public class Graph {
         List<GraphElement> list = Stream.concat( this.nodes.values().stream(), this.edges.values().stream() ).collect( Collectors.toList() );
         for ( List<GraphElement> elements : Lists.partition( list, relCreateBatch ) ) {
             StringBuilder sql = new StringBuilder( "INSERT INTO " );
+            sql.append( elements.get( 0 ).getLabels().get( 0 ) ).append( REL_POSTFIX );
             sql.append( "(" ).append( String.join( ",", elements.get( 0 ).getFixedProperties().keySet() ) ).append( ")" );
             sql.append( "VALUES" );
             int i = 0;
@@ -215,10 +219,10 @@ public class Graph {
                 .mongoQl( "use " + namespace )
                 .surrealQl( "DEFINE DATABASE " + namespace ).build() );
 
-        for ( String collection : getGraphElementStream().flatMap( n -> n.getLabels().stream() ).collect( Collectors.toSet() ) ) {
-            RawQuery.builder()
+        for ( String collection : getGraphElementStream().flatMap( n -> n.getLabels().stream().map( l -> l + DOC_POSTFIX ) ).collect( Collectors.toSet() ) ) {
+            queries.add( RawQuery.builder()
                     .mongoQl( "db.createCollection(" + collection + ")" + onStore )
-                    .surrealQl( "DEFINE TABLE " + collection ).build();
+                    .surrealQl( "DEFINE TABLE " + collection + " SCHEMALESS" ).build() );
         }
 
         return queries;
@@ -240,24 +244,23 @@ public class Graph {
         Set<String> labels = new HashSet<>();
 
         for ( GraphElement element : getGraphElementStream().collect( Collectors.toSet() ) ) {
-            if ( labels.contains( element.getLabels().get( 0 ) ) ) {
+            String label = element.getLabels().get( 0 );
+            if ( labels.contains( label ) ) {
                 continue;
             }
-            StringBuilder sql = new StringBuilder( "CREATE TABLE " ).append( element.getLabels().get( 0 ) ).append( "(" );
-            StringBuilder surreal = new StringBuilder( "DEFINE TABLE " ).append( element.getLabels().get( 0 ) ).append( " SCHEMAFULL;" );
+            StringBuilder sql = new StringBuilder( "CREATE TABLE " ).append( label ).append( REL_POSTFIX ).append( "(" );
+            StringBuilder surreal = new StringBuilder( "DEFINE TABLE " ).append( label ).append( REL_POSTFIX ).append( " SCHEMAFULL;" );
 
-            int i = 0;
             for ( Entry<String, PropertyType> entry : element.getTypes().entrySet() ) {
                 sql.append( entry.getKey() ).append( " " ).append( entry.getValue().asSql() ).append( "," );
-                surreal.append( "DEFINE FIELD " ).append( entry.getKey() ).append( " ON TABLE " ).append( entry.getValue().asSurreal() ).append( ";" );
-                i++;
+                surreal.append( "DEFINE FIELD " ).append( entry.getKey() ).append( " ON " ).append( label ).append( REL_POSTFIX ).append( " TYPE " ).append( entry.getValue().asSurreal() ).append( ";" );
             }
 
             sql.append( "PRIMARY KEY(" ).append( element.getTypes().keySet().stream().findFirst().get() ).append( "));" );
 
             queries.add( RawQuery.builder().sql( sql.toString() ).surrealQl( surreal.toString() ).build() );
 
-            labels.add( element.getLabels().get( 0 ) );
+            labels.add( label );
         }
 
         return queries;
@@ -267,7 +270,7 @@ public class Graph {
     @EqualsAndHashCode(callSuper = true)
     @Value
     @NonFinal
-    public static class Node extends GraphElement {
+    public abstract static class Node extends GraphElement {
 
         public JsonObject nestedQueries;
 
@@ -288,7 +291,7 @@ public class Graph {
     @EqualsAndHashCode(callSuper = true)
     @Value
     @NonFinal
-    public static class Edge extends GraphElement {
+    public abstract static class Edge extends GraphElement {
 
         public Edge( Map<String, PropertyType> types, Map<String, String> fixedProperties, Map<String, String> dynProperties, long from, long to, boolean directed ) {
             super( types, fixedProperties, dynProperties );

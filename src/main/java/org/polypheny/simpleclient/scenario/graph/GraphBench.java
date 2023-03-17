@@ -75,10 +75,13 @@ public class GraphBench extends Scenario {
 
     private final GraphBenchConfig config;
 
-    private final List<Long> measuredTimes;
+    ;
     private long executeRuntime;
     private final Map<Integer, String> queryTypes;
-    private final Map<Integer, List<Long>> measuredTimePerQueryType;
+
+    private final List<Long> measuredTimes = Collections.synchronizedList( new LinkedList<>() );
+
+    private final Map<Integer, List<Long>> measuredTimePerQueryType = new ConcurrentHashMap<>();
 
 
     public GraphBench( Executor.ExecutorFactory executorFactory, GraphBenchConfig config, boolean commitAfterEveryQuery, boolean dumpQueryList ) {
@@ -90,9 +93,7 @@ public class GraphBench extends Scenario {
 
         this.config = config;
 
-        measuredTimes = Collections.synchronizedList( new LinkedList<>() );
         queryTypes = new HashMap<>();
-        measuredTimePerQueryType = new ConcurrentHashMap<>();
     }
 
 
@@ -187,7 +188,7 @@ public class GraphBench extends Scenario {
 
         ArrayList<EvaluationThread> threads = new ArrayList<>();
         for ( int i = 0; i < numberOfThreads; i++ ) {
-            threads.add( new EvaluationThread( queryList, executorFactory.createExecutorInstance( csvWriter, GRAPH_NAMESPACE ) ) );
+            threads.add( new EvaluationThread( queryList, executorFactory.createExecutorInstance( csvWriter, GRAPH_NAMESPACE ), commitAfterEveryQuery ) );
         }
 
         EvaluationThreadMonitor threadMonitor = new EvaluationThreadMonitor( threads );
@@ -197,9 +198,16 @@ public class GraphBench extends Scenario {
             thread.start();
         }
 
-        for ( Thread thread : threads ) {
+        for ( EvaluationThread thread : threads ) {
             try {
                 thread.join();
+                this.measuredTimes.addAll( thread.measuredTimes );
+                thread.measuredTimePerQueryType.forEach( ( k, v ) -> {
+                    if ( !this.measuredTimePerQueryType.containsKey( k ) ) {
+                        this.measuredTimePerQueryType.put( k, new ArrayList<>() );
+                    }
+                    this.measuredTimePerQueryType.get( k ).addAll( v );
+                } );
             } catch ( InterruptedException e ) {
                 throw new RuntimeException( "Unexpected interrupt", e );
             }
@@ -285,7 +293,8 @@ public class GraphBench extends Scenario {
     }
 
 
-    private class EvaluationThread extends Thread {
+    @Getter
+    public static class EvaluationThread extends Thread {
 
         private final Executor executor;
         private final List<QueryListEntry> theQueryList;
@@ -293,11 +302,18 @@ public class GraphBench extends Scenario {
         @Setter
         private EvaluationThreadMonitor threadMonitor;
 
+        private final List<Long> measuredTimes = Collections.synchronizedList( new LinkedList<>() );
 
-        EvaluationThread( List<QueryListEntry> queryList, Executor executor ) {
+        private final Map<Integer, List<Long>> measuredTimePerQueryType = new ConcurrentHashMap<>();
+
+        final boolean commitAfterEveryQuery;
+
+
+        public EvaluationThread( List<QueryListEntry> queryList, Executor executor, boolean commitAfterEveryQuery ) {
             super( "EvaluationThread" );
             this.executor = executor;
-            theQueryList = queryList;
+            this.theQueryList = queryList;
+            this.commitAfterEveryQuery = commitAfterEveryQuery;
         }
 
 
@@ -376,7 +392,7 @@ public class GraphBench extends Scenario {
     }
 
 
-    private class EvaluationThreadMonitor {
+    public static class EvaluationThreadMonitor {
 
         private final List<EvaluationThread> threads;
         @Getter

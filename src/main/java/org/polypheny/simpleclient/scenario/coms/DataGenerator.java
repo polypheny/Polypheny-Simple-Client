@@ -74,4 +74,12 @@ public class DataGenerator {
 
     }
 
+
+    public List<Query> generateWorkload( ComsConfig config ) {
+        NetworkGenerator generator = new NetworkGenerator( config );
+        // Graph graph = generator.network.toGraph();
+
+        return generator.network.simulateRun();
+    }
+
 }

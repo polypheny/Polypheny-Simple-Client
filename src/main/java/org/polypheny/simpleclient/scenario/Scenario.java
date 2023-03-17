@@ -132,7 +132,7 @@ public abstract class Scenario {
     public abstract int getNumberOfInsertThreads();
 
 
-    protected void commitAndCloseExecutor( Executor executor ) {
+    protected static void commitAndCloseExecutor( Executor executor ) {
         if ( executor != null ) {
             try {
                 executor.executeCommit();
