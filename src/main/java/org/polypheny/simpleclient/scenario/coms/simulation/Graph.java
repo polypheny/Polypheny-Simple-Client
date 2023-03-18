@@ -79,23 +79,18 @@ public class Graph {
         StringBuilder cypher;
         StringBuilder surreal;
         for ( List<Edge> edges : Lists.partition( new ArrayList<>( sources.values() ), graphCreateBatch ) ) {
-            cypher = new StringBuilder( "CREATE " );
             int i = 0;
             for ( Edge edge : edges ) {
+                cypher = new StringBuilder( "MATCH " ).append( String.format( "(n1{_id:%s})", edge.from ) )
+                        .append( "," ).append( String.format( "(n2{_id:%s})", edge.to ) );
+                cypher.append( " CREATE " );
                 surreal = new StringBuilder( "RELATE " ); // no batch update possible
-                if ( i != 0 ) {
-                    cypher.append( ", " );
-                }
                 //// Cypher CREATE (n1 {})-[]-(n2 {})
                 cypher.append( String.format(
-                        "(n%s_%s{_id:%s})-[r%d:%s{%s}]->(n%s_%s{_id:%s})",
-                        edge.from, edge.from,
-                        edge.from,
+                        "(n1)-[r%d:%s{%s}]->(n2)",
                         i,
                         String.join( ":", edge.getLabels() ),
-                        edge.dynProperties.entrySet().stream().map( e -> e.getKey() + ":" + e.getValue() ).collect( Collectors.joining( "," ) ),
-                        edge.to,
-                        edge.to, edge.to ) );
+                        edge.dynProperties.entrySet().stream().map( e -> e.getKey() + ":" + e.getValue() ).collect( Collectors.joining( "," ) ) ) );
 
                 //// SurrealDB INSERT INTO dev [{name: 'Amy'}, {name: 'Mary', id: 'Mary'}]; ARE ALWAYS DIRECTED
                 surreal.append( String.format(
@@ -106,9 +101,10 @@ public class Graph {
                         edge.dynProperties.entrySet().stream().map( e -> e.getKey() + ":" + e.getValue() ).collect( Collectors.joining( "," ) ) ) );
 
                 surrealDBs.add( surreal.append( "};" ).toString() );
+                cyphers.add( cypher.toString() );
                 i++;
             }
-            cyphers.add( cypher.toString() );
+
         }
         return new Pair<>( cyphers, surrealDBs );
 
@@ -194,8 +190,8 @@ public class Graph {
 
         List<GraphElement> list = Stream.concat( this.nodes.values().stream(), this.edges.values().stream() ).collect( Collectors.toList() );
         for ( List<GraphElement> elements : Lists.partition( list, relCreateBatch ) ) {
-            StringBuilder sql = new StringBuilder( "INSERT INTO " );
-            sql.append( GraphElement.namespace + REL_POSTFIX ).append( "." ).append( elements.get( 0 ).getLabels().get( 0 ) ).append( REL_POSTFIX );
+            StringBuilder sql = new StringBuilder();
+
             sql.append( " (" ).append( String.join( ",", elements.get( 0 ).getFixedProperties().keySet() ) ).append( ")" );
             sql.append( " VALUES " );
             int i = 0;
@@ -206,9 +202,12 @@ public class Graph {
                 sql.append( "(" ).append( element.asSql() ).append( ")" );
                 i++;
             }
+            String label = elements.get( 0 ).getLabels().get( 0 ) + REL_POSTFIX;
+            String sqlLabel = GraphElement.namespace + REL_POSTFIX + "." + label;
+
             queries.add( RawQuery.builder()
-                    .sql( sql.toString() )
-                    .surrealQl( sql.toString() ).build() );
+                    .sql( "INSERT INTO " + sqlLabel + sql )
+                    .surrealQl( "INSERT INTO " + label + sql ).build() );
         }
 
         return queries;
@@ -265,11 +264,12 @@ public class Graph {
         Set<String> labels = new HashSet<>();
 
         for ( GraphElement element : getGraphElementStream().collect( Collectors.toSet() ) ) {
-            String label = namespace + "." + element.getLabels().get( 0 );
+            String label = element.getLabels().get( 0 );
+            String sqlLabel = namespace + "." + label;
             if ( labels.contains( label ) ) {
                 continue;
             }
-            StringBuilder sql = new StringBuilder( "CREATE TABLE " ).append( label ).append( REL_POSTFIX ).append( "(" );
+            StringBuilder sql = new StringBuilder( "CREATE TABLE " ).append( sqlLabel ).append( REL_POSTFIX ).append( "(" );
             StringBuilder surreal = new StringBuilder( "DEFINE TABLE " ).append( label ).append( REL_POSTFIX ).append( " SCHEMAFULL;" );
 
             for ( Entry<String, PropertyType> entry : element.getTypes().entrySet() ) {

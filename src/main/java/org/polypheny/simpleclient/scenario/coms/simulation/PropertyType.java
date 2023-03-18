@@ -109,13 +109,13 @@ public class PropertyType {
         }
 
 
-        public String asString( Random random, int maxDepth, Type... excepts ) {
+        public String asString( Random random, int maxDepth, int size, Type... excepts ) {
             if ( maxDepth <= 0 ) {
                 excepts = new Type[]{ OBJECT, ARRAY };
             }
             switch ( this ) {
                 case CHAR:
-                    return "'value" + random.nextInt() + "'";
+                    return "'value" + random.nextInt( size ) + "'";
                 case FLOAT:
                     return String.valueOf( Network.config.allowNegative ? random.nextFloat( 5 ) : random.nextFloat( 0, 5 ) );
                 case NUMBER:
@@ -125,7 +125,7 @@ public class PropertyType {
                     int fill = random.nextInt( 10 );
                     Type type = getRandom( random, excepts ); // sadly only same type supported by neo4j...
                     for ( int i = 0; i < fill; i++ ) {
-                        array.add( type.asString( random, maxDepth - 1, excepts ) );
+                        array.add( type.asString( random, maxDepth - 1, size, excepts ) );
                     }
                     return "[" + String.join( ", ", array ) + "]";
                 case OBJECT:

@@ -207,7 +207,7 @@ public class NetworkGenerator {
 
             for ( int i = 0; i < amount; i++ ) {
                 Type type = Type.getRandom( random, Type.OBJECT );
-                properties.put( "key" + i, type.asString( random, 3, Type.OBJECT, Type.ARRAY ) );
+                properties.put( "key" + i, type.asString( random, 3, 250, Type.OBJECT, Type.ARRAY ) );
             }
             return properties;
         }

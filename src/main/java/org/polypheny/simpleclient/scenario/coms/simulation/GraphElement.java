@@ -83,11 +83,11 @@ public abstract class GraphElement {
     public List<Query> getRemoveQuery() {
         String cypher = String.format( "MATCH (n {_id: %s}) DELETE n", getId() );
         String mongo = String.format( "db.%s.remove({_id: %s})", getLabels().get( 0 ) + DOC_POSTFIX, getId() );
-        String sql = String.format( "DELETE %s WHERE _id = %s;", getTable(), getId() );
+        String sql = String.format( "DELETE FROM %s WHERE id = %s", getTable( true ), getId() );
 
         String surrealGraph = String.format( "DELETE node WHERE _id = %s;", getId() );
         String surrealDoc = String.format( "DELETE %s WHERE _id = %s;", getLabels().get( 0 ) + DOC_POSTFIX, getId() );
-        String surrealRel = String.format( "DELETE %s WHERE _id = %s;", getTable(), getId() );
+        String surrealRel = String.format( "DELETE FROM %s WHERE _id = %s;", getTable( false ), getId() );
 
         return Arrays.asList(
                 RawQuery.builder().cypher( cypher ).surrealQl( surrealGraph ).build(),
@@ -111,20 +111,27 @@ public abstract class GraphElement {
 
     public Query getRelQuery() {
         StringBuilder sql = new StringBuilder( "INSERT INTO " );
-        sql.append( getTable() );
+        StringBuilder surreal = new StringBuilder( "INSERT INTO " );
+        sql.append( getTable( true ) );
+        surreal.append( getTable( false ) );
+
         sql.append( " (" ).append( String.join( ",", getFixedProperties().keySet() ) ).append( ")" );
         sql.append( " VALUES " );
         sql.append( "(" ).append( asSql() ).append( ")" );
 
+        surreal.append( " (" ).append( String.join( ",", getFixedProperties().keySet() ) ).append( ")" );
+        surreal.append( " VALUES " );
+        surreal.append( "(" ).append( asSql() ).append( ")" );
+
         return RawQuery.builder()
                 .sql( sql.toString() )
-                .surrealQl( sql.toString() ).build();
+                .surrealQl( surreal.toString() ).build();
     }
 
 
     @NotNull
-    private String getTable() {
-        return namespace + REL_POSTFIX + "." + getLabels().get( 0 ) + REL_POSTFIX;
+    private String getTable( boolean withPrefix ) {
+        return (withPrefix ? namespace + REL_POSTFIX + "." : "") + getLabels().get( 0 ) + REL_POSTFIX;
     }
 
 
@@ -134,13 +141,13 @@ public abstract class GraphElement {
     public List<Query> changeDevice( Random random ) {
         int i = random.nextInt( fixedProperties.size() ) + 1;
 
-        StringBuilder sql = new StringBuilder( "UPDATE " ).append( getTable() ).append( " SET " );
+        StringBuilder sql = new StringBuilder( " SET " );
 
         Map<String, String> updates = new HashMap<>();
         for ( int j = 0; j < i; j++ ) {
             String key = new ArrayList<>( fixedProperties.keySet() ).get( j );
             PropertyType property = types.get( key );
-            updates.put( key, property.getType().asString( random, 0, Type.OBJECT ) );
+            updates.put( key, property.getType().asString( random, 0, property.getLength(), Type.OBJECT ) );
         }
 
         sql.append( updates.entrySet().stream().map( u -> u.getKey() + " = " + u.getValue() ).collect( Collectors.joining( ", " ) ) );
@@ -151,8 +158,8 @@ public abstract class GraphElement {
         fixedProperties.putAll( updates );
 
         return Collections.singletonList( RawQuery.builder()
-                .sql( sql.toString() )
-                .surrealQl( sql.toString() ).build() );
+                .sql( "UPDATE " + getTable( true ) + sql )
+                .surrealQl( "UPDATE " + getTable( false ) + sql ).build() );
     }
 
 }
