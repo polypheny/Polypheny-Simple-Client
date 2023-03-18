@@ -26,6 +26,8 @@ package org.polypheny.simpleclient.scenario.coms.simulation;
 
 import com.google.gson.JsonObject;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -33,6 +35,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.EqualsAndHashCode;
@@ -265,42 +268,178 @@ public class NetworkGenerator {
         }
 
 
+        @NonNull
         private List<Query> simulateLogs() {
-            return null;
+            List<Query> queries = new ArrayList<>();
+
+            //// remove logs
+            queries.addAll(
+                    merge(
+                            doRandom( mobiles, mobiles.size() / 10f, e -> removeElement( e, mobiles ) ),
+                            doRandom( ioTs, ioTs.size() / 10f, e -> removeElement( e, ioTs ) ),
+                            doRandom( pcs, pcs.size() / 10f, e -> removeElement( e, pcs ) ),
+                            doRandom( aps, aps.size() / 10f, e -> removeElement( e, aps ) ),
+                            doRandom( switches, switches.size() / 10f, e -> removeElement( e, switches ) ),
+                            doRandom( servers, servers.size() / 10f, e -> removeElement( e, servers ) )
+                    )
+            );
+
+            //// add logs
+            queries.addAll(
+                    merge(
+                            doRandom( mobiles, mobiles.size() / 10f, this::addLogs ),
+                            doRandom( ioTs, ioTs.size() / 10f, this::addLogs ),
+                            doRandom( pcs, pcs.size() / 10f, this::addLogs ),
+                            doRandom( aps, aps.size() / 10f, this::addLogs ),
+                            doRandom( switches, switches.size() / 10f, this::addLogs ),
+                            doRandom( servers, servers.size() / 10f, this::addLogs )
+                    )
+            );
+
+            //// read random
+            queries.addAll(
+                    merge(
+                            doRandom( mobiles, mobiles.size() / 10f, this::readLogs ),
+                            doRandom( ioTs, ioTs.size() / 10f, this::readLogs ),
+                            doRandom( pcs, pcs.size() / 10f, this::readLogs ),
+                            doRandom( aps, aps.size() / 10f, this::readLogs ),
+                            doRandom( switches, switches.size() / 10f, this::readLogs ),
+                            doRandom( servers, servers.size() / 10f, this::readLogs )
+                    )
+            );
+
+            return queries;
         }
 
 
-        private List<Query> simulateDevices() {
+        private <T extends Node> List<Query> readLogs( T element ) {
             List<Query> queries = new ArrayList<>();
 
-            //// remove old devices
-            // remove Mobile devices (lot)
-            queries.addAll( pickRandom( mobiles, mobiles.size() / 10f ).stream().flatMap( e -> removeElement( e, mobiles ).stream() ).collect( Collectors.toList() ) );
-
-            // remove Iot devices (small)
-            queries.addAll( pickRandom( ioTs, ioTs.size() / 25f ).stream().flatMap( e -> removeElement( e, ioTs ).stream() ).collect( Collectors.toList() ) );
-
-            // remove PC and Macs (small)
-            queries.addAll( pickRandom( pcs, pcs.size() / 25f ).stream().flatMap( e -> removeElement( e, pcs ).stream() ).collect( Collectors.toList() ) );
-            queries.addAll( pickRandom( macs, macs.size() / 25f ).stream().flatMap( e -> removeElement( e, macs ).stream() ).collect( Collectors.toList() ) );
-
-            // remove AP (really small)
-            queries.addAll( pickRandom( aps, aps.size() / 10f ).stream().flatMap( e -> removeElement( e, aps ).stream() ).collect( Collectors.toList() ) );
-
-            // remove Server (nearly none)
-            queries.addAll( pickRandom( aps, aps.size() / 10f ).stream().flatMap( e -> removeElement( e, aps ).stream() ).collect( Collectors.toList() ) );
-
-            //// add new devices
-            // add Mobile devices (lot)
-
-            // add PC and Macs (small)
-
-            // add AP (really small)
-
-            // add Server (nearly none)
-            //// change properties of devices
+            queries.addAll( element.readFullLog() );
+            queries.addAll( element.readPartialLog( random ) );
 
             return queries;
+        }
+
+
+        private <T extends Node> List<Query> addLogs( T element ) {
+            return element.addLog( random, config.nestingDepth );
+        }
+
+
+        @SafeVarargs
+        private final List<Query> merge( List<Query>... multipleQueries ) {
+            return Arrays.stream( multipleQueries ).flatMap( Collection::stream ).collect( Collectors.toList() );
+        }
+
+
+        private <T extends GraphElement> List<Query> doRandom( List<T> elements, float roughAmount, Function<T, List<Query>> task ) {
+            if ( roughAmount < 1 ) {
+                return Collections.emptyList();
+            }
+
+            int amount = (int) roughAmount;
+
+            List<Query> queries = new ArrayList<>();
+            for ( int i = 0; i < amount; i++ ) {
+                queries.addAll( task.apply( elements.get( random.nextInt( amount ) ) ) );
+            }
+            return queries;
+        }
+
+
+        @NonNull
+        private List<Query> simulateDevices() {
+            List<Query> queries = new ArrayList<>();
+            //// remove old devices
+            simulateDeleteDevices( queries );
+
+            //// add new devices
+            simulateNewDevices( queries );
+
+            //// change properties of devices
+            simulateDeviceChanges( queries );
+
+            return queries;
+        }
+
+
+        private void simulateDeviceChanges( List<Query> queries ) {
+
+            queries.addAll( merge(
+                            // remove Mobile devices (lot)
+                            doRandom( mobiles, mobiles.size() / 10f, e -> changeDevice( e, mobiles ) ),
+                            // remove Iot devices (small)
+                            doRandom( ioTs, ioTs.size() / 10f, e -> changeDevice( e, ioTs ) ),
+                            // remove PC and Macs (small)
+                            doRandom( pcs, pcs.size() / 10f, e -> changeDevice( e, pcs ) ),
+                            doRandom( macs, macs.size() / 10f, e -> changeDevice( e, macs ) ),
+                            // remove AP (minimal)
+                            doRandom( aps, aps.size() / 10f, e -> changeDevice( e, aps ) ),
+                            // remove Server (nearly none)
+                            doRandom( servers, servers.size() / 10f, e -> changeDevice( e, servers ) ),
+                            // change connections (lot)
+                            doRandom( wlans, wlans.size() / 10f, e -> changeDevice( e, wlans ) ),
+                            doRandom( lans, lans.size() / 10f, e -> changeDevice( e, lans ) )
+                    )
+            );
+
+        }
+
+
+        private <T extends GraphElement> List<Query> changeDevice( T element, List<T> elements ) {
+            List<Query> queries = new ArrayList<>();
+
+            throw new RuntimeException();
+
+            //return queries;
+        }
+
+
+        private void simulateDeleteDevices( List<Query> queries ) {
+
+            queries.addAll( merge(
+                    // remove Mobile devices (lot)
+                    doRandom( mobiles, mobiles.size() / 10f, e -> removeElement( e, mobiles ) ),
+                    // remove Iot devices (small)
+                    doRandom( ioTs, ioTs.size() / 10f, e -> removeElement( e, ioTs ) ),
+                    // remove PC and Macs (small)
+                    doRandom( pcs, pcs.size() / 25f, e -> removeElement( e, pcs ) ),
+                    doRandom( macs, macs.size() / 25f, e -> removeElement( e, macs ) ),
+                    // remove AP (minimal)
+                    doRandom( aps, aps.size() / 10f, e -> removeElement( e, aps ) ),
+                    // remove Server (nearly none)
+                    doRandom( servers, servers.size() / 10f, e -> removeElement( e, servers )
+                    ) )
+            );
+
+        }
+
+
+        private void simulateNewDevices( List<Query> queries ) {
+
+            queries.addAll( merge(
+                    // add Mobile devices (lot)
+                    doRandom( mobiles, mobiles.size() / 10f, e -> addElement( e, mobiles ) ),
+                    // add Iot devices (lot)
+                    doRandom( ioTs, ioTs.size() / 10f, e -> addElement( e, ioTs ) ),
+                    // add PC and Macs (small)
+                    doRandom( pcs, pcs.size() / 25f, e -> addElement( e, pcs ) ),
+                    doRandom( macs, macs.size() / 25f, e -> addElement( e, macs ) ),
+                    // add AP (minimal)
+                    doRandom( aps, aps.size() / 10f, e -> addElement( e, aps ) ),
+                    // add Server (nearly none)
+                    doRandom( servers, servers.size() / 10f, e -> addElement( e, servers )
+                    ) )
+            );
+
+        }
+
+
+        private <E extends GraphElement> List<Query> addElement( E element, List<E> elements ) {
+            elements.add( element );
+
+            return element.asQuery();
         }
 
 
@@ -355,6 +494,7 @@ public class NetworkGenerator {
                     Network.generateNestedProperties( random, network.config.nestingDepth ) );
             this.random = random;
         }
+
 
     }
 

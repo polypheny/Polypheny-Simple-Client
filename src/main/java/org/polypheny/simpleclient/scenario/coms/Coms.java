@@ -36,13 +36,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 import java.util.Random;
-import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
 import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.executor.Executor.DatabaseInstance;
@@ -56,15 +54,6 @@ import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 import org.polypheny.simpleclient.query.QueryListEntry;
 import org.polypheny.simpleclient.scenario.Scenario;
-import org.polypheny.simpleclient.scenario.coms.queryBuilder.document.AddLogs;
-import org.polypheny.simpleclient.scenario.coms.queryBuilder.document.DeleteLogs;
-import org.polypheny.simpleclient.scenario.coms.queryBuilder.document.ScanLogs;
-import org.polypheny.simpleclient.scenario.coms.queryBuilder.graph.AddNewDevice;
-import org.polypheny.simpleclient.scenario.coms.queryBuilder.graph.AddNewSwitch;
-import org.polypheny.simpleclient.scenario.coms.queryBuilder.graph.DropDevices;
-import org.polypheny.simpleclient.scenario.coms.queryBuilder.relational.AddDevices;
-import org.polypheny.simpleclient.scenario.coms.queryBuilder.relational.ChangeDeviceAttribute;
-import org.polypheny.simpleclient.scenario.coms.queryBuilder.relational.RemoveDevices;
 import org.polypheny.simpleclient.scenario.graph.GraphBench.EvaluationThread;
 import org.polypheny.simpleclient.scenario.graph.GraphBench.EvaluationThreadMonitor;
 
@@ -147,9 +136,9 @@ public class Coms extends Scenario {
         List<Query> queries = generator.generateWorkload( config );
 
         log.info( "Preparing query list for the benchmark..." );
-        List<QueryListEntry> relQueryList = buildRelQueryList();
-        List<QueryListEntry> docQueryList = buildDocQueryList();
-        List<QueryListEntry> graphQueryList = buildGraphQueryList();
+        List<QueryListEntry> relQueryList = getRelQueries( queries );
+        List<QueryListEntry> docQueryList = getDocQueries( queries );
+        List<QueryListEntry> graphQueryList = getGraphQueries( queries );
 
         dumpQueries( outputDirectory, relQueryList, q -> q.query.getSql() );
         dumpQueries( outputDirectory, docQueryList, q -> q.query.getMongoQl() );
@@ -159,6 +148,21 @@ public class Coms extends Scenario {
         log.info( "run time: {} s", executeRuntime / 1000000000 );
 
         return executeRuntime;
+    }
+
+
+    private List<QueryListEntry> getGraphQueries( List<Query> queries ) {
+        return queries.stream().filter( q -> q.getCypher() != null ).map( q -> new QueryListEntry( q, 0 ) ).collect( Collectors.toList() );
+    }
+
+
+    private List<QueryListEntry> getDocQueries( List<Query> queries ) {
+        return queries.stream().filter( q -> q.getMongoQl() != null ).map( q -> new QueryListEntry( q, 0 ) ).collect( Collectors.toList() );
+    }
+
+
+    private List<QueryListEntry> getRelQueries( List<Query> queries ) {
+        return queries.stream().filter( q -> q.getSql() != null ).map( q -> new QueryListEntry( q, 0 ) ).collect( Collectors.toList() );
     }
 
 
@@ -248,42 +252,6 @@ public class Coms extends Scenario {
                 log.error( "Error while dumping query list", e );
             }
         }
-    }
-
-
-    @NotNull
-    private List<QueryListEntry> buildRelQueryList() {
-        List<QueryListEntry> queryList = new Vector<>();
-        addNumberOfTimes( queryList, new AddDevices( config, random ), config.numberOfAddDevicesQueries );
-        addNumberOfTimes( queryList, new ChangeDeviceAttribute( config, random ), config.numberOfChangeDeviceAttributeQueries );
-        addNumberOfTimes( queryList, new RemoveDevices( config, random ), config.numberOfRemoveDevicesQueries );
-
-        Collections.shuffle( queryList, random );
-        return queryList;
-    }
-
-
-    @NotNull
-    private List<QueryListEntry> buildDocQueryList() {
-        List<QueryListEntry> queryList = new Vector<>();
-        addNumberOfTimes( queryList, new AddLogs( config, random ), config.numberOfAddLogsQueries );
-        addNumberOfTimes( queryList, new DeleteLogs( config, random ), config.numberOfDeleteLogsQueries );
-        addNumberOfTimes( queryList, new ScanLogs( config, random ), config.numberOfScanLogsQueries );
-
-        Collections.shuffle( queryList, random );
-        return queryList;
-    }
-
-
-    @NotNull
-    private List<QueryListEntry> buildGraphQueryList() {
-        List<QueryListEntry> queryList = new Vector<>();
-        addNumberOfTimes( queryList, new AddNewDevice( config, random ), config.numberOfAddNewDeviceQueries );
-        addNumberOfTimes( queryList, new AddNewSwitch( config, random ), config.numberOfAddNewSwitchQueries );
-        addNumberOfTimes( queryList, new DropDevices( config, random ), config.numberOfDropDevicesQueries );
-
-        Collections.shuffle( queryList, random );
-        return queryList;
     }
 
 

@@ -107,4 +107,46 @@ public abstract class GraphElement {
 
     }
 
+
+    public List<Query> asQuery() {
+
+        return Arrays.asList(
+                getGraphQuery(),
+                getDocQuery(),
+                getRelQuery()
+        );
+    }
+
+
+    public Query getRelQuery() {
+        StringBuilder sql = new StringBuilder( "INSERT INTO " );
+        sql.append( getLabels().get( 0 ) ).append( REL_POSTFIX );
+        sql.append( "(" ).append( String.join( ",", getFixedProperties().keySet() ) ).append( ")" );
+        sql.append( "VALUES" );
+        sql.append( "(" ).append( asSql() ).append( ")" );
+
+        return RawQuery.builder()
+                .sql( sql.append( ")" ).toString() )
+                .surrealQl( sql.toString() ).build();
+    }
+
+
+    public Query getDocQuery() {
+        String collection = getLabels().get( 0 ) + DOC_POSTFIX;
+        StringBuilder mongo = new StringBuilder( "db." + collection + ".insertMany(" );
+        StringBuilder surreal = new StringBuilder( "CREATE " );
+        mongo.append( "{" );
+        mongo.append( asMongo() );
+        mongo.append( "})" );
+        surreal.append( "{" );
+        surreal.append( asDynSurreal() );
+        surreal.append( "})" );
+
+        return RawQuery.builder().mongoQl( mongo.toString() ).surrealQl( surreal.toString() ).build();
+    }
+
+
+    public abstract Query getGraphQuery();
+
+
 }

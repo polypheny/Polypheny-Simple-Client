@@ -33,6 +33,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -44,6 +45,7 @@ import org.jetbrains.annotations.NotNull;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.RawQuery;
 import org.polypheny.simpleclient.query.RawQuery.RawQueryBuilder;
+import org.polypheny.simpleclient.scenario.coms.simulation.NetworkGenerator.Network;
 import org.polypheny.simpleclient.scenario.graph.GraphQuery;
 
 @Value
@@ -57,8 +59,8 @@ public class Graph {
 
     public List<Query> getGraphQueries( int graphCreateBatch ) {
 
-        Pair<List<String>, List<String>> nodes = buildNodeQueries( graphCreateBatch );
-        Pair<List<String>, List<String>> edges = buildEdgeQueries( graphCreateBatch );
+        Pair<List<String>, List<String>> nodes = buildNodeQueries( this.nodes, graphCreateBatch );
+        Pair<List<String>, List<String>> edges = buildEdgeQueries( this.edges, graphCreateBatch );
 
         return Streams.zip(
                 Stream.concat( nodes.getFirst().stream(), edges.getFirst().stream() ),
@@ -66,12 +68,12 @@ public class Graph {
     }
 
 
-    private Pair<List<String>, List<String>> buildEdgeQueries( int graphCreateBatch ) {
+    public static Pair<List<String>, List<String>> buildEdgeQueries( Map<Long, Edge> sources, int graphCreateBatch ) {
         List<String> cyphers = new ArrayList<>();
         List<String> surrealDBs = new ArrayList<>();
         StringBuilder cypher;
         StringBuilder surreal;
-        for ( List<Edge> edges : Lists.partition( new ArrayList<>( this.edges.values() ), graphCreateBatch ) ) {
+        for ( List<Edge> edges : Lists.partition( new ArrayList<>( sources.values() ), graphCreateBatch ) ) {
             cypher = new StringBuilder( "CREATE " );
             int i = 0;
             for ( Edge edge : edges ) {
@@ -108,12 +110,12 @@ public class Graph {
     }
 
 
-    Pair<List<String>, List<String>> buildNodeQueries( int graphCreateBatch ) {
+    public static Pair<List<String>, List<String>> buildNodeQueries( Map<Long, Node> sources, int graphCreateBatch ) {
         List<String> cyphers = new ArrayList<>();
         List<String> surrealDBs = new ArrayList<>();
         StringBuilder cypher;
         StringBuilder surreal;
-        for ( List<Node> nodes : Lists.partition( new ArrayList<>( this.nodes.values() ), graphCreateBatch ) ) {
+        for ( List<Node> nodes : Lists.partition( new ArrayList<>( sources.values() ), graphCreateBatch ) ) {
             cypher = new StringBuilder( "CREATE " );
             surreal = new StringBuilder( "INSERT INTO node [" );
             int i = 0;
@@ -256,7 +258,7 @@ public class Graph {
                 surreal.append( "DEFINE FIELD " ).append( entry.getKey() ).append( " ON " ).append( label ).append( REL_POSTFIX ).append( " TYPE " ).append( entry.getValue().asSurreal() ).append( ";" );
             }
 
-            sql.append( "PRIMARY KEY(" ).append( element.getTypes().keySet().stream().findFirst().get() ).append( "));" );
+            sql.append( "PRIMARY KEY(" ).append( element.getTypes().keySet().stream().findFirst().orElseThrow( RuntimeException::new ) ).append( "));" );
 
             queries.add( RawQuery.builder().sql( sql.toString() ).surrealQl( surreal.toString() ).build() );
 
@@ -272,7 +274,7 @@ public class Graph {
     @NonFinal
     public abstract static class Node extends GraphElement {
 
-        public JsonObject nestedQueries;
+        public List<JsonObject> nestedQueries;
 
 
         public Node(
@@ -281,9 +283,72 @@ public class Graph {
                 Map<String, String> dynProperties,
                 JsonObject nestedQueries ) {
             super( types, fixedProperties, dynProperties );
-            this.nestedQueries = nestedQueries;
+            this.nestedQueries = new ArrayList<>( Collections.singletonList( nestedQueries ) );
         }
 
+
+        @Override
+        public Query getGraphQuery() {
+            StringBuilder surreal = new StringBuilder( "INSERT INTO node [" );
+
+            String cypher = "CREATE " + String.format(
+                    "(n%d:%s{%s})",
+                    getId(), String.join( ":", getLabels() ),
+                    Stream.concat(
+                                    dynProperties.entrySet().stream().map( e -> e.getKey() + ":" + e.getValue() ),
+                                    Stream.of( "_id: " + getId() ) )
+                            .collect( Collectors.joining( "," ) ) );
+
+            surreal.append( String.format(
+                    "{ labels: [ %s ], %s }",
+                    getLabels().stream().map( l -> "\"" + l + "\"" ).collect( Collectors.joining( "," ) ),
+                    Stream.concat(
+                            dynProperties.entrySet().stream().map( e -> e.getKey() + ":" + e.getValue() ),
+                            Stream.of( "_id: " + getId() ) ).collect( Collectors.joining( "," ) ) ) );
+
+            return RawQuery.builder().cypher( cypher ).surrealQl( surreal.toString() ).build();
+        }
+
+
+        public List<Query> addLog( Random random, int nestingDepth ) {
+            JsonObject log = Network.generateNestedProperties( random, nestingDepth );
+
+            nestedQueries.add( log );
+
+            String collection = getLabels().get( 0 ) + DOC_POSTFIX;
+
+            String surreal = "CREATE {"
+                    + asDynSurreal()
+                    + "}";
+            String mongo = "db." + collection + ".insertMany({"
+                    + asMongo()
+                    + "})";
+
+            return Collections.singletonList( RawQuery.builder().mongoQl( mongo ).surrealQl( surreal ).build() );
+
+        }
+
+
+        public List<Query> readFullLog() {
+            String collection = getLabels().get( 0 ) + DOC_POSTFIX;
+
+            String surreal = "SELECT * FROM " + collection;
+            String mongo = "db." + collection + ".find({})";
+
+            return Collections.singletonList( RawQuery.builder().mongoQl( mongo ).surrealQl( surreal ).build() );
+        }
+
+
+        public List<Query> readPartialLog( Random random ) {
+            int prop = random.nextInt( 10 );
+
+            String collection = getLabels().get( 0 ) + DOC_POSTFIX;
+
+            String surreal = "SELECT * FROM " + collection;
+            String mongo = "db." + collection + ".find({},{ key" + prop + ":1})";
+
+            return Collections.singletonList( RawQuery.builder().mongoQl( mongo ).surrealQl( surreal ).build() );
+        }
 
     }
 
@@ -304,6 +369,34 @@ public class Graph {
         long from;
         long to;
         boolean directed;
+
+
+        @Override
+        public Query getGraphQuery() {
+            StringBuilder surreal = new StringBuilder( "RELATE " ); // no batch update possible
+
+            String cypher = "CREATE " + String.format(
+                    "(n%s_%s{_id:%s})-[r%d:%s{%s}]-(n%s_%s{_id:%s})",
+                    from, from,
+                    from,
+                    id,
+                    String.join( ":", getLabels() ),
+                    dynProperties.entrySet().stream().map( e -> e.getKey() + ":" + e.getValue() ).collect( Collectors.joining( "," ) ),
+                    to,
+                    to, to );
+
+            //// SurrealDB INSERT INTO dev [{name: 'Amy'}, {name: 'Mary', id: 'Mary'}]; ARE ALWAYS DIRECTED
+            surreal.append( String.format(
+                    " (SELECT * FROM node WHERE _id = %s)->write->(SELECT * FROM node WHERE _id = %s) CONTENT{ labels: [ %s ], %s ",
+                    from,
+                    to,
+                    getLabels().stream().map( l -> "\"" + l + "\"" ).collect( Collectors.joining( "," ) ),
+                    dynProperties.entrySet().stream().map( e -> e.getKey() + ":" + e.getValue() ).collect( Collectors.joining( "," ) ) ) );
+
+            surreal.append( "};" );
+
+            return RawQuery.builder().cypher( cypher ).surrealQl( surreal.toString() ).build();
+        }
 
     }
 

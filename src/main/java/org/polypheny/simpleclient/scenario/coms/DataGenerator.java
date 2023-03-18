@@ -24,6 +24,7 @@
 
 package org.polypheny.simpleclient.scenario.coms;
 
+import java.util.ArrayList;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.executor.Executor;
@@ -52,6 +53,7 @@ public class DataGenerator {
         List<Query> docQueries = graph.getDocQueries( config.docCreateBatch );
         List<Query> relQueries = graph.getRelQueries( config.relCreateBatch );
 
+
         for ( Query query : graphQueries ) {
             executor.executeQuery( query );
         }
@@ -62,6 +64,7 @@ public class DataGenerator {
             executor.executeQuery( query );
         }
 
+
         log.warn( "finished" );
 
         // -> generateSchema logs
@@ -70,7 +73,7 @@ public class DataGenerator {
 
         // -> generateSchema %5 of log queries
 
-        // -> genrate 5% of logs for simulation
+        // -> generate 5% of logs for simulation
 
     }
 
@@ -79,7 +82,11 @@ public class DataGenerator {
         NetworkGenerator generator = new NetworkGenerator( config );
         // Graph graph = generator.network.toGraph();
 
-        return generator.network.simulateRun();
+        List<Query> queries = new ArrayList<>();
+        for ( int i = 0; i < config.simulationRuns; i++ ) {
+            queries.addAll( generator.network.simulateRun() );
+        }
+        return queries;
     }
 
 }
