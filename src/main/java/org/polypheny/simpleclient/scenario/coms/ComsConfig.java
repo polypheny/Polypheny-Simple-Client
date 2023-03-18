@@ -55,7 +55,7 @@ public class ComsConfig extends AbstractConfig {
 
     public ComsConfig( String system, Properties properties ) {
         super( "coms", system, properties );
-        simulationRuns = getIntProperty( properties, "networkScale" );
+        simulationRuns = getIntProperty( properties, "simulationRuns" );
         threadDistribution = Arrays.stream( getStringProperty( properties, "threadDistribution" ).split( "_" ) ).map( Integer::parseInt ).collect( Collectors.toList() );
 
         seed = getLongProperty( properties, "seed" );

@@ -24,6 +24,7 @@
 
 package org.polypheny.simpleclient.main;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 import lombok.extern.slf4j.Slf4j;
@@ -93,6 +94,45 @@ public abstract class ProgressReporter {
                 }
             }
         }
+
+
+        public void updateProgress() {
+            theProgressReporter.update( totalNumber - theList.size(), totalNumber );
+        }
+
+    }
+
+
+    public static class ReportMultiQueryListProgress implements Runnable {
+
+        private final int totalNumber;
+        private final ProgressReporter theProgressReporter;
+        private final List<List<QueryListEntry>> lists;
+
+
+        public ReportMultiQueryListProgress( List<List<QueryListEntry>> lists, ProgressReporter progressReporter ) {
+            this.totalNumber = (int) lists.stream().mapToLong( Collection::size ).sum();
+            this.lists = lists;
+            this.theProgressReporter = progressReporter;
+        }
+
+
+        @Override
+        public void run() {
+            while ( true ) {
+                int current = (int) lists.stream().mapToLong( Collection::size ).sum();
+                theProgressReporter.update( totalNumber - current, totalNumber );
+                if ( current == 0 ) {
+                    break;
+                }
+                try {
+                    Thread.sleep( 1000 );
+                } catch ( InterruptedException e ) {
+                    throw new RuntimeException( "Unexpected interrupt", e );
+                }
+            }
+        }
+
 
     }
 

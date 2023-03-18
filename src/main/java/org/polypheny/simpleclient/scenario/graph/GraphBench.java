@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
+import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -188,7 +189,7 @@ public class GraphBench extends Scenario {
 
         ArrayList<EvaluationThread> threads = new ArrayList<>();
         for ( int i = 0; i < numberOfThreads; i++ ) {
-            threads.add( new EvaluationThread( queryList, executorFactory.createExecutorInstance( csvWriter, GRAPH_NAMESPACE ), commitAfterEveryQuery ) );
+            threads.add( new EvaluationThread( queryList, executorFactory.createExecutorInstance( csvWriter, GRAPH_NAMESPACE ), queryTypes.keySet(), commitAfterEveryQuery ) );
         }
 
         EvaluationThreadMonitor threadMonitor = new EvaluationThreadMonitor( threads );
@@ -309,10 +310,11 @@ public class GraphBench extends Scenario {
         final boolean commitAfterEveryQuery;
 
 
-        public EvaluationThread( List<QueryListEntry> queryList, Executor executor, boolean commitAfterEveryQuery ) {
+        public EvaluationThread( List<QueryListEntry> queryList, Executor executor, Set<Integer> templateIds, boolean commitAfterEveryQuery ) {
             super( "EvaluationThread" );
             this.executor = executor;
             this.theQueryList = queryList;
+            templateIds.forEach( id -> measuredTimePerQueryType.put( id, new ArrayList<>() ) );
             this.commitAfterEveryQuery = commitAfterEveryQuery;
         }
 

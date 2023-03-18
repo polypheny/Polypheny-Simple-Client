@@ -29,7 +29,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -39,7 +38,6 @@ import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.executor.Executor;
@@ -49,7 +47,7 @@ import org.polypheny.simpleclient.executor.ExecutorException;
 import org.polypheny.simpleclient.executor.PolyphenyDbExecutor;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.main.ProgressReporter;
-import org.polypheny.simpleclient.main.ProgressReporter.ReportQueryListProgress;
+import org.polypheny.simpleclient.main.ProgressReporter.ReportMultiQueryListProgress;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 import org.polypheny.simpleclient.query.QueryListEntry;
@@ -152,17 +150,20 @@ public class Coms extends Scenario {
 
 
     private List<QueryListEntry> getGraphQueries( List<Query> queries ) {
-        return queries.stream().filter( q -> q.getCypher() != null ).map( q -> new QueryListEntry( q, 0 ) ).collect( Collectors.toList() );
+        queryTypes.put( 1, "graph" ); // todo more distinct
+        return queries.stream().filter( q -> q.getCypher() != null ).map( q -> new QueryListEntry( q, 1 ) ).collect( Collectors.toList() );
     }
 
 
     private List<QueryListEntry> getDocQueries( List<Query> queries ) {
-        return queries.stream().filter( q -> q.getMongoQl() != null ).map( q -> new QueryListEntry( q, 0 ) ).collect( Collectors.toList() );
+        queryTypes.put( 2, "doc" ); // todo more distinct
+        return queries.stream().filter( q -> q.getMongoQl() != null ).map( q -> new QueryListEntry( q, 2 ) ).collect( Collectors.toList() );
     }
 
 
     private List<QueryListEntry> getRelQueries( List<Query> queries ) {
-        return queries.stream().filter( q -> q.getSql() != null ).map( q -> new QueryListEntry( q, 0 ) ).collect( Collectors.toList() );
+        queryTypes.put( 3, "relational" ); // todo more distinct
+        return queries.stream().filter( q -> q.getSql() != null ).map( q -> new QueryListEntry( q, 3 ) ).collect( Collectors.toList() );
     }
 
 
@@ -188,23 +189,19 @@ public class Coms extends Scenario {
                 // add to last
                 List<QueryListEntry> old = organized.remove( organized.size() - 1 );
 
-                List<QueryListEntry> list = Stream.concat( old.stream(), queryLists[i].stream() ).collect( Collectors.toList() );
-                Collections.shuffle( list );
+                List<QueryListEntry> list = randomlyMergeInOrder( old, queryLists[i] );
                 organized.add( list );
                 amount += (part * t);
             }
             i++;
         }
 
-        List<QueryListEntry> mergedList = Arrays.stream( queryLists ).flatMap( Collection::stream ).collect( Collectors.toList() );
-        (new Thread( new ReportQueryListProgress( mergedList, progressReporter ) )).start();
+        new Thread( new ReportMultiQueryListProgress( organized, progressReporter ) ).start();
         long startTime = System.nanoTime();
 
         ArrayList<EvaluationThread> threads = new ArrayList<>();
-        for ( List<QueryListEntry> queryList : queryLists ) {
-            for ( int j = 0; j < numberOfThreads; j++ ) {
-                threads.add( new EvaluationThread( queryList, executorFactory.createExecutorInstance( csvWriter, NAMESPACE ), commitAfterEveryQuery ) );
-            }
+        for ( List<QueryListEntry> queryList : organized ) {
+            threads.add( new EvaluationThread( queryList, executorFactory.createExecutorInstance( csvWriter, NAMESPACE ), queryTypes.keySet(), commitAfterEveryQuery ) );
         }
 
         EvaluationThreadMonitor threadMonitor = new EvaluationThreadMonitor( threads );
@@ -231,6 +228,26 @@ public class Coms extends Scenario {
         if ( threadMonitor.isAborted() ) {
             throw new RuntimeException( "Exception while executing benchmark", threadMonitor.getException() );
         }
+    }
+
+
+    @SafeVarargs
+    private final List<QueryListEntry> randomlyMergeInOrder( final List<QueryListEntry>... lists ) {
+        List<QueryListEntry> merged = new ArrayList<>();
+
+        List<List<QueryListEntry>> bucket = new ArrayList<>( Arrays.asList( lists ) );
+
+        while ( !bucket.isEmpty() ) {
+            int i = random.nextInt( bucket.size() );
+
+            merged.add( bucket.get( i ).remove( 0 ) );
+            if ( bucket.get( i ).isEmpty() ) {
+                bucket.remove( i );
+            }
+
+        }
+
+        return merged;
     }
 
 

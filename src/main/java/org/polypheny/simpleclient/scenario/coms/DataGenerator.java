@@ -53,7 +53,6 @@ public class DataGenerator {
         List<Query> docQueries = graph.getDocQueries( config.docCreateBatch );
         List<Query> relQueries = graph.getRelQueries( config.relCreateBatch );
 
-
         for ( Query query : graphQueries ) {
             executor.executeQuery( query );
         }
@@ -63,7 +62,6 @@ public class DataGenerator {
         for ( Query query : relQueries ) {
             executor.executeQuery( query );
         }
-
 
         log.warn( "finished" );
 
@@ -80,12 +78,13 @@ public class DataGenerator {
 
     public List<Query> generateWorkload( ComsConfig config ) {
         NetworkGenerator generator = new NetworkGenerator( config );
-        // Graph graph = generator.network.toGraph();
+        log.warn( "Start Configuration:\n" + generator.network );
 
         List<Query> queries = new ArrayList<>();
         for ( int i = 0; i < config.simulationRuns; i++ ) {
             queries.addAll( generator.network.simulateRun() );
         }
+        log.warn( "End Configuration:\n" + generator.network );
         return queries;
     }
 

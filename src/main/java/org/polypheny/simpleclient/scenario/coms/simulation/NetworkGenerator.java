@@ -275,12 +275,12 @@ public class NetworkGenerator {
             //// remove logs
             queries.addAll(
                     merge(
-                            doRandom( mobiles, mobiles.size() / 10f, e -> removeElement( e, mobiles ) ),
-                            doRandom( ioTs, ioTs.size() / 10f, e -> removeElement( e, ioTs ) ),
-                            doRandom( pcs, pcs.size() / 10f, e -> removeElement( e, pcs ) ),
-                            doRandom( aps, aps.size() / 10f, e -> removeElement( e, aps ) ),
-                            doRandom( switches, switches.size() / 10f, e -> removeElement( e, switches ) ),
-                            doRandom( servers, servers.size() / 10f, e -> removeElement( e, servers ) )
+                            doRandom( mobiles, mobiles.size() / 10f, this::deleteLogs ),
+                            doRandom( ioTs, ioTs.size() / 10f, this::deleteLogs ),
+                            doRandom( pcs, pcs.size() / 10f, this::deleteLogs ),
+                            doRandom( aps, aps.size() / 10f, this::deleteLogs ),
+                            doRandom( switches, switches.size() / 10f, this::deleteLogs ),
+                            doRandom( servers, servers.size() / 10f, this::deleteLogs )
                     )
             );
 
@@ -309,6 +309,11 @@ public class NetworkGenerator {
             );
 
             return queries;
+        }
+
+
+        private <T extends Node> List<Query> deleteLogs( T element ) {
+            return element.deleteLogs( random );
         }
 
 
@@ -368,31 +373,32 @@ public class NetworkGenerator {
 
             queries.addAll( merge(
                             // remove Mobile devices (lot)
-                            doRandom( mobiles, mobiles.size() / 10f, e -> changeDevice( e, mobiles ) ),
+                            doRandom( mobiles, mobiles.size() / 10f, this::changeDevice ),
                             // remove Iot devices (small)
-                            doRandom( ioTs, ioTs.size() / 10f, e -> changeDevice( e, ioTs ) ),
+                            doRandom( ioTs, ioTs.size() / 10f, this::changeDevice ),
                             // remove PC and Macs (small)
-                            doRandom( pcs, pcs.size() / 10f, e -> changeDevice( e, pcs ) ),
-                            doRandom( macs, macs.size() / 10f, e -> changeDevice( e, macs ) ),
+                            doRandom( pcs, pcs.size() / 10f, this::changeDevice ),
+                            doRandom( macs, macs.size() / 10f, this::changeDevice ),
                             // remove AP (minimal)
-                            doRandom( aps, aps.size() / 10f, e -> changeDevice( e, aps ) ),
+                            doRandom( aps, aps.size() / 10f, this::changeDevice ),
                             // remove Server (nearly none)
-                            doRandom( servers, servers.size() / 10f, e -> changeDevice( e, servers ) ),
+                            doRandom( servers, servers.size() / 10f, this::changeDevice ),
                             // change connections (lot)
-                            doRandom( wlans, wlans.size() / 10f, e -> changeDevice( e, wlans ) ),
-                            doRandom( lans, lans.size() / 10f, e -> changeDevice( e, lans ) )
+                            doRandom( wlans, wlans.size() / 10f, this::changeDevice ),
+                            doRandom( lans, lans.size() / 10f, this::changeDevice )
                     )
             );
 
         }
 
 
-        private <T extends GraphElement> List<Query> changeDevice( T element, List<T> elements ) {
+        private <T extends GraphElement> List<Query> changeDevice( T element ) {
             List<Query> queries = new ArrayList<>();
 
-            throw new RuntimeException();
+            queries.addAll( element.changeDevice( random ) );
+            // todo add more changes
 
-            //return queries;
+            return queries;
         }
 
 
@@ -449,23 +455,29 @@ public class NetworkGenerator {
         }
 
 
-        @NonNull
-        private <T extends GraphElement> List<T> pickRandom( List<T> elements, float picks ) {
-            if ( picks < 0.5 ) {
-                log.debug( "do nothing" );
-                return Collections.emptyList();
-            }
-            int roundedPicks = (int) picks;
-
-            List<T> picked = new ArrayList<>();
-
-            for ( int i = 0; i < roundedPicks; i++ ) {
-                picked.add( elements.get( random.nextInt( elements.size() ) ) );
-            }
-
-            return picked;
-
+        @Override
+        public String toString() {
+            return "Network{" +
+                    "servers: " + servers.size() + " with " + summarize( servers ) + ",\n" +
+                    "switches: " + switches.size() + " with " + summarize( switches ) + ",\n" +
+                    "aps: " + aps.size() + " with " + summarize( aps ) + ",\n" +
+                    "ioTs: " + ioTs.size() + " with " + summarize( ioTs ) + ",\n" +
+                    "mobiles: " + mobiles.size() + " with " + summarize( mobiles ) + ",\n" +
+                    "pcs: " + pcs.size() + " with " + summarize( pcs ) + ",\n" +
+                    "macs: " + macs.size() + " with " + summarize( macs ) + ",\n" +
+                    "lans: " + lans.size() + " with " + summarize( lans ) + ",\n" +
+                    "wlans: " + wlans.size() + " with " + summarize( wlans ) + ",\n" +
+                    '}';
         }
+
+
+        private <E extends GraphElement> String summarize( List<E> elements ) {
+            double avgGraph = elements.stream().mapToInt( e -> e.getDynProperties().size() ).average().orElseThrow( () -> new RuntimeException( "Error on avg." ) );
+            double avgRel = elements.stream().mapToInt( e -> e.getFixedProperties().size() ).average().orElseThrow( () -> new RuntimeException( "Error on avg." ) );
+            double avgDoc = elements.stream().filter( e -> e instanceof Node ).map( e -> (Node) e ).mapToInt( e -> e.getNestedQueries().size() ).average().orElse( 0 ); // only Node do have this
+            return "{ avgGraphProps: " + avgGraph + ", avgRelProps: " + avgRel + ", avgDocProps: " + avgDoc + " }";
+        }
+
 
     }
 

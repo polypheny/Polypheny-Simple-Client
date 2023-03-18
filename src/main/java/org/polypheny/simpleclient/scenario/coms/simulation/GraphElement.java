@@ -30,14 +30,20 @@ import static org.polypheny.simpleclient.scenario.coms.simulation.Graph.REL_POST
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Random;
+import java.util.stream.Collectors;
 import lombok.Value;
 import lombok.experimental.NonFinal;
+import org.jetbrains.annotations.NotNull;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.RawQuery;
+import org.polypheny.simpleclient.scenario.coms.simulation.Graph.Node;
 import org.polypheny.simpleclient.scenario.coms.simulation.NetworkGenerator.Network;
+import org.polypheny.simpleclient.scenario.coms.simulation.PropertyType.Type;
 
 @Value
 @NonFinal
@@ -63,24 +69,6 @@ public abstract class GraphElement {
     }
 
 
-    public String asMongo() {
-        List<String> query = new ArrayList<>();
-        for ( Entry<String, String> entry : dynProperties.entrySet() ) {
-            query.add( entry.getKey() + ":" + entry.getValue() );
-        }
-        return String.join( ",", query );
-    }
-
-
-    public String asDynSurreal() {
-        List<String> query = new ArrayList<>();
-        for ( Entry<String, String> entry : dynProperties.entrySet() ) {
-            query.add( entry.getKey() + ":" + entry.getValue() );
-        }
-        return String.join( ",", query );
-    }
-
-
     public String asSql() {
         List<String> query = new ArrayList<>();
         for ( Entry<String, String> entry : fixedProperties.entrySet() ) {
@@ -93,11 +81,11 @@ public abstract class GraphElement {
     public List<Query> getRemoveQuery() {
         String cypher = String.format( "MATCH (n {_id: %s}) DELETE n", getId() );
         String mongo = String.format( "db.%s.remove({_id: %s})", getLabels().get( 0 ) + DOC_POSTFIX, getId() );
-        String sql = String.format( "DELETE %s WHERE _id = %s;", getLabels().get( 0 ) + REL_POSTFIX, getId() );
+        String sql = String.format( "DELETE %s WHERE _id = %s;", getTable(), getId() );
 
         String surrealGraph = String.format( "DELETE node WHERE _id = %s;", getId() );
         String surrealDoc = String.format( "DELETE %s WHERE _id = %s;", getLabels().get( 0 ) + DOC_POSTFIX, getId() );
-        String surrealRel = String.format( "DELETE %s WHERE _id = %s;", getLabels().get( 0 ) + REL_POSTFIX, getId() );
+        String surrealRel = String.format( "DELETE %s WHERE _id = %s;", getTable(), getId() );
 
         return Arrays.asList(
                 RawQuery.builder().cypher( cypher ).surrealQl( surrealGraph ).build(),
@@ -109,44 +97,60 @@ public abstract class GraphElement {
 
 
     public List<Query> asQuery() {
-
-        return Arrays.asList(
-                getGraphQuery(),
-                getDocQuery(),
-                getRelQuery()
-        );
+        List<Query> queries = new ArrayList<>();
+        queries.add( getGraphQuery() );
+        if ( this instanceof Node ) {
+            queries.add( ((Node) this).getDocQuery() );
+        }
+        queries.add( getRelQuery() );
+        return queries;
     }
 
 
     public Query getRelQuery() {
         StringBuilder sql = new StringBuilder( "INSERT INTO " );
-        sql.append( getLabels().get( 0 ) ).append( REL_POSTFIX );
-        sql.append( "(" ).append( String.join( ",", getFixedProperties().keySet() ) ).append( ")" );
-        sql.append( "VALUES" );
+        sql.append( getTable() );
+        sql.append( " (" ).append( String.join( ",", getFixedProperties().keySet() ) ).append( ")" );
+        sql.append( " VALUES " );
         sql.append( "(" ).append( asSql() ).append( ")" );
 
         return RawQuery.builder()
-                .sql( sql.append( ")" ).toString() )
+                .sql( sql.toString() )
                 .surrealQl( sql.toString() ).build();
     }
 
 
-    public Query getDocQuery() {
-        String collection = getLabels().get( 0 ) + DOC_POSTFIX;
-        StringBuilder mongo = new StringBuilder( "db." + collection + ".insertMany(" );
-        StringBuilder surreal = new StringBuilder( "CREATE " );
-        mongo.append( "{" );
-        mongo.append( asMongo() );
-        mongo.append( "})" );
-        surreal.append( "{" );
-        surreal.append( asDynSurreal() );
-        surreal.append( "})" );
-
-        return RawQuery.builder().mongoQl( mongo.toString() ).surrealQl( surreal.toString() ).build();
+    @NotNull
+    private String getTable() {
+        return getLabels().get( 0 ) + REL_POSTFIX;
     }
 
 
     public abstract Query getGraphQuery();
 
+
+    public List<Query> changeDevice( Random random ) {
+        int i = random.nextInt( fixedProperties.size() ) + 1;
+
+        StringBuilder sql = new StringBuilder( "UPDATE " ).append( getTable() ).append( " SET " );
+
+        Map<String, String> updates = new HashMap<>();
+        for ( int j = 0; j < i; j++ ) {
+            String key = new ArrayList<>( fixedProperties.keySet() ).get( j );
+            PropertyType property = types.get( key );
+            updates.put( key, property.getType().asString( random, 0, Type.OBJECT ) );
+        }
+
+        sql.append( updates.entrySet().stream().map( u -> u.getKey() + " = " + u.getValue() ).collect( Collectors.joining( ", " ) ) );
+        sql.append( " WHERE " );
+        sql.append( updates.keySet().stream().map( u -> u + " = " + fixedProperties.get( u ) ).collect( Collectors.joining( " AND " ) ) );
+
+        // update simulation
+        fixedProperties.putAll( updates );
+
+        return Collections.singletonList( RawQuery.builder()
+                .sql( sql.toString() )
+                .surrealQl( sql.toString() ).build() );
+    }
 
 }

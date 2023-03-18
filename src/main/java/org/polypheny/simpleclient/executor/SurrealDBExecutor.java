@@ -113,7 +113,9 @@ public class SurrealDBExecutor implements Executor {
                 .basicAuth( "root", "root" );
 
         HttpResponse<JsonNode> response = request.asJson();
-
+        if ( !response.isSuccess() ) {
+            throw new RuntimeException( query + "\n" + response.getBody().getObject().get( "information" ).toString() );
+        }
     }
 
 
