@@ -56,6 +56,8 @@ public class Graph {
 
     public static final String DOC_POSTFIX = "_doc";
     public static final String REL_POSTFIX = "_rel";
+
+    public static final String GRAPH_POSTFIX = "_graph";
     Map<Long, Node> nodes;
     Map<Long, Edge> edges;
 
@@ -86,7 +88,7 @@ public class Graph {
                 }
                 //// Cypher CREATE (n1 {})-[]-(n2 {})
                 cypher.append( String.format(
-                        "(n%s_%s{_id:%s})-[r%d:%s{%s}]-(n%s_%s{_id:%s})",
+                        "(n%s_%s{_id:%s})-[r%d:%s{%s}]->(n%s_%s{_id:%s})",
                         edge.from, edge.from,
                         edge.from,
                         i,
@@ -158,10 +160,13 @@ public class Graph {
 
         for ( List<Node> nodes : Lists.partition( new ArrayList<>( this.nodes.values() ), docCreateBatch ) ) {
             String collection = nodes.get( 0 ).getLabels().get( 0 ) + DOC_POSTFIX;
-            StringBuilder mongo = new StringBuilder( "db." + collection + ".insertMany(" );
+            StringBuilder mongo = new StringBuilder( "db." + collection + ".insertMany([" );
             StringBuilder surreal = new StringBuilder( "INSERT INTO " + collection + " [" );
             int i = 0;
             for ( Node node : nodes ) {
+                if ( node.nestedQueries.isEmpty() ) {
+                    continue;
+                }
                 if ( i != 0 ) {
                     mongo.append( ", " );
                     surreal.append( ", " );
@@ -171,8 +176,12 @@ public class Graph {
                 surreal.append( node.asMongos().get( 0 ) );
                 i++;
             }
+            if ( i == 0 ) {
+                continue;
+            }
+
             queries.add( RawQuery.builder()
-                    .mongoQl( mongo.append( ")" ).toString() )
+                    .mongoQl( mongo.append( "])" ).toString() )
                     .surrealQl( surreal.append( "]" ).toString() ).build() );
         }
 
@@ -186,7 +195,7 @@ public class Graph {
         List<GraphElement> list = Stream.concat( this.nodes.values().stream(), this.edges.values().stream() ).collect( Collectors.toList() );
         for ( List<GraphElement> elements : Lists.partition( list, relCreateBatch ) ) {
             StringBuilder sql = new StringBuilder( "INSERT INTO " );
-            sql.append( elements.get( 0 ).getLabels().get( 0 ) ).append( REL_POSTFIX );
+            sql.append( GraphElement.namespace + REL_POSTFIX ).append( "." ).append( elements.get( 0 ).getLabels().get( 0 ) ).append( REL_POSTFIX );
             sql.append( " (" ).append( String.join( ",", elements.get( 0 ).getFixedProperties().keySet() ) ).append( ")" );
             sql.append( " VALUES " );
             int i = 0;
@@ -227,9 +236,11 @@ public class Graph {
                 .mongoQl( "use " + namespace )
                 .surrealQl( "DEFINE DATABASE " + namespace ).build() );
 
+        String store = onStore != null ? ".store(" + onStore + ")" : "";
+
         for ( String collection : getGraphElementStream().flatMap( n -> n.getLabels().stream().map( l -> l + DOC_POSTFIX ) ).collect( Collectors.toSet() ) ) {
             queries.add( RawQuery.builder()
-                    .mongoQl( "db.createCollection(" + collection + ")" + onStore )
+                    .mongoQl( "db.createCollection(" + collection + ")" + store )
                     .surrealQl( "DEFINE TABLE " + collection + " SCHEMALESS" ).build() );
         }
 
@@ -249,10 +260,12 @@ public class Graph {
                 .sql( "CREATE SCHEMA " + namespace )
                 .surrealQl( "DEFINE DATABASE " + namespace ).build() );
 
+        String store = onStore != null ? " ON STORE " + onStore : "";
+
         Set<String> labels = new HashSet<>();
 
         for ( GraphElement element : getGraphElementStream().collect( Collectors.toSet() ) ) {
-            String label = element.getLabels().get( 0 );
+            String label = namespace + "." + element.getLabels().get( 0 );
             if ( labels.contains( label ) ) {
                 continue;
             }
@@ -260,11 +273,12 @@ public class Graph {
             StringBuilder surreal = new StringBuilder( "DEFINE TABLE " ).append( label ).append( REL_POSTFIX ).append( " SCHEMAFULL;" );
 
             for ( Entry<String, PropertyType> entry : element.getTypes().entrySet() ) {
-                sql.append( entry.getKey() ).append( " " ).append( entry.getValue().asSql() ).append( "," );
+                sql.append( entry.getKey() ).append( " " ).append( entry.getValue().asSql() ).append( " NOT NULL," );
                 surreal.append( "DEFINE FIELD " ).append( entry.getKey() ).append( " ON " ).append( label ).append( REL_POSTFIX ).append( " TYPE " ).append( entry.getValue().asSurreal() ).append( ";" );
             }
 
-            sql.append( "PRIMARY KEY(" ).append( element.getTypes().keySet().stream().findFirst().orElseThrow( RuntimeException::new ) ).append( "));" );
+            sql.append( "PRIMARY KEY(" ).append( element.getTypes().keySet().stream().findFirst().orElseThrow( RuntimeException::new ) ).append( "))" )
+                    .append( store );
 
             queries.add( RawQuery.builder().sql( sql.toString() ).surrealQl( surreal.toString() ).build() );
 
@@ -326,7 +340,7 @@ public class Graph {
             String docs = String.join( ",", asMongos() );
 
             String surreal = "INSERT INTO " + collection + " [" + docs + "]";
-            String mongo = "db." + collection + ".insertMany(" + docs + ")";
+            String mongo = "db." + collection + ".insertMany([" + docs + "])";
 
             return Collections.singletonList( RawQuery.builder().mongoQl( mongo ).surrealQl( surreal ).build() );
 
@@ -401,12 +415,12 @@ public class Graph {
 
         public Query getDocQuery() {
             String collection = getLabels().get( 0 ) + DOC_POSTFIX;
-            StringBuilder mongo = new StringBuilder( "db." + collection + ".insertMany(" );
+            StringBuilder mongo = new StringBuilder( "db." + collection + ".insertMany([" );
             StringBuilder surreal = new StringBuilder( "INSERT INTO " + collection ).append( " [" );
             mongo.append( String.join( ",", asMongos() ) );
             surreal.append( String.join( ",", asMongos() ) );
 
-            return RawQuery.builder().mongoQl( mongo.append( ")" ).toString() ).surrealQl( surreal.append( "]" ).toString() ).build();
+            return RawQuery.builder().mongoQl( mongo.append( "])" ).toString() ).surrealQl( surreal.append( "]" ).toString() ).build();
         }
 
     }
@@ -435,7 +449,7 @@ public class Graph {
             StringBuilder surreal = new StringBuilder( "RELATE " ); // no batch update possible
 
             String cypher = "CREATE " + String.format(
-                    "(n%s_%s{_id:%s})-[r%d:%s{%s}]-(n%s_%s{_id:%s})",
+                    "(n%s_%s{_id:%s})-[r%d:%s{%s}]->(n%s_%s{_id:%s})",
                     from, from,
                     from,
                     id,

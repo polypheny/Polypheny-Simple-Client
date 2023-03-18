@@ -109,12 +109,12 @@ public class PolyphenyDbCypherExecutor extends PolyphenyDbHttpExecutor {
 
         @Override
         public PolyphenyDbCypherExecutor createExecutorInstance( CsvWriter csvWriter ) {
-            return (PolyphenyDbCypherExecutor) createExecutorInstance( csvWriter, GRAPH_NAMESPACE );
+            return createExecutorInstance( csvWriter, GRAPH_NAMESPACE );
         }
 
 
         @Override
-        public Executor createExecutorInstance( CsvWriter csvWriter, String namespace ) {
+        public PolyphenyDbCypherExecutor createExecutorInstance( CsvWriter csvWriter, String namespace ) {
             return new PolyphenyDbCypherExecutor( host, csvWriter, namespace );
         }
 

@@ -51,8 +51,6 @@ import org.polypheny.simpleclient.scenario.coms.simulation.PropertyType.Type;
 @Slf4j
 public class NetworkGenerator {
 
-
-    public final ComsConfig config;
     private final Random random;
     public final Network network;
 
@@ -65,7 +63,6 @@ public class NetworkGenerator {
      * @param config
      */
     public NetworkGenerator( ComsConfig config ) {
-        this.config = config;
         this.random = new Random( config.seed );
 
         // generateSchema network (simulation)
@@ -112,14 +109,14 @@ public class NetworkGenerator {
         List<Lan> lans = new ArrayList<>();
 
         List<WLan> wlans = new ArrayList<>();
-        ComsConfig config;
+        public static ComsConfig config;
         int scale;
 
 
         public Network( Random random, ComsConfig config ) {
             this.random = random;
             this.scale = config.networkScale;
-            this.config = config;
+            Network.config = config;
 
             generateObject( SERVERS, () -> servers.add( new Server( this, random ) ) );
             generateObject( SWITCHES, () -> switches.add( new Switch( this, random ) ) );
@@ -180,6 +177,7 @@ public class NetworkGenerator {
             collectNodes( macs, nodes );
             collectNodes( switches, nodes );
             collectNodes( mobiles, nodes );
+            collectNodes( ioTs, nodes );
             collectNodes( aps, nodes );
 
             Map<Long, Edge> edges = new HashMap<>();
@@ -209,7 +207,7 @@ public class NetworkGenerator {
 
             for ( int i = 0; i < amount; i++ ) {
                 Type type = Type.getRandom( random, Type.OBJECT );
-                properties.put( "key" + i, type.asString( random, 3, Type.OBJECT ) );
+                properties.put( "key" + i, type.asString( random, 3, Type.OBJECT, Type.ARRAY ) );
             }
             return properties;
         }
@@ -222,7 +220,7 @@ public class NetworkGenerator {
                 StringBuilder value = new StringBuilder( String.valueOf( random.nextInt( 10 ) ) );
                 switch ( entry.getValue().getType() ) {
                     case CHAR:
-                        value = new StringBuilder( "\"value" + value + "\"" );
+                        value = new StringBuilder( "'value" + value + "'" );
                         break;
                     case NUMBER:
                         break;
@@ -250,7 +248,7 @@ public class NetworkGenerator {
         public static JsonObject generateNestedProperties( Random random, int nestingDepth ) {
             JsonObject object = new JsonObject();
 
-            for ( int i = 0; i < random.nextInt( 10 ); i++ ) {
+            for ( int i = 0; i < random.nextInt( 10 ) + 1; i++ ) {
                 String key = "key" + random.nextInt( 10 );
                 Type type = Type.getRandom( random );
                 object.add( key, type.asJson( random, nestingDepth ) );
@@ -383,6 +381,8 @@ public class NetworkGenerator {
                             doRandom( aps, aps.size() / 10f, this::changeDevice ),
                             // remove Server (nearly none)
                             doRandom( servers, servers.size() / 10f, this::changeDevice ),
+                            // remove Swich (nearly none)
+                            doRandom( switches, switches.size() / 10f, this::changeDevice ),
                             // change connections (lot)
                             doRandom( wlans, wlans.size() / 10f, this::changeDevice ),
                             doRandom( lans, lans.size() / 10f, this::changeDevice )
@@ -415,7 +415,8 @@ public class NetworkGenerator {
                     // remove AP (minimal)
                     doRandom( aps, aps.size() / 10f, e -> removeElement( e, aps ) ),
                     // remove Server (nearly none)
-                    doRandom( servers, servers.size() / 10f, e -> removeElement( e, servers )
+                    doRandom( servers, servers.size() / 10f, e -> removeElement( e, servers ) ),
+                    doRandom( switches, switches.size() / 10f, e -> removeElement( e, switches )
                     ) )
             );
 
@@ -425,18 +426,19 @@ public class NetworkGenerator {
         private void simulateNewDevices( List<Query> queries ) {
 
             queries.addAll( merge(
-                    // add Mobile devices (lot)
-                    doRandom( mobiles, mobiles.size() / 10f, e -> addElement( e, mobiles ) ),
-                    // add Iot devices (lot)
-                    doRandom( ioTs, ioTs.size() / 10f, e -> addElement( e, ioTs ) ),
-                    // add PC and Macs (small)
-                    doRandom( pcs, pcs.size() / 25f, e -> addElement( e, pcs ) ),
-                    doRandom( macs, macs.size() / 25f, e -> addElement( e, macs ) ),
-                    // add AP (minimal)
-                    doRandom( aps, aps.size() / 10f, e -> addElement( e, aps ) ),
-                    // add Server (nearly none)
-                    doRandom( servers, servers.size() / 10f, e -> addElement( e, servers )
-                    ) )
+                            // add Mobile devices (lot)
+                            doRandom( mobiles, mobiles.size() / 10f, e -> addElement( e, mobiles ) ),
+                            // add Iot devices (lot)
+                            doRandom( ioTs, ioTs.size() / 10f, e -> addElement( e, ioTs ) ),
+                            // add PC and Macs (small)
+                            doRandom( pcs, pcs.size() / 25f, e -> addElement( e, pcs ) ),
+                            doRandom( macs, macs.size() / 25f, e -> addElement( e, macs ) ),
+                            // add AP (minimal)
+                            doRandom( aps, aps.size() / 10f, e -> addElement( e, aps ) ),
+                            // add Server (nearly none)
+                            doRandom( servers, servers.size() / 10f, e -> addElement( e, servers ) ),
+                            doRandom( switches, switches.size() / 10f, e -> addElement( e, switches ) )
+                    )
             );
 
         }
@@ -502,8 +504,8 @@ public class NetworkGenerator {
             super(
                     types,
                     Network.generateFixedTypedProperties( random, types ),
-                    Network.generateProperties( random, network.config.switchConfigs ),
-                    Network.generateNestedProperties( random, network.config.nestingDepth ) );
+                    Network.generateProperties( random, Network.config.switchConfigs ),
+                    Network.generateNestedProperties( random, Network.config.nestingDepth ) );
             this.random = random;
         }
 
@@ -531,8 +533,8 @@ public class NetworkGenerator {
             super(
                     types,
                     Network.generateFixedTypedProperties( random, types ),
-                    Network.generateProperties( random, network.config.switchConfigs ),
-                    Network.generateNestedProperties( random, network.config.nestingDepth ) );
+                    Network.generateProperties( random, Network.config.switchConfigs ),
+                    Network.generateNestedProperties( random, Network.config.nestingDepth ) );
             this.random = random;
         }
 
@@ -556,8 +558,8 @@ public class NetworkGenerator {
         public AP( Network network, Random random ) {
             super( types,
                     Network.generateFixedTypedProperties( random, types ),
-                    Network.generateProperties( random, network.config.apDynConfigs ),
-                    Network.generateNestedProperties( random, network.config.nestingDepth ) );
+                    Network.generateProperties( random, Network.config.apDynConfigs ),
+                    Network.generateNestedProperties( random, Network.config.nestingDepth ) );
             this.random = random;
         }
 
@@ -584,8 +586,8 @@ public class NetworkGenerator {
         public IoT( Network network, Random random ) {
             super( types,
                     Network.generateFixedTypedProperties( random, types ),
-                    Network.generateProperties( random, network.config.mobileDynConfigsMax ),
-                    Network.generateNestedProperties( random, network.config.nestingDepth ) );
+                    Network.generateProperties( random, Network.config.mobileDynConfigsMax ),
+                    Network.generateNestedProperties( random, Network.config.nestingDepth ) );
             this.random = random;
         }
 
@@ -609,8 +611,8 @@ public class NetworkGenerator {
         public Mobile( Network network, Random random ) {
             super( types,
                     Network.generateFixedTypedProperties( random, types ),
-                    Network.generateProperties( random, network.config.mobileDynConfigsMax ),
-                    Network.generateNestedProperties( random, network.config.nestingDepth ) );
+                    Network.generateProperties( random, Network.config.mobileDynConfigsMax ),
+                    Network.generateNestedProperties( random, Network.config.nestingDepth ) );
             this.random = random;
         }
 
@@ -634,8 +636,8 @@ public class NetworkGenerator {
         public PC( Network network, Random random ) {
             super( types,
                     Network.generateFixedTypedProperties( random, types ),
-                    Network.generateProperties( random, network.config.pcDynConfigsMax ),
-                    Network.generateNestedProperties( random, network.config.nestingDepth ) );
+                    Network.generateProperties( random, Network.config.pcDynConfigsMax ),
+                    Network.generateNestedProperties( random, Network.config.nestingDepth ) );
             this.random = random;
         }
 
@@ -660,8 +662,8 @@ public class NetworkGenerator {
         public Mac( Network network, Random random ) {
             super( types,
                     Network.generateFixedTypedProperties( random, types ),
-                    Network.generateProperties( random, network.config.pcDynConfigsMax ),
-                    Network.generateNestedProperties( random, network.config.nestingDepth ) );
+                    Network.generateProperties( random, Network.config.pcDynConfigsMax ),
+                    Network.generateNestedProperties( random, Network.config.nestingDepth ) );
             this.random = random;
         }
 
@@ -688,7 +690,7 @@ public class NetworkGenerator {
             super(
                     types,
                     Network.generateFixedTypedProperties( random, types ),
-                    Network.generateProperties( random, network.config.connectionConfigs ),
+                    Network.generateProperties( random, Network.config.connectionConfigs ),
                     from,
                     to,
                     directed );
@@ -717,7 +719,7 @@ public class NetworkGenerator {
             super(
                     types,
                     Network.generateFixedTypedProperties( random, types ),
-                    Network.generateProperties( random, network.config.connectionConfigs ),
+                    Network.generateProperties( random, Network.config.connectionConfigs ),
                     from,
                     to,
                     directed );

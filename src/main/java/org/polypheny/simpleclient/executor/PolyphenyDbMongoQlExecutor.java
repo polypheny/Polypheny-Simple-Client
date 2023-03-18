@@ -174,7 +174,7 @@ public class PolyphenyDbMongoQlExecutor extends PolyphenyDbHttpExecutor {
 
 
         @Override
-        public Executor createExecutorInstance( CsvWriter csvWriter, String namespace ) {
+        public PolyphenyDbMongoQlExecutor createExecutorInstance( CsvWriter csvWriter, String namespace ) {
             return new PolyphenyDbMongoQlExecutor( host, csvWriter, namespace );
         }
 

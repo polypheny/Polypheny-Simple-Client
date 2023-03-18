@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
 import lombok.Value;
+import org.polypheny.simpleclient.scenario.coms.simulation.NetworkGenerator.Network;
 
 @Value
 public class PropertyType {
@@ -77,9 +78,9 @@ public class PropertyType {
                 case CHAR:
                     return new JsonPrimitive( "value" + random.nextInt() );
                 case FLOAT:
-                    return new JsonPrimitive( random.nextFloat() );
+                    return new JsonPrimitive( Network.config.allowNegative ? random.nextFloat() : random.nextFloat( 0, 1000 ) );
                 case NUMBER:
-                    return new JsonPrimitive( random.nextInt() );
+                    return new JsonPrimitive( Network.config.allowNegative ? random.nextInt() : random.nextInt( 0, 5 ) );
                 case ARRAY:
                     JsonArray array = new JsonArray();
                     int fill = random.nextInt( 10 );
@@ -114,16 +115,16 @@ public class PropertyType {
             }
             switch ( this ) {
                 case CHAR:
-                    return "\"value" + random.nextInt() + "\"";
+                    return "'value" + random.nextInt() + "'";
                 case FLOAT:
-                    return String.valueOf( random.nextFloat( 5 ) );
+                    return String.valueOf( Network.config.allowNegative ? random.nextFloat( 5 ) : random.nextFloat( 0, 5 ) );
                 case NUMBER:
-                    return String.valueOf( random.nextInt() );
+                    return String.valueOf( Network.config.allowNegative ? random.nextInt( 1000 ) : random.nextInt( 0, 1000 ) );
                 case ARRAY:
                     List<String> array = new ArrayList<>();
                     int fill = random.nextInt( 10 );
+                    Type type = getRandom( random, excepts ); // sadly only same type supported by neo4j...
                     for ( int i = 0; i < fill; i++ ) {
-                        Type type = getRandom( random, excepts );
                         array.add( type.asString( random, maxDepth - 1, excepts ) );
                     }
                     return "[" + String.join( ", ", array ) + "]";

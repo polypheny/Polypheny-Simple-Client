@@ -74,7 +74,7 @@ public class GraphQuery extends Query {
 
     @Override
     public String getMongoQl() {
-        throw new RuntimeException( "MongoQL is not supported for graph queries!" );
+        return null;
     }
 
 

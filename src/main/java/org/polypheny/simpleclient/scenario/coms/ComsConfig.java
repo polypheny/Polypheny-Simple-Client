@@ -31,6 +31,7 @@ import java.util.Properties;
 import java.util.stream.Collectors;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
+import org.polypheny.simpleclient.cli.Mode;
 import org.polypheny.simpleclient.scenario.AbstractConfig;
 
 @EqualsAndHashCode(callSuper = true)
@@ -51,10 +52,13 @@ public class ComsConfig extends AbstractConfig {
     public int relCreateBatch;
     public List<Integer> threadDistribution;
     public int simulationRuns;
+    public Mode mode;
+    public boolean allowNegative;
 
 
     public ComsConfig( String system, Properties properties ) {
         super( "coms", system, properties );
+        mode = Mode.valueOf( getStringProperty( properties, "mode" ).toUpperCase() );
         simulationRuns = getIntProperty( properties, "simulationRuns" );
         threadDistribution = Arrays.stream( getStringProperty( properties, "threadDistribution" ).split( "_" ) ).map( Integer::parseInt ).collect( Collectors.toList() );
 
@@ -76,12 +80,15 @@ public class ComsConfig extends AbstractConfig {
         docCreateBatch = getIntProperty( properties, "docCreateBatch" );
         relCreateBatch = getIntProperty( properties, "relCreateBatch" );
 
+        allowNegative = getBooleanProperty( properties, "allowNegative" );
+
     }
 
 
     public ComsConfig( Map<String, String> parsedConfig ) {
         super( "coms", parsedConfig.get( "store" ), parsedConfig );
 
+        mode = Mode.valueOf( parsedConfig.get( "threadDistribution" ).toUpperCase() );
         seed = Long.parseLong( parsedConfig.get( "seed" ) );
         simulationRuns = Integer.parseInt( parsedConfig.get( "simulationRuns" ) );
 
@@ -103,6 +110,8 @@ public class ComsConfig extends AbstractConfig {
         docCreateBatch = Integer.parseInt( parsedConfig.get( "docCreateBatch" ) );
 
         relCreateBatch = Integer.parseInt( parsedConfig.get( "relCreateBatch" ) );
+
+        allowNegative = Boolean.getBoolean( parsedConfig.get( "allowNegative" ) );
 
     }
 

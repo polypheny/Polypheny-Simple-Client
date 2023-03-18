@@ -184,7 +184,7 @@ public class ChronosAgent extends AbstractChronosAgent {
         Executor.ExecutorFactory executorFactory;
         switch ( parsedConfig.get( "store" ) ) {
             case "polypheny":
-                executorFactory = new PolyphenyDbMultiExecutorFactory( ChronosCommand.hostname );
+                executorFactory = new PolyphenyDbMultiExecutorFactory( ChronosCommand.hostname, "coms" );
                 break;
             case "polypheny-jdbc":
                 executorFactory = new PolyphenyDbJdbcExecutorFactory( ChronosCommand.hostname, Boolean.parseBoolean( parsedConfig.get( "prepareStatements" ) ) );

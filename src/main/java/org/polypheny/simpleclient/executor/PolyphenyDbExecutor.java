@@ -53,19 +53,19 @@ public interface PolyphenyDbExecutor extends Executor {
     List<String> storeNames = new ArrayList<>();
 
 
-    void dropStore(String name) throws ExecutorException;
+    void dropStore( String name ) throws ExecutorException;
 
 
-    void deployStore(String name, String clazz, String config) throws ExecutorException;
+    void deployStore( String name, String clazz, String config ) throws ExecutorException;
 
 
-    void deployAdapter(String name, String adapterIdentifier, String type, String config) throws ExecutorException;
+    void deployAdapter( String name, String adapterIdentifier, String type, String config ) throws ExecutorException;
 
 
     default String deployHsqldb() throws ExecutorException {
         String storeName = "hsqldb" + storeCounter.getAndIncrement();
         String config = "{maxConnections:\"25\",trxControlMode:locks,trxIsolationLevel:read_committed,type:Memory,tableType:Memory,mode:embedded}";
-        if (useNewDeploySyntax()) {
+        if ( useNewDeploySyntax() ) {
             deployAdapter(
                     storeName,
                     "HSQLDB",
@@ -76,9 +76,9 @@ public interface PolyphenyDbExecutor extends Executor {
             deployStore(
                     storeName,
                     "org.polypheny.db.adapter.jdbc.stores.HsqldbStore",
-                    config);
+                    config );
         }
-        storeNames.add(storeName);
+        storeNames.add( storeName );
         return storeName;
     }
 
@@ -86,26 +86,26 @@ public interface PolyphenyDbExecutor extends Executor {
     default String deployMonetDb( boolean deployStoresUsingDocker ) throws ExecutorException {
         String config;
         String name;
-        if (deployStoresUsingDocker) {
+        if ( deployStoresUsingDocker ) {
             name = "monetdb" + storeCounter.getAndIncrement();
             config = "{\"port\":\"" + nextPort.getAndIncrement() + "\",\"maxConnections\":\"25\",\"password\":\"polypheny\",\"mode\":\"docker\",\"instanceId\":\"0\"}";
         } else {
             name = "monetdb";
             config = "{\"database\":\"test\",\"host\":\"localhost\",\"maxConnections\":\"25\",\"password\":\"monetdb\",\"username\":\"monetdb\",\"port\":\"50000\",\"mode\":\"remote\"}";
         }
-        if (useNewDeploySyntax()) {
+        if ( useNewDeploySyntax() ) {
             deployAdapter(
                     name,
                     "MONETDB",
                     "STORE",
-                    config);
+                    config );
         } else {
             deployStore(
                     name,
                     "org.polypheny.db.adapter.jdbc.stores.MonetdbStore",
-                    config);
+                    config );
         }
-        storeNames.add(name);
+        storeNames.add( name );
         return name;
     }
 
@@ -113,26 +113,26 @@ public interface PolyphenyDbExecutor extends Executor {
     default String deployPostgres( boolean deployStoresUsingDocker ) throws ExecutorException {
         String config;
         String name;
-        if (deployStoresUsingDocker) {
+        if ( deployStoresUsingDocker ) {
             name = "postgres" + storeCounter.getAndIncrement();
             config = "{\"port\":\"" + nextPort.getAndIncrement() + "\",\"maxConnections\":\"25\",\"password\":\"postgres\",\"mode\":\"docker\",\"instanceId\":\"0\"}";
         } else {
             name = "postgres";
             config = "{\"database\":\"test\",\"host\":\"localhost\",\"maxConnections\":\"25\",\"password\":\"postgres\",\"username\":\"postgres\",\"port\":\"5432\",\"mode\":\"remote\"}";
         }
-        if (useNewDeploySyntax()) {
+        if ( useNewDeploySyntax() ) {
             deployAdapter(
                     name,
                     "POSTGRESQL",
                     "STORE",
-                    config);
+                    config );
         } else {
             deployStore(
                     name,
                     "org.polypheny.db.adapter.jdbc.stores.PostgresqlStore",
-                    config);
+                    config );
         }
-        storeNames.add(name);
+        storeNames.add( name );
         return name;
     }
 
@@ -140,26 +140,26 @@ public interface PolyphenyDbExecutor extends Executor {
     default String deployCassandra( boolean deployStoresUsingDocker ) throws ExecutorException {
         String config;
         String name;
-        if (deployStoresUsingDocker) {
+        if ( deployStoresUsingDocker ) {
             name = "cassandra" + storeCounter.getAndIncrement();
             config = "{\"port\":\"" + nextPort.getAndIncrement() + "\",\"mode\":\"docker\",\"instanceId\":\"0\"}";
         } else {
             name = "cassandra";
             config = "{\"mode\":\"embedded\",\"host\":\"localhost\",\"port\":\"9042\",\"keyspace\":\"cassandra\",\"username\":\"cassandra\",\"password\":\"cass\"}";
         }
-        if (useNewDeploySyntax()) {
+        if ( useNewDeploySyntax() ) {
             deployAdapter(
                     name,
                     "CASSANDRA",
                     "STORE",
-                    config);
+                    config );
         } else {
             deployStore(
                     name,
                     "org.polypheny.db.adapter.cassandra.CassandraStore",
-                    config);
+                    config );
         }
-        storeNames.add(name);
+        storeNames.add( name );
         return name;
     }
 
@@ -167,19 +167,19 @@ public interface PolyphenyDbExecutor extends Executor {
     default String deployFileStore() throws ExecutorException {
         String storeName = "file" + storeCounter.getAndIncrement();
         String config = "{\"mode\":\"embedded\"}";
-        if (useNewDeploySyntax()) {
+        if ( useNewDeploySyntax() ) {
             deployAdapter(
                     storeName,
                     "FILE",
                     "STORE",
-                    config);
+                    config );
         } else {
             deployStore(
                     storeName,
                     "org.polypheny.db.adapter.file.FileStore",
-                    config);
+                    config );
         }
-        storeNames.add(storeName);
+        storeNames.add( storeName );
         return storeName;
     }
 
@@ -187,19 +187,19 @@ public interface PolyphenyDbExecutor extends Executor {
     default String deployCottontail() throws ExecutorException {
         String storeName = "cottontail" + storeCounter.getAndIncrement();
         String config = "{\"type\":\"Embedded\",\"host\":\"localhost\",\"port\":\"" + nextPort.getAndIncrement() + "\",\"database\":\"cottontail\",\"engine\":\"MAPDB\",\"mode\":\"embedded\"}";
-        if (useNewDeploySyntax()) {
+        if ( useNewDeploySyntax() ) {
             deployAdapter(
                     storeName,
                     "COTTONTAIL",
                     "STORE",
-                    config);
+                    config );
         } else {
             deployStore(
                     storeName,
                     "org.polypheny.db.adapter.cottontail.CottontailStore",
-                    config);
+                    config );
         }
-        storeNames.add(storeName);
+        storeNames.add( storeName );
         return storeName;
     }
 
@@ -207,38 +207,38 @@ public interface PolyphenyDbExecutor extends Executor {
     default String deployMongoDb() throws ExecutorException {
         String storeName = "mongodb" + storeCounter.getAndIncrement();
         String config = "{\"mode\":\"docker\",\"instanceId\":\"0\",\"port\":\"" + nextPort.getAndIncrement() + "\",\"persistent\":\"false\",\"trxLifetimeLimit\":\"1209600\"}";
-        if (useNewDeploySyntax()) {
+        if ( useNewDeploySyntax() ) {
             deployAdapter(
                     storeName,
                     "MONGODB",
                     "STORE",
-                    config);
+                    config );
         } else {
             deployStore(
                     storeName,
                     "org.polypheny.db.adapter.mongodb.MongoStore",
-                    config);
+                    config );
         }
-        storeNames.add(storeName);
+        storeNames.add( storeName );
         return storeName;
     }
 
     default String deployNeo4j() throws ExecutorException {
         String storeName = "neo4j" + storeCounter.getAndIncrement();
         String config = "{\"mode\":\"docker\",\"instanceId\":\"0\",\"port\":\"" + nextPort.getAndIncrement() + "\"}";
-        if (useNewDeploySyntax()) {
+        if ( useNewDeploySyntax() ) {
             deployAdapter(
                     storeName,
                     "NEO4J",
                     "STORE",
-                    config);
+                    config );
         } else {
             deployStore(
                     storeName,
                     "org.polypheny.db.adapter.neo4j.Neo4jStore",
-                    config);
+                    config );
         }
-        storeNames.add(storeName);
+        storeNames.add( storeName );
         return storeName;
     }
 
@@ -614,15 +614,15 @@ public interface PolyphenyDbExecutor extends Executor {
             } finally {
                 try {
                     executor.closeConnection();
-                } catch (ExecutorException e) {
-                    log.error("Exception while closing connection", e);
+                } catch ( ExecutorException e ) {
+                    log.error( "Exception while closing connection", e );
                 }
             }
         }
 
     }
 
-    void setNewDeploySyntax(boolean useNewDeploySyntax);
+    void setNewDeploySyntax( boolean useNewDeploySyntax );
 
     boolean useNewDeploySyntax();
 

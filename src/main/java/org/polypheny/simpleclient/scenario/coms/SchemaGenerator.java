@@ -29,6 +29,7 @@ import java.util.Random;
 import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.executor.ExecutorException;
 import org.polypheny.simpleclient.query.Query;
+import org.polypheny.simpleclient.scenario.coms.Coms.PolyphenyAdapters;
 import org.polypheny.simpleclient.scenario.coms.simulation.Graph;
 import org.polypheny.simpleclient.scenario.coms.simulation.NetworkGenerator.Network;
 
@@ -39,7 +40,7 @@ public class SchemaGenerator {
     private Network network;
 
 
-    public void generateSchema( ComsConfig config, Executor executor, String namespace, String onStore ) throws ExecutorException {
+    public void generateSchema( ComsConfig config, Executor executor, String namespace, String onStore, PolyphenyAdapters adapters ) throws ExecutorException {
         this.config = config;
         this.random = new Random( config.seed );
         this.network = new Network( random, config );
@@ -52,9 +53,9 @@ public class SchemaGenerator {
 
         Graph graph = this.network.toGraph();
 
-        List<Query> graphQueries = graph.getSchemaGraphQueries( onStore, namespace );
-        List<Query> docQueries = graph.getSchemaDocQueries( onStore, namespace );
-        List<Query> relQueries = graph.getSchemaRelQueries( onStore, namespace );
+        List<Query> graphQueries = graph.getSchemaGraphQueries( adapters.getGraphAdapter(), namespace + Graph.GRAPH_POSTFIX );
+        List<Query> docQueries = graph.getSchemaDocQueries( adapters.getDocAdapter(), namespace + Graph.DOC_POSTFIX );
+        List<Query> relQueries = graph.getSchemaRelQueries( adapters.getRelAdapter(), namespace + Graph.REL_POSTFIX );
 
         for ( Query query : graphQueries ) {
             executor.executeQuery( query );

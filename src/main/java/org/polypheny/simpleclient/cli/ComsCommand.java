@@ -53,7 +53,7 @@ public class ComsCommand implements CliRunnable {
     private List<String> args;
 
     @Option(name = { "--mode" }, arity = 0, description = "Which stack to use, either a native stack(Neo4j, MongoDB, PostgreSQL), Polypheny or SurrealDB (default:Polypheny).")
-    public static Mode mode = Mode.SURREAL_DB;
+    public static Mode mode = Mode.POLYPHENY;
 
 
     @Option(name = { "-p", "--polypheny" }, title = "IP or Hostname", arity = 1, description = "IP or Hostname of the server (default: 127.0.0.1).")
@@ -95,7 +95,7 @@ public class ComsCommand implements CliRunnable {
         switch ( mode ) {
 
             case POLYPHENY:
-                executorFactory = new PolyphenyDbMultiExecutorFactory( polyphenyDbHost );
+                executorFactory = new PolyphenyDbMultiExecutorFactory( polyphenyDbHost, "coms" );
                 break;
             case NATIVE:
                 executorFactory = new MultiExecutorFactory(
@@ -103,7 +103,7 @@ public class ComsCommand implements CliRunnable {
                         new NeoExecutorFactory( neo4j ),
                         new MongoQlExecutorFactory( mongoDB ) );
                 break;
-            case SURREAL_DB:
+            case SURREAL:
                 executorFactory = new SurrealDBExecutorFactory( surrealHost );
                 break;
             default:

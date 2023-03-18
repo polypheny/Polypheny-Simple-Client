@@ -38,13 +38,17 @@ import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import lombok.AllArgsConstructor;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.QueryMode;
+import org.polypheny.simpleclient.cli.Mode;
 import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.executor.Executor.DatabaseInstance;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
 import org.polypheny.simpleclient.executor.ExecutorException;
 import org.polypheny.simpleclient.executor.PolyphenyDbExecutor;
+import org.polypheny.simpleclient.executor.PolyphenyDbMultiExecutorFactory.MultiExecutor;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.main.ProgressReporter;
 import org.polypheny.simpleclient.main.ProgressReporter.ReportMultiQueryListProgress;
@@ -66,6 +70,7 @@ public class Coms extends Scenario {
     private final List<Long> measuredTimes;
     private final HashMap<Integer, String> queryTypes;
     private final ConcurrentHashMap<Integer, List<Long>> measuredTimePerQueryType;
+    private final Mode mode;
     private long executeRuntime;
 
 
@@ -73,6 +78,7 @@ public class Coms extends Scenario {
         super( executorFactory, commitAfterEveryQuery, dumpQueryList, queryMode );
         this.random = new Random( config.seed );
         this.config = config;
+        this.mode = config.mode;
 
         this.measuredTimes = Collections.synchronizedList( new LinkedList<>() );
         this.queryTypes = new HashMap<>();
@@ -103,12 +109,38 @@ public class Coms extends Scenario {
         Executor executor = null;
         try {
             executor = executorFactory.createExecutorInstance( null, NAMESPACE );
+
+            PolyphenyAdapters adapters;
+            if ( mode == Mode.POLYPHENY ) {
+                log.info( "Deploying adapters..." );
+                adapters = deployAdapters( (MultiExecutor) executor );
+            } else {
+                adapters = deployAdapters( null );
+            }
+
             SchemaGenerator generator = new SchemaGenerator();
-            generator.generateSchema( config, executor, NAMESPACE, onStore );
+            generator.generateSchema( config, executor, NAMESPACE, onStore, adapters );
         } catch ( ExecutorException e ) {
             throw new RuntimeException( "Exception while creating schema", e );
         } finally {
             commitAndCloseExecutor( executor );
+        }
+    }
+
+
+    private PolyphenyAdapters deployAdapters( MultiExecutor executor ) {
+        if ( executor == null ) {
+            return new PolyphenyAdapters( null, null, null );
+        }
+
+        try {
+            executor.jdbc.setNewDeploySyntax( true );
+            return new PolyphenyAdapters(
+                    executor.jdbc.deployPostgres( true ),
+                    executor.jdbc.deployMongoDb(),
+                    executor.jdbc.deployNeo4j() );
+        } catch ( ExecutorException e ) {
+            throw new RuntimeException( e );
         }
     }
 
@@ -297,6 +329,17 @@ public class Coms extends Scenario {
     @Override
     public int getNumberOfInsertThreads() {
         return 0;
+    }
+
+
+    @Value
+    @AllArgsConstructor
+    public static class PolyphenyAdapters {
+
+        String relAdapter;
+        String docAdapter;
+        String graphAdapter;
+
     }
 
 }

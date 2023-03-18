@@ -77,7 +77,7 @@ public class MultiBenchCommand implements CliRunnable {
             }
         }
 
-        ExecutorFactory executorFactory = new PolyphenyDbMultiExecutorFactory( polyphenyDbHost );
+        ExecutorFactory executorFactory = new PolyphenyDbMultiExecutorFactory( polyphenyDbHost, "coms" );
 
         try {
             if ( args.get( 0 ).equalsIgnoreCase( "data" ) ) {

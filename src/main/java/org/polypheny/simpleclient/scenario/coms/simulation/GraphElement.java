@@ -51,6 +51,8 @@ public abstract class GraphElement {
 
     public long id = Network.idBuilder.getAndIncrement();
 
+    public static final String namespace = "coms";
+
     public Map<String, String> fixedProperties;
 
     public Map<String, String> dynProperties;
@@ -58,7 +60,7 @@ public abstract class GraphElement {
 
 
     public List<String> getLabels() {
-        return Collections.singletonList( getClass().getSimpleName() );
+        return Collections.singletonList( getClass().getSimpleName().toLowerCase() );
     }
 
 
@@ -122,7 +124,7 @@ public abstract class GraphElement {
 
     @NotNull
     private String getTable() {
-        return getLabels().get( 0 ) + REL_POSTFIX;
+        return namespace + REL_POSTFIX + "." + getLabels().get( 0 ) + REL_POSTFIX;
     }
 
 
