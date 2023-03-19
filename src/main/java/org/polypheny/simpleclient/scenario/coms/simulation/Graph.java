@@ -186,20 +186,25 @@ public class Graph {
 
 
     public List<Query> getRelQueries( int relCreateBatch ) {
-        List<Query> queries = new ArrayList<>();
-
         List<GraphElement> list = Stream.concat( this.nodes.values().stream(), this.edges.values().stream() ).collect( Collectors.toList() );
+        return buildRelInserts( relCreateBatch, list );
+    }
+
+
+    @NotNull
+    public static List<Query> buildRelInserts( int relCreateBatch, List<GraphElement> list ) {
+        List<Query> queries = new ArrayList<>();
         for ( List<GraphElement> elements : Lists.partition( list, relCreateBatch ) ) {
             StringBuilder sql = new StringBuilder();
 
-            sql.append( " (" ).append( String.join( ",", elements.get( 0 ).getFixedProperties().keySet() ) ).append( ")" );
+            sql.append( " (" ).append( String.join( ",", GraphElement.types.keySet() ) ).append( ")" );
             sql.append( " VALUES " );
             int i = 0;
             for ( GraphElement element : elements ) {
                 if ( i != 0 ) {
                     sql.append( ", " );
                 }
-                sql.append( "(" ).append( element.asSql() ).append( ")" );
+                sql.append( "(" ).append( element.asSql().get( 0 ) ).append( ")" );
                 i++;
             }
             String label = elements.get( 0 ).getLabels().get( 0 ) + REL_POSTFIX;
@@ -272,12 +277,12 @@ public class Graph {
             StringBuilder sql = new StringBuilder( "CREATE TABLE " ).append( sqlLabel ).append( REL_POSTFIX ).append( "(" );
             StringBuilder surreal = new StringBuilder( "DEFINE TABLE " ).append( label ).append( REL_POSTFIX ).append( " SCHEMAFULL;" );
 
-            for ( Entry<String, PropertyType> entry : element.getTypes().entrySet() ) {
+            for ( Entry<String, PropertyType> entry : element.types.entrySet() ) {
                 sql.append( entry.getKey() ).append( " " ).append( entry.getValue().asSql() ).append( " NOT NULL," );
                 surreal.append( "DEFINE FIELD " ).append( entry.getKey() ).append( " ON " ).append( label ).append( REL_POSTFIX ).append( " TYPE " ).append( entry.getValue().asSurreal() ).append( ";" );
             }
 
-            sql.append( "PRIMARY KEY(" ).append( element.getTypes().keySet().stream().findFirst().orElseThrow( RuntimeException::new ) ).append( "))" )
+            sql.append( "PRIMARY KEY(" ).append( element.types.keySet().stream().findFirst().orElseThrow( RuntimeException::new ) ).append( "))" )
                     .append( store );
 
             queries.add( RawQuery.builder().sql( sql.toString() ).surrealQl( surreal.toString() ).build() );
@@ -298,11 +303,10 @@ public class Graph {
 
 
         public Node(
-                Map<String, PropertyType> types,
                 Map<String, String> fixedProperties,
                 Map<String, String> dynProperties,
                 JsonObject nestedQueries ) {
-            super( types, fixedProperties, dynProperties );
+            super( fixedProperties, dynProperties );
             this.nestedQueries = new ArrayList<>( Collections.singletonList( nestedQueries ) );
         }
 
@@ -378,7 +382,7 @@ public class Graph {
             }
 
             String surreal = "DELETE " + collection + " WHERE " + filter.entrySet().stream().map( e -> e.getKey() + "=" + e.getValue() ).collect( Collectors.joining( " AND " ) );
-            String mongo = "db." + collection + ".remove(" + filter + ")";
+            String mongo = "db." + collection + ".deleteMany(" + filter + ")";
 
             return Collections.singletonList( RawQuery.builder().mongoQl( mongo ).surrealQl( surreal ).build() );
 
@@ -431,8 +435,8 @@ public class Graph {
     @NonFinal
     public abstract static class Edge extends GraphElement {
 
-        public Edge( Map<String, PropertyType> types, Map<String, String> fixedProperties, Map<String, String> dynProperties, long from, long to, boolean directed ) {
-            super( types, fixedProperties, dynProperties );
+        public Edge( Map<String, String> fixedProperties, Map<String, String> dynProperties, long from, long to, boolean directed ) {
+            super( fixedProperties, dynProperties );
             this.from = from;
             this.to = to;
             this.directed = directed;

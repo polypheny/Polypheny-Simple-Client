@@ -36,6 +36,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
 import java.util.stream.Collectors;
+import lombok.Getter;
 import lombok.Value;
 import lombok.experimental.NonFinal;
 import org.jetbrains.annotations.NotNull;
@@ -49,14 +50,23 @@ import org.polypheny.simpleclient.scenario.coms.simulation.PropertyType.Type;
 @NonFinal
 public abstract class GraphElement {
 
+    @Getter
+    public static Map<String, PropertyType> types = new HashMap<String, PropertyType>() {{
+        put( "a_stamp", new PropertyType( 5, Type.NUMBER ) );
+        put( "id", new PropertyType( 3, Type.NUMBER ) );
+        put( "manufactureId", new PropertyType( 12, Type.NUMBER ) );
+        put( "manufactureName", new PropertyType( 12, Type.CHAR ) );
+        put( "entry", new PropertyType( 12, Type.NUMBER ) );
+        put( "description", new PropertyType( 255, Type.NUMBER ) );
+    }};
+
     public long id = Network.idBuilder.getAndIncrement();
 
     public static final String namespace = "coms";
 
-    public Map<String, String> fixedProperties;
+    public List<Map<String, String>> fixedProperties;
 
     public Map<String, String> dynProperties;
-    public Map<String, PropertyType> types;
 
 
     public List<String> getLabels() {
@@ -64,25 +74,29 @@ public abstract class GraphElement {
     }
 
 
-    public GraphElement( Map<String, PropertyType> types, Map<String, String> fixedProperties, Map<String, String> dynProperties ) {
-        this.fixedProperties = fixedProperties;
+    public GraphElement( Map<String, String> fixedProperties, Map<String, String> dynProperties ) {
+        this.fixedProperties = new ArrayList<>( Collections.singletonList( fixedProperties ) );
         this.dynProperties = dynProperties;
-        this.types = types;
     }
 
 
-    public String asSql() {
-        List<String> query = new ArrayList<>();
-        for ( Entry<String, String> entry : fixedProperties.entrySet() ) {
-            query.add( entry.getValue() );
+    public List<String> asSql() {
+        List<String> queries = new ArrayList<>();
+        for ( Map<String, String> map : fixedProperties ) {
+            List<String> query = new ArrayList<>();
+            for ( Entry<String, String> entry : map.entrySet() ) {
+                query.add( entry.getValue() );
+            }
+            queries.add( String.join( ",", query ) );
         }
-        return String.join( ",", query );
+
+        return queries;
     }
 
 
     public List<Query> getRemoveQuery() {
         String cypher = String.format( "MATCH (n {_id: %s}) DELETE n", getId() );
-        String mongo = String.format( "db.%s.remove({_id: %s})", getLabels().get( 0 ) + DOC_POSTFIX, getId() );
+        String mongo = String.format( "db.%s.deleteMany({_id: %s})", getLabels().get( 0 ) + DOC_POSTFIX, getId() );
         String sql = String.format( "DELETE FROM %s WHERE id = %s", getTable( true ), getId() );
 
         String surrealGraph = String.format( "DELETE node WHERE _id = %s;", getId() );
@@ -115,13 +129,14 @@ public abstract class GraphElement {
         sql.append( getTable( true ) );
         surreal.append( getTable( false ) );
 
-        sql.append( " (" ).append( String.join( ",", getFixedProperties().keySet() ) ).append( ")" );
+        sql.append( " (" ).append( String.join( ",", types.keySet() ) ).append( ")" );
         sql.append( " VALUES " );
-        sql.append( "(" ).append( asSql() ).append( ")" );
+        String values = asSql().stream().map( s -> "(" + s + ")" ).collect( Collectors.joining( "," ) );
+        sql.append( values );
 
-        surreal.append( " (" ).append( String.join( ",", getFixedProperties().keySet() ) ).append( ")" );
+        surreal.append( " (" ).append( String.join( ",", types.keySet() ) ).append( ")" );
         surreal.append( " VALUES " );
-        surreal.append( "(" ).append( asSql() ).append( ")" );
+        surreal.append( values );
 
         return RawQuery.builder()
                 .sql( sql.toString() )
@@ -139,27 +154,65 @@ public abstract class GraphElement {
 
 
     public List<Query> changeDevice( Random random ) {
-        int i = random.nextInt( fixedProperties.size() ) + 1;
+        int changedPerProperties = random.nextInt( types.size() ) + 1;
+        int targetProperties = random.nextInt( fixedProperties.size() );
 
         StringBuilder sql = new StringBuilder( " SET " );
 
         Map<String, String> updates = new HashMap<>();
-        for ( int j = 0; j < i; j++ ) {
-            String key = new ArrayList<>( fixedProperties.keySet() ).get( j );
+        for ( int j = 0; j < changedPerProperties; j++ ) {
+            String key = new ArrayList<>( types.keySet() ).get( j );
             PropertyType property = types.get( key );
             updates.put( key, property.getType().asString( random, 0, property.getLength(), Type.OBJECT ) );
         }
 
         sql.append( updates.entrySet().stream().map( u -> u.getKey() + " = " + u.getValue() ).collect( Collectors.joining( ", " ) ) );
         sql.append( " WHERE " );
-        sql.append( updates.keySet().stream().map( u -> u + " = " + fixedProperties.get( u ) ).collect( Collectors.joining( " AND " ) ) );
+        sql.append( updates.keySet().stream().map( u -> u + " = " + fixedProperties.get( targetProperties ).get( u ) ).collect( Collectors.joining( " AND " ) ) );
 
         // update simulation
-        fixedProperties.putAll( updates );
+        fixedProperties.get( targetProperties ).putAll( updates );
 
         return Collections.singletonList( RawQuery.builder()
                 .sql( "UPDATE " + getTable( true ) + sql )
                 .surrealQl( "UPDATE " + getTable( false ) + sql ).build() );
+    }
+
+
+    public List<Query> addDeviceAction( Random random ) {
+        int newProps = random.nextInt( 5 ) + 1;
+
+        List<Map<String, String>> adds = new ArrayList<>();
+
+        for ( int i = 0; i < newProps; i++ ) {
+            adds.add( Network.generateFixedTypedProperties( random, types ) );
+        }
+        fixedProperties.addAll( adds );
+
+        return buildQueries( adds );
+    }
+
+
+    private List<Query> buildQueries( List<Map<String, String>> adds ) {
+
+        StringBuilder sql = new StringBuilder();
+
+        sql.append( " (" ).append( String.join( ",", types.keySet() ) ).append( ")" );
+        sql.append( " VALUES " );
+        int i = 0;
+        for ( Map<String, String> element : adds ) {
+            if ( i != 0 ) {
+                sql.append( ", " );
+            }
+            sql.append( "(" ).append( String.join( ", ", element.values() ) ).append( ")" );
+            i++;
+        }
+        String label = getLabels().get( 0 ) + REL_POSTFIX;
+        String sqlLabel = GraphElement.namespace + REL_POSTFIX + "." + label;
+
+        return Collections.singletonList( RawQuery.builder()
+                .sql( "INSERT INTO " + sqlLabel + sql )
+                .surrealQl( "INSERT INTO " + label + sql ).build() );
     }
 
 }

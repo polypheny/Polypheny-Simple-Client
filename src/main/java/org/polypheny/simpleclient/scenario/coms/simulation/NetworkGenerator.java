@@ -118,15 +118,15 @@ public class NetworkGenerator {
             this.scale = config.networkScale;
             Network.config = config;
 
-            generateObject( SERVERS, () -> servers.add( new Server( this, random ) ) );
-            generateObject( SWITCHES, () -> switches.add( new Switch( this, random ) ) );
-            generateObject( APS, () -> aps.add( new AP( this, random ) ) );
+            generateObject( SERVERS, () -> servers.add( new Server( random ) ) );
+            generateObject( SWITCHES, () -> switches.add( new Switch( random ) ) );
+            generateObject( APS, () -> aps.add( new AP( random ) ) );
 
-            generateObject( CLIENTS * OS_DISTRIBUTION, () -> pcs.add( new PC( this, random ) ) );
-            generateObject( CLIENTS * (1 - OS_DISTRIBUTION), () -> macs.add( new Mac( this, random ) ) );
+            generateObject( CLIENTS * OS_DISTRIBUTION, () -> pcs.add( new PC( random ) ) );
+            generateObject( CLIENTS * (1 - OS_DISTRIBUTION), () -> macs.add( new Mac( random ) ) );
 
-            generateObject( MOBILES * MOBILE_DISTRIBUTION, () -> mobiles.add( new Mobile( this, random ) ) );
-            generateObject( MOBILES * (1 - MOBILE_DISTRIBUTION), () -> ioTs.add( new IoT( this, random ) ) );
+            generateObject( MOBILES * MOBILE_DISTRIBUTION, () -> mobiles.add( new Mobile( random ) ) );
+            generateObject( MOBILES * (1 - MOBILE_DISTRIBUTION), () -> ioTs.add( new IoT( random ) ) );
 
             generateConnection( this.servers, this.servers, this.servers.size() / 4, Connection.LAN );
 
@@ -154,9 +154,9 @@ public class NetworkGenerator {
                 R to = toElements.get( random.nextInt( toElements.size() ) );
 
                 if ( connection == Connection.WLAN ) {
-                    this.wlans.add( new WLan( this, from.getId(), to.getId(), false, random ) );
+                    this.wlans.add( new WLan( from.getId(), to.getId(), false, random ) );
                 } else if ( connection == Connection.LAN ) {
-                    this.lans.add( new Lan( this, from.getId(), to.getId(), false, random ) );
+                    this.lans.add( new Lan( from.getId(), to.getId(), false, random ) );
                 }
             }
 
@@ -396,6 +396,7 @@ public class NetworkGenerator {
             List<Query> queries = new ArrayList<>();
 
             queries.addAll( element.changeDevice( random ) );
+            queries.addAll( element.addDeviceAction( random ) );
             // todo add more changes
 
             return queries;
@@ -492,18 +493,10 @@ public class NetworkGenerator {
 
         Random random;
 
-        public static Map<String, PropertyType> types = new HashMap<String, PropertyType>() {{
-            put( "id", new PropertyType( 3, Type.NUMBER ) );
-            put( "manufactureId", new PropertyType( 12, Type.NUMBER ) );
-            put( "manufactureName", new PropertyType( 12, Type.CHAR ) );
-            put( "entry", new PropertyType( 12, Type.NUMBER ) );
-        }};
 
-
-        public Server( Network network, Random random ) {
+        public Server( Random random ) {
             super(
-                    types,
-                    Network.generateFixedTypedProperties( random, types ),
+                    Network.generateFixedTypedProperties( random, getTypes() ),
                     Network.generateProperties( random, Network.config.switchConfigs ),
                     Network.generateNestedProperties( random, Network.config.nestingDepth ) );
             this.random = random;
@@ -521,17 +514,9 @@ public class NetworkGenerator {
 
         Random random;
 
-        public static Map<String, PropertyType> types = new HashMap<String, PropertyType>() {{
-            put( "id", new PropertyType( 3, Type.NUMBER ) );
-            put( "manufactureId", new PropertyType( 12, Type.NUMBER ) );
-            put( "manufactureName", new PropertyType( 12, Type.CHAR ) );
-            put( "entry", new PropertyType( 12, Type.NUMBER ) );
-        }};
 
-
-        public Switch( Network network, Random random ) {
+        public Switch( Random random ) {
             super(
-                    types,
                     Network.generateFixedTypedProperties( random, types ),
                     Network.generateProperties( random, Network.config.switchConfigs ),
                     Network.generateNestedProperties( random, Network.config.nestingDepth ) );
@@ -547,16 +532,9 @@ public class NetworkGenerator {
 
         Random random;
 
-        public static Map<String, PropertyType> types = new HashMap<String, PropertyType>() {{
-            put( "id", new PropertyType( 3, Type.NUMBER ) );
-            put( "manufactureId", new PropertyType( 12, Type.NUMBER ) );
-            put( "manufactureName", new PropertyType( 12, Type.CHAR ) );
-            put( "entry", new PropertyType( 12, Type.NUMBER ) );
-        }};
 
-
-        public AP( Network network, Random random ) {
-            super( types,
+        public AP( Random random ) {
+            super(
                     Network.generateFixedTypedProperties( random, types ),
                     Network.generateProperties( random, Network.config.apDynConfigs ),
                     Network.generateNestedProperties( random, Network.config.nestingDepth ) );
@@ -575,16 +553,9 @@ public class NetworkGenerator {
 
         Random random;
 
-        public static Map<String, PropertyType> types = new HashMap<String, PropertyType>() {{
-            put( "id", new PropertyType( 3, Type.NUMBER ) );
-            put( "manufactureId", new PropertyType( 12, Type.NUMBER ) );
-            put( "manufactureName", new PropertyType( 12, Type.CHAR ) );
-            put( "entry", new PropertyType( 12, Type.NUMBER ) );
-        }};
 
-
-        public IoT( Network network, Random random ) {
-            super( types,
+        public IoT( Random random ) {
+            super(
                     Network.generateFixedTypedProperties( random, types ),
                     Network.generateProperties( random, Network.config.mobileDynConfigsMax ),
                     Network.generateNestedProperties( random, Network.config.nestingDepth ) );
@@ -600,16 +571,9 @@ public class NetworkGenerator {
 
         Random random;
 
-        public static Map<String, PropertyType> types = new HashMap<String, PropertyType>() {{
-            put( "id", new PropertyType( 3, Type.NUMBER ) );
-            put( "manufactureId", new PropertyType( 12, Type.NUMBER ) );
-            put( "manufactureName", new PropertyType( 12, Type.CHAR ) );
-            put( "entry", new PropertyType( 12, Type.NUMBER ) );
-        }};
 
-
-        public Mobile( Network network, Random random ) {
-            super( types,
+        public Mobile( Random random ) {
+            super(
                     Network.generateFixedTypedProperties( random, types ),
                     Network.generateProperties( random, Network.config.mobileDynConfigsMax ),
                     Network.generateNestedProperties( random, Network.config.nestingDepth ) );
@@ -625,16 +589,9 @@ public class NetworkGenerator {
 
         Random random;
 
-        public static Map<String, PropertyType> types = new HashMap<String, PropertyType>() {{
-            put( "id", new PropertyType( 3, Type.NUMBER ) );
-            put( "manufactureId", new PropertyType( 12, Type.NUMBER ) );
-            put( "manufactureName", new PropertyType( 12, Type.CHAR ) );
-            put( "entry", new PropertyType( 12, Type.NUMBER ) );
-        }};
 
-
-        public PC( Network network, Random random ) {
-            super( types,
+        public PC( Random random ) {
+            super(
                     Network.generateFixedTypedProperties( random, types ),
                     Network.generateProperties( random, Network.config.pcDynConfigsMax ),
                     Network.generateNestedProperties( random, Network.config.nestingDepth ) );
@@ -651,16 +608,9 @@ public class NetworkGenerator {
 
         Random random;
 
-        public static Map<String, PropertyType> types = new HashMap<String, PropertyType>() {{
-            put( "id", new PropertyType( 3, Type.NUMBER ) );
-            put( "manufactureId", new PropertyType( 12, Type.NUMBER ) );
-            put( "manufactureName", new PropertyType( 12, Type.CHAR ) );
-            put( "entry", new PropertyType( 12, Type.NUMBER ) );
-        }};
 
-
-        public Mac( Network network, Random random ) {
-            super( types,
+        public Mac( Random random ) {
+            super(
                     Network.generateFixedTypedProperties( random, types ),
                     Network.generateProperties( random, Network.config.pcDynConfigsMax ),
                     Network.generateNestedProperties( random, Network.config.nestingDepth ) );
@@ -678,17 +628,9 @@ public class NetworkGenerator {
 
         Random random;
 
-        public static Map<String, PropertyType> types = new HashMap<String, PropertyType>() {{
-            put( "id", new PropertyType( 3, Type.NUMBER ) );
-            put( "manufactureId", new PropertyType( 12, Type.NUMBER ) );
-            put( "manufactureName", new PropertyType( 12, Type.CHAR ) );
-            put( "entry", new PropertyType( 12, Type.NUMBER ) );
-        }};
 
-
-        public Lan( Network network, long from, long to, boolean directed, Random random ) {
+        public Lan( long from, long to, boolean directed, Random random ) {
             super(
-                    types,
                     Network.generateFixedTypedProperties( random, types ),
                     Network.generateProperties( random, Network.config.connectionConfigs ),
                     from,
@@ -707,17 +649,9 @@ public class NetworkGenerator {
 
         Random random;
 
-        public static Map<String, PropertyType> types = new HashMap<String, PropertyType>() {{
-            put( "id", new PropertyType( 3, Type.NUMBER ) );
-            put( "manufactureId", new PropertyType( 12, Type.NUMBER ) );
-            put( "manufactureName", new PropertyType( 12, Type.CHAR ) );
-            put( "entry", new PropertyType( 12, Type.NUMBER ) );
-        }};
 
-
-        public WLan( Network network, long from, long to, boolean directed, Random random ) {
+        public WLan( long from, long to, boolean directed, Random random ) {
             super(
-                    types,
                     Network.generateFixedTypedProperties( random, types ),
                     Network.generateProperties( random, Network.config.connectionConfigs ),
                     from,
