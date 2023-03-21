@@ -652,7 +652,7 @@ public class Gavel extends Scenario {
     }
 
 
-    static class DataGenerationThreadMonitor {
+    public static class DataGenerationThreadMonitor {
 
         private final List<DataGenerator> dataGenerators;
         @Getter
@@ -661,7 +661,7 @@ public class Gavel extends Scenario {
         private Exception exception = null;
 
 
-        DataGenerationThreadMonitor() {
+        public DataGenerationThreadMonitor() {
             this.dataGenerators = new LinkedList<>();
             aborted = false;
         }

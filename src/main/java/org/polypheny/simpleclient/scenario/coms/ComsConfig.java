@@ -51,7 +51,7 @@ public class ComsConfig extends AbstractConfig {
     public int docCreateBatch;
     public int relCreateBatch;
     public List<Integer> threadDistribution;
-    public int simulationRuns;
+
     public Mode mode;
     public boolean allowNegative;
 
@@ -59,7 +59,6 @@ public class ComsConfig extends AbstractConfig {
     public ComsConfig( String system, Properties properties ) {
         super( "coms", system, properties );
         mode = Mode.valueOf( getStringProperty( properties, "mode" ).toUpperCase() );
-        simulationRuns = getIntProperty( properties, "simulationRuns" );
         threadDistribution = Arrays.stream( getStringProperty( properties, "threadDistribution" ).split( "_" ) ).map( Integer::parseInt ).collect( Collectors.toList() );
 
         seed = getLongProperty( properties, "seed" );
@@ -90,7 +89,6 @@ public class ComsConfig extends AbstractConfig {
 
         mode = Mode.valueOf( parsedConfig.get( "threadDistribution" ).toUpperCase() );
         seed = Long.parseLong( parsedConfig.get( "seed" ) );
-        simulationRuns = Integer.parseInt( parsedConfig.get( "simulationRuns" ) );
 
         threadDistribution = Arrays.stream( parsedConfig.get( "threadDistribution" ).split( "_" ) ).map( Integer::parseInt ).collect( Collectors.toList() );
 

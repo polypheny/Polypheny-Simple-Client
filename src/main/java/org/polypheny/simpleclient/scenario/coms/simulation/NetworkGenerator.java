@@ -88,11 +88,11 @@ public class NetworkGenerator {
 
         public static double MOBILE_DISTRIBUTION = 0.4;
 
-        public static long MOBILES = 400;
+        public static long MOBILES = 200;
 
-        public static long APS = 100;
+        public static long APS = 50;
 
-        public static long SWITCHES = 5;
+        public static long SWITCHES = 10;
         Random random;
         List<Server> servers = new ArrayList<>();
         List<Switch> switches = new ArrayList<>();
@@ -128,28 +128,32 @@ public class NetworkGenerator {
             generateObject( MOBILES * MOBILE_DISTRIBUTION, () -> mobiles.add( new Mobile( random ) ) );
             generateObject( MOBILES * (1 - MOBILE_DISTRIBUTION), () -> ioTs.add( new IoT( random ) ) );
 
-            generateConnection( this.servers, this.servers, this.servers.size() / 4, Connection.LAN );
+            generateConnection( this.servers, this.servers, this.servers.size(), Connection.LAN );
 
-            generateConnection( this.servers, this.switches, this.switches.size(), Connection.LAN );
+            generateConnection( this.servers, this.switches, this.switches.size() * 2, Connection.LAN );
 
-            generateConnection( this.switches, this.pcs, this.switches.size(), Connection.LAN );
-            generateConnection( this.switches, this.macs, this.switches.size(), Connection.LAN );
+            generateConnection( this.switches, this.pcs, this.switches.size() * 2, Connection.LAN );
+            generateConnection( this.switches, this.macs, this.switches.size() * 2, Connection.LAN );
 
-            generateConnection( this.servers, this.aps, this.aps.size(), Connection.LAN );
+            generateConnection( this.servers, this.aps, this.aps.size() * 2, Connection.LAN );
 
-            generateConnection( this.aps, this.mobiles, this.mobiles.size(), Connection.WLAN );
-            generateConnection( this.aps, this.ioTs, this.ioTs.size(), Connection.WLAN );
+            generateConnection( this.aps, this.mobiles, this.mobiles.size() * 2, Connection.WLAN );
+            generateConnection( this.aps, this.ioTs, this.ioTs.size() * 2, Connection.WLAN );
         }
 
 
         private <L extends GraphElement, R extends GraphElement> void generateConnection( List<L> fromElements, List<R> toElements, int max, Connection connection ) {
-            generateConnection( fromElements, toElements, 0, max, connection );
+            int min = max / 2;
+            if ( min >= max ) {
+                min = max - 1;
+            }
+            generateConnection( fromElements, toElements, min, max, connection );
         }
 
 
         private <L extends GraphElement, R extends GraphElement> void generateConnection( List<L> fromElements, List<R> toElements, int min, int max, Connection connection ) {
 
-            for ( int i = 0; i < min + random.nextInt( max - min ); i++ ) {
+            for ( int i = 0; i < min + random.nextInt( max - min ) + 1; i++ ) {
                 L from = fromElements.get( random.nextInt( fromElements.size() ) );
                 R to = toElements.get( random.nextInt( toElements.size() ) );
 
@@ -271,57 +275,47 @@ public class NetworkGenerator {
             List<Query> queries = new ArrayList<>();
 
             //// remove logs
-            queries.addAll(
-                    merge(
-                            doRandom( mobiles, mobiles.size() / 10f, this::deleteLogs ),
-                            doRandom( ioTs, ioTs.size() / 10f, this::deleteLogs ),
-                            doRandom( pcs, pcs.size() / 10f, this::deleteLogs ),
-                            doRandom( aps, aps.size() / 10f, this::deleteLogs ),
-                            doRandom( switches, switches.size() / 10f, this::deleteLogs ),
-                            doRandom( servers, servers.size() / 10f, this::deleteLogs )
-                    )
-            );
+            handleRemoveLogs( queries );
+            readEntities( queries );
 
             //// add logs
-            queries.addAll(
-                    merge(
-                            doRandom( mobiles, mobiles.size() / 10f, this::addLogs ),
-                            doRandom( ioTs, ioTs.size() / 10f, this::addLogs ),
-                            doRandom( pcs, pcs.size() / 10f, this::addLogs ),
-                            doRandom( aps, aps.size() / 10f, this::addLogs ),
-                            doRandom( switches, switches.size() / 10f, this::addLogs ),
-                            doRandom( servers, servers.size() / 10f, this::addLogs )
-                    )
-            );
-
-            //// read random
-            queries.addAll(
-                    merge(
-                            doRandom( mobiles, mobiles.size() / 10f, this::readLogs ),
-                            doRandom( ioTs, ioTs.size() / 10f, this::readLogs ),
-                            doRandom( pcs, pcs.size() / 10f, this::readLogs ),
-                            doRandom( aps, aps.size() / 10f, this::readLogs ),
-                            doRandom( switches, switches.size() / 10f, this::readLogs ),
-                            doRandom( servers, servers.size() / 10f, this::readLogs )
-                    )
-            );
+            handleAddLogs( queries );
+            readEntities( queries );
 
             return queries;
+        }
+
+
+        private void handleAddLogs( List<Query> queries ) {
+            queries.addAll(
+                    merge(
+                            doRandomly( mobiles, mobiles.size() / 10f, this::addLogs ),
+                            doRandomly( ioTs, ioTs.size() / 10f, this::addLogs ),
+                            doRandomly( pcs, pcs.size() / 10f, this::addLogs ),
+                            doRandomly( aps, aps.size() / 10f, this::addLogs ),
+                            doRandomly( switches, switches.size() / 10f, this::addLogs ),
+                            doRandomly( servers, servers.size() / 10f, this::addLogs )
+                    )
+            );
+        }
+
+
+        private void handleRemoveLogs( List<Query> queries ) {
+            queries.addAll(
+                    merge(
+                            doRandomly( mobiles, mobiles.size() / 10f, this::deleteLogs ),
+                            doRandomly( ioTs, ioTs.size() / 10f, this::deleteLogs ),
+                            doRandomly( pcs, pcs.size() / 10f, this::deleteLogs ),
+                            doRandomly( aps, aps.size() / 10f, this::deleteLogs ),
+                            doRandomly( switches, switches.size() / 10f, this::deleteLogs ),
+                            doRandomly( servers, servers.size() / 10f, this::deleteLogs )
+                    )
+            );
         }
 
 
         private <T extends Node> List<Query> deleteLogs( T element ) {
             return element.deleteLogs( random );
-        }
-
-
-        private <T extends Node> List<Query> readLogs( T element ) {
-            List<Query> queries = new ArrayList<>();
-
-            queries.addAll( element.readFullLog() );
-            queries.addAll( element.readPartialLog( random ) );
-
-            return queries;
         }
 
 
@@ -332,11 +326,21 @@ public class NetworkGenerator {
 
         @SafeVarargs
         private final List<Query> merge( List<Query>... multipleQueries ) {
-            return Arrays.stream( multipleQueries ).flatMap( Collection::stream ).collect( Collectors.toList() );
+            // order of single list has to be preserved but not their order
+            return Arrays.stream( multipleQueries ).flatMap( Collection::stream ).collect( Collectors.toCollection( ArrayList::new ) );
         }
 
 
-        private <T extends GraphElement> List<Query> doRandom( List<T> elements, float roughAmount, Function<T, List<Query>> task ) {
+        @SafeVarargs
+        private final List<Query> mergeRandomly( List<Query>... multipleQueries ) {
+            // order of single list has to be preserved but not their order
+            List<Query> queries = Arrays.stream( multipleQueries ).flatMap( Collection::stream ).collect( Collectors.toCollection( ArrayList::new ) );
+            Collections.shuffle( queries, random );
+            return queries;
+        }
+
+
+        private <T extends GraphElement> List<Query> doRandomly( List<T> elements, float roughAmount, Function<T, List<Query>> task ) {
             if ( roughAmount < 1 ) {
                 return Collections.emptyList();
             }
@@ -354,16 +358,43 @@ public class NetworkGenerator {
         @NonNull
         private List<Query> simulateDevices() {
             List<Query> queries = new ArrayList<>();
-            //// remove old devices
-            simulateDeleteDevices( queries );
 
-            //// add new devices
-            simulateNewDevices( queries );
+            for ( int i = 0; i < random.nextInt( 4 ); i++ ) {
+                //// remove old devices
+                simulateDeleteDevices( queries );
+                readEntities( queries );
 
-            //// change properties of devices
-            simulateDeviceChanges( queries );
+                //// add new devices
+                simulateNewDevices( queries );
+                readEntities( queries );
+
+                //// change properties of devices
+                simulateDeviceChanges( queries );
+                readEntities( queries );
+            }
 
             return queries;
+        }
+
+
+        private void readEntities( List<Query> queries ) {
+            List<List<? extends GraphElement>> elements = Arrays.asList( mobiles, ioTs, pcs, macs, aps, servers, switches, wlans, lans );
+            List<Function<GraphElement, List<Query>>> tasks = Arrays.asList( GraphElement::getReadAllDynamic, GraphElement::getReadAllFixed, GraphElement::getReadAllNested, GraphElement::readFullLog, e -> e.readPartialLog( random ) );
+
+            for ( int i = 0; i < random.nextInt( config.numberOfThreads ); i++ ) {
+                int randomType = random.nextInt( elements.size() + 1 );
+
+                for ( int j = 0; j < random.nextInt(); j++ ) {
+                    int randomElement = random.nextInt( elements.size() + 1 );
+
+                    GraphElement element = elements.get( randomType ).get( randomElement );
+
+                    int taskId = random.nextInt( tasks.size() + 1 );
+                    queries.addAll( tasks.get( taskId ).apply( element ) );
+
+                }
+
+            }
         }
 
 
@@ -371,21 +402,21 @@ public class NetworkGenerator {
 
             queries.addAll( merge(
                             // remove Mobile devices (lot)
-                            doRandom( mobiles, mobiles.size() / 10f, this::changeDevice ),
+                            doRandomly( mobiles, mobiles.size() / 10f, this::changeDevice ),
                             // remove Iot devices (small)
-                            doRandom( ioTs, ioTs.size() / 10f, this::changeDevice ),
+                            doRandomly( ioTs, ioTs.size() / 10f, this::changeDevice ),
                             // remove PC and Macs (small)
-                            doRandom( pcs, pcs.size() / 10f, this::changeDevice ),
-                            doRandom( macs, macs.size() / 10f, this::changeDevice ),
+                            doRandomly( pcs, pcs.size() / 10f, this::changeDevice ),
+                            doRandomly( macs, macs.size() / 10f, this::changeDevice ),
                             // remove AP (minimal)
-                            doRandom( aps, aps.size() / 10f, this::changeDevice ),
+                            doRandomly( aps, aps.size() / 10f, this::changeDevice ),
                             // remove Server (nearly none)
-                            doRandom( servers, servers.size() / 10f, this::changeDevice ),
+                            doRandomly( servers, servers.size() / 10f, this::changeDevice ),
                             // remove Swich (nearly none)
-                            doRandom( switches, switches.size() / 10f, this::changeDevice ),
+                            doRandomly( switches, switches.size() / 10f, this::changeDevice ),
                             // change connections (lot)
-                            doRandom( wlans, wlans.size() / 10f, this::changeDevice ),
-                            doRandom( lans, lans.size() / 10f, this::changeDevice )
+                            doRandomly( wlans, wlans.size() / 10f, this::changeDevice ),
+                            doRandomly( lans, lans.size() / 10f, this::changeDevice )
                     )
             );
 
@@ -407,17 +438,17 @@ public class NetworkGenerator {
 
             queries.addAll( merge(
                     // remove Mobile devices (lot)
-                    doRandom( mobiles, mobiles.size() / 10f, e -> removeElement( e, mobiles ) ),
+                    doRandomly( mobiles, mobiles.size() / 10f, e -> removeElement( e, mobiles ) ),
                     // remove Iot devices (small)
-                    doRandom( ioTs, ioTs.size() / 10f, e -> removeElement( e, ioTs ) ),
+                    doRandomly( ioTs, ioTs.size() / 10f, e -> removeElement( e, ioTs ) ),
                     // remove PC and Macs (small)
-                    doRandom( pcs, pcs.size() / 25f, e -> removeElement( e, pcs ) ),
-                    doRandom( macs, macs.size() / 25f, e -> removeElement( e, macs ) ),
+                    doRandomly( pcs, pcs.size() / 25f, e -> removeElement( e, pcs ) ),
+                    doRandomly( macs, macs.size() / 25f, e -> removeElement( e, macs ) ),
                     // remove AP (minimal)
-                    doRandom( aps, aps.size() / 10f, e -> removeElement( e, aps ) ),
+                    doRandomly( aps, aps.size() / 10f, e -> removeElement( e, aps ) ),
                     // remove Server (nearly none)
-                    doRandom( servers, servers.size() / 10f, e -> removeElement( e, servers ) ),
-                    doRandom( switches, switches.size() / 10f, e -> removeElement( e, switches )
+                    doRandomly( servers, servers.size() / 10f, e -> removeElement( e, servers ) ),
+                    doRandomly( switches, switches.size() / 10f, e -> removeElement( e, switches )
                     ) )
             );
 
@@ -428,17 +459,17 @@ public class NetworkGenerator {
 
             queries.addAll( merge(
                             // add Mobile devices (lot)
-                            doRandom( mobiles, mobiles.size() / 10f, e -> addElement( e, mobiles ) ),
+                            doRandomly( mobiles, mobiles.size() / 10f, e -> addElement( e, mobiles ) ),
                             // add Iot devices (lot)
-                            doRandom( ioTs, ioTs.size() / 10f, e -> addElement( e, ioTs ) ),
+                            doRandomly( ioTs, ioTs.size() / 10f, e -> addElement( e, ioTs ) ),
                             // add PC and Macs (small)
-                            doRandom( pcs, pcs.size() / 25f, e -> addElement( e, pcs ) ),
-                            doRandom( macs, macs.size() / 25f, e -> addElement( e, macs ) ),
+                            doRandomly( pcs, pcs.size() / 25f, e -> addElement( e, pcs ) ),
+                            doRandomly( macs, macs.size() / 25f, e -> addElement( e, macs ) ),
                             // add AP (minimal)
-                            doRandom( aps, aps.size() / 10f, e -> addElement( e, aps ) ),
+                            doRandomly( aps, aps.size() / 10f, e -> addElement( e, aps ) ),
                             // add Server (nearly none)
-                            doRandom( servers, servers.size() / 10f, e -> addElement( e, servers ) ),
-                            doRandom( switches, switches.size() / 10f, e -> addElement( e, switches ) )
+                            doRandomly( servers, servers.size() / 10f, e -> addElement( e, servers ) ),
+                            doRandomly( switches, switches.size() / 10f, e -> addElement( e, switches ) )
                     )
             );
 
@@ -454,7 +485,38 @@ public class NetworkGenerator {
 
         private <T extends GraphElement> List<Query> removeElement( T element, List<T> elements ) {
             elements.remove( element );
+
+            if ( element instanceof Node ) {
+                // we need to remove connections first
+                List<WLan> ws = this.wlans
+                        .stream()
+                        .filter( w -> w.getFrom() == element.getId() || w.getTo() == element.getId() ).collect( Collectors.toList() );
+                List<Query> wQueries = ws
+                        .stream()
+                        .flatMap( e -> removeElement( e, wlans ).stream() )
+                        .collect( Collectors.toList() );
+
+                List<Lan> ls = this.lans
+                        .stream()
+                        .filter( w -> w.getFrom() == element.getId() || w.getTo() == element.getId() ).collect( Collectors.toList() );
+                List<Query> lQueries = ls
+                        .stream()
+                        .flatMap( e -> removeElement( e, lans ).stream() )
+                        .collect( Collectors.toList() );
+
+                return Stream.concat( Stream.concat( wQueries.stream(), lQueries.stream() ), element.getRemoveQuery().stream() ).collect( Collectors.toList() );
+            }
+
             return element.getRemoveQuery();
+        }
+
+
+        private boolean isNull( WLan w ) {
+            if ( w == null ) {
+                System.out.println( w );
+            }
+
+            return true;
         }
 
 

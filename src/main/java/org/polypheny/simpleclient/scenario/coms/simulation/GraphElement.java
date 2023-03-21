@@ -24,11 +24,9 @@
 
 package org.polypheny.simpleclient.scenario.coms.simulation;
 
-import static org.polypheny.simpleclient.scenario.coms.simulation.Graph.DOC_POSTFIX;
 import static org.polypheny.simpleclient.scenario.coms.simulation.Graph.REL_POSTFIX;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -36,6 +34,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.Getter;
 import lombok.Value;
 import lombok.experimental.NonFinal;
@@ -94,22 +93,23 @@ public abstract class GraphElement {
     }
 
 
-    public List<Query> getRemoveQuery() {
-        String cypher = String.format( "MATCH (n {_id: %s}) DELETE n", getId() );
-        String mongo = String.format( "db.%s.deleteMany({_id: %s})", getLabels().get( 0 ) + DOC_POSTFIX, getId() );
-        String sql = String.format( "DELETE FROM %s WHERE id = %s", getTable( true ), getId() );
-
-        String surrealGraph = String.format( "DELETE node WHERE _id = %s;", getId() );
-        String surrealDoc = String.format( "DELETE %s WHERE _id = %s;", getLabels().get( 0 ) + DOC_POSTFIX, getId() );
-        String surrealRel = String.format( "DELETE FROM %s WHERE _id = %s;", getTable( false ), getId() );
-
-        return Arrays.asList(
-                RawQuery.builder().cypher( cypher ).surrealQl( surrealGraph ).build(),
-                RawQuery.builder().mongoQl( mongo ).surrealQl( surrealDoc ).build(),
-                RawQuery.builder().sql( sql ).surrealQl( surrealRel ).build()
-        );
-
+    @NotNull
+    protected String getCollection() {
+        return getLabels().get( 0 ) + Graph.DOC_POSTFIX;
     }
+
+
+    public List<Query> readFullLog() {
+        return Collections.emptyList();
+    }
+
+
+    public List<Query> readPartialLog( Random random ) {
+        return Collections.emptyList();
+    }
+
+
+    public abstract List<Query> getRemoveQuery();
 
 
     public List<Query> asQuery() {
@@ -145,7 +145,7 @@ public abstract class GraphElement {
 
 
     @NotNull
-    private String getTable( boolean withPrefix ) {
+    String getTable( boolean withPrefix ) {
         return (withPrefix ? namespace + REL_POSTFIX + "." : "") + getLabels().get( 0 ) + REL_POSTFIX;
     }
 
@@ -213,6 +213,41 @@ public abstract class GraphElement {
         return Collections.singletonList( RawQuery.builder()
                 .sql( "INSERT INTO " + sqlLabel + sql )
                 .surrealQl( "INSERT INTO " + label + sql ).build() );
+    }
+
+
+    public String asDyn() {
+        return Stream.concat( new HashMap<String, String>() {{
+                    put( "_id", String.valueOf( getId() ) );
+                }}.entrySet().stream(),
+                dynProperties.entrySet().stream() ).map( e -> e.getKey() + ":" + e.getValue() ).collect( Collectors.joining( "," ) );
+    }
+
+
+    public List<Query> getReadAllDynamic() {
+        StringBuilder cypher = new StringBuilder( "MATCH " );
+        if ( this instanceof Node ) {
+            cypher.append( "(n{_id:" ).append( getId() ).append( "})" );
+        } else {
+            cypher.append( "()-[n{_id:" ).append( getId() ).append( "}]-()" );
+        }
+        cypher.append( " RETURN n" );
+
+        return Collections.singletonList( RawQuery.builder()
+                .surrealQl( "SELECT * FROM " + getTable( false ) + " WHERE _id =" + getId() )
+                .cypher( cypher.toString() ).build() );
+    }
+
+
+    public List<Query> getReadAllFixed() {
+        return Collections.singletonList( RawQuery.builder()
+                .surrealQl( "SELECT * FROM " + getTable( false ) + " WHERE _id =" + getId() )
+                .sql( "SELECT * FROM " + getTable( true ) + " WHERE id = " + getId() ).build() );
+    }
+
+
+    public List<Query> getReadAllNested() {
+        return Collections.emptyList();
     }
 
 }

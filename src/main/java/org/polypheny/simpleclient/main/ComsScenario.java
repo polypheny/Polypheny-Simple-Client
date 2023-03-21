@@ -41,19 +41,19 @@ public class ComsScenario {
 
     public static void data( ExecutorFactory executorFactory, Mode mode, int multiplier ) {
         ComsConfig config = new ComsConfig( mode.toString(), getProperties() );
-        Coms bench = new Coms( executorFactory, config, true, false, QueryMode.TABLE );
+        Coms bench = new Coms( executorFactory, config, true, false, QueryMode.TABLE, multiplier );
 
-        ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
+        ProgressReporter progressReporter = new ProgressBar( 1, config.progressReportBase );
         bench.generateData( null, progressReporter );
     }
 
 
     public static void workload( ExecutorFactory executorFactory, Mode mode, int multiplier, boolean writeCsv ) {
         ComsConfig config = new ComsConfig( mode.toString(), getProperties() );
-        Coms bench = new Coms( executorFactory, config, true, false, QueryMode.TABLE );
+        Coms bench = new Coms( executorFactory, config, true, false, QueryMode.TABLE, multiplier );
 
         final CsvWriter csvWriter;
-        if ( true ) {
+        if ( writeCsv ) {
             csvWriter = new CsvWriter( "results.csv" );
         } else {
             csvWriter = null;
@@ -66,7 +66,7 @@ public class ComsScenario {
 
     public static void schema( ExecutorFactory executorFactory, Mode mode ) {
         ComsConfig config = new ComsConfig( mode.toString(), getProperties() );
-        Coms bench = new Coms( executorFactory, config, true, false, QueryMode.TABLE );
+        Coms bench = new Coms( executorFactory, config, true, false, QueryMode.TABLE, 1 );
         bench.createSchema( null, true );
     }
 

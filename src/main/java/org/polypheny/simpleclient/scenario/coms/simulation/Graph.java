@@ -29,6 +29,7 @@ import com.google.common.collect.Streams;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -90,7 +91,7 @@ public class Graph {
                         "(n1)-[r%d:%s{%s}]->(n2)",
                         i,
                         String.join( ":", edge.getLabels() ),
-                        edge.dynProperties.entrySet().stream().map( e -> e.getKey() + ":" + e.getValue() ).collect( Collectors.joining( "," ) ) ) );
+                        edge.asDyn() ) );
 
                 //// SurrealDB INSERT INTO dev [{name: 'Amy'}, {name: 'Mary', id: 'Mary'}]; ARE ALWAYS DIRECTED
                 surreal.append( String.format(
@@ -98,7 +99,7 @@ public class Graph {
                         edge.from,
                         edge.to,
                         edge.getLabels().stream().map( l -> "\"" + l + "\"" ).collect( Collectors.joining( "," ) ),
-                        edge.dynProperties.entrySet().stream().map( e -> e.getKey() + ":" + e.getValue() ).collect( Collectors.joining( "," ) ) ) );
+                        edge.asDyn() ) );
 
                 surrealDBs.add( surreal.append( "};" ).toString() );
                 cyphers.add( cypher.toString() );
@@ -129,18 +130,13 @@ public class Graph {
                 cypher.append( String.format(
                         "(n%d:%s{%s})",
                         i, String.join( ":", node.getLabels() ),
-                        Stream.concat(
-                                        node.dynProperties.entrySet().stream().map( e -> e.getKey() + ":" + e.getValue() ),
-                                        Stream.of( "_id: " + node.getId() ) )
-                                .collect( Collectors.joining( "," ) ) ) );
+                        node.asDyn() ) );
 
                 //// SurrealDB INSERT INTO dev [{name: 'Amy'}, {name: 'Mary', id: 'Mary'}];
                 surreal.append( String.format(
                         "{ labels: [ %s ], %s }",
                         node.getLabels().stream().map( l -> "\"" + l + "\"" ).collect( Collectors.joining( "," ) ),
-                        Stream.concat(
-                                node.dynProperties.entrySet().stream().map( e -> e.getKey() + ":" + e.getValue() ),
-                                Stream.of( "_id: " + node.getId() ) ).collect( Collectors.joining( "," ) ) ) );
+                        node.asDyn() ) );
 
                 i++;
             }
@@ -155,7 +151,7 @@ public class Graph {
         List<Query> queries = new ArrayList<>();
 
         for ( List<Node> nodes : Lists.partition( new ArrayList<>( this.nodes.values() ), docCreateBatch ) ) {
-            String collection = nodes.get( 0 ).getLabels().get( 0 ) + DOC_POSTFIX;
+            String collection = nodes.get( 0 ).getCollection();
             StringBuilder mongo = new StringBuilder( "db." + collection + ".insertMany([" );
             StringBuilder surreal = new StringBuilder( "INSERT INTO " + collection + " [" );
             int i = 0;
@@ -389,12 +385,7 @@ public class Graph {
         }
 
 
-        @NotNull
-        private String getCollection() {
-            return getLabels().get( 0 ) + DOC_POSTFIX;
-        }
-
-
+        @Override
         public List<Query> readFullLog() {
             String collection = getCollection();
 
@@ -405,6 +396,7 @@ public class Graph {
         }
 
 
+        @Override
         public List<Query> readPartialLog( Random random ) {
             int prop = random.nextInt( 10 );
 
@@ -425,6 +417,32 @@ public class Graph {
             surreal.append( String.join( ",", asMongos() ) );
 
             return RawQuery.builder().mongoQl( mongo.append( "])" ).toString() ).surrealQl( surreal.append( "]" ).toString() ).build();
+        }
+
+
+        @Override
+        public List<Query> getRemoveQuery() {
+            String cypher = String.format( "MATCH (n {_id: %s}) DELETE n", getId() );
+            String mongo = String.format( "db.%s.deleteMany({_id: %s})", getLabels().get( 0 ) + DOC_POSTFIX, getId() );
+            String sql = String.format( "DELETE FROM %s WHERE id = %s", getTable( true ), getId() );
+
+            String surrealGraph = String.format( "DELETE node WHERE _id = %s;", getId() );
+            String surrealDoc = String.format( "DELETE %s WHERE _id = %s;", getLabels().get( 0 ) + DOC_POSTFIX, getId() );
+            String surrealRel = String.format( "DELETE FROM %s WHERE _id = %s;", getTable( false ), getId() );
+
+            return Arrays.asList(
+                    RawQuery.builder().cypher( cypher ).surrealQl( surrealGraph ).build(),
+                    RawQuery.builder().mongoQl( mongo ).surrealQl( surrealDoc ).build(),
+                    RawQuery.builder().sql( sql ).surrealQl( surrealRel ).build()
+            );
+        }
+
+
+        @Override
+        public List<Query> getReadAllNested() {
+            return Collections.singletonList( RawQuery.builder()
+                    .surrealQl( "SELECT * FROM " + getCollection() + " WHERE _id =" + getId() )
+                    .mongoQl( "db." + getCollection() + ".find({ _id: " + getId() + "})" ).build() );
         }
 
     }
@@ -475,6 +493,24 @@ public class Graph {
             return RawQuery.builder().cypher( cypher ).surrealQl( surreal.toString() ).build();
         }
 
+
+        @Override
+        public List<Query> getRemoveQuery() {
+            String cypher = String.format( "MATCH ()-[n {_id: %s}]-() DELETE n", getId() );
+            String mongo = String.format( "db.%s.deleteMany({_id: %s})", getLabels().get( 0 ) + DOC_POSTFIX, getId() );
+            String sql = String.format( "DELETE FROM %s WHERE id = %s", getTable( true ), getId() );
+
+            String surrealGraph = String.format( "DELETE node WHERE _id = %s;", getId() );
+            String surrealDoc = String.format( "DELETE %s WHERE _id = %s;", getLabels().get( 0 ) + DOC_POSTFIX, getId() );
+            String surrealRel = String.format( "DELETE FROM %s WHERE _id = %s;", getTable( false ), getId() );
+
+            return Arrays.asList(
+                    RawQuery.builder().cypher( cypher ).surrealQl( surrealGraph ).build(),
+                    RawQuery.builder().mongoQl( mongo ).surrealQl( surrealDoc ).build(),
+                    RawQuery.builder().sql( sql ).surrealQl( surrealRel ).build()
+            );
+
+        }
 
     }
 

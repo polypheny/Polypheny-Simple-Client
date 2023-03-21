@@ -32,6 +32,7 @@ import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.scenario.coms.Coms.PolyphenyAdapters;
 import org.polypheny.simpleclient.scenario.coms.simulation.Graph;
 import org.polypheny.simpleclient.scenario.coms.simulation.NetworkGenerator.Network;
+import org.polypheny.simpleclient.scenario.gavel.Gavel.DataGenerationThreadMonitor;
 
 public class SchemaGenerator {
 
@@ -50,6 +51,8 @@ public class SchemaGenerator {
         // -> generateSchema parameters per nodes
         // -> generateSchema configs depending on type of node
         // -> generateSchema logs?
+
+        DataGenerationThreadMonitor threadMonitor = new DataGenerationThreadMonitor();
 
         Graph graph = this.network.toGraph();
 

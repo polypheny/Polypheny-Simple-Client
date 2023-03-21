@@ -29,6 +29,8 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.executor.ExecutorException;
+import org.polypheny.simpleclient.main.ProgressBar;
+import org.polypheny.simpleclient.main.ProgressReporter;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.scenario.coms.simulation.Graph;
 import org.polypheny.simpleclient.scenario.coms.simulation.NetworkGenerator;
@@ -44,26 +46,20 @@ public class DataGenerator {
         // -> generateSchema logs, execute 5% untimed
         // -> generateSchema queries on network, execute 5%
 
+        log.info( "Generating data..." );
         // generateSchema simulation setting
         NetworkGenerator generator = new NetworkGenerator( config );
         Graph graph = generator.network.toGraph();
 
         // insert into db
-        List<Query> graphQueries = graph.getGraphQueries( config.graphCreateBatch );
-        List<Query> docQueries = graph.getDocQueries( config.docCreateBatch );
-        List<Query> relQueries = graph.getRelQueries( config.relCreateBatch );
 
-        for ( Query query : graphQueries ) {
-            executor.executeQuery( query );
-        }
-        for ( Query query : docQueries ) {
-            executor.executeQuery( query );
-        }
-        for ( Query query : relQueries ) {
-            executor.executeQuery( query );
-        }
+        executeAndUpdateProgress( config, executor, graph.getGraphQueries( config.graphCreateBatch ), "Generating Graph Data..." );
 
-        log.warn( "finished" );
+        executeAndUpdateProgress( config, executor, graph.getDocQueries( config.docCreateBatch ), "\nGenerating Document Data..." );
+
+        executeAndUpdateProgress( config, executor, graph.getRelQueries( config.relCreateBatch ), "\nGenerating Relational Data..." );
+
+        log.info( "Finished..." );
 
         // -> generateSchema logs
 
@@ -76,12 +72,36 @@ public class DataGenerator {
     }
 
 
-    public List<Query> generateWorkload( ComsConfig config ) {
+    private static void executeAndUpdateProgress( ComsConfig config, Executor executor, List<Query> queries, String msg ) throws ExecutorException {
+        int size = queries.size();
+        System.out.println( msg );
+        ProgressReporter progress = new ProgressBar( 1, config.progressReportBase );
+        int mod = queries.size() / progress.base;
+        if ( mod == 0 ) {
+            mod = progress.base / queries.size();
+            for ( Query query : queries ) {
+                executor.executeQuery( query );
+                for ( int j = 0; j < mod; j++ ) {
+                    progress.updateProgress();
+                }
+            }
+        } else {
+            for ( int i = 0; i < size; i++ ) {
+                executor.executeQuery( queries.get( i ) );
+                if ( (i % mod) == 0 ) {
+                    progress.updateProgress();
+                }
+            }
+        }
+    }
+
+
+    public List<Query> generateWorkload( ComsConfig config, int multiplier ) {
         NetworkGenerator generator = new NetworkGenerator( config );
         log.warn( "Start Configuration:\n" + generator.network );
 
         List<Query> queries = new ArrayList<>();
-        for ( int i = 0; i < config.simulationRuns; i++ ) {
+        for ( int i = 0; i < multiplier; i++ ) {
             queries.addAll( generator.network.simulateRun() );
         }
         log.warn( "End Configuration:\n" + generator.network );
