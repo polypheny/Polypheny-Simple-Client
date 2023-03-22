@@ -229,7 +229,7 @@ public class ChronosAgent extends AbstractChronosAgent {
                 break;
             case "coms":
                 config = new ComsConfig( parsedConfig );
-                scenario = new Coms(executorFactory, (ComsConfig) config, true, dumpQueryList, queryMode );
+                scenario = new Coms( executorFactory, (ComsConfig) config, true, dumpQueryList, queryMode, 1 );
                 break;
             case "knnBench":
                 config = new KnnBenchConfig( parsedConfig );

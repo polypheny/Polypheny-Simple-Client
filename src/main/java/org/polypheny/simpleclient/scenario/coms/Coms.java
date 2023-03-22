@@ -71,14 +71,16 @@ public class Coms extends Scenario {
     private final HashMap<Integer, String> queryTypes;
     private final ConcurrentHashMap<Integer, List<Long>> measuredTimePerQueryType;
     private final Mode mode;
+    private final int multiplier;
     private long executeRuntime;
 
 
-    public Coms( ExecutorFactory executorFactory, ComsConfig config, boolean commitAfterEveryQuery, boolean dumpQueryList, QueryMode queryMode ) {
+    public Coms( ExecutorFactory executorFactory, ComsConfig config, boolean commitAfterEveryQuery, boolean dumpQueryList, QueryMode queryMode, int multiplier ) {
         super( executorFactory, commitAfterEveryQuery, dumpQueryList, queryMode );
         this.random = new Random( config.seed );
         this.config = config;
         this.mode = config.mode;
+        this.multiplier = multiplier;
 
         this.measuredTimes = Collections.synchronizedList( new LinkedList<>() );
         this.queryTypes = new HashMap<>();
@@ -163,7 +165,7 @@ public class Coms extends Scenario {
     @Override
     public long execute( ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory, int numberOfThreads ) {
         DataGenerator generator = new DataGenerator();
-        List<Query> queries = generator.generateWorkload( config );
+        List<Query> queries = generator.generateWorkload( config, multiplier );
 
         log.info( "Preparing query list for the benchmark..." );
         List<QueryListEntry> relQueryList = getRelQueries( queries );
