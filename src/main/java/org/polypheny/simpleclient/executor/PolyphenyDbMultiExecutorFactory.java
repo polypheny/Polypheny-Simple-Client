@@ -162,6 +162,27 @@ public class PolyphenyDbMultiExecutorFactory extends ExecutorFactory {
             cypher.flushCsvWriter();
         }
 
+        public String deployAdapter( String storeType ) throws ExecutorException {
+            switch ( storeType.toLowerCase() ){
+                case "mongodb":
+                    return jdbc.deployMongoDb();
+                case "neo4j":
+                    return jdbc.deployNeo4j();
+                case "postgres":
+                    return jdbc.deployPostgres( true );
+                case "cottontail":
+                    return jdbc.deployCottontail();
+                case "hsqldb":
+                    return jdbc.deployHsqldb();
+                case "monetdb":
+                    return jdbc.deployMonetDb( true );
+                case "file":
+                    return jdbc.deployFileStore();
+                default:
+                    throw new RuntimeException("Unknown store selected for deployment.");
+            }
+        }
+
     }
 
 }

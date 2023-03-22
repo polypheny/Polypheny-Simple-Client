@@ -199,7 +199,7 @@ public class ChronosAgent extends AbstractChronosAgent {
                 executorFactory = new PolyphenyDbCypherExecutorFactory( ChronosCommand.hostname );
                 break;
             case "surrealdb":
-                executorFactory = new SurrealDBExecutorFactory( ChronosCommand.hostname );
+                executorFactory = new SurrealDBExecutorFactory( ChronosCommand.hostname, true );
                 break;
             case "postgres":
                 executorFactory = new PostgresExecutorFactory( ChronosCommand.hostname, Boolean.parseBoolean( parsedConfig.get( "prepareStatements" ) ) );

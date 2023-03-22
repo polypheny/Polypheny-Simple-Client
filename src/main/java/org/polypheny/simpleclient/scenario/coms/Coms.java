@@ -138,9 +138,9 @@ public class Coms extends Scenario {
         try {
             executor.jdbc.setNewDeploySyntax( true );
             return new PolyphenyAdapters(
-                    executor.jdbc.deployPostgres( true ),
-                    executor.jdbc.deployMongoDb(),
-                    executor.jdbc.deployNeo4j() );
+                    executor.deployAdapter( config.graphStore ),
+                    executor.deployAdapter( config.docStore ),
+                    executor.deployAdapter( config.relStore ) );
         } catch ( ExecutorException e ) {
             throw new RuntimeException( e );
         }

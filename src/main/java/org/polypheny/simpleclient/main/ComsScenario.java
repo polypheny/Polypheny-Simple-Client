@@ -25,12 +25,8 @@
 package org.polypheny.simpleclient.main;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.Objects;
-import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.QueryMode;
-import org.polypheny.simpleclient.cli.Mode;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
 import org.polypheny.simpleclient.scenario.coms.Coms;
 import org.polypheny.simpleclient.scenario.coms.ComsConfig;
@@ -39,8 +35,7 @@ import org.polypheny.simpleclient.scenario.coms.ComsConfig;
 public class ComsScenario {
 
 
-    public static void data( ExecutorFactory executorFactory, Mode mode, int multiplier ) {
-        ComsConfig config = new ComsConfig( mode.toString(), getProperties() );
+    public static void data( ExecutorFactory executorFactory, ComsConfig config, int multiplier ) {
         Coms bench = new Coms( executorFactory, config, true, false, QueryMode.TABLE, multiplier );
 
         ProgressReporter progressReporter = new ProgressBar( 1, config.progressReportBase );
@@ -48,8 +43,7 @@ public class ComsScenario {
     }
 
 
-    public static void workload( ExecutorFactory executorFactory, Mode mode, int multiplier, boolean writeCsv ) {
-        ComsConfig config = new ComsConfig( mode.toString(), getProperties() );
+    public static void workload( ExecutorFactory executorFactory, ComsConfig config, int multiplier, boolean writeCsv ) {
         Coms bench = new Coms( executorFactory, config, true, false, QueryMode.TABLE, multiplier );
 
         final CsvWriter csvWriter;
@@ -64,21 +58,10 @@ public class ComsScenario {
     }
 
 
-    public static void schema( ExecutorFactory executorFactory, Mode mode ) {
-        ComsConfig config = new ComsConfig( mode.toString(), getProperties() );
+    public static void schema( ExecutorFactory executorFactory, ComsConfig config ) {
         Coms bench = new Coms( executorFactory, config, true, false, QueryMode.TABLE, 1 );
         bench.createSchema( null, true );
     }
 
-
-    private static Properties getProperties() {
-        Properties props = new Properties();
-        try {
-            props.load( Objects.requireNonNull( ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/coms/coms.properties" ) ) );
-        } catch ( IOException e ) {
-            log.error( "Exception while reading properties file", e );
-        }
-        return props;
-    }
 
 }

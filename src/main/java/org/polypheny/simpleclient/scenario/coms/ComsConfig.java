@@ -54,6 +54,9 @@ public class ComsConfig extends AbstractConfig {
 
     public Mode mode;
     public boolean allowNegative;
+    public String graphStore;
+    public String docStore;
+    public String relStore;
 
 
     public ComsConfig( String system, Properties properties ) {
@@ -81,6 +84,9 @@ public class ComsConfig extends AbstractConfig {
 
         allowNegative = getBooleanProperty( properties, "allowNegative" );
 
+        graphStore = getStringProperty( properties, "graphStore" );
+        docStore = getStringProperty( properties, "docStore" );
+        relStore = getStringProperty( properties, "relStore" );
     }
 
 
@@ -111,6 +117,9 @@ public class ComsConfig extends AbstractConfig {
 
         allowNegative = Boolean.getBoolean( parsedConfig.get( "allowNegative" ) );
 
+        graphStore = parsedConfig.get( "graphStore" );
+        docStore = parsedConfig.get( "docStore" );
+        relStore = parsedConfig.get( "relStore" );
     }
 
 

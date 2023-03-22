@@ -55,10 +55,10 @@ import org.polypheny.simpleclient.scenario.graph.GraphQuery;
 @Value
 public class Graph {
 
-    public static final String DOC_POSTFIX = "_doc";
-    public static final String REL_POSTFIX = "_rel";
+    public static final String DOC_POSTFIX = "Doc";
+    public static final String REL_POSTFIX = "Rel";
 
-    public static final String GRAPH_POSTFIX = "_graph";
+    public static final String GRAPH_POSTFIX = "Graph";
     Map<Long, Node> nodes;
     Map<Long, Edge> edges;
 

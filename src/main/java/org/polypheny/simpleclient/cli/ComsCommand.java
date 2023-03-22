@@ -28,10 +28,14 @@ import com.github.rvesse.airline.HelpOption;
 import com.github.rvesse.airline.annotations.Arguments;
 import com.github.rvesse.airline.annotations.Command;
 import com.github.rvesse.airline.annotations.Option;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Objects;
+import java.util.Properties;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
 import org.polypheny.simpleclient.executor.MultiExecutorFactory;
@@ -40,6 +44,7 @@ import org.polypheny.simpleclient.executor.PostgresExecutor;
 import org.polypheny.simpleclient.executor.SurrealDBExecutor.SurrealDBExecutorFactory;
 import org.polypheny.simpleclient.main.ComsScenario;
 import org.polypheny.simpleclient.main.CsvWriter;
+import org.polypheny.simpleclient.scenario.coms.ComsConfig;
 
 @Slf4j
 @Command(name = "coms", description = "Mode for testing the Coms-Benchmark.")
@@ -52,8 +57,6 @@ public class ComsCommand implements CliRunnable {
     @Arguments(description = "Task { schema | data | workload } and multiplier.")
     private List<String> args;
 
-    @Option(name = { "--mode" }, arity = 0, description = "Which stack to use, either a native stack(Neo4j, MongoDB, PostgreSQL), Polypheny or SurrealDB (default:Polypheny).")
-    public static Mode mode = Mode.SURREAL;
 
 
     @Option(name = { "-p", "--polypheny" }, title = "IP or Hostname", arity = 1, description = "IP or Hostname of the server (default: 127.0.0.1).")
@@ -71,6 +74,7 @@ public class ComsCommand implements CliRunnable {
 
     @Option(name = { "--writeCSV" }, arity = 0, description = "Write a CSV file containing execution times for all executed queries (default: false).")
     public boolean writeCsv = false;
+    private ComsConfig config;
 
 
     @Override
@@ -88,35 +92,20 @@ public class ComsCommand implements CliRunnable {
                 System.exit( 1 );
             }
         }
-
+        this.config = new ComsConfig( "coms", getProperties() );
         //// Define executorFactory, depending on cli parameter
         ExecutorFactory executorFactory;
 
-        switch ( mode ) {
-
-            case POLYPHENY:
-                executorFactory = new PolyphenyDbMultiExecutorFactory( polyphenyDbHost, "coms" );
-                break;
-            case NATIVE:
-                executorFactory = new MultiExecutorFactory(
-                        new PostgresExecutor.PostgresExecutorFactory( postgres, false ),
-                        new NeoExecutorFactory( neo4j ),
-                        new MongoQlExecutorFactory( mongoDB ) );
-                break;
-            case SURREAL:
-                executorFactory = new SurrealDBExecutorFactory( surrealHost );
-                break;
-            default:
-                throw new IllegalArgumentException();
-        }
-
         try {
             if ( args.get( 0 ).equalsIgnoreCase( "data" ) ) {
-                ComsScenario.data( executorFactory, mode, multiplier );
+                executorFactory = getExecutorFactory( false );
+                ComsScenario.data( executorFactory,config, multiplier );
             } else if ( args.get( 0 ).equalsIgnoreCase( "workload" ) ) {
-                ComsScenario.workload( executorFactory, mode, multiplier, writeCsv );
+                executorFactory = getExecutorFactory( false );
+                ComsScenario.workload( executorFactory,config, multiplier, writeCsv );
             } else if ( args.get( 0 ).equalsIgnoreCase( "schema" ) ) {
-                ComsScenario.schema( executorFactory, mode );
+                executorFactory = getExecutorFactory( true );
+                ComsScenario.schema( executorFactory, config );
             } else {
                 System.err.println( "Unknown task: " + args.get( 0 ) );
             }
@@ -135,7 +124,31 @@ public class ComsCommand implements CliRunnable {
     }
 
 
-    public class NeoExecutorFactory extends ExecutorFactory {
+    @NotNull
+    private ExecutorFactory getExecutorFactory( boolean createDocker ) {
+        ExecutorFactory executorFactory;
+        switch ( config.mode ) {
+
+            case POLYPHENY:
+                executorFactory = new PolyphenyDbMultiExecutorFactory( polyphenyDbHost, "coms" );
+                break;
+            case NATIVE:
+                executorFactory = new MultiExecutorFactory(
+                        new PostgresExecutor.PostgresExecutorFactory( postgres, false ),
+                        new NeoExecutorFactory( neo4j ),
+                        new MongoQlExecutorFactory( mongoDB ) );
+                break;
+            case SURREAL:
+                executorFactory = new SurrealDBExecutorFactory( surrealHost, createDocker );
+                break;
+            default:
+                throw new IllegalArgumentException();
+        }
+        return executorFactory;
+    }
+
+
+    public static class NeoExecutorFactory extends ExecutorFactory {
 
         public NeoExecutorFactory( String host ) {
         }
@@ -172,6 +185,16 @@ public class ComsCommand implements CliRunnable {
             return 0;
         }
 
+    }
+
+    private static Properties getProperties() {
+        Properties props = new Properties();
+        try {
+            props.load( Objects.requireNonNull( ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/coms/coms.properties" ) ) );
+        } catch ( IOException e ) {
+            log.error( "Exception while reading properties file", e );
+        }
+        return props;
     }
 
 }

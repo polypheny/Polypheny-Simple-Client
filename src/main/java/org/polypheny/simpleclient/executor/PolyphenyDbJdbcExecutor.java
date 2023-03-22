@@ -38,6 +38,7 @@ public class PolyphenyDbJdbcExecutor extends JdbcExecutor implements PolyphenyDb
 
     private boolean useNewDeploySyntax = false;
 
+
     private PolyphenyDbJdbcExecutor( String polyphenyHost, CsvWriter csvWriter, boolean prepareStatements ) {
         super( csvWriter, prepareStatements );
 
@@ -69,36 +70,38 @@ public class PolyphenyDbJdbcExecutor extends JdbcExecutor implements PolyphenyDb
 
 
     @Override
-    public void dropStore(String name) throws ExecutorException {
-        executeQuery(new RawQuery("ALTER ADAPTERS DROP \"" + name + "\"", null, false));
+    public void dropStore( String name ) throws ExecutorException {
+        executeQuery( new RawQuery( "ALTER ADAPTERS DROP \"" + name + "\"", null, false ) );
     }
 
 
     @Override
-    public void deployStore(String name, String clazz, String config) throws ExecutorException {
-        executeQuery(new RawQuery("ALTER ADAPTERS ADD \"" + name + "\" USING '" + clazz + "' WITH '" + config + "'", null, false));
+    public void deployStore( String name, String clazz, String config ) throws ExecutorException {
+        executeQuery( new RawQuery( "ALTER ADAPTERS ADD \"" + name + "\" USING '" + clazz + "' WITH '" + config + "'", null, false ) );
     }
 
 
     @Override
-    public void deployAdapter(String name, String adapterIdentifier, String type, String config) throws ExecutorException {
-        executeQuery(new RawQuery("ALTER ADAPTERS ADD \"" + name + "\" USING '" + adapterIdentifier + "' AS " + type + " WITH '" + config + "'", null, false));
+    public void deployAdapter( String name, String adapterIdentifier, String type, String config ) throws ExecutorException {
+        executeQuery( new RawQuery( "ALTER ADAPTERS ADD \"" + name + "\" USING '" + adapterIdentifier + "' AS " + type + " WITH '" + config + "'", null, false ) );
     }
 
 
     @Override
-    public void setConfig(String key, String value) {
+    public void setConfig( String key, String value ) {
         try {
-            executeQuery(new RawQuery("ALTER CONFIG '" + key + "' SET '" + value + "'", null, false));
-        } catch (ExecutorException e) {
-            log.error("Exception while setting config \"" + key + "\"!", e);
+            executeQuery( new RawQuery( "ALTER CONFIG '" + key + "' SET '" + value + "'", null, false ) );
+        } catch ( ExecutorException e ) {
+            log.error( "Exception while setting config \"" + key + "\"!", e );
         }
     }
 
+
     @Override
-    public void setNewDeploySyntax(boolean useNewDeploySyntax) {
+    public void setNewDeploySyntax( boolean useNewDeploySyntax ) {
         this.useNewDeploySyntax = useNewDeploySyntax;
     }
+
 
     @Override
     public boolean useNewDeploySyntax() {
@@ -106,14 +109,14 @@ public class PolyphenyDbJdbcExecutor extends JdbcExecutor implements PolyphenyDb
     }
 
 
-    public static void commitAndCloseJdbcExecutor(JdbcExecutor executor) throws ExecutorException {
-        if (executor != null) {
+    public static void commitAndCloseJdbcExecutor( JdbcExecutor executor ) throws ExecutorException {
+        if ( executor != null ) {
             try {
                 executor.executeCommit();
-            } catch (ExecutorException e) {
+            } catch ( ExecutorException e ) {
                 try {
                     executor.executeRollback();
-                } catch (ExecutorException ex) {
+                } catch ( ExecutorException ex ) {
                     log.error( "Error while rollback connection", e );
                 }
             } finally {

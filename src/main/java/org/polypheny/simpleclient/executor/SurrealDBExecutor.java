@@ -47,12 +47,20 @@ public class SurrealDBExecutor implements Executor {
     private final CsvWriter csvWriter;
 
 
-    public SurrealDBExecutor( String host, CsvWriter csvWriter ) throws Exception {
+    public SurrealDBExecutor( String host, CsvWriter csvWriter, boolean createDocker ) throws Exception {
         this.host = host;
         this.csvWriter = csvWriter;
 
         // floatDB(); 855 ms -> 2.1s -> 2.8s
-
+        if ( createDocker ) {
+            // deploy with Docker
+            ProcessBuilder builder = new ProcessBuilder();
+            builder.command( "docker", "container", "stop", "surrealdb" );
+            builder.start().waitFor();
+            builder = new ProcessBuilder();
+            builder.command( "docker", "run", "-d", "--rm", "--name", "surrealdb", "-p", host + ":8000", "surrealdb/surrealdb:latest", "start", "--log", "trace", "--user", "root", "--pass", "root", "memory" );
+            builder.start().waitFor();
+        }
     }
 
 
@@ -168,17 +176,19 @@ public class SurrealDBExecutor implements Executor {
     public static class SurrealDBExecutorFactory extends ExecutorFactory {
 
         private final String host;
+        private final boolean createDocker;
 
 
-        public SurrealDBExecutorFactory( String host ) {
+        public SurrealDBExecutorFactory( String host, boolean createDocker ) {
             this.host = host;
+            this.createDocker = createDocker;
         }
 
 
         @Override
         public Executor createExecutorInstance( CsvWriter csvWriter ) {
             try {
-                return new SurrealDBExecutor( host, csvWriter );
+                return new SurrealDBExecutor( host, csvWriter, createDocker );
             } catch ( Exception e ) {
                 throw new RuntimeException( e );
             }
