@@ -93,7 +93,7 @@ public class ComsConfig extends AbstractConfig {
     public ComsConfig( Map<String, String> parsedConfig ) {
         super( "coms", parsedConfig.get( "store" ), parsedConfig );
 
-        mode = Mode.valueOf( parsedConfig.get( "threadDistribution" ).toUpperCase() );
+        mode = Mode.valueOf( parsedConfig.get( "mode" ).toUpperCase() );
         seed = Long.parseLong( parsedConfig.get( "seed" ) );
 
         threadDistribution = Arrays.stream( parsedConfig.get( "threadDistribution" ).split( "_" ) ).map( Integer::parseInt ).collect( Collectors.toList() );
