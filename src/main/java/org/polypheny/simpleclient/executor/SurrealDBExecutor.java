@@ -31,10 +31,6 @@ import kong.unirest.JsonNode;
 import kong.unirest.RequestBodyEntity;
 import kong.unirest.Unirest;
 import lombok.extern.slf4j.Slf4j;
-import org.eclipse.jetty.websocket.api.Session;
-import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;
-import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
-import org.eclipse.jetty.websocket.api.annotations.WebSocket;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.query.BatchableInsert;
 import org.polypheny.simpleclient.query.Query;
@@ -202,42 +198,5 @@ public class SurrealDBExecutor implements Executor {
 
     }
 
-
-    @WebSocket
-    public static class ClientEndPoint {
-
-        private Session session;
-
-
-        @OnWebSocketConnect
-        public void onConnect( Session session ) {
-            // The WebSocket connection is established.
-
-            // Store the session to be able to send data to the remote peer.
-            this.session = session;
-
-            // You may configure the session.
-            session.setMaxTextMessageSize( 16 * 1024 );
-
-            // You may immediately send a message to the remote peer.
-            //session.getRemote().sendString( "connected", WriteCallback.NOOP );
-        }
-
-
-        @OnWebSocketMessage
-        public void onText( Session session, String text ) {
-            log.warn( text );
-        }
-
-
-        public void sendMsg( String text ) {
-            try {
-                this.session.getRemote().sendString( text );
-            } catch ( IOException e ) {
-                throw new RuntimeException( e );
-            }
-        }
-
-    }
 
 }
