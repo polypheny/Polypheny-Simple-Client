@@ -85,20 +85,6 @@ dependencies {
         exclude group: 'org.slf4j'
     }
 
-    // Websocket
-    implementation (group: 'org.eclipse.jetty', name: 'jetty-client', version: '11.0.14' ){  //License: Apache 2.0
-        exclude group: 'org.apache.logging.log4j'
-        exclude group: 'org.slf4j'
-    }
-    /*implementation (group: 'org.eclipse.jetty.websocket', name: 'websocket-client', version: '9.4.51.v20230217'){  //License: Apache 2.0
-        exclude group: 'org.apache.logging.log4j'
-        exclude group: 'org.slf4j'
-    }*/
-    implementation (group: 'org.eclipse.jetty.websocket', name: 'websocket-jetty-client', version: '11.0.14'){  //License: Apache 2.0
-        exclude group: 'org.apache.logging.log4j'
-        exclude group: 'org.slf4j'
-    }
-
 
     // CLI library
     implementation group: 'com.github.rvesse', name: 'airline', version: '2.8.5' // License: Apache 2.0
