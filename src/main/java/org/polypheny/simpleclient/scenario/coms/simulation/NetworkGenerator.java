@@ -460,16 +460,16 @@ public class NetworkGenerator {
 
         @Override
         public String toString() {
-            return "Network{" +
-                    "servers: " + servers.size() + " with " + summarize( servers ) + ",\n" +
-                    "switches: " + switches.size() + " with " + summarize( switches ) + ",\n" +
-                    "aps: " + aps.size() + " with " + summarize( aps ) + ",\n" +
-                    "ioTs: " + ioTs.size() + " with " + summarize( ioTs ) + ",\n" +
-                    "mobiles: " + mobiles.size() + " with " + summarize( mobiles ) + ",\n" +
-                    "pcs: " + pcs.size() + " with " + summarize( pcs ) + ",\n" +
-                    "macs: " + macs.size() + " with " + summarize( macs ) + ",\n" +
-                    "lans: " + lans.size() + " with " + summarize( lans ) + ",\n" +
-                    "wlans: " + wlans.size() + " with " + summarize( wlans ) + ",\n" +
+            return "Network{\n" +
+                    "\tservers: " + servers.size() + " with " + summarize( servers ) + ",\n" +
+                    "\tswitches: " + switches.size() + " with " + summarize( switches ) + ",\n" +
+                    "\taps: " + aps.size() + " with " + summarize( aps ) + ",\n" +
+                    "\tioTs: " + ioTs.size() + " with " + summarize( ioTs ) + ",\n" +
+                    "\tmobiles: " + mobiles.size() + " with " + summarize( mobiles ) + ",\n" +
+                    "\tpcs: " + pcs.size() + " with " + summarize( pcs ) + ",\n" +
+                    "\tmacs: " + macs.size() + " with " + summarize( macs ) + ",\n" +
+                    "\tlans: " + lans.size() + " with " + summarize( lans ) + ",\n" +
+                    "\twlans: " + wlans.size() + " with " + summarize( wlans ) + ",\n" +
                     '}';
         }
 
