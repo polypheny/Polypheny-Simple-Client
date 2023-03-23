@@ -62,7 +62,9 @@ import org.polypheny.simpleclient.executor.PolyphenyDbMultiExecutorFactory;
 import org.polypheny.simpleclient.executor.PolyphenyDbRestExecutor.PolyphenyDbRestExecutorFactory;
 import org.polypheny.simpleclient.executor.PostgresExecutor.PostgresExecutorFactory;
 import org.polypheny.simpleclient.executor.PostgresExecutor.PostgresInstance;
+import org.polypheny.simpleclient.executor.SurrealDBExecutor;
 import org.polypheny.simpleclient.executor.SurrealDBExecutor.SurrealDBExecutorFactory;
+import org.polypheny.simpleclient.executor.SurrealDBExecutor.SurrealDbInstance;
 import org.polypheny.simpleclient.scenario.AbstractConfig;
 import org.polypheny.simpleclient.scenario.Scenario;
 import org.polypheny.simpleclient.scenario.coms.Coms;
@@ -330,6 +332,10 @@ public class ChronosAgent extends AbstractChronosAgent {
                 break;
             case "cottontail":
                 databaseInstance = new CottontailInstance();
+                scenario.createSchema( databaseInstance, false );
+                break;
+            case "surreal":
+                databaseInstance = new SurrealDbInstance( ChronosCommand.hostname );
                 scenario.createSchema( databaseInstance, false );
                 break;
             default:

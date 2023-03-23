@@ -48,15 +48,7 @@ public class SurrealDBExecutor implements Executor {
         this.csvWriter = csvWriter;
 
         // floatDB(); 855 ms -> 2.1s -> 2.8s
-        if ( createDocker ) {
-            // deploy with Docker
-            ProcessBuilder builder = new ProcessBuilder();
-            builder.command( "docker", "container", "stop", "surrealdb" );
-            builder.start().waitFor();
-            builder = new ProcessBuilder();
-            builder.command( "docker", "run", "-d", "--rm", "--name", "surrealdb", "-p", host + ":8000", "surrealdb/surrealdb:latest", "start", "--log", "trace", "--user", "root", "--pass", "root", "memory" );
-            builder.start().waitFor();
-        }
+
     }
 
 
@@ -194,6 +186,40 @@ public class SurrealDBExecutor implements Executor {
         @Override
         public int getMaxNumberOfThreads() {
             return 0;
+        }
+
+    }
+
+
+    public static class SurrealDbInstance extends DatabaseInstance {
+
+
+        public SurrealDbInstance( String hostname ) {
+            try {
+                // deploy with Docker
+                ProcessBuilder builder = new ProcessBuilder();
+                builder.command( "docker", "container", "stop", "surrealdb" );
+                builder.start().waitFor();
+                builder = new ProcessBuilder();
+                builder.command( "docker", "run", "-d", "--rm", "--name", "surrealdb", "-p", hostname + ":8000", "surrealdb/surrealdb:latest", "start", "--log", "trace", "--user", "root", "--pass", "root", "memory" );
+                builder.start().waitFor();
+            } catch ( InterruptedException | IOException e ) {
+                throw new RuntimeException( e );
+            }
+
+        }
+
+
+        @Override
+        public void tearDown() {
+
+            try {
+                ProcessBuilder builder = new ProcessBuilder();
+                builder.command( "docker", "container", "stop", "surrealdb" );
+                builder.start().waitFor();
+            } catch ( InterruptedException | IOException e ) {
+                throw new RuntimeException( e );
+            }
         }
 
     }
