@@ -25,5 +25,5 @@
 package org.polypheny.simpleclient.cli;
 
 public enum Mode {
-    POLYPHENY, NATIVE, SURREAL;
+    POLYPHENY, NATIVE, SURREALDB;
 }

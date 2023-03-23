@@ -52,6 +52,9 @@ public interface Executor {
 
     abstract class ExecutorFactory {
 
+        private String namespace;
+
+
         public Executor createExecutorInstance() {
             return createExecutorInstance( null );
         }
@@ -61,6 +64,7 @@ public interface Executor {
 
 
         public Executor createExecutorInstance( CsvWriter csvWriter, String namespace ) {
+            this.namespace = namespace;
             return createExecutorInstance( csvWriter );
         }
 

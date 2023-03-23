@@ -50,6 +50,7 @@ import org.polypheny.simpleclient.scenario.coms.ComsConfig;
 @Command(name = "coms", description = "Mode for testing the Coms-Benchmark.")
 public class ComsCommand implements CliRunnable {
 
+    public static final String NAMESPACE = "coms";
     @SuppressWarnings("SpringAutowiredFieldsWarningInspection")
     @Inject
     private HelpOption<AbstractOltpBenchCommand> help;
@@ -63,7 +64,7 @@ public class ComsCommand implements CliRunnable {
     public String polyphenyDbHost = "127.0.0.1";
 
     @Option(name = { "-s", "--surreal" }, title = "IP or Hostname + Port", arity = 1, description = "IP or Hostname of the SurrealDB server (default: 127.0.0.1).")
-    public String surrealHost = "127.0.0.1:8000";
+    public String surrealHost = "127.0.0.1";
     @Option(name = { "-n", "--neo4j" }, title = "IP or Hostname + Port", arity = 1, description = "IP or Hostname of the Neo4j server (default: 127.0.0.1).")
     public String neo4j = "127.0.0.1";
     @Option(name = { "-m", "--mongo" }, title = "IP or Hostname + Port", arity = 1, description = "IP or Hostname of the MongoDB server (default: 127.0.0.1).")
@@ -130,7 +131,7 @@ public class ComsCommand implements CliRunnable {
         switch ( config.mode ) {
 
             case POLYPHENY:
-                executorFactory = new PolyphenyDbMultiExecutorFactory( polyphenyDbHost, "coms" );
+                executorFactory = new PolyphenyDbMultiExecutorFactory( polyphenyDbHost );
                 break;
             case NATIVE:
                 executorFactory = new MultiExecutorFactory(
@@ -138,8 +139,8 @@ public class ComsCommand implements CliRunnable {
                         new NeoExecutorFactory( neo4j ),
                         new MongoQlExecutorFactory( mongoDB ) );
                 break;
-            case SURREAL:
-                executorFactory = new SurrealDBExecutorFactory( surrealHost, createDocker );
+            case SURREALDB:
+                executorFactory = new SurrealDBExecutorFactory( surrealHost, "8000", createDocker );
                 break;
             default:
                 throw new IllegalArgumentException();

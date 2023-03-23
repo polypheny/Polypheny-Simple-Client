@@ -53,12 +53,11 @@ public class PolyphenyDbMultiExecutorFactory extends ExecutorFactory {
     private final PolyphenyDbMongoQlExecutorFactory mongoQlExecutorFactory;
     @Getter
     private final PolyphenyDbCypherExecutorFactory cypherExecutorFactory;
-    private final String namespace;
+    private String namespace = "coms";
 
 
-    public PolyphenyDbMultiExecutorFactory( String host, String namespace ) {
+    public PolyphenyDbMultiExecutorFactory( String host ) {
         this.host = host;
-        this.namespace = namespace;
         jdbcExecutorFactory = new PolyphenyDbJdbcExecutorFactory( host, true );
         mongoQlExecutorFactory = new PolyphenyDbMongoQlExecutorFactory( host );
         cypherExecutorFactory = new PolyphenyDbCypherExecutorFactory( host );
@@ -67,8 +66,13 @@ public class PolyphenyDbMultiExecutorFactory extends ExecutorFactory {
 
     @Override
     public Executor createExecutorInstance( CsvWriter csvWriter ) {
+        return createExecutorInstance( csvWriter, namespace );
+    }
 
-        return new MultiExecutor( jdbcExecutorFactory, mongoQlExecutorFactory, cypherExecutorFactory, csvWriter, namespace );
+
+    @Override
+    public Executor createExecutorInstance( CsvWriter csvWriter, String namespace ) {
+        return new MultiExecutor( namespace, jdbcExecutorFactory, mongoQlExecutorFactory, cypherExecutorFactory, csvWriter );
     }
 
 
@@ -79,14 +83,14 @@ public class PolyphenyDbMultiExecutorFactory extends ExecutorFactory {
 
 
     @Value
-    public static class MultiExecutor implements Executor {
+    public static class MultiExecutor implements PolyphenyDbExecutor {
 
         public PolyphenyDbJdbcExecutor jdbc;
         public PolyphenyDbMongoQlExecutor mongo;
         public PolyphenyDbCypherExecutor cypher;
 
 
-        public MultiExecutor( PolyphenyDbJdbcExecutorFactory jdbcExecutorFactory, PolyphenyDbMongoQlExecutorFactory mongoQlExecutorFactory, PolyphenyDbCypherExecutorFactory cypherExecutorFactory, CsvWriter csvWriter, String namespace ) {
+        public MultiExecutor( String namespace, PolyphenyDbJdbcExecutorFactory jdbcExecutorFactory, PolyphenyDbMongoQlExecutorFactory mongoQlExecutorFactory, PolyphenyDbCypherExecutorFactory cypherExecutorFactory, CsvWriter csvWriter ) {
             this.jdbc = jdbcExecutorFactory.createExecutorInstance( csvWriter );
             this.mongo = mongoQlExecutorFactory.createExecutorInstance( csvWriter, namespace + DOC_POSTFIX );
             this.cypher = cypherExecutorFactory.createExecutorInstance( csvWriter, namespace + GRAPH_POSTFIX );
@@ -162,8 +166,9 @@ public class PolyphenyDbMultiExecutorFactory extends ExecutorFactory {
             cypher.flushCsvWriter();
         }
 
+
         public String deployAdapter( String storeType ) throws ExecutorException {
-            switch ( storeType.toLowerCase() ){
+            switch ( storeType.toLowerCase() ) {
                 case "mongodb":
                     return jdbc.deployMongoDb();
                 case "neo4j":
@@ -179,8 +184,44 @@ public class PolyphenyDbMultiExecutorFactory extends ExecutorFactory {
                 case "file":
                     return jdbc.deployFileStore();
                 default:
-                    throw new RuntimeException("Unknown store selected for deployment.");
+                    throw new RuntimeException( "Unknown store selected for deployment." );
             }
+        }
+
+
+        @Override
+        public void dropStore( String name ) throws ExecutorException {
+            jdbc.dropStore( name );
+        }
+
+
+        @Override
+        public void deployStore( String name, String clazz, String config ) throws ExecutorException {
+            jdbc.deployStore( name, clazz, config );
+        }
+
+
+        @Override
+        public void deployAdapter( String name, String adapterIdentifier, String type, String config ) throws ExecutorException {
+            jdbc.deployAdapter( name, adapterIdentifier, type, config );
+        }
+
+
+        @Override
+        public void setConfig( String key, String value ) {
+            jdbc.setConfig( key, value );
+        }
+
+
+        @Override
+        public void setNewDeploySyntax( boolean useNewDeploySyntax ) {
+            jdbc.setNewDeploySyntax( useNewDeploySyntax );
+        }
+
+
+        @Override
+        public boolean useNewDeploySyntax() {
+            return jdbc.useNewDeploySyntax();
         }
 
     }

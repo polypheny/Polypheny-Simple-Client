@@ -61,7 +61,7 @@ public class ComsConfig extends AbstractConfig {
 
     public ComsConfig( String system, Properties properties ) {
         super( "coms", system, properties );
-        mode = Mode.valueOf( getStringProperty( properties, "mode" ).toUpperCase() );
+        mode = Mode.valueOf( system.toUpperCase() );
         threadDistribution = Arrays.stream( getStringProperty( properties, "threadDistribution" ).split( "_" ) ).map( Integer::parseInt ).collect( Collectors.toList() );
 
         seed = getLongProperty( properties, "seed" );
@@ -93,7 +93,7 @@ public class ComsConfig extends AbstractConfig {
     public ComsConfig( Map<String, String> parsedConfig ) {
         super( "coms", parsedConfig.get( "store" ), parsedConfig );
 
-        mode = Mode.valueOf( parsedConfig.get( "mode" ).toUpperCase() );
+        mode = Mode.valueOf( this.system.toUpperCase() );
         seed = Long.parseLong( parsedConfig.get( "seed" ) );
 
         threadDistribution = Arrays.stream( parsedConfig.get( "threadDistribution" ).split( "_" ) ).map( Integer::parseInt ).collect( Collectors.toList() );

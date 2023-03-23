@@ -62,7 +62,6 @@ import org.polypheny.simpleclient.executor.PolyphenyDbMultiExecutorFactory;
 import org.polypheny.simpleclient.executor.PolyphenyDbRestExecutor.PolyphenyDbRestExecutorFactory;
 import org.polypheny.simpleclient.executor.PostgresExecutor.PostgresExecutorFactory;
 import org.polypheny.simpleclient.executor.PostgresExecutor.PostgresInstance;
-import org.polypheny.simpleclient.executor.SurrealDBExecutor;
 import org.polypheny.simpleclient.executor.SurrealDBExecutor.SurrealDBExecutorFactory;
 import org.polypheny.simpleclient.executor.SurrealDBExecutor.SurrealDbInstance;
 import org.polypheny.simpleclient.scenario.AbstractConfig;
@@ -186,7 +185,7 @@ public class ChronosAgent extends AbstractChronosAgent {
         Executor.ExecutorFactory executorFactory;
         switch ( parsedConfig.get( "store" ) ) {
             case "polypheny":
-                executorFactory = new PolyphenyDbMultiExecutorFactory( ChronosCommand.hostname, "coms" );
+                executorFactory = new PolyphenyDbMultiExecutorFactory( ChronosCommand.hostname );
                 break;
             case "polypheny-jdbc":
                 executorFactory = new PolyphenyDbJdbcExecutorFactory( ChronosCommand.hostname, Boolean.parseBoolean( parsedConfig.get( "prepareStatements" ) ) );
@@ -201,7 +200,7 @@ public class ChronosAgent extends AbstractChronosAgent {
                 executorFactory = new PolyphenyDbCypherExecutorFactory( ChronosCommand.hostname );
                 break;
             case "surrealdb":
-                executorFactory = new SurrealDBExecutorFactory( ChronosCommand.hostname, true );
+                executorFactory = new SurrealDBExecutorFactory( ChronosCommand.hostname, "8000", true );
                 break;
             case "postgres":
                 executorFactory = new PostgresExecutorFactory( ChronosCommand.hostname, Boolean.parseBoolean( parsedConfig.get( "prepareStatements" ) ) );
@@ -334,8 +333,8 @@ public class ChronosAgent extends AbstractChronosAgent {
                 databaseInstance = new CottontailInstance();
                 scenario.createSchema( databaseInstance, false );
                 break;
-            case "surreal":
-                databaseInstance = new SurrealDbInstance( ChronosCommand.hostname );
+            case "surrealdb":
+                databaseInstance = new SurrealDbInstance( ChronosCommand.hostname, "8000" );
                 scenario.createSchema( databaseInstance, false );
                 break;
             default:

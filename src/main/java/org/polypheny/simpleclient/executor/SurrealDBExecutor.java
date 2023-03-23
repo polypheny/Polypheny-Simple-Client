@@ -167,8 +167,8 @@ public class SurrealDBExecutor implements Executor {
         private final boolean createDocker;
 
 
-        public SurrealDBExecutorFactory( String host, boolean createDocker ) {
-            this.host = host;
+        public SurrealDBExecutorFactory( String host, String port, boolean createDocker ) {
+            this.host = host + ":" + port;
             this.createDocker = createDocker;
         }
 
@@ -194,14 +194,14 @@ public class SurrealDBExecutor implements Executor {
     public static class SurrealDbInstance extends DatabaseInstance {
 
 
-        public SurrealDbInstance( String hostname ) {
+        public SurrealDbInstance( String hostname, String port ) {
             try {
                 // deploy with Docker
                 ProcessBuilder builder = new ProcessBuilder();
                 builder.command( "docker", "container", "stop", "surrealdb" );
                 builder.start().waitFor();
                 builder = new ProcessBuilder();
-                builder.command( "docker", "run", "-d", "--rm", "--name", "surrealdb", "-p", hostname + ":8000", "surrealdb/surrealdb:latest", "start", "--log", "trace", "--user", "root", "--pass", "root", "memory" );
+                builder.command( "docker", "run", "-d", "--rm", "--name", "surrealdb", "-p", hostname + ":" + port + ":8000", "surrealdb/surrealdb:latest", "start", "--log", "trace", "--user", "root", "--pass", "root", "memory" );
                 builder.start().waitFor();
             } catch ( InterruptedException | IOException e ) {
                 throw new RuntimeException( e );
