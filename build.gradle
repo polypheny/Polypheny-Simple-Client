@@ -1,8 +1,8 @@
 group "org.polypheny"
 description = "A lightweight Polypheny-DB benchmarking client"
 
-def versionMajor = 3
-def versionMinor = 5
+def versionMajor = 4
+def versionMinor = 0
 def versionQualifier = "-SNAPSHOT"
 version = versionMajor + "." + versionMinor + versionQualifier
 
@@ -84,7 +84,6 @@ dependencies {
         exclude group: 'org.apache.logging.log4j'
         exclude group: 'org.slf4j'
     }
-
 
     // CLI library
     implementation group: 'com.github.rvesse', name: 'airline', version: '2.8.5' // License: Apache 2.0
