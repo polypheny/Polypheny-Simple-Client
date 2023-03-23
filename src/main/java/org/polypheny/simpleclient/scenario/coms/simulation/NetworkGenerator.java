@@ -265,7 +265,8 @@ public class NetworkGenerator {
         public List<Query> simulateRun() {
             return Stream.concat(
                     simulateDevices().stream(),
-                    simulateLogs().stream() ).collect( Collectors.toList() );
+                    simulateLogs().stream()
+            ).collect( Collectors.toList() );
 
         }
 
@@ -289,12 +290,13 @@ public class NetworkGenerator {
         private void handleAddLogs( List<Query> queries ) {
             queries.addAll(
                     merge(
-                            doRandomly( mobiles, mobiles.size() / 10f, this::addLogs ),
-                            doRandomly( ioTs, ioTs.size() / 10f, this::addLogs ),
-                            doRandomly( pcs, pcs.size() / 10f, this::addLogs ),
-                            doRandomly( aps, aps.size() / 10f, this::addLogs ),
-                            doRandomly( switches, switches.size() / 10f, this::addLogs ),
-                            doRandomly( servers, servers.size() / 10f, this::addLogs )
+                            doRandomly( mobiles, mobiles.size() * config.addLogs, this::addLogs ),
+                            doRandomly( ioTs, ioTs.size() * config.addLogs, this::addLogs ),
+                            doRandomly( pcs, pcs.size() * config.addLogs, this::addLogs ),
+                            doRandomly( macs, macs.size() * config.addLogs, this::addLogs ),
+                            doRandomly( aps, aps.size() * config.addLogs, this::addLogs ),
+                            doRandomly( switches, switches.size() * config.addLogs, this::addLogs ),
+                            doRandomly( servers, servers.size() * config.addLogs, this::addLogs )
                     )
             );
         }
@@ -303,12 +305,13 @@ public class NetworkGenerator {
         private void handleRemoveLogs( List<Query> queries ) {
             queries.addAll(
                     merge(
-                            doRandomly( mobiles, mobiles.size() / 10f, this::deleteLogs ),
-                            doRandomly( ioTs, ioTs.size() / 10f, this::deleteLogs ),
-                            doRandomly( pcs, pcs.size() / 10f, this::deleteLogs ),
-                            doRandomly( aps, aps.size() / 10f, this::deleteLogs ),
-                            doRandomly( switches, switches.size() / 10f, this::deleteLogs ),
-                            doRandomly( servers, servers.size() / 10f, this::deleteLogs )
+                            doRandomly( mobiles, mobiles.size() * config.removeLogs, this::deleteLogs ),
+                            doRandomly( ioTs, ioTs.size() * config.removeLogs, this::deleteLogs ),
+                            doRandomly( pcs, pcs.size() * config.removeLogs, this::deleteLogs ),
+                            doRandomly( macs, macs.size() * config.removeLogs, this::deleteLogs ),
+                            doRandomly( aps, aps.size() * config.removeLogs, this::deleteLogs ),
+                            doRandomly( switches, switches.size() * config.removeLogs, this::deleteLogs ),
+                            doRandomly( servers, servers.size() * config.removeLogs, this::deleteLogs )
                     )
             );
         }
@@ -340,16 +343,15 @@ public class NetworkGenerator {
         }
 
 
-        private <T extends GraphElement> List<Query> doRandomly( List<T> elements, float roughAmount, Function<T, List<Query>> task ) {
+        private <T extends GraphElement> List<Query> doRandomly( List<T> elements, double roughAmount, Function<T, List<Query>> task ) {
             if ( roughAmount < 1 ) {
                 return Collections.emptyList();
             }
-
             int amount = (int) roughAmount;
 
             List<Query> queries = new ArrayList<>();
             for ( int i = 0; i < amount; i++ ) {
-                queries.addAll( task.apply( elements.get( random.nextInt( amount ) ) ) );
+                queries.addAll( task.apply( elements.get( random.nextInt( elements.size() ) ) ) );
             }
             return queries;
         }
@@ -382,14 +384,16 @@ public class NetworkGenerator {
             List<Function<GraphElement, List<Query>>> tasks = Arrays.asList( GraphElement::getReadAllDynamic, GraphElement::getReadAllFixed, GraphElement::getReadAllNested, GraphElement::readFullLog, e -> e.readPartialLog( random ) );
 
             for ( int i = 0; i < random.nextInt( config.numberOfThreads ); i++ ) {
-                int randomType = random.nextInt( elements.size() + 1 );
+                int randomType = random.nextInt( elements.size() );
+
+                List<? extends GraphElement> list = elements.get( randomType );
 
                 for ( int j = 0; j < random.nextInt(); j++ ) {
-                    int randomElement = random.nextInt( elements.size() + 1 );
+                    int randomElement = random.nextInt( list.size() );
 
-                    GraphElement element = elements.get( randomType ).get( randomElement );
+                    GraphElement element = list.get( randomElement );
 
-                    int taskId = random.nextInt( tasks.size() + 1 );
+                    int taskId = random.nextInt( tasks.size() );
                     queries.addAll( tasks.get( taskId ).apply( element ) );
 
                 }
@@ -402,21 +406,21 @@ public class NetworkGenerator {
 
             queries.addAll( merge(
                             // remove Mobile devices (lot)
-                            doRandomly( mobiles, mobiles.size() / 10f, this::changeDevice ),
+                            doRandomly( mobiles, mobiles.size() * config.changeDevice, this::changeDevice ),
                             // remove Iot devices (small)
-                            doRandomly( ioTs, ioTs.size() / 10f, this::changeDevice ),
+                            doRandomly( ioTs, ioTs.size() * config.changeDevice, this::changeDevice ),
                             // remove PC and Macs (small)
-                            doRandomly( pcs, pcs.size() / 10f, this::changeDevice ),
-                            doRandomly( macs, macs.size() / 10f, this::changeDevice ),
+                            doRandomly( pcs, pcs.size() * config.changeDevice, this::changeDevice ),
+                            doRandomly( macs, macs.size() * config.changeDevice, this::changeDevice ),
                             // remove AP (minimal)
-                            doRandomly( aps, aps.size() / 10f, this::changeDevice ),
+                            doRandomly( aps, aps.size() * config.changeDevice, this::changeDevice ),
                             // remove Server (nearly none)
-                            doRandomly( servers, servers.size() / 10f, this::changeDevice ),
+                            doRandomly( servers, servers.size() * config.changeDevice, this::changeDevice ),
                             // remove Swich (nearly none)
-                            doRandomly( switches, switches.size() / 10f, this::changeDevice ),
+                            doRandomly( switches, switches.size() * config.changeDevice, this::changeDevice ),
                             // change connections (lot)
-                            doRandomly( wlans, wlans.size() / 10f, this::changeDevice ),
-                            doRandomly( lans, lans.size() / 10f, this::changeDevice )
+                            doRandomly( wlans, wlans.size() * config.changeDevice, this::changeDevice ),
+                            doRandomly( lans, lans.size() * config.changeDevice, this::changeDevice )
                     )
             );
 
@@ -438,17 +442,17 @@ public class NetworkGenerator {
 
             queries.addAll( merge(
                     // remove Mobile devices (lot)
-                    doRandomly( mobiles, mobiles.size() / 10f, e -> removeElement( e, mobiles ) ),
+                    doRandomly( mobiles, mobiles.size() * config.removeDevice, e -> removeElement( e, mobiles ) ),
                     // remove Iot devices (small)
-                    doRandomly( ioTs, ioTs.size() / 10f, e -> removeElement( e, ioTs ) ),
+                    doRandomly( ioTs, ioTs.size() * config.removeDevice, e -> removeElement( e, ioTs ) ),
                     // remove PC and Macs (small)
-                    doRandomly( pcs, pcs.size() / 25f, e -> removeElement( e, pcs ) ),
-                    doRandomly( macs, macs.size() / 25f, e -> removeElement( e, macs ) ),
+                    doRandomly( pcs, pcs.size() * config.removeDevice, e -> removeElement( e, pcs ) ),
+                    doRandomly( macs, macs.size() * config.removeDevice, e -> removeElement( e, macs ) ),
                     // remove AP (minimal)
-                    doRandomly( aps, aps.size() / 10f, e -> removeElement( e, aps ) ),
+                    doRandomly( aps, aps.size() * config.removeDevice, e -> removeElement( e, aps ) ),
                     // remove Server (nearly none)
-                    doRandomly( servers, servers.size() / 10f, e -> removeElement( e, servers ) ),
-                    doRandomly( switches, switches.size() / 10f, e -> removeElement( e, switches )
+                    doRandomly( servers, servers.size() * config.removeDevice, e -> removeElement( e, servers ) ),
+                    doRandomly( switches, switches.size() * config.removeDevice, e -> removeElement( e, switches )
                     ) )
             );
 
@@ -459,17 +463,17 @@ public class NetworkGenerator {
 
             queries.addAll( merge(
                             // add Mobile devices (lot)
-                            doRandomly( mobiles, mobiles.size() / 10f, e -> addElement( e, mobiles ) ),
+                            doRandomly( mobiles, mobiles.size() * config.newDevice, e -> addElement( e, mobiles ) ),
                             // add Iot devices (lot)
-                            doRandomly( ioTs, ioTs.size() / 10f, e -> addElement( e, ioTs ) ),
+                            doRandomly( ioTs, ioTs.size() * config.newDevice, e -> addElement( e, ioTs ) ),
                             // add PC and Macs (small)
-                            doRandomly( pcs, pcs.size() / 25f, e -> addElement( e, pcs ) ),
-                            doRandomly( macs, macs.size() / 25f, e -> addElement( e, macs ) ),
+                            doRandomly( pcs, pcs.size() * config.newDevice, e -> addElement( e, pcs ) ),
+                            doRandomly( macs, macs.size() * config.newDevice, e -> addElement( e, macs ) ),
                             // add AP (minimal)
-                            doRandomly( aps, aps.size() / 10f, e -> addElement( e, aps ) ),
+                            doRandomly( aps, aps.size() * config.newDevice, e -> addElement( e, aps ) ),
                             // add Server (nearly none)
-                            doRandomly( servers, servers.size() / 10f, e -> addElement( e, servers ) ),
-                            doRandomly( switches, switches.size() / 10f, e -> addElement( e, switches ) )
+                            doRandomly( servers, servers.size() * config.newDevice, e -> addElement( e, servers ) ),
+                            doRandomly( switches, switches.size() * config.newDevice, e -> addElement( e, switches ) )
                     )
             );
 

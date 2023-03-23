@@ -200,7 +200,7 @@ public class ChronosAgent extends AbstractChronosAgent {
                 executorFactory = new PolyphenyDbCypherExecutorFactory( ChronosCommand.hostname );
                 break;
             case "surrealdb":
-                executorFactory = new SurrealDBExecutorFactory( ChronosCommand.hostname, "8000", true );
+                executorFactory = new SurrealDBExecutorFactory( ChronosCommand.hostname, "8989", true );
                 break;
             case "postgres":
                 executorFactory = new PostgresExecutorFactory( ChronosCommand.hostname, Boolean.parseBoolean( parsedConfig.get( "prepareStatements" ) ) );
@@ -230,7 +230,7 @@ public class ChronosAgent extends AbstractChronosAgent {
                 break;
             case "coms":
                 config = new ComsConfig( parsedConfig );
-                scenario = new Coms( executorFactory, (ComsConfig) config, true, dumpQueryList, queryMode, 1 );
+                scenario = new Coms( executorFactory, (ComsConfig) config, true, dumpQueryList, queryMode, -1 );
                 break;
             case "knnBench":
                 config = new KnnBenchConfig( parsedConfig );
@@ -334,7 +334,7 @@ public class ChronosAgent extends AbstractChronosAgent {
                 scenario.createSchema( databaseInstance, false );
                 break;
             case "surrealdb":
-                databaseInstance = new SurrealDbInstance( ChronosCommand.hostname, "8000" );
+                databaseInstance = new SurrealDbInstance( ChronosCommand.hostname, "8989" );
                 scenario.createSchema( databaseInstance, false );
                 break;
             default:

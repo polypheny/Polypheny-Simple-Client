@@ -59,7 +59,6 @@ public class ComsCommand implements CliRunnable {
     private List<String> args;
 
 
-
     @Option(name = { "-p", "--polypheny" }, title = "IP or Hostname", arity = 1, description = "IP or Hostname of the server (default: 127.0.0.1).")
     public String polyphenyDbHost = "127.0.0.1";
 
@@ -93,17 +92,17 @@ public class ComsCommand implements CliRunnable {
                 System.exit( 1 );
             }
         }
-        this.config = new ComsConfig( "coms", getProperties() );
+        this.config = new ComsConfig( "coms", getProperties(), multiplier );
         //// Define executorFactory, depending on cli parameter
         ExecutorFactory executorFactory;
 
         try {
             if ( args.get( 0 ).equalsIgnoreCase( "data" ) ) {
                 executorFactory = getExecutorFactory( false );
-                ComsScenario.data( executorFactory,config, multiplier );
+                ComsScenario.data( executorFactory, config, multiplier );
             } else if ( args.get( 0 ).equalsIgnoreCase( "workload" ) ) {
                 executorFactory = getExecutorFactory( false );
-                ComsScenario.workload( executorFactory,config, multiplier, writeCsv );
+                ComsScenario.workload( executorFactory, config, multiplier, writeCsv );
             } else if ( args.get( 0 ).equalsIgnoreCase( "schema" ) ) {
                 executorFactory = getExecutorFactory( true );
                 ComsScenario.schema( executorFactory, config );
@@ -140,7 +139,7 @@ public class ComsCommand implements CliRunnable {
                         new MongoQlExecutorFactory( mongoDB ) );
                 break;
             case SURREALDB:
-                executorFactory = new SurrealDBExecutorFactory( surrealHost, "8000", createDocker );
+                executorFactory = new SurrealDBExecutorFactory( surrealHost, "8989", createDocker );
                 break;
             default:
                 throw new IllegalArgumentException();
@@ -187,6 +186,7 @@ public class ComsCommand implements CliRunnable {
         }
 
     }
+
 
     private static Properties getProperties() {
         Properties props = new Properties();

@@ -80,7 +80,7 @@ public class Coms extends Scenario {
         this.random = new Random( config.seed );
         this.config = config;
         this.mode = config.mode;
-        this.multiplier = multiplier;
+        this.multiplier = multiplier == -1 ? config.runs : multiplier;
 
         this.measuredTimes = Collections.synchronizedList( new LinkedList<>() );
         this.queryTypes = new HashMap<>();
@@ -256,6 +256,16 @@ public class Coms extends Scenario {
         executeRuntime = System.nanoTime() - startTime;
 
         for ( EvaluationThread thread : threads ) {
+            thread.getMeasuredTimePerQueryType().forEach( ( k, v ) -> {
+                if ( !measuredTimePerQueryType.containsKey( k ) ) {
+                    measuredTimePerQueryType.put( k, new ArrayList<>() );
+                }
+                measuredTimePerQueryType.get( k ).addAll( v );
+            } );
+            measuredTimes.addAll( thread.getMeasuredTimes() );
+        }
+
+        for ( EvaluationThread thread : threads ) {
             thread.closeExecutor();
         }
 
@@ -324,7 +334,15 @@ public class Coms extends Scenario {
 
     @Override
     public void analyze( Properties properties, File outputDirectory ) {
+        properties.put( "measuredTime", calculateMean( measuredTimes ) );
 
+        measuredTimePerQueryType.forEach( ( templateId, time ) -> {
+            calculateResults( queryTypes, properties, templateId, time );
+        } );
+        properties.put( "queryTypes_maxId", queryTypes.size() );
+        properties.put( "executeRuntime", executeRuntime / 1000000000.0 );
+        properties.put( "numberOfQueries", measuredTimes.size() );
+        properties.put( "throughput", measuredTimes.size() / (executeRuntime / 1000000000.0) );
     }
 
 

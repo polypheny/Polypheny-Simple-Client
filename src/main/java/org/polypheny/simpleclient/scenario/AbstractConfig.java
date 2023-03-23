@@ -184,6 +184,16 @@ public abstract class AbstractConfig {
     }
 
 
+    protected double getDoubleProperty( Properties properties, String name ) {
+        String str = getProperty( properties, name );
+        if ( str == null ) {
+            log.error( "Property '{}' not found in config", name );
+            throw new RuntimeException( "Property '" + name + "' not found in config" );
+        }
+        return Double.parseDouble( str );
+    }
+
+
     protected boolean getBooleanProperty( Properties properties, String name ) {
         String str = getStringProperty( properties, name );
         switch ( str ) {

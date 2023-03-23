@@ -24,12 +24,14 @@
 
 package org.polypheny.simpleclient.executor;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import kong.unirest.HttpResponse;
 import kong.unirest.JsonNode;
 import kong.unirest.RequestBodyEntity;
 import kong.unirest.Unirest;
+import kong.unirest.UnirestException;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.query.BatchableInsert;
@@ -100,18 +102,22 @@ public class SurrealDBExecutor implements Executor {
 
 
     private void execute( String query ) {
+        try {
+            RequestBodyEntity request = Unirest.post( "http://" + host + "/sql" )
+                    .body( query )
+                    .header( "Accept", "application/json" )
+                    .header( "NS", "test" )
+                    .header( "DB", "test" )
+                    .basicAuth( "root", "root" );
 
-        RequestBodyEntity request = Unirest.post( "http://" + host + "/sql" )
-                .body( query )
-                .header( "Accept", "application/json" )
-                .header( "NS", "test" )
-                .header( "DB", "test" )
-                .basicAuth( "root", "root" );
-
-        HttpResponse<JsonNode> response = request.asJson();
-        if ( !response.isSuccess() ) {
-            throw new RuntimeException( query + "\n" + response.getBody().getObject().get( "information" ).toString() );
+            HttpResponse<JsonNode> response = request.asJson();
+            if ( !response.isSuccess() ) {
+                throw new RuntimeException( query + "\n" + response.getBody().getObject().get( "information" ).toString() );
+            }
+        } catch ( UnirestException e ) {
+            throw new RuntimeException( e );
         }
+
     }
 
 
@@ -193,16 +199,30 @@ public class SurrealDBExecutor implements Executor {
 
     public static class SurrealDbInstance extends DatabaseInstance {
 
+        private final File folder;
+
 
         public SurrealDbInstance( String hostname, String port ) {
+            File clientFolder = new File( new File( System.getProperty( "user.home" ), ".polypheny" ), "client" );
+            folder = new File( clientFolder, "surrealdb" );
+
+            recursiveDeleteFolder( folder );
+
+            if ( !folder.exists() ) {
+                if ( !folder.mkdirs() ) {
+                    throw new RuntimeException( "Could not create data directory" );
+                }
+            }
+
             try {
                 // deploy with Docker
                 ProcessBuilder builder = new ProcessBuilder();
                 builder.command( "docker", "container", "stop", "surrealdb" );
                 builder.start().waitFor();
                 builder = new ProcessBuilder();
-                builder.command( "docker", "run", "-d", "--rm", "--name", "surrealdb", "-p", hostname + ":" + port + ":8000", "surrealdb/surrealdb:latest", "start", "--log", "trace", "--user", "root", "--pass", "root", "memory" );
+                builder.command( "docker", "run", "-d", "--rm", "--name", "surrealdb", "-p", hostname + ":" + port + ":8000", "surrealdb/surrealdb:latest", "start", "--log", "trace", "--user", "root", "--pass", "root", "file://" + folder.getAbsolutePath() );
                 builder.start().waitFor();
+                Thread.sleep( 3000 ); // while we could use a more sophisticated approach, this will do the job for now
             } catch ( InterruptedException | IOException e ) {
                 throw new RuntimeException( e );
             }
@@ -212,7 +232,6 @@ public class SurrealDBExecutor implements Executor {
 
         @Override
         public void tearDown() {
-
             try {
                 ProcessBuilder builder = new ProcessBuilder();
                 builder.command( "docker", "container", "stop", "surrealdb" );
@@ -220,6 +239,17 @@ public class SurrealDBExecutor implements Executor {
             } catch ( InterruptedException | IOException e ) {
                 throw new RuntimeException( e );
             }
+        }
+
+
+        private void recursiveDeleteFolder( File folder ) {
+            File[] allContents = folder.listFiles();
+            if ( allContents != null ) {
+                for ( File file : allContents ) {
+                    recursiveDeleteFolder( file );
+                }
+            }
+            folder.delete();
         }
 
     }

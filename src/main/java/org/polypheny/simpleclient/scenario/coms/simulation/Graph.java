@@ -273,12 +273,12 @@ public class Graph {
             StringBuilder sql = new StringBuilder( "CREATE TABLE " ).append( sqlLabel ).append( REL_POSTFIX ).append( "(" );
             StringBuilder surreal = new StringBuilder( "DEFINE TABLE " ).append( label ).append( REL_POSTFIX ).append( " SCHEMAFULL;" );
 
-            for ( Entry<String, PropertyType> entry : element.types.entrySet() ) {
+            for ( Entry<String, PropertyType> entry : GraphElement.types.entrySet() ) {
                 sql.append( entry.getKey() ).append( " " ).append( entry.getValue().asSql() ).append( " NOT NULL," );
                 surreal.append( "DEFINE FIELD " ).append( entry.getKey() ).append( " ON " ).append( label ).append( REL_POSTFIX ).append( " TYPE " ).append( entry.getValue().asSurreal() ).append( ";" );
             }
 
-            sql.append( "PRIMARY KEY(" ).append( element.types.keySet().stream().findFirst().orElseThrow( RuntimeException::new ) ).append( "))" )
+            sql.append( "PRIMARY KEY(" ).append( GraphElement.types.keySet().stream().findFirst().orElseThrow( RuntimeException::new ) ).append( "))" )
                     .append( store );
 
             queries.add( RawQuery.builder().sql( sql.toString() ).surrealQl( surreal.toString() ).build() );
@@ -373,6 +373,7 @@ public class Graph {
                 String key = new ArrayList<>( nestedLog.keySet() ).get( j );
                 filter.add( key, nestedLog.get( key ) );
             }
+
             if ( filter.size() == 0 ) {
                 return Collections.emptyList();
             }

@@ -57,10 +57,18 @@ public class ComsConfig extends AbstractConfig {
     public String graphStore;
     public String docStore;
     public String relStore;
+    public int runs;
+    public double removeLogs;
+    public double addLogs;
+    public double changeDevice;
+    public double newDevice;
+    public double removeDevice;
 
 
-    public ComsConfig( String system, Properties properties ) {
+    public ComsConfig( String system, Properties properties, int multiplier ) {
         super( "coms", system, properties );
+
+        runs = multiplier;
         mode = Mode.valueOf( system.toUpperCase() );
         threadDistribution = Arrays.stream( getStringProperty( properties, "threadDistribution" ).split( "_" ) ).map( Integer::parseInt ).collect( Collectors.toList() );
 
@@ -87,12 +95,20 @@ public class ComsConfig extends AbstractConfig {
         graphStore = getStringProperty( properties, "graphStore" );
         docStore = getStringProperty( properties, "docStore" );
         relStore = getStringProperty( properties, "relStore" );
+
+        removeLogs = getDoubleProperty( properties, "removeLogs" );
+        addLogs = getDoubleProperty( properties, "addLogs" );
+
+        changeDevice = getDoubleProperty( properties, "changeDevice" );
+        newDevice = getDoubleProperty( properties, "newDevice" );
+        removeDevice = getDoubleProperty( properties, "removeDevice" );
     }
 
 
     public ComsConfig( Map<String, String> parsedConfig ) {
         super( "coms", parsedConfig.get( "store" ), parsedConfig );
 
+        runs = Integer.parseInt( parsedConfig.get( "runs" ) );
         mode = Mode.valueOf( this.system.toUpperCase() );
         seed = Long.parseLong( parsedConfig.get( "seed" ) );
 
@@ -120,6 +136,17 @@ public class ComsConfig extends AbstractConfig {
         graphStore = parsedConfig.get( "graphStore" );
         docStore = parsedConfig.get( "docStore" );
         relStore = parsedConfig.get( "relStore" );
+
+        removeLogs = parsePercent( parsedConfig.get( "removeLogs" ) );
+        addLogs = parsePercent( parsedConfig.get( "addLogs" ) );
+        changeDevice = parsePercent( parsedConfig.get( "changeDevice" ) );
+        newDevice = parsePercent( parsedConfig.get( "newDevice" ) );
+        removeDevice = parsePercent( parsedConfig.get( "removeDevice" ) );
+    }
+
+
+    public double parsePercent( String percent ) {
+        return Integer.parseInt( percent.replace( "%", "" ).trim() ) / 100d;
     }
 
 
