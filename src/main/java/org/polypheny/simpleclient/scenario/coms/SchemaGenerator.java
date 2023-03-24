@@ -28,7 +28,9 @@ import java.util.List;
 import java.util.Random;
 import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.executor.ExecutorException;
+import org.polypheny.simpleclient.executor.PolyphenyDbExecutor;
 import org.polypheny.simpleclient.query.Query;
+import org.polypheny.simpleclient.query.RawQuery;
 import org.polypheny.simpleclient.scenario.coms.Coms.PolyphenyAdapters;
 import org.polypheny.simpleclient.scenario.coms.simulation.Graph;
 import org.polypheny.simpleclient.scenario.coms.simulation.NetworkGenerator.Network;
@@ -71,6 +73,13 @@ public class SchemaGenerator {
         for ( Query query : relQueries ) {
             executor.executeQuery( query );
         }
+    }
+
+
+    public void tearDown( String namespace, PolyphenyDbExecutor executor ) throws ExecutorException {
+        executor.executeQuery( RawQuery.builder().cypher( "DROP DATABASE " + namespace + Graph.GRAPH_POSTFIX ).build() );
+        executor.executeQuery( RawQuery.builder().mongoQl( "db.dropDatabase()" ).build() );
+        executor.executeQuery( RawQuery.builder().sql( "DROP SCHEMA " + namespace + Graph.REL_POSTFIX ).build() );
     }
 
 }

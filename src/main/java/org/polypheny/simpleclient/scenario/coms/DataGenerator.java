@@ -38,6 +38,9 @@ import org.polypheny.simpleclient.scenario.coms.simulation.NetworkGenerator;
 @Slf4j
 public class DataGenerator {
 
+    private NetworkGenerator generator;
+
+
     public void generateData( ComsConfig config, Executor executor ) throws ExecutorException {
         // generateSchema network (simulation)
         // -> generateSchema structure of network -> nodes, edges
@@ -48,7 +51,7 @@ public class DataGenerator {
 
         log.info( "Generating data..." );
         // generateSchema simulation setting
-        NetworkGenerator generator = new NetworkGenerator( config );
+        updateNetworkGenerator( config );
         Graph graph = generator.network.toGraph();
 
         // insert into db
@@ -69,6 +72,11 @@ public class DataGenerator {
 
         // -> generate 5% of logs for simulation
 
+    }
+
+
+    public void updateNetworkGenerator( ComsConfig config ) {
+        this.generator = new NetworkGenerator( config );
     }
 
 
@@ -96,14 +104,11 @@ public class DataGenerator {
     }
 
 
-    public List<List<Query>> generateWorkload( ComsConfig config, int multiplier ) {
-        NetworkGenerator generator = new NetworkGenerator( config );
+    public List<Query> generateWorkload() {
         log.warn( "Start Configuration:\n" + generator.network );
 
-        List<List<Query>> queries = new ArrayList<>();
-        for ( int i = 0; i < multiplier; i++ ) {
-            queries.add( generator.network.simulateRun() );
-        }
+        List<Query> queries = new ArrayList<>( generator.network.simulateRun() );
+
         log.warn( "End Configuration:\n" + generator.network );
         return queries;
     }

@@ -520,32 +520,37 @@ public interface PolyphenyDbExecutor extends Executor {
         public void tearDown() {
             stopPolypheny( polyphenyControlConnector );
             for ( String store : config.dataStores ) {
-                switch ( store ) {
-                    case "hsqldb":
-                        break;
-                    case "postgres":
-                        if ( !config.deployStoresUsingDocker ) {
-                            PostgresInstance.reset();
-                        }
-                        break;
-                    case "monetdb":
-                        if ( !config.deployStoresUsingDocker ) {
-                            MonetdbInstance.reset();
-                        }
-                        break;
-                    case "cassandra":
-                        break;
-                    case "file":
-                        break;
-                    case "cottontail":
-                        break;
-                    case "mongodb":
-                        break;
-                    case "neo4j":
-                        break;
-                    default:
-                        throw new RuntimeException( "Unknown data store: " + store );
-                }
+                tearDownStore( store );
+            }
+        }
+
+
+        private void tearDownStore( String store ) {
+            switch ( store ) {
+                case "hsqldb":
+                    break;
+                case "postgres":
+                    if ( !config.deployStoresUsingDocker ) {
+                        PostgresInstance.reset();
+                    }
+                    break;
+                case "monetdb":
+                    if ( !config.deployStoresUsingDocker ) {
+                        MonetdbInstance.reset();
+                    }
+                    break;
+                case "cassandra":
+                    break;
+                case "file":
+                    break;
+                case "cottontail":
+                    break;
+                case "mongodb":
+                    break;
+                case "neo4j":
+                    break;
+                default:
+                    throw new RuntimeException( "Unknown data store: " + store );
             }
         }
 
@@ -621,6 +626,7 @@ public interface PolyphenyDbExecutor extends Executor {
         }
 
     }
+
 
     void setNewDeploySyntax( boolean useNewDeploySyntax );
 

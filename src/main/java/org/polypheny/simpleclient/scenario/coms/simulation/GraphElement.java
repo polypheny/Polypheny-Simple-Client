@@ -246,6 +246,42 @@ public abstract class GraphElement {
     }
 
 
+    public List<Query> getReadSpecificPropFixed( Random random ) {
+        String keyVal = getRandomFixed( random );
+        String projects = getRandomFixedProjects( random );
+        return Collections.singletonList( RawQuery.builder()
+                .surrealQl( "SELECT " + projects + " FROM " + getTable( false ) + " WHERE " + keyVal )
+                .sql( "SELECT " + projects + " FROM " + getTable( true ) + " WHERE " + keyVal ).build() );
+    }
+
+
+    private String getRandomFixedProjects( Random random ) {
+        if ( random.nextBoolean() ) {
+            return "*";
+        }
+
+        List<String> keys = new ArrayList<>( types.keySet() );
+        int amount = random.nextInt( keys.size() );
+
+        List<String> projects = new ArrayList<>();
+
+        for ( int i = 0; i < amount; i++ ) {
+            projects.add( keys.remove( random.nextInt( keys.size() ) ) );
+        }
+        return String.join( ", ", projects );
+    }
+
+
+    private String getRandomFixed( Random random ) {
+        int randomElement = random.nextInt( fixedProperties.size() );
+        List<String> keys = new ArrayList<>( new HashMap<>( fixedProperties.get( randomElement ) ).keySet() );
+        int randomKey = random.nextInt( keys.size() );
+        String value = fixedProperties.get( randomElement ).get( keys.get( randomKey ) );
+
+        return keys.get( randomKey ) + " = " + value;
+    }
+
+
     public List<Query> getReadAllNested() {
         return Collections.emptyList();
     }

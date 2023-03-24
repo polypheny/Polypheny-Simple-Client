@@ -39,10 +39,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.QueryMode;
@@ -78,6 +74,7 @@ public class Coms extends Scenario {
     private final Mode mode;
     private final int multiplier;
     private long executeRuntime;
+    private PolyphenyAdapters adapters;
 
 
     public Coms( ExecutorFactory executorFactory, ComsConfig config, boolean commitAfterEveryQuery, boolean dumpQueryList, QueryMode queryMode, int multiplier ) {
@@ -117,7 +114,6 @@ public class Coms extends Scenario {
         try {
             executor = executorFactory.createExecutorInstance( null, NAMESPACE );
 
-            PolyphenyAdapters adapters;
             if ( mode == Mode.POLYPHENY ) {
                 log.info( "Deploying adapters..." );
                 adapters = deployAdapters( (MultiExecutor) executor );
@@ -170,35 +166,50 @@ public class Coms extends Scenario {
     @Override
     public long execute( ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory, int numberOfThreads ) {
         DataGenerator generator = new DataGenerator();
-        List<List<Query>> runsQueries = generator.generateWorkload( config, multiplier );
+        generator.updateNetworkGenerator( config );
 
-        log.info( "Preparing query list for the benchmark..." );
+        for ( int i = 0; i < multiplier; i++ ) {
+            List<Query> queries = generator.generateWorkload();
 
-        List<List<QueryListEntry>> relQueries = new ArrayList<>();
-        List<List<QueryListEntry>> docQueries = new ArrayList<>();
-        List<List<QueryListEntry>> graphQueries = new ArrayList<>();
+            log.info( "Preparing query list for the benchmark..." );
 
-        int cycles = runsQueries.size();
-        for ( List<Query> queries : runsQueries ) {
-            relQueries.add( getRelQueries( queries ) );
-            docQueries.add( getDocQueries( queries ) );
-            graphQueries.add( getGraphQueries( queries ) );
+            List<QueryListEntry> relQueries = new ArrayList<>();
+            List<QueryListEntry> docQueries = new ArrayList<>();
+            List<QueryListEntry> graphQueries = new ArrayList<>();
 
-            dumpQueries( outputDirectory, relQueries.get( relQueries.size() - 1 ), q -> q.query.getSql() );
-            dumpQueries( outputDirectory, docQueries.get( docQueries.size() - 1 ), q -> q.query.getMongoQl() );
-            dumpQueries( outputDirectory, graphQueries.get( graphQueries.size() - 1 ), q -> q.query.getCypher() );
-        }
+            dumpQueries( outputDirectory, getRelQueries( queries ), q -> q.query.getSql() );
+            dumpQueries( outputDirectory, getDocQueries( queries ), q -> q.query.getMongoQl() );
+            dumpQueries( outputDirectory, getGraphQueries( queries ), q -> q.query.getCypher() );
 
-        // this could be extended to allow observations of changes over a single run
+            // this could be extended to allow observations of changes over a single run
 
-        for ( int i = 0; i < cycles; i++ ) {
-            log.info( String.format( "Starting benchmark cycle %d of %d...", i, cycles ) );
-            startEvaluation( progressReporter, csvWriter, numberOfThreads, config.threadDistribution, relQueries.get( i ), docQueries.get( i ), graphQueries.get( i ) );
+            log.info( String.format( "Starting benchmark cycle %d of %d...", i, multiplier ) );
+            startEvaluation( progressReporter, csvWriter, numberOfThreads, config.threadDistribution, relQueries, docQueries, graphQueries );
+
         }
 
         log.info( "run time: {} s", executeRuntime / 1000000000 );
 
+        if ( adapters != null && adapters.isSet() ) {
+            tearDownAdapters( adapters, executorFactory );
+        }
+
         return executeRuntime;
+    }
+
+
+    private void tearDownAdapters( PolyphenyAdapters adapters, ExecutorFactory executorFactory ) {
+        PolyphenyDbExecutor executor = (PolyphenyDbExecutor) executorFactory.createExecutorInstance( null, "coms" );
+        SchemaGenerator generator = new SchemaGenerator();
+
+        try {
+            generator.tearDown( "coms", executor );
+            executor.dropStore( adapters.docAdapter );
+            executor.dropStore( adapters.relAdapter );
+            executor.dropStore( adapters.graphAdapter );
+        } catch ( ExecutorException e ) {
+            throw new RuntimeException( e );
+        }
     }
 
 
@@ -383,6 +394,11 @@ public class Coms extends Scenario {
         String relAdapter;
         String docAdapter;
         String graphAdapter;
+
+
+        public boolean isSet() {
+            return relAdapter != null || docAdapter != null || graphAdapter != null;
+        }
 
     }
 

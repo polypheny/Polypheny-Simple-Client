@@ -42,6 +42,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.math3.util.Precision;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.scenario.coms.ComsConfig;
 import org.polypheny.simpleclient.scenario.coms.simulation.Graph.Edge;
@@ -381,7 +382,14 @@ public class NetworkGenerator {
 
         private void readEntities( List<Query> queries ) {
             List<List<? extends GraphElement>> elements = Arrays.asList( mobiles, ioTs, pcs, macs, aps, servers, switches, wlans, lans );
-            List<Function<GraphElement, List<Query>>> tasks = Arrays.asList( GraphElement::getReadAllDynamic, GraphElement::getReadAllFixed, GraphElement::getReadAllNested, GraphElement::readFullLog, e -> e.readPartialLog( random ) );
+            Map<Function<GraphElement, List<Query>>, Integer> tasks = new HashMap<Function<GraphElement, List<Query>>, Integer>() {{
+                put( GraphElement::getReadAllDynamic, 1 );
+                put( GraphElement::getReadAllFixed, 1 );
+                put( GraphElement::getReadAllNested, 1 );
+                put( GraphElement::readFullLog, 1 );
+                put( e -> e.readPartialLog( random ), 4 );
+                put( e -> e.getReadSpecificPropFixed( random ), 4 );
+            }};
 
             for ( int i = 0; i < random.nextInt( config.numberOfThreads ); i++ ) {
                 int randomType = random.nextInt( elements.size() );
@@ -393,8 +401,8 @@ public class NetworkGenerator {
 
                     GraphElement element = list.get( randomElement );
 
-                    int taskId = random.nextInt( tasks.size() );
-                    queries.addAll( tasks.get( taskId ).apply( element ) );
+                    Function<GraphElement, List<Query>> task = getRandomTask( random, tasks );
+                    queries.addAll( task.apply( element ) );
 
                 }
 
@@ -402,14 +410,29 @@ public class NetworkGenerator {
         }
 
 
+        private <T extends Function<GraphElement, List<Query>>> T getRandomTask( Random random, Map<T, Integer> tasks ) {
+            List<T> elements = new ArrayList<>();
+
+            tasks.forEach( ( k, v ) -> {
+                for ( int i = 0; i < v; i++ ) {
+                    elements.add( k );
+                }
+            } );
+
+            int index = random.nextInt( elements.size() );
+
+            return elements.get( index );
+        }
+
+
         private void simulateDeviceChanges( List<Query> queries ) {
 
             queries.addAll( merge(
-                            // remove Mobile devices (lot)
-                            doRandomly( mobiles, mobiles.size() * config.changeDevice, this::changeDevice ),
-                            // remove Iot devices (small)
-                            doRandomly( ioTs, ioTs.size() * config.changeDevice, this::changeDevice ),
-                            // remove PC and Macs (small)
+                    // remove Mobile devices (lot)
+                    doRandomly( mobiles, mobiles.size() * config.changeDevice, this::changeDevice ),
+                    // remove Iot devices (small)
+                    doRandomly( ioTs, ioTs.size() * config.changeDevice, this::changeDevice ),
+                    // remove PC and Macs (small)
                             doRandomly( pcs, pcs.size() * config.changeDevice, this::changeDevice ),
                             doRandomly( macs, macs.size() * config.changeDevice, this::changeDevice ),
                             // remove AP (minimal)
@@ -541,10 +564,11 @@ public class NetworkGenerator {
 
 
         private <E extends GraphElement> String summarize( List<E> elements ) {
+
             double avgGraph = elements.stream().mapToInt( e -> e.getDynProperties().size() ).average().orElseThrow( () -> new RuntimeException( "Error on avg." ) );
             double avgRel = elements.stream().mapToInt( e -> e.getFixedProperties().size() ).average().orElseThrow( () -> new RuntimeException( "Error on avg." ) );
             double avgDoc = elements.stream().filter( e -> e instanceof Node ).map( e -> (Node) e ).mapToInt( e -> e.getNestedQueries().size() ).average().orElse( 0 ); // only Node do have this
-            return "{ avgGraphProps: " + avgGraph + ", avgRelProps: " + avgRel + ", avgDocProps: " + avgDoc + " }";
+            return "{ avgGraphProps: " + Precision.round( avgGraph, 2 ) + ", avgRelProps: " + Precision.round( avgRel, 2 ) + ", avgDocProps: " + Precision.round( avgDoc, 2 ) + " }";
         }
 
 

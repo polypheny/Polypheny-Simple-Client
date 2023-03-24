@@ -108,7 +108,7 @@ public class ComsConfig extends AbstractConfig {
     public ComsConfig( Map<String, String> parsedConfig ) {
         super( "coms", parsedConfig.get( "store" ), parsedConfig );
 
-        cycles = Integer.parseInt( parsedConfig.get( "runs" ) );
+        cycles = Integer.parseInt( parsedConfig.get( "cycles" ) );
         mode = Mode.valueOf( this.system.toUpperCase() );
         seed = Long.parseLong( parsedConfig.get( "seed" ) );
 

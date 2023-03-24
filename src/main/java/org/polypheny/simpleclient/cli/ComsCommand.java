@@ -92,7 +92,7 @@ public class ComsCommand implements CliRunnable {
                 System.exit( 1 );
             }
         }
-        this.config = new ComsConfig( "coms", getProperties(), multiplier );
+        this.config = new ComsConfig( getProperties().getProperty( "system" ), getProperties(), multiplier );
         //// Define executorFactory, depending on cli parameter
         ExecutorFactory executorFactory;
 
