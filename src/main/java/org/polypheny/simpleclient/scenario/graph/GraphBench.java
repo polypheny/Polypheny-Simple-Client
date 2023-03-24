@@ -35,12 +35,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
-import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.executor.Executor;
@@ -53,6 +51,7 @@ import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.main.ProgressReporter;
 import org.polypheny.simpleclient.query.QueryBuilder;
 import org.polypheny.simpleclient.query.QueryListEntry;
+import org.polypheny.simpleclient.scenario.EvaluationThread;
 import org.polypheny.simpleclient.scenario.Scenario;
 import org.polypheny.simpleclient.scenario.graph.queryBuilder.CountNodePropertyBuilder;
 import org.polypheny.simpleclient.scenario.graph.queryBuilder.CreateGraphDatabase;
@@ -202,8 +201,8 @@ public class GraphBench extends Scenario {
         for ( EvaluationThread thread : threads ) {
             try {
                 thread.join();
-                this.measuredTimes.addAll( thread.measuredTimes );
-                thread.measuredTimePerQueryType.forEach( ( k, v ) -> {
+                this.measuredTimes.addAll( thread.getMeasuredTimes() );
+                thread.getMeasuredTimePerQueryType().forEach( ( k, v ) -> {
                     if ( !this.measuredTimePerQueryType.containsKey( k ) ) {
                         this.measuredTimePerQueryType.put( k, new ArrayList<>() );
                     }
@@ -291,106 +290,6 @@ public class GraphBench extends Scenario {
                 throw new RuntimeException( "Unexpected interrupt", e );
             }
         }
-    }
-
-
-    @Getter
-    public static class EvaluationThread extends Thread {
-
-        private final Executor executor;
-        private final List<QueryListEntry> theQueryList;
-        private boolean abort = false;
-        @Setter
-        private EvaluationThreadMonitor threadMonitor;
-
-        private final List<Long> measuredTimes = Collections.synchronizedList( new LinkedList<>() );
-
-        private final Map<Integer, List<Long>> measuredTimePerQueryType = new ConcurrentHashMap<>();
-
-        final boolean commitAfterEveryQuery;
-
-
-        public EvaluationThread( List<QueryListEntry> queryList, Executor executor, Set<Integer> templateIds, boolean commitAfterEveryQuery ) {
-            super( "EvaluationThread" );
-            this.executor = executor;
-            this.theQueryList = queryList;
-            templateIds.forEach( id -> measuredTimePerQueryType.put( id, new ArrayList<>() ) );
-            this.commitAfterEveryQuery = commitAfterEveryQuery;
-        }
-
-
-        @Override
-        public void run() {
-            long measuredTimeStart;
-            long measuredTime;
-            QueryListEntry queryListEntry;
-
-            while ( !theQueryList.isEmpty() && !abort ) {
-                measuredTimeStart = System.nanoTime();
-                try {
-                    queryListEntry = theQueryList.remove( 0 );
-                } catch ( IndexOutOfBoundsException e ) { // This is neither nice nor efficient...
-                    // This can happen due to concurrency if two threads enter the while-loop and there is only one thread left
-                    // Simply leaf the loop
-                    break;
-                }
-                try {
-                    executor.executeQuery( queryListEntry.query );
-                } catch ( ExecutorException e ) {
-                    log.error( "Caught exception while executing queries", e );
-                    threadMonitor.notifyAboutError( e );
-                    try {
-                        executor.executeRollback();
-                    } catch ( ExecutorException ex ) {
-                        log.error( "Error while rollback", e );
-                    }
-                    throw new RuntimeException( e );
-                }
-                measuredTime = System.nanoTime() - measuredTimeStart;
-                measuredTimes.add( measuredTime );
-                measuredTimePerQueryType.get( queryListEntry.templateId ).add( measuredTime );
-                if ( commitAfterEveryQuery ) {
-                    try {
-                        executor.executeCommit();
-                    } catch ( ExecutorException e ) {
-                        log.error( "Caught exception while committing", e );
-                        threadMonitor.notifyAboutError( e );
-                        try {
-                            executor.executeRollback();
-                        } catch ( ExecutorException ex ) {
-                            log.error( "Error while rollback", e );
-                        }
-                        throw new RuntimeException( e );
-                    }
-                }
-            }
-
-            try {
-                executor.executeCommit();
-            } catch ( ExecutorException e ) {
-                log.error( "Caught exception while committing", e );
-                threadMonitor.notifyAboutError( e );
-                try {
-                    executor.executeRollback();
-                } catch ( ExecutorException ex ) {
-                    log.error( "Error while rollback", e );
-                }
-                throw new RuntimeException( e );
-            }
-
-            executor.flushCsvWriter();
-        }
-
-
-        public void abort() {
-            this.abort = true;
-        }
-
-
-        public void closeExecutor() {
-            commitAndCloseExecutor( executor );
-        }
-
     }
 
 

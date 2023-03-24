@@ -57,7 +57,7 @@ public class ComsConfig extends AbstractConfig {
     public String graphStore;
     public String docStore;
     public String relStore;
-    public int runs;
+    public int cycles;
     public double removeLogs;
     public double addLogs;
     public double changeDevice;
@@ -68,7 +68,7 @@ public class ComsConfig extends AbstractConfig {
     public ComsConfig( String system, Properties properties, int multiplier ) {
         super( "coms", system, properties );
 
-        runs = multiplier;
+        cycles = multiplier;
         mode = Mode.valueOf( system.toUpperCase() );
         threadDistribution = Arrays.stream( getStringProperty( properties, "threadDistribution" ).split( "_" ) ).map( Integer::parseInt ).collect( Collectors.toList() );
 
@@ -108,7 +108,7 @@ public class ComsConfig extends AbstractConfig {
     public ComsConfig( Map<String, String> parsedConfig ) {
         super( "coms", parsedConfig.get( "store" ), parsedConfig );
 
-        runs = Integer.parseInt( parsedConfig.get( "runs" ) );
+        cycles = Integer.parseInt( parsedConfig.get( "runs" ) );
         mode = Mode.valueOf( this.system.toUpperCase() );
         seed = Long.parseLong( parsedConfig.get( "seed" ) );
 

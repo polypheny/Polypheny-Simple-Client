@@ -39,6 +39,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.QueryMode;
@@ -55,8 +59,8 @@ import org.polypheny.simpleclient.main.ProgressReporter.ReportMultiQueryListProg
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 import org.polypheny.simpleclient.query.QueryListEntry;
+import org.polypheny.simpleclient.scenario.EvaluationThread;
 import org.polypheny.simpleclient.scenario.Scenario;
-import org.polypheny.simpleclient.scenario.graph.GraphBench.EvaluationThread;
 import org.polypheny.simpleclient.scenario.graph.GraphBench.EvaluationThreadMonitor;
 
 @Slf4j
@@ -67,6 +71,7 @@ public class Coms extends Scenario {
 
     private final Random random;
     private final ComsConfig config;
+
     private final List<Long> measuredTimes;
     private final HashMap<Integer, String> queryTypes;
     private final ConcurrentHashMap<Integer, List<Long>> measuredTimePerQueryType;
@@ -80,7 +85,7 @@ public class Coms extends Scenario {
         this.random = new Random( config.seed );
         this.config = config;
         this.mode = config.mode;
-        this.multiplier = multiplier == -1 ? config.runs : multiplier;
+        this.multiplier = multiplier == -1 ? config.cycles : multiplier;
 
         this.measuredTimes = Collections.synchronizedList( new LinkedList<>() );
         this.queryTypes = new HashMap<>();
@@ -165,17 +170,31 @@ public class Coms extends Scenario {
     @Override
     public long execute( ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory, int numberOfThreads ) {
         DataGenerator generator = new DataGenerator();
-        List<Query> queries = generator.generateWorkload( config, multiplier );
+        List<List<Query>> runsQueries = generator.generateWorkload( config, multiplier );
 
         log.info( "Preparing query list for the benchmark..." );
-        List<QueryListEntry> relQueryList = getRelQueries( queries );
-        List<QueryListEntry> docQueryList = getDocQueries( queries );
-        List<QueryListEntry> graphQueryList = getGraphQueries( queries );
 
-        dumpQueries( outputDirectory, relQueryList, q -> q.query.getSql() );
-        dumpQueries( outputDirectory, docQueryList, q -> q.query.getMongoQl() );
-        dumpQueries( outputDirectory, graphQueryList, q -> q.query.getCypher() );
-        startEvaluation( progressReporter, csvWriter, numberOfThreads, config.threadDistribution, relQueryList, docQueryList, graphQueryList );
+        List<List<QueryListEntry>> relQueries = new ArrayList<>();
+        List<List<QueryListEntry>> docQueries = new ArrayList<>();
+        List<List<QueryListEntry>> graphQueries = new ArrayList<>();
+
+        int cycles = runsQueries.size();
+        for ( List<Query> queries : runsQueries ) {
+            relQueries.add( getRelQueries( queries ) );
+            docQueries.add( getDocQueries( queries ) );
+            graphQueries.add( getGraphQueries( queries ) );
+
+            dumpQueries( outputDirectory, relQueries.get( relQueries.size() - 1 ), q -> q.query.getSql() );
+            dumpQueries( outputDirectory, docQueries.get( docQueries.size() - 1 ), q -> q.query.getMongoQl() );
+            dumpQueries( outputDirectory, graphQueries.get( graphQueries.size() - 1 ), q -> q.query.getCypher() );
+        }
+
+        // this could be extended to allow observations of changes over a single run
+
+        for ( int i = 0; i < cycles; i++ ) {
+            log.info( String.format( "Starting benchmark cycle %d of %d...", i, cycles ) );
+            startEvaluation( progressReporter, csvWriter, numberOfThreads, config.threadDistribution, relQueries.get( i ), docQueries.get( i ), graphQueries.get( i ) );
+        }
 
         log.info( "run time: {} s", executeRuntime / 1000000000 );
 
@@ -255,6 +274,19 @@ public class Coms extends Scenario {
 
         executeRuntime = System.nanoTime() - startTime;
 
+        collectResultsOfThreads( threads );
+
+        for ( EvaluationThread thread : threads ) {
+            thread.closeExecutor();
+        }
+
+        if ( threadMonitor.isAborted() ) {
+            throw new RuntimeException( "Exception while executing benchmark", threadMonitor.getException() );
+        }
+    }
+
+
+    private void collectResultsOfThreads( ArrayList<EvaluationThread> threads ) {
         for ( EvaluationThread thread : threads ) {
             thread.getMeasuredTimePerQueryType().forEach( ( k, v ) -> {
                 if ( !measuredTimePerQueryType.containsKey( k ) ) {
@@ -263,14 +295,6 @@ public class Coms extends Scenario {
                 measuredTimePerQueryType.get( k ).addAll( v );
             } );
             measuredTimes.addAll( thread.getMeasuredTimes() );
-        }
-
-        for ( EvaluationThread thread : threads ) {
-            thread.closeExecutor();
-        }
-
-        if ( threadMonitor.isAborted() ) {
-            throw new RuntimeException( "Exception while executing benchmark", threadMonitor.getException() );
         }
     }
 

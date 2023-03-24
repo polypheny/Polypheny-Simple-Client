@@ -96,13 +96,13 @@ public class DataGenerator {
     }
 
 
-    public List<Query> generateWorkload( ComsConfig config, int multiplier ) {
+    public List<List<Query>> generateWorkload( ComsConfig config, int multiplier ) {
         NetworkGenerator generator = new NetworkGenerator( config );
         log.warn( "Start Configuration:\n" + generator.network );
 
-        List<Query> queries = new ArrayList<>();
+        List<List<Query>> queries = new ArrayList<>();
         for ( int i = 0; i < multiplier; i++ ) {
-            queries.addAll( generator.network.simulateRun() );
+            queries.add( generator.network.simulateRun() );
         }
         log.warn( "End Configuration:\n" + generator.network );
         return queries;
