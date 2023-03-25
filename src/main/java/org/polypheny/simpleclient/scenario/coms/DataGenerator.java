@@ -38,7 +38,7 @@ import org.polypheny.simpleclient.scenario.coms.simulation.NetworkGenerator;
 @Slf4j
 public class DataGenerator {
 
-    private NetworkGenerator generator;
+    public NetworkGenerator generator;
 
 
     public void generateData( ComsConfig config, Executor executor ) throws ExecutorException {
@@ -105,11 +105,15 @@ public class DataGenerator {
 
 
     public List<Query> generateWorkload() {
-        log.warn( "Start Configuration:\n" + generator.network );
+        if ( log.isInfoEnabled() ) {
+            log.info( "Start Configuration:\n" + generator.network );
+        }
 
         List<Query> queries = new ArrayList<>( generator.network.simulateRun() );
 
-        log.warn( "End Configuration:\n" + generator.network );
+        if ( log.isInfoEnabled() ) {
+            log.info( "End Configuration:\n" + generator.network );
+        }
         return queries;
     }
 

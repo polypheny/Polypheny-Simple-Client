@@ -73,7 +73,7 @@ public class Coms extends Scenario {
     private final ConcurrentHashMap<Integer, List<Long>> measuredTimePerQueryType;
     private final Mode mode;
     private final int multiplier;
-    private long executeRuntime;
+    private long executeRuntime = 0;
     private PolyphenyAdapters adapters;
 
 
@@ -168,18 +168,19 @@ public class Coms extends Scenario {
         DataGenerator generator = new DataGenerator();
         generator.updateNetworkGenerator( config );
 
+        log.warn( "Start Configuration:\n" + generator.generator.network );
         for ( int i = 0; i < multiplier; i++ ) {
             List<Query> queries = generator.generateWorkload();
 
             log.info( "Preparing query list for the benchmark..." );
 
-            List<QueryListEntry> relQueries = new ArrayList<>();
-            List<QueryListEntry> docQueries = new ArrayList<>();
-            List<QueryListEntry> graphQueries = new ArrayList<>();
+            List<QueryListEntry> relQueries = getRelQueries( queries );
+            List<QueryListEntry> docQueries = getDocQueries( queries );
+            List<QueryListEntry> graphQueries = getGraphQueries( queries );
 
-            dumpQueries( outputDirectory, getRelQueries( queries ), q -> q.query.getSql() );
-            dumpQueries( outputDirectory, getDocQueries( queries ), q -> q.query.getMongoQl() );
-            dumpQueries( outputDirectory, getGraphQueries( queries ), q -> q.query.getCypher() );
+            dumpQueries( outputDirectory, relQueries, q -> q.query.getSql() );
+            dumpQueries( outputDirectory, docQueries, q -> q.query.getMongoQl() );
+            dumpQueries( outputDirectory, graphQueries, q -> q.query.getCypher() );
 
             // this could be extended to allow observations of changes over a single run
 
@@ -188,6 +189,7 @@ public class Coms extends Scenario {
 
         }
 
+        log.warn( "End Configuration:\n" + generator.generator.network );
         log.info( "run time: {} s", executeRuntime / 1000000000 );
 
         if ( adapters != null && adapters.isSet() ) {
@@ -214,19 +216,19 @@ public class Coms extends Scenario {
 
 
     private List<QueryListEntry> getGraphQueries( List<Query> queries ) {
-        queryTypes.put( 1, "graph" ); // todo more distinct
+        queryTypes.put( 1, "graph" );
         return queries.stream().filter( q -> q.getCypher() != null ).map( q -> new QueryListEntry( q, 1 ) ).collect( Collectors.toList() );
     }
 
 
     private List<QueryListEntry> getDocQueries( List<Query> queries ) {
-        queryTypes.put( 2, "doc" ); // todo more distinct
+        queryTypes.put( 2, "doc" );
         return queries.stream().filter( q -> q.getMongoQl() != null ).map( q -> new QueryListEntry( q, 2 ) ).collect( Collectors.toList() );
     }
 
 
     private List<QueryListEntry> getRelQueries( List<Query> queries ) {
-        queryTypes.put( 3, "relational" ); // todo more distinct
+        queryTypes.put( 3, "relational" );
         return queries.stream().filter( q -> q.getSql() != null ).map( q -> new QueryListEntry( q, 3 ) ).collect( Collectors.toList() );
     }
 
@@ -283,7 +285,7 @@ public class Coms extends Scenario {
             }
         }
 
-        executeRuntime = System.nanoTime() - startTime;
+        executeRuntime += System.nanoTime() - startTime;
 
         collectResultsOfThreads( threads );
 

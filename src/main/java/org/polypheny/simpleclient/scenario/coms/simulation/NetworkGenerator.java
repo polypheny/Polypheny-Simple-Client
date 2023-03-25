@@ -395,6 +395,9 @@ public class NetworkGenerator {
                 int randomType = random.nextInt( elements.size() );
 
                 List<? extends GraphElement> list = elements.get( randomType );
+                if ( list.size() == 0 ) {
+                    continue;
+                }
 
                 for ( int j = 0; j < random.nextInt(); j++ ) {
                     int randomElement = random.nextInt( list.size() );
@@ -428,11 +431,11 @@ public class NetworkGenerator {
         private void simulateDeviceChanges( List<Query> queries ) {
 
             queries.addAll( merge(
-                    // remove Mobile devices (lot)
-                    doRandomly( mobiles, mobiles.size() * config.changeDevice, this::changeDevice ),
-                    // remove Iot devices (small)
-                    doRandomly( ioTs, ioTs.size() * config.changeDevice, this::changeDevice ),
-                    // remove PC and Macs (small)
+                            // remove Mobile devices (lot)
+                            doRandomly( mobiles, mobiles.size() * config.changeDevice, this::changeDevice ),
+                            // remove Iot devices (small)
+                            doRandomly( ioTs, ioTs.size() * config.changeDevice, this::changeDevice ),
+                            // remove PC and Macs (small)
                             doRandomly( pcs, pcs.size() * config.changeDevice, this::changeDevice ),
                             doRandomly( macs, macs.size() * config.changeDevice, this::changeDevice ),
                             // remove AP (minimal)
@@ -506,7 +509,57 @@ public class NetworkGenerator {
         private <E extends GraphElement> List<Query> addElement( E element, List<E> elements ) {
             elements.add( element );
 
-            return element.asQuery();
+            List<Device> types = element.getPossibleConnectionTypes();
+
+            List<Query> queries = new ArrayList<>( element.asQuery() );
+
+            int addedConnections = random.nextInt( 2 ) + 1;
+            for ( int i = 0; i < addedConnections; i++ ) {
+                int typToConnect = random.nextInt( types.size() );
+                boolean isLan = random.nextBoolean();
+
+                long to;
+                switch ( types.get( typToConnect ) ) {
+                    case SERVER:
+                        isLan = true;
+                        to = servers.get( random.nextInt( servers.size() ) ).id;
+                        break;
+                    case SWITCH:
+                        isLan = true;
+                        to = switches.get( random.nextInt( switches.size() ) ).id;
+                        break;
+                    case AP:
+                        to = aps.get( random.nextInt( aps.size() ) ).id;
+                        break;
+                    case IOT:
+                        to = ioTs.get( random.nextInt( ioTs.size() ) ).id;
+                        break;
+                    case MOBILE:
+                        to = mobiles.get( random.nextInt( mobiles.size() ) ).id;
+                        break;
+                    case MAC:
+                        to = macs.get( random.nextInt( macs.size() ) ).id;
+                        break;
+                    case PC:
+                        to = pcs.get( random.nextInt( pcs.size() ) ).id;
+                        break;
+                    default:
+                        throw new RuntimeException( "Not correctly configured" );
+                }
+
+                if ( isLan ) {
+                    Lan lan = new Lan( element.id, to, true, random );
+                    queries.addAll( lan.asQuery() );
+                    lans.add( lan );
+                } else {
+                    WLan wlan = new WLan( element.id, to, true, random );
+                    queries.addAll( wlan.asQuery() );
+                    wlans.add( wlan );
+                }
+
+            }
+
+            return queries;
         }
 
 
@@ -565,8 +618,8 @@ public class NetworkGenerator {
 
         private <E extends GraphElement> String summarize( List<E> elements ) {
 
-            double avgGraph = elements.stream().mapToInt( e -> e.getDynProperties().size() ).average().orElseThrow( () -> new RuntimeException( "Error on avg." ) );
-            double avgRel = elements.stream().mapToInt( e -> e.getFixedProperties().size() ).average().orElseThrow( () -> new RuntimeException( "Error on avg." ) );
+            double avgGraph = elements.stream().mapToInt( e -> e.getDynProperties().size() ).average().orElse( 0d );
+            double avgRel = elements.stream().mapToInt( e -> e.getFixedProperties().size() ).average().orElse( 0d );
             double avgDoc = elements.stream().filter( e -> e instanceof Node ).map( e -> (Node) e ).mapToInt( e -> e.getNestedQueries().size() ).average().orElse( 0 ); // only Node do have this
             return "{ avgGraphProps: " + Precision.round( avgGraph, 2 ) + ", avgRelProps: " + Precision.round( avgRel, 2 ) + ", avgDocProps: " + Precision.round( avgDoc, 2 ) + " }";
         }
@@ -593,6 +646,11 @@ public class NetworkGenerator {
         }
 
 
+        @Override
+        public List<Device> getPossibleConnectionTypes() {
+            return Arrays.asList( Device.SERVER, Device.SWITCH );
+        }
+
     }
 
     //// Distributors
@@ -611,6 +669,12 @@ public class NetworkGenerator {
                     Network.generateProperties( random, Network.config.switchConfigs ),
                     Network.generateNestedProperties( random, Network.config.nestingDepth ) );
             this.random = random;
+        }
+
+
+        @Override
+        public List<Device> getPossibleConnectionTypes() {
+            return Arrays.asList( Device.SWITCH, Device.SERVER, Device.AP, Device.PC, Device.MAC );
         }
 
     }
@@ -632,6 +696,11 @@ public class NetworkGenerator {
         }
 
 
+        @Override
+        public List<Device> getPossibleConnectionTypes() {
+            return Arrays.asList( Device.AP, Device.SWITCH, Device.SERVER, Device.MOBILE, Device.IOT, Device.MAC, Device.PC );
+        }
+
     }
 
     //// Devices
@@ -652,6 +721,12 @@ public class NetworkGenerator {
             this.random = random;
         }
 
+
+        @Override
+        public List<Device> getPossibleConnectionTypes() {
+            return Arrays.asList( Device.IOT, Device.AP );
+        }
+
     }
 
 
@@ -668,6 +743,12 @@ public class NetworkGenerator {
                     Network.generateProperties( random, Network.config.mobileDynConfigsMax ),
                     Network.generateNestedProperties( random, Network.config.nestingDepth ) );
             this.random = random;
+        }
+
+
+        @Override
+        public List<Device> getPossibleConnectionTypes() {
+            return Collections.singletonList( Device.AP );
         }
 
     }
@@ -689,6 +770,11 @@ public class NetworkGenerator {
         }
 
 
+        @Override
+        public List<Device> getPossibleConnectionTypes() {
+            return Arrays.asList( Device.SWITCH, Device.AP );
+        }
+
     }
 
 
@@ -705,6 +791,12 @@ public class NetworkGenerator {
                     Network.generateProperties( random, Network.config.pcDynConfigsMax ),
                     Network.generateNestedProperties( random, Network.config.nestingDepth ) );
             this.random = random;
+        }
+
+
+        @Override
+        public List<Device> getPossibleConnectionTypes() {
+            return Arrays.asList( Device.SWITCH, Device.AP );
         }
 
     }
@@ -730,6 +822,11 @@ public class NetworkGenerator {
         }
 
 
+        @Override
+        public List<Device> getPossibleConnectionTypes() {
+            return Collections.emptyList();
+        }
+
     }
 
 
@@ -751,12 +848,29 @@ public class NetworkGenerator {
         }
 
 
+        @Override
+        public List<Device> getPossibleConnectionTypes() {
+            return Collections.emptyList();
+        }
+
+
     }
 
 
     enum Connection {
         WLAN,
         LAN
+    }
+
+
+    enum Device {
+        SERVER,
+        SWITCH,
+        AP,
+        IOT,
+        MOBILE,
+        MAC,
+        PC
     }
 
 }

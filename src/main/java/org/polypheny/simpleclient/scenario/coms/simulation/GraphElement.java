@@ -42,6 +42,7 @@ import org.jetbrains.annotations.NotNull;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.RawQuery;
 import org.polypheny.simpleclient.scenario.coms.simulation.Graph.Node;
+import org.polypheny.simpleclient.scenario.coms.simulation.NetworkGenerator.Device;
 import org.polypheny.simpleclient.scenario.coms.simulation.NetworkGenerator.Network;
 import org.polypheny.simpleclient.scenario.coms.simulation.PropertyType.Type;
 
@@ -53,8 +54,8 @@ public abstract class GraphElement {
     public static Map<String, PropertyType> types = new HashMap<String, PropertyType>() {{
         put( "a_stamp", new PropertyType( 5, Type.NUMBER ) );
         put( "id", new PropertyType( 3, Type.NUMBER ) );
-        put( "manufactureId", new PropertyType( 12, Type.NUMBER ) );
-        put( "manufactureName", new PropertyType( 12, Type.CHAR ) );
+        put( "manufactureid", new PropertyType( 12, Type.NUMBER ) );
+        put( "manufacturename", new PropertyType( 12, Type.CHAR ) );
         put( "entry", new PropertyType( 12, Type.NUMBER ) );
         put( "description", new PropertyType( 255, Type.NUMBER ) );
     }};
@@ -261,7 +262,7 @@ public abstract class GraphElement {
         }
 
         List<String> keys = new ArrayList<>( types.keySet() );
-        int amount = random.nextInt( keys.size() );
+        int amount = random.nextInt( keys.size() ) + 1;
 
         List<String> projects = new ArrayList<>();
 
@@ -285,5 +286,8 @@ public abstract class GraphElement {
     public List<Query> getReadAllNested() {
         return Collections.emptyList();
     }
+
+
+    public abstract List<Device> getPossibleConnectionTypes();
 
 }

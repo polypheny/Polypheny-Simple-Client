@@ -369,8 +369,11 @@ public class Graph {
                 return Collections.emptyList();
             }
 
-            for ( int j = 0; j < random.nextInt( nestedLog.size() + 1 ); j++ ) {
+            for ( int j = 0; j < random.nextInt( nestedLog.size() ) + 1; j++ ) {
                 String key = new ArrayList<>( nestedLog.keySet() ).get( j );
+                if ( nestedLog.get( key ).isJsonObject() && nestedLog.get( key ).getAsJsonObject().size() == 0 ) {
+                    continue;
+                }
                 filter.add( key, nestedLog.get( key ) );
             }
 
