@@ -53,7 +53,6 @@ import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.main.ProgressReporter;
 import org.polypheny.simpleclient.main.ProgressReporter.ReportMultiQueryListProgress;
 import org.polypheny.simpleclient.query.Query;
-import org.polypheny.simpleclient.query.QueryBuilder;
 import org.polypheny.simpleclient.query.QueryListEntry;
 import org.polypheny.simpleclient.scenario.EvaluationThread;
 import org.polypheny.simpleclient.scenario.Scenario;
@@ -168,6 +167,15 @@ public class Coms extends Scenario {
         DataGenerator generator = new DataGenerator();
         generator.updateNetworkGenerator( config );
 
+        if ( config.numberOfWarmUpIterations > 0 ) {
+            log.warn( "Pre-Warm-Up Configuration:\n" + generator.generator.network );
+        }
+
+        for ( int i = 0; i < config.numberOfWarmUpIterations; i++ ) {
+            // we advance the network to a state, which is at the point of after the warmup workload
+            generator.generateWorkload();
+        }
+
         log.warn( "Start Configuration:\n" + generator.generator.network );
         for ( int i = 0; i < multiplier; i++ ) {
             List<Query> queries = generator.generateWorkload();
@@ -253,6 +261,9 @@ public class Coms extends Scenario {
                 amount -= 1;
             } else {
                 // add to last
+                if ( organized.isEmpty() ) {
+                    organized.add( new ArrayList<>() );
+                }
                 List<QueryListEntry> old = organized.remove( organized.size() - 1 );
 
                 List<QueryListEntry> list = randomlyMergeInOrder( old, queryLists[i] );
@@ -321,6 +332,11 @@ public class Coms extends Scenario {
         while ( !bucket.isEmpty() ) {
             int i = random.nextInt( bucket.size() );
 
+            if ( bucket.get( i ).isEmpty() ) {
+                bucket.remove( i );
+                continue;
+            }
+
             merged.add( bucket.get( i ).remove( 0 ) );
             if ( bucket.get( i ).isEmpty() ) {
                 bucket.remove( i );
@@ -353,19 +369,31 @@ public class Coms extends Scenario {
     }
 
 
-    private void addNumberOfTimes( List<QueryListEntry> list, QueryBuilder queryBuilder, int numberOfTimes ) {
-        int id = queryTypes.size() + 1;
-        queryTypes.put( id, queryBuilder.getNewQuery().getSql() );
-        measuredTimePerQueryType.put( id, Collections.synchronizedList( new LinkedList<>() ) );
-        for ( int i = 0; i < numberOfTimes; i++ ) {
-            list.add( new QueryListEntry( queryBuilder.getNewQuery(), id ) );
-        }
-    }
-
-
     @Override
     public void warmUp( ProgressReporter progressReporter ) {
-
+        log.warn( "Warm-up..." );
+        DataGenerator generator = new DataGenerator();
+        generator.updateNetworkGenerator( config );
+        Executor executor = null;
+        for ( int i = 0; i < config.numberOfWarmUpIterations; i++ ) {
+            log.warn( "Iteration " + i + "..." );
+            try {
+                executor = executorFactory.createExecutorInstance( null, NAMESPACE );
+                List<Query> queries = generator.generateWorkload();
+                for ( Query query : queries ) {
+                    executor.executeQuery( query );
+                }
+            } catch ( ExecutorException e ) {
+                throw new RuntimeException( e );
+            } finally {
+                commitAndCloseExecutor( executor );
+            }
+            try {
+                Thread.sleep( 10000 );
+            } catch ( InterruptedException e ) {
+                throw new RuntimeException( "Unexpected interrupt", e );
+            }
+        }
     }
 
 

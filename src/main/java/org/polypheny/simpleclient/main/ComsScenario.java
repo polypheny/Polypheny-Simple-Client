@@ -64,4 +64,10 @@ public class ComsScenario {
     }
 
 
+    public static void warmup( ExecutorFactory executorFactory, ComsConfig config ) {
+        Coms bench = new Coms( executorFactory, config, true, false, QueryMode.TABLE, 1 );
+        ProgressReporter progressReporter = new ProgressBar( 1, config.progressReportBase );
+        bench.warmUp( progressReporter );
+    }
+
 }

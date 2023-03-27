@@ -97,18 +97,27 @@ public class ComsCommand implements CliRunnable {
         ExecutorFactory executorFactory;
 
         try {
-            if ( args.get( 0 ).equalsIgnoreCase( "data" ) ) {
-                executorFactory = getExecutorFactory( false );
-                ComsScenario.data( executorFactory, config, multiplier );
-            } else if ( args.get( 0 ).equalsIgnoreCase( "workload" ) ) {
-                executorFactory = getExecutorFactory( false );
-                ComsScenario.workload( executorFactory, config, multiplier, writeCsv );
-            } else if ( args.get( 0 ).equalsIgnoreCase( "schema" ) ) {
-                executorFactory = getExecutorFactory( true );
-                ComsScenario.schema( executorFactory, config );
-            } else {
-                System.err.println( "Unknown task: " + args.get( 0 ) );
+            switch ( args.get( 0 ).toLowerCase() ) {
+                case "schema":
+                    executorFactory = getExecutorFactory( true );
+                    ComsScenario.schema( executorFactory, config );
+                    break;
+                case "data":
+                    executorFactory = getExecutorFactory( false );
+                    ComsScenario.data( executorFactory, config, multiplier );
+                    break;
+                case "warmup":
+                    executorFactory = getExecutorFactory( true );
+                    ComsScenario.warmup( executorFactory, config );
+                    break;
+                case "workload":
+                    executorFactory = getExecutorFactory( false );
+                    ComsScenario.workload( executorFactory, config, multiplier, writeCsv );
+                    break;
+                default:
+                    System.err.println( "Unknown task: " + args.get( 0 ) );
             }
+
         } catch ( Throwable t ) {
             log.error( "Exception while executing Coms!", t );
             System.exit( 1 );
