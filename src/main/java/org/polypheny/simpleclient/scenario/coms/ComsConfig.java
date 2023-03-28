@@ -63,6 +63,8 @@ public class ComsConfig extends AbstractConfig {
     public double changeDevice;
     public double newDevice;
     public double removeDevice;
+    public double removeUsers;
+    public int readQueries;
 
 
     public ComsConfig( String system, Properties properties, int multiplier ) {
@@ -102,6 +104,10 @@ public class ComsConfig extends AbstractConfig {
         changeDevice = getDoubleProperty( properties, "changeDevice" );
         newDevice = getDoubleProperty( properties, "newDevice" );
         removeDevice = getDoubleProperty( properties, "removeDevice" );
+
+        removeUsers = getDoubleProperty( properties, "removeUsers" );
+
+        readQueries = getIntProperty( properties, "readQueries" );
     }
 
 
@@ -142,6 +148,9 @@ public class ComsConfig extends AbstractConfig {
         changeDevice = parsePercent( parsedConfig.get( "changeDevice" ) );
         newDevice = parsePercent( parsedConfig.get( "newDevice" ) );
         removeDevice = parsePercent( parsedConfig.get( "removeDevice" ) );
+
+        removeUsers = Double.parseDouble( parsedConfig.get( "removeUsers" ) );
+        readQueries = Integer.parseInt( parsedConfig.get( "removeUsers" ) );
     }
 
 

@@ -25,15 +25,25 @@
 package org.polypheny.simpleclient.query;
 
 
+import java.util.Collections;
+import java.util.List;
+
 public class QueryListEntry {
 
     public final Query query;
     public final int templateId;
+    public final List<Integer> templateIds;
 
 
     public QueryListEntry( Query query, int templateId ) {
+        this( query, Collections.singletonList( templateId ) );
+    }
+
+
+    public QueryListEntry( Query query, List<Integer> templateIds ) {
         this.query = query;
-        this.templateId = templateId;
+        this.templateId = templateIds.get( 0 );
+        this.templateIds = templateIds;
     }
 
 }

@@ -138,9 +138,10 @@ public class Coms extends Scenario {
         try {
             executor.jdbc.setNewDeploySyntax( true );
             return new PolyphenyAdapters(
-                    executor.deployAdapter( config.graphStore ),
+                    executor.deployAdapter( config.relStore ),
                     executor.deployAdapter( config.docStore ),
-                    executor.deployAdapter( config.relStore ) );
+                    executor.deployAdapter( config.graphStore ) );
+
         } catch ( ExecutorException e ) {
             throw new RuntimeException( e );
         }

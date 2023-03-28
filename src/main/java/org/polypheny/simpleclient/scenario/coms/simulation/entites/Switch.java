@@ -29,9 +29,9 @@ import java.util.List;
 import java.util.Random;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
-import org.polypheny.simpleclient.scenario.coms.simulation.entites.Graph.Node;
 import org.polypheny.simpleclient.scenario.coms.simulation.NetworkGenerator.Device;
 import org.polypheny.simpleclient.scenario.coms.simulation.NetworkGenerator.Network;
+import org.polypheny.simpleclient.scenario.coms.simulation.entites.Graph.Node;
 
 @EqualsAndHashCode(callSuper = true)
 @Value
@@ -50,7 +50,7 @@ public class Switch extends Node {
 
     @Override
     public List<Device> getPossibleConnectionTypes() {
-        return Arrays.asList( Device.SWITCH, Device.SERVER, Device.AP, Device.PC, Device.MAC );
+        return Arrays.asList( Device.SWITCH, Device.SERVER, Device.AP, Device.PC );
     }
 
 }

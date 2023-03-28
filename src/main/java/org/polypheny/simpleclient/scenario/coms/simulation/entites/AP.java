@@ -41,8 +41,7 @@ public class AP extends Node {
 
 
     public AP( Random random ) {
-        super(
-                Network.generateProperties( random, Network.config.apDynConfigs ),
+        super( Network.generateProperties( random, Network.config.apDynConfigs ),
                 Network.generateNestedProperties( random, Network.config.nestingDepth ) );
         this.random = random;
     }
@@ -50,7 +49,7 @@ public class AP extends Node {
 
     @Override
     public List<Device> getPossibleConnectionTypes() {
-        return Arrays.asList( Device.AP, Device.SWITCH, Device.SERVER, Device.MOBILE, Device.IOT, Device.MAC, Device.PC );
+        return Arrays.asList( Device.AP, Device.SWITCH, Device.SERVER, Device.MOBILE, Device.IOT, Device.PC );
     }
 
 }

@@ -64,6 +64,11 @@ public abstract class Query {
     public abstract String getMongoQl();
 
 
+    public List<String> getTypes() {
+        return null;
+    }
+
+
     public String getSurrealQl() {
         return null;
     }

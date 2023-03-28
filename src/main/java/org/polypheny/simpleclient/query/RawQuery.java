@@ -24,6 +24,7 @@
 
 package org.polypheny.simpleclient.query;
 
+import java.util.List;
 import java.util.Map;
 import kong.unirest.HttpRequest;
 import lombok.Builder;
@@ -47,21 +48,23 @@ public class RawQuery extends Query {
 
     @Getter
     private final String surrealQl;
+    private final List<String> types;
 
 
     public RawQuery( String sql, HttpRequest<?> rest, boolean expectResultSet ) {
-        this( sql, rest, null, null, null, expectResultSet );
+        this( sql, rest, null, null, null, null, expectResultSet );
     }
 
 
     @Builder
-    public RawQuery( String sql, HttpRequest<?> rest, String mongoQl, String cypher, String surrealQl, boolean expectResultSet ) {
+    public RawQuery( String sql, HttpRequest<?> rest, String mongoQl, String cypher, String surrealQl, List<String> types, boolean expectResultSet ) {
         super( expectResultSet );
         this.sql = sql;
         this.rest = rest;
         this.mongoQl = mongoQl;
         this.cypher = cypher;
         this.surrealQl = surrealQl;
+        this.types = types;
     }
 
 

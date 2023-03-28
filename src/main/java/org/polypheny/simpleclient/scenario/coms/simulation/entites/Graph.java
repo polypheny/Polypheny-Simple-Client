@@ -87,8 +87,8 @@ public class Graph {
         for ( List<Edge> edges : Lists.partition( new ArrayList<>( sources.values() ), graphCreateBatch ) ) {
             int i = 0;
             for ( Edge edge : edges ) {
-                cypher = new StringBuilder( "MATCH " ).append( String.format( "(n1{_id:%s})", edge.from ) )
-                        .append( "," ).append( String.format( "(n2{_id:%s})", edge.to ) );
+                cypher = new StringBuilder( "MATCH " ).append( String.format( "(n1{id:%s})", edge.from ) )
+                        .append( "," ).append( String.format( "(n2{id:%s})", edge.to ) );
                 cypher.append( " CREATE " );
                 surreal = new StringBuilder( "RELATE " ); // no batch update possible
                 //// Cypher CREATE (n1 {})-[]-(n2 {})
@@ -100,7 +100,7 @@ public class Graph {
 
                 //// SurrealDB INSERT INTO dev [{name: 'Amy'}, {name: 'Mary', id: 'Mary'}]; ARE ALWAYS DIRECTED
                 surreal.append( String.format(
-                        " (SELECT * FROM node WHERE _id = %s)->write->(SELECT * FROM node WHERE _id = %s) CONTENT { labels: [ %s ], %s ",
+                        " (SELECT * FROM node WHERE id = %s)->write->(SELECT * FROM node WHERE id = %s) CONTENT { labels: [ %s ], %s ",
                         edge.from,
                         edge.to,
                         edge.getLabels().stream().map( l -> "\"" + l + "\"" ).collect( Collectors.joining( "," ) ),
@@ -197,13 +197,13 @@ public class Graph {
 
         StringBuilder sql = new StringBuilder();
 
-        sql.append( " (" ).append( String.join( ",", User.types.keySet() ) ).append( ")" );
+        sql.append( " (" ).append( String.join( ", ", User.types.keySet() ) ).append( ")" );
         sql.append( " VALUES " );
 
-        sql.append( "(" ).append( String.join( ", ", User.getSql( users ) ) ).append( ")" );
+        sql.append( User.getSql( users ).stream().map( u -> "(" + u + ")" ).collect( Collectors.joining( ", " ) ) );
 
         String label = "user" + REL_POSTFIX;
-        String sqlLabel = "user" + REL_POSTFIX + "." + label;
+        String sqlLabel = "coms" + REL_POSTFIX + "." + label;
 
         queries.add( RawQuery.builder()
                 .sql( "INSERT INTO " + sqlLabel + sql )
@@ -273,7 +273,7 @@ public class Graph {
             surreal.append( "DEFINE FIELD " ).append( entry.getKey() ).append( " ON " ).append( label ).append( REL_POSTFIX ).append( " TYPE " ).append( entry.getValue().asSurreal() ).append( ";" );
         }
 
-        sql.append( "PRIMARY KEY(" ).append( User.types.keySet().stream().findFirst().orElseThrow( RuntimeException::new ) ).append( "))" )
+        sql.append( "PRIMARY KEY(" ).append( User.pk ).append( "))" )
                 .append( store );
 
         queries.add( RawQuery.builder().sql( sql.toString() ).surrealQl( surreal.toString() ).build() );
