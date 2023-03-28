@@ -38,16 +38,25 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.math3.util.Precision;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.scenario.coms.ComsConfig;
-import org.polypheny.simpleclient.scenario.coms.simulation.Graph.Edge;
-import org.polypheny.simpleclient.scenario.coms.simulation.Graph.Node;
+import org.polypheny.simpleclient.scenario.coms.simulation.entites.AP;
+import org.polypheny.simpleclient.scenario.coms.simulation.entites.Graph;
+import org.polypheny.simpleclient.scenario.coms.simulation.entites.Graph.Edge;
+import org.polypheny.simpleclient.scenario.coms.simulation.entites.Graph.Node;
 import org.polypheny.simpleclient.scenario.coms.simulation.PropertyType.Type;
+import org.polypheny.simpleclient.scenario.coms.simulation.entites.IoT;
+import org.polypheny.simpleclient.scenario.coms.simulation.entites.Lan;
+import org.polypheny.simpleclient.scenario.coms.simulation.entites.Mac;
+import org.polypheny.simpleclient.scenario.coms.simulation.entites.Mobile;
+import org.polypheny.simpleclient.scenario.coms.simulation.entites.PC;
+import org.polypheny.simpleclient.scenario.coms.simulation.entites.Server;
+import org.polypheny.simpleclient.scenario.coms.simulation.entites.Switch;
+import org.polypheny.simpleclient.scenario.coms.simulation.entites.Wlan;
 
 @Slf4j
 public class NetworkGenerator {
@@ -109,7 +118,10 @@ public class NetworkGenerator {
 
         List<Lan> lans = new ArrayList<>();
 
-        List<WLan> wlans = new ArrayList<>();
+        List<Wlan> wlans = new ArrayList<>();
+
+        List<User> users = new ArrayList<>();
+
         public static ComsConfig config;
         int scale;
 
@@ -140,6 +152,8 @@ public class NetworkGenerator {
 
             generateConnection( this.aps, this.mobiles, this.mobiles.size() * 2, Connection.WLAN );
             generateConnection( this.aps, this.ioTs, this.ioTs.size() * 2, Connection.WLAN );
+
+            generateObject( SERVERS, () -> users.add( new User( random ) ) );
         }
 
 
@@ -159,7 +173,7 @@ public class NetworkGenerator {
                 R to = toElements.get( random.nextInt( toElements.size() ) );
 
                 if ( connection == Connection.WLAN ) {
-                    this.wlans.add( new WLan( from.getId(), to.getId(), false, random ) );
+                    this.wlans.add( new Wlan( from.getId(), to.getId(), false, random ) );
                 } else if ( connection == Connection.LAN ) {
                     this.lans.add( new Lan( from.getId(), to.getId(), false, random ) );
                 }
@@ -189,7 +203,7 @@ public class NetworkGenerator {
             collectEdges( lans, edges );
             collectEdges( wlans, edges );
 
-            return new Graph( nodes, edges );
+            return new Graph( nodes, edges, users.stream().collect( Collectors.toMap( u -> u.id, u -> u )) );
         }
 
 
@@ -552,7 +566,7 @@ public class NetworkGenerator {
                     queries.addAll( lan.asQuery() );
                     lans.add( lan );
                 } else {
-                    WLan wlan = new WLan( element.id, to, true, random );
+                    Wlan wlan = new Wlan( element.id, to, true, random );
                     queries.addAll( wlan.asQuery() );
                     wlans.add( wlan );
                 }
@@ -568,7 +582,7 @@ public class NetworkGenerator {
 
             if ( element instanceof Node ) {
                 // we need to remove connections first
-                List<WLan> ws = this.wlans
+                List<Wlan> ws = this.wlans
                         .stream()
                         .filter( w -> w.getFrom() == element.getId() || w.getTo() == element.getId() ).collect( Collectors.toList() );
                 List<Query> wQueries = ws
@@ -591,7 +605,7 @@ public class NetworkGenerator {
         }
 
 
-        private boolean isNull( WLan w ) {
+        private boolean isNull( Wlan w ) {
             if ( w == null ) {
                 System.out.println( w );
             }
@@ -619,9 +633,8 @@ public class NetworkGenerator {
         private <E extends GraphElement> String summarize( List<E> elements ) {
 
             double avgGraph = elements.stream().mapToInt( e -> e.getDynProperties().size() ).average().orElse( 0d );
-            double avgRel = elements.stream().mapToInt( e -> e.getFixedProperties().size() ).average().orElse( 0d );
             double avgDoc = elements.stream().filter( e -> e instanceof Node ).map( e -> (Node) e ).mapToInt( e -> e.getNestedQueries().size() ).average().orElse( 0 ); // only Node do have this
-            return "{ avgGraphProps: " + Precision.round( avgGraph, 2 ) + ", avgRelProps: " + Precision.round( avgRel, 2 ) + ", avgDocProps: " + Precision.round( avgDoc, 2 ) + " }";
+            return "{ avgGraphProps: " + Precision.round( avgGraph, 2 ) + ", avgDocProps: " + Precision.round( avgDoc, 2 ) + " }";
         }
 
 
@@ -629,232 +642,11 @@ public class NetworkGenerator {
 
     //// Backbone
 
-
-    @EqualsAndHashCode(callSuper = true)
-    @Value
-    public static class Server extends Node {
-
-        Random random;
-
-
-        public Server( Random random ) {
-            super(
-                    Network.generateFixedTypedProperties( random, getTypes() ),
-                    Network.generateProperties( random, Network.config.switchConfigs ),
-                    Network.generateNestedProperties( random, Network.config.nestingDepth ) );
-            this.random = random;
-        }
-
-
-        @Override
-        public List<Device> getPossibleConnectionTypes() {
-            return Arrays.asList( Device.SERVER, Device.SWITCH );
-        }
-
-    }
-
     //// Distributors
-
-
-    @EqualsAndHashCode(callSuper = true)
-    @Value
-    public static class Switch extends Node {
-
-        Random random;
-
-
-        public Switch( Random random ) {
-            super(
-                    Network.generateFixedTypedProperties( random, types ),
-                    Network.generateProperties( random, Network.config.switchConfigs ),
-                    Network.generateNestedProperties( random, Network.config.nestingDepth ) );
-            this.random = random;
-        }
-
-
-        @Override
-        public List<Device> getPossibleConnectionTypes() {
-            return Arrays.asList( Device.SWITCH, Device.SERVER, Device.AP, Device.PC, Device.MAC );
-        }
-
-    }
-
-
-    @EqualsAndHashCode(callSuper = true)
-    @Value
-    public static class AP extends Node {
-
-        Random random;
-
-
-        public AP( Random random ) {
-            super(
-                    Network.generateFixedTypedProperties( random, types ),
-                    Network.generateProperties( random, Network.config.apDynConfigs ),
-                    Network.generateNestedProperties( random, Network.config.nestingDepth ) );
-            this.random = random;
-        }
-
-
-        @Override
-        public List<Device> getPossibleConnectionTypes() {
-            return Arrays.asList( Device.AP, Device.SWITCH, Device.SERVER, Device.MOBILE, Device.IOT, Device.MAC, Device.PC );
-        }
-
-    }
 
     //// Devices
 
-
-    @EqualsAndHashCode(callSuper = true)
-    @Value
-    public static class IoT extends Node {
-
-        Random random;
-
-
-        public IoT( Random random ) {
-            super(
-                    Network.generateFixedTypedProperties( random, types ),
-                    Network.generateProperties( random, Network.config.mobileDynConfigsMax ),
-                    Network.generateNestedProperties( random, Network.config.nestingDepth ) );
-            this.random = random;
-        }
-
-
-        @Override
-        public List<Device> getPossibleConnectionTypes() {
-            return Arrays.asList( Device.IOT, Device.AP );
-        }
-
-    }
-
-
-    @EqualsAndHashCode(callSuper = true)
-    @Value
-    public static class Mobile extends Node {
-
-        Random random;
-
-
-        public Mobile( Random random ) {
-            super(
-                    Network.generateFixedTypedProperties( random, types ),
-                    Network.generateProperties( random, Network.config.mobileDynConfigsMax ),
-                    Network.generateNestedProperties( random, Network.config.nestingDepth ) );
-            this.random = random;
-        }
-
-
-        @Override
-        public List<Device> getPossibleConnectionTypes() {
-            return Collections.singletonList( Device.AP );
-        }
-
-    }
-
-
-    @EqualsAndHashCode(callSuper = true)
-    @Value
-    public static class PC extends Node {
-
-        Random random;
-
-
-        public PC( Random random ) {
-            super(
-                    Network.generateFixedTypedProperties( random, types ),
-                    Network.generateProperties( random, Network.config.pcDynConfigsMax ),
-                    Network.generateNestedProperties( random, Network.config.nestingDepth ) );
-            this.random = random;
-        }
-
-
-        @Override
-        public List<Device> getPossibleConnectionTypes() {
-            return Arrays.asList( Device.SWITCH, Device.AP );
-        }
-
-    }
-
-
-    @EqualsAndHashCode(callSuper = true)
-    @Value
-    public static class Mac extends Node {
-
-        Random random;
-
-
-        public Mac( Random random ) {
-            super(
-                    Network.generateFixedTypedProperties( random, types ),
-                    Network.generateProperties( random, Network.config.pcDynConfigsMax ),
-                    Network.generateNestedProperties( random, Network.config.nestingDepth ) );
-            this.random = random;
-        }
-
-
-        @Override
-        public List<Device> getPossibleConnectionTypes() {
-            return Arrays.asList( Device.SWITCH, Device.AP );
-        }
-
-    }
-
     //// Connections
-
-
-    @EqualsAndHashCode(callSuper = true)
-    @Value
-    public static class Lan extends Edge {
-
-        Random random;
-
-
-        public Lan( long from, long to, boolean directed, Random random ) {
-            super(
-                    Network.generateFixedTypedProperties( random, types ),
-                    Network.generateProperties( random, Network.config.connectionConfigs ),
-                    from,
-                    to,
-                    directed );
-            this.random = random;
-        }
-
-
-        @Override
-        public List<Device> getPossibleConnectionTypes() {
-            return Collections.emptyList();
-        }
-
-    }
-
-
-    @EqualsAndHashCode(callSuper = true)
-    @Value
-    public static class WLan extends Edge {
-
-        Random random;
-
-
-        public WLan( long from, long to, boolean directed, Random random ) {
-            super(
-                    Network.generateFixedTypedProperties( random, types ),
-                    Network.generateProperties( random, Network.config.connectionConfigs ),
-                    from,
-                    to,
-                    directed );
-            this.random = random;
-        }
-
-
-        @Override
-        public List<Device> getPossibleConnectionTypes() {
-            return Collections.emptyList();
-        }
-
-
-    }
 
 
     enum Connection {
@@ -863,7 +655,7 @@ public class NetworkGenerator {
     }
 
 
-    enum Device {
+    public enum Device {
         SERVER,
         SWITCH,
         AP,

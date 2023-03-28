@@ -32,7 +32,7 @@ import org.polypheny.simpleclient.executor.ExecutorException;
 import org.polypheny.simpleclient.main.ProgressBar;
 import org.polypheny.simpleclient.main.ProgressReporter;
 import org.polypheny.simpleclient.query.Query;
-import org.polypheny.simpleclient.scenario.coms.simulation.Graph;
+import org.polypheny.simpleclient.scenario.coms.simulation.entites.Graph;
 import org.polypheny.simpleclient.scenario.coms.simulation.NetworkGenerator;
 
 @Slf4j

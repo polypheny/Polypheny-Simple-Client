@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019-3/11/23, 11:54 AM The Polypheny Project
+ * Copyright (c) 2019-3/28/23, 11:12 AM The Polypheny Project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"), to deal
@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.polypheny.simpleclient.scenario.coms.simulation;
+package org.polypheny.simpleclient.scenario.coms.simulation.entites;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Streams;
@@ -48,7 +48,10 @@ import org.jetbrains.annotations.NotNull;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.RawQuery;
 import org.polypheny.simpleclient.query.RawQuery.RawQueryBuilder;
+import org.polypheny.simpleclient.scenario.coms.simulation.GraphElement;
 import org.polypheny.simpleclient.scenario.coms.simulation.NetworkGenerator.Network;
+import org.polypheny.simpleclient.scenario.coms.simulation.PropertyType;
+import org.polypheny.simpleclient.scenario.coms.simulation.User;
 import org.polypheny.simpleclient.scenario.graph.GraphQuery;
 
 @Slf4j
@@ -61,6 +64,8 @@ public class Graph {
     public static final String GRAPH_POSTFIX = "Graph";
     Map<Long, Node> nodes;
     Map<Long, Edge> edges;
+
+    Map<Long, User> user;
 
 
     public List<Query> getGraphQueries( int graphCreateBatch ) {
@@ -182,34 +187,27 @@ public class Graph {
 
 
     public List<Query> getRelQueries( int relCreateBatch ) {
-        List<GraphElement> list = Stream.concat( this.nodes.values().stream(), this.edges.values().stream() ).collect( Collectors.toList() );
-        return buildRelInserts( relCreateBatch, list );
+        return buildRelInserts( relCreateBatch, new ArrayList<>( user.values() ) );
     }
 
 
     @NotNull
-    public static List<Query> buildRelInserts( int relCreateBatch, List<GraphElement> list ) {
+    public static List<Query> buildRelInserts( int relCreateBatch, List<User> users ) {
         List<Query> queries = new ArrayList<>();
-        for ( List<GraphElement> elements : Lists.partition( list, relCreateBatch ) ) {
-            StringBuilder sql = new StringBuilder();
 
-            sql.append( " (" ).append( String.join( ",", GraphElement.types.keySet() ) ).append( ")" );
-            sql.append( " VALUES " );
-            int i = 0;
-            for ( GraphElement element : elements ) {
-                if ( i != 0 ) {
-                    sql.append( ", " );
-                }
-                sql.append( "(" ).append( element.asSql().get( 0 ) ).append( ")" );
-                i++;
-            }
-            String label = elements.get( 0 ).getLabels().get( 0 ) + REL_POSTFIX;
-            String sqlLabel = GraphElement.namespace + REL_POSTFIX + "." + label;
+        StringBuilder sql = new StringBuilder();
 
-            queries.add( RawQuery.builder()
-                    .sql( "INSERT INTO " + sqlLabel + sql )
-                    .surrealQl( "INSERT INTO " + label + sql ).build() );
-        }
+        sql.append( " (" ).append( String.join( ",", User.types.keySet() ) ).append( ")" );
+        sql.append( " VALUES " );
+
+        sql.append( "(" ).append( String.join( ", ", User.getSql( users ) ) ).append( ")" );
+
+        String label = "user" + REL_POSTFIX;
+        String sqlLabel = "user" + REL_POSTFIX + "." + label;
+
+        queries.add( RawQuery.builder()
+                .sql( "INSERT INTO " + sqlLabel + sql )
+                .surrealQl( "INSERT INTO " + label + sql ).build() );
 
         return queries;
     }
@@ -254,7 +252,7 @@ public class Graph {
     }
 
 
-    public List<Query> getSchemaRelQueries( String onStore, String namespace ) {
+    public List<Query> getSchemaRelQueries( String onStore, String namespace, Map<Long, User> users ) {
         List<Query> queries = new ArrayList<>();
         queries.add( RawQuery.builder()
                 .sql( "CREATE SCHEMA " + namespace )
@@ -264,27 +262,23 @@ public class Graph {
 
         Set<String> labels = new HashSet<>();
 
-        for ( GraphElement element : getGraphElementStream().collect( Collectors.toSet() ) ) {
-            String label = element.getLabels().get( 0 );
-            String sqlLabel = namespace + "." + label;
-            if ( labels.contains( label ) ) {
-                continue;
-            }
-            StringBuilder sql = new StringBuilder( "CREATE TABLE " ).append( sqlLabel ).append( REL_POSTFIX ).append( "(" );
-            StringBuilder surreal = new StringBuilder( "DEFINE TABLE " ).append( label ).append( REL_POSTFIX ).append( " SCHEMAFULL;" );
+        String label = "user";
+        String sqlLabel = namespace + "." + label;
 
-            for ( Entry<String, PropertyType> entry : GraphElement.types.entrySet() ) {
-                sql.append( entry.getKey() ).append( " " ).append( entry.getValue().asSql() ).append( " NOT NULL," );
-                surreal.append( "DEFINE FIELD " ).append( entry.getKey() ).append( " ON " ).append( label ).append( REL_POSTFIX ).append( " TYPE " ).append( entry.getValue().asSurreal() ).append( ";" );
-            }
+        StringBuilder sql = new StringBuilder( "CREATE TABLE " ).append( sqlLabel ).append( REL_POSTFIX ).append( "(" );
+        StringBuilder surreal = new StringBuilder( "DEFINE TABLE " ).append( label ).append( REL_POSTFIX ).append( " SCHEMAFULL;" );
 
-            sql.append( "PRIMARY KEY(" ).append( GraphElement.types.keySet().stream().findFirst().orElseThrow( RuntimeException::new ) ).append( "))" )
-                    .append( store );
-
-            queries.add( RawQuery.builder().sql( sql.toString() ).surrealQl( surreal.toString() ).build() );
-
-            labels.add( label );
+        for ( Entry<String, PropertyType> entry : User.types.entrySet() ) {
+            sql.append( entry.getKey() ).append( " " ).append( entry.getValue().asSql() ).append( " NOT NULL," );
+            surreal.append( "DEFINE FIELD " ).append( entry.getKey() ).append( " ON " ).append( label ).append( REL_POSTFIX ).append( " TYPE " ).append( entry.getValue().asSurreal() ).append( ";" );
         }
+
+        sql.append( "PRIMARY KEY(" ).append( User.types.keySet().stream().findFirst().orElseThrow( RuntimeException::new ) ).append( "))" )
+                .append( store );
+
+        queries.add( RawQuery.builder().sql( sql.toString() ).surrealQl( surreal.toString() ).build() );
+
+        labels.add( label );
 
         return queries;
     }
@@ -299,10 +293,9 @@ public class Graph {
 
 
         public Node(
-                Map<String, String> fixedProperties,
                 Map<String, String> dynProperties,
                 JsonObject nestedQueries ) {
-            super( fixedProperties, dynProperties );
+            super( dynProperties );
             this.nestedQueries = new ArrayList<>( Collections.singletonList( nestedQueries ) );
         }
 
@@ -457,8 +450,8 @@ public class Graph {
     @NonFinal
     public abstract static class Edge extends GraphElement {
 
-        public Edge( Map<String, String> fixedProperties, Map<String, String> dynProperties, long from, long to, boolean directed ) {
-            super( fixedProperties, dynProperties );
+        public Edge( Map<String, String> dynProperties, long from, long to, boolean directed ) {
+            super( dynProperties );
             this.from = from;
             this.to = to;
             this.directed = directed;

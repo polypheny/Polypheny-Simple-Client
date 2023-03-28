@@ -24,8 +24,8 @@
 
 package org.polypheny.simpleclient.executor;
 
-import static org.polypheny.simpleclient.scenario.coms.simulation.Graph.DOC_POSTFIX;
-import static org.polypheny.simpleclient.scenario.coms.simulation.Graph.GRAPH_POSTFIX;
+import static org.polypheny.simpleclient.scenario.coms.simulation.entites.Graph.DOC_POSTFIX;
+import static org.polypheny.simpleclient.scenario.coms.simulation.entites.Graph.GRAPH_POSTFIX;
 
 import java.util.List;
 import lombok.Getter;

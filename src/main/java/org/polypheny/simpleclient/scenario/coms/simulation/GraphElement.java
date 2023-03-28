@@ -24,7 +24,7 @@
 
 package org.polypheny.simpleclient.scenario.coms.simulation;
 
-import static org.polypheny.simpleclient.scenario.coms.simulation.Graph.REL_POSTFIX;
+import static org.polypheny.simpleclient.scenario.coms.simulation.entites.Graph.REL_POSTFIX;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -41,7 +41,8 @@ import lombok.experimental.NonFinal;
 import org.jetbrains.annotations.NotNull;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.RawQuery;
-import org.polypheny.simpleclient.scenario.coms.simulation.Graph.Node;
+import org.polypheny.simpleclient.scenario.coms.simulation.entites.Graph;
+import org.polypheny.simpleclient.scenario.coms.simulation.entites.Graph.Node;
 import org.polypheny.simpleclient.scenario.coms.simulation.NetworkGenerator.Device;
 import org.polypheny.simpleclient.scenario.coms.simulation.NetworkGenerator.Network;
 import org.polypheny.simpleclient.scenario.coms.simulation.PropertyType.Type;
@@ -50,21 +51,10 @@ import org.polypheny.simpleclient.scenario.coms.simulation.PropertyType.Type;
 @NonFinal
 public abstract class GraphElement {
 
-    @Getter
-    public static Map<String, PropertyType> types = new HashMap<String, PropertyType>() {{
-        put( "a_stamp", new PropertyType( 5, Type.NUMBER ) );
-        put( "id", new PropertyType( 3, Type.NUMBER ) );
-        put( "manufactureid", new PropertyType( 12, Type.NUMBER ) );
-        put( "manufacturename", new PropertyType( 12, Type.CHAR ) );
-        put( "entry", new PropertyType( 12, Type.NUMBER ) );
-        put( "description", new PropertyType( 255, Type.NUMBER ) );
-    }};
 
     public long id = Network.idBuilder.getAndIncrement();
 
     public static final String namespace = "coms";
-
-    public List<Map<String, String>> fixedProperties;
 
     public Map<String, String> dynProperties;
 
@@ -74,28 +64,18 @@ public abstract class GraphElement {
     }
 
 
-    public GraphElement( Map<String, String> fixedProperties, Map<String, String> dynProperties ) {
-        this.fixedProperties = new ArrayList<>( Collections.singletonList( fixedProperties ) );
+    public GraphElement( Map<String, String> dynProperties ) {
         this.dynProperties = dynProperties;
     }
 
 
     public List<String> asSql() {
-        List<String> queries = new ArrayList<>();
-        for ( Map<String, String> map : fixedProperties ) {
-            List<String> query = new ArrayList<>();
-            for ( Entry<String, String> entry : map.entrySet() ) {
-                query.add( entry.getValue() );
-            }
-            queries.add( String.join( ",", query ) );
-        }
-
-        return queries;
+        return Collections.emptyList();
     }
 
 
     @NotNull
-    protected String getCollection() {
+    public String getCollection() {
         return getLabels().get( 0 ) + Graph.DOC_POSTFIX;
     }
 
@@ -146,7 +126,7 @@ public abstract class GraphElement {
 
 
     @NotNull
-    String getTable( boolean withPrefix ) {
+    protected String getTable( boolean withPrefix ) {
         return (withPrefix ? namespace + REL_POSTFIX + "." : "") + getLabels().get( 0 ) + REL_POSTFIX;
     }
 
