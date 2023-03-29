@@ -96,6 +96,9 @@ public class EvaluationThread extends Thread {
             measuredTime = System.nanoTime() - measuredTimeStart;
             measuredTimes.add( measuredTime );
             measuredTimePerQueryType.get( queryListEntry.templateId ).add( measuredTime );
+            for ( Integer id : queryListEntry.templateIds ) {
+                measuredTimePerQueryType.get( id ).add( measuredTime );
+            }
             if ( commitAfterEveryQuery ) {
                 try {
                     executor.executeCommit();

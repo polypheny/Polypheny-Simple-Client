@@ -25,6 +25,7 @@
 package org.polypheny.simpleclient.scenario.coms.simulation;
 
 import com.google.gson.JsonObject;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -45,6 +46,7 @@ import org.apache.commons.math3.util.Precision;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.scenario.coms.ComsConfig;
 import org.polypheny.simpleclient.scenario.coms.simulation.PropertyType.Type;
+import org.polypheny.simpleclient.scenario.coms.simulation.User.Login;
 import org.polypheny.simpleclient.scenario.coms.simulation.entites.AP;
 import org.polypheny.simpleclient.scenario.coms.simulation.entites.Graph;
 import org.polypheny.simpleclient.scenario.coms.simulation.entites.Graph.Edge;
@@ -88,6 +90,9 @@ public class NetworkGenerator {
     @Value
     public static class Network {
 
+        long startDay = LocalDate.now().toEpochDay();
+        long endDay;
+
         public static AtomicLong idBuilder = new AtomicLong();
         public static long SERVERS = 1;
 
@@ -130,14 +135,18 @@ public class NetworkGenerator {
             this.scale = config.networkScale;
             Network.config = config;
 
-            generateObject( SERVERS, () -> servers.add( new Server( random ) ) );
-            generateObject( SWITCHES, () -> switches.add( new Switch( random ) ) );
-            generateObject( APS, () -> aps.add( new AP( random ) ) );
+            endDay = startDay + config.duration;
 
-            generateObject( CLIENTS, () -> pcs.add( new PC( random ) ) );
+            generateObject( USERS, () -> users.add( new User( random ) ) );
 
-            generateObject( MOBILES * MOBILE_DISTRIBUTION, () -> mobiles.add( new Mobile( random ) ) );
-            generateObject( MOBILES * (1 - MOBILE_DISTRIBUTION), () -> ioTs.add( new IoT( random ) ) );
+            generateObject( SERVERS, () -> servers.add( new Server( random, this ) ) );
+            generateObject( SWITCHES, () -> switches.add( new Switch( random, this ) ) );
+            generateObject( APS, () -> aps.add( new AP( random, this ) ) );
+
+            generateObject( CLIENTS, () -> pcs.add( new PC( random, this ) ) );
+
+            generateObject( MOBILES * MOBILE_DISTRIBUTION, () -> mobiles.add( new Mobile( random, this ) ) );
+            generateObject( MOBILES * (1 - MOBILE_DISTRIBUTION), () -> ioTs.add( new IoT( random, this ) ) );
 
             generateConnection( this.servers, this.servers, this.servers.size(), Connection.LAN );
 
@@ -150,7 +159,25 @@ public class NetworkGenerator {
             generateConnection( this.aps, this.mobiles, this.mobiles.size() * 2, Connection.WLAN );
             generateConnection( this.aps, this.ioTs, this.ioTs.size() * 2, Connection.WLAN );
 
-            generateObject( USERS, () -> users.add( new User( random ) ) );
+
+        }
+
+
+        public List<Login> generateAccess( long deviceId, List<User> users, boolean isAccessedFrequently ) {
+            List<Login> logins = new ArrayList<>();
+
+            for ( User user : users ) {
+                if ( !isAccessedFrequently && random.nextFloat() < 0.2 ) {
+                    // really accessed infrequently
+                    continue;
+                }
+                for ( int i = 0; i < random.nextInt( config.loginsPerUser ); i++ ) {
+                    logins.add( Login.createRandomLogin( user.id, deviceId, this ) );
+
+                }
+            }
+
+            return logins;
         }
 
 
@@ -244,8 +271,10 @@ public class NetworkGenerator {
                     case CHAR:
                         value = new StringBuilder( "'value" + value + "'" );
                         break;
-                    case NUMBER:
+                    case BOOLEAN:
+                        value.append( random.nextBoolean() );
                         break;
+                    case NUMBER:
                     case FLOAT:
                         value.append( random.nextInt( 10 ) );
                         break;
@@ -293,8 +322,8 @@ public class NetworkGenerator {
             List<Query> queries = new ArrayList<>();
 
             readEntities( queries );
-
             handleRemoveUsers( queries );
+            handleNewLogins( queries );
 
             readEntities( queries );
             handleAddUsers( queries );
@@ -304,6 +333,21 @@ public class NetworkGenerator {
             readEntities( queries );
 
             return queries;
+        }
+
+
+        private void handleNewLogins( List<Query> queries ) {
+            queries.addAll( doRandomly( users, users.size() * config.newLogins, this::addLogin ) );
+        }
+
+
+        private List<Query> addLogin( User user ) {
+            List<List<? extends Node>> targets = Arrays.asList( ioTs, pcs, mobiles, servers );
+
+            List<? extends Node> target = targets.get( random.nextInt( targets.size() ) );
+            Node device = target.get( random.nextInt( target.size() ) );
+
+            return device.addAccess( user, this );
         }
 
 
@@ -600,6 +644,11 @@ public class NetworkGenerator {
             return "{ avgGraphProps: " + Precision.round( avgGraph, 2 ) + ", avgDocProps: " + Precision.round( avgDoc, 2 ) + " }";
         }
 
+
+        public String createRandomTimestamp() {
+            long date = random.nextLong( startDay, endDay );
+            return LocalDate.ofEpochDay( date ).toString();
+        }
 
     }
 

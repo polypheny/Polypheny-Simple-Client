@@ -40,10 +40,10 @@ public class IoT extends Node {
     Random random;
 
 
-    public IoT( Random random ) {
+    public IoT( Random random, Network network ) {
         super(
                 Network.generateProperties( random, Network.config.mobileDynConfigsMax ),
-                Network.generateNestedProperties( random, Network.config.nestingDepth ) );
+                Network.generateNestedProperties( random, Network.config.nestingDepth ), network, true );
         this.random = random;
     }
 

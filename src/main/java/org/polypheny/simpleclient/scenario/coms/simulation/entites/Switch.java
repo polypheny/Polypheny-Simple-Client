@@ -40,10 +40,10 @@ public class Switch extends Node {
     Random random;
 
 
-    public Switch( Random random ) {
+    public Switch( Random random, Network network ) {
         super(
                 Network.generateProperties( random, Network.config.switchConfigs ),
-                Network.generateNestedProperties( random, Network.config.nestingDepth ) );
+                Network.generateNestedProperties( random, Network.config.nestingDepth ), network, true );
         this.random = random;
     }
 

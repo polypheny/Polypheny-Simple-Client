@@ -65,6 +65,9 @@ public class ComsConfig extends AbstractConfig {
     public double removeDevice;
     public double removeUsers;
     public int readQueries;
+    public int loginsPerUser;
+    public long duration;
+    public double newLogins;
 
 
     public ComsConfig( String system, Properties properties, int multiplier ) {
@@ -108,6 +111,12 @@ public class ComsConfig extends AbstractConfig {
         removeUsers = getDoubleProperty( properties, "removeUsers" );
 
         readQueries = getIntProperty( properties, "readQueries" );
+
+        newLogins = getDoubleProperty( properties, "newLogins" );
+
+        loginsPerUser = getIntProperty( properties, "loginsPerUser" );
+
+        duration = getIntProperty( properties, "duration" );
     }
 
 
@@ -143,6 +152,8 @@ public class ComsConfig extends AbstractConfig {
         docStore = parsedConfig.get( "docStore" );
         relStore = parsedConfig.get( "relStore" );
 
+        duration = Integer.parseInt( parsedConfig.get( "duration" ) );
+
         removeLogs = parsePercent( parsedConfig.get( "removeLogs" ) );
         addLogs = parsePercent( parsedConfig.get( "addLogs" ) );
         changeDevice = parsePercent( parsedConfig.get( "changeDevice" ) );
@@ -150,7 +161,11 @@ public class ComsConfig extends AbstractConfig {
         removeDevice = parsePercent( parsedConfig.get( "removeDevice" ) );
 
         removeUsers = Double.parseDouble( parsedConfig.get( "removeUsers" ) );
-        readQueries = Integer.parseInt( parsedConfig.get( "removeUsers" ) );
+        readQueries = Integer.parseInt( parsedConfig.get( "readQueries" ) );
+
+        newLogins = parsePercent( parsedConfig.get( "newLogins" ) );
+
+        loginsPerUser = Integer.parseInt( parsedConfig.get( "loginsPerUser" ) );
     }
 
 

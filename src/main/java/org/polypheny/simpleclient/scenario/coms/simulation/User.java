@@ -33,7 +33,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import lombok.Value;
 import org.jetbrains.annotations.NotNull;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.RawQuery;
@@ -45,9 +47,8 @@ public class User {
 
     public static final String namespace = "coms";
 
-    private final Random random;
 
-    public static Map<String, PropertyType> types = new HashMap<String, PropertyType>() {{
+    public static Map<String, PropertyType> userTypes = new HashMap<String, PropertyType>() {{
         put( "id", new PropertyType( 5, Type.NUMBER ) );
         put( "firstname", new PropertyType( 12, Type.CHAR ) );
         put( "lastname", new PropertyType( 12, Type.CHAR ) );
@@ -55,29 +56,38 @@ public class User {
         put( "salary", new PropertyType( 255, Type.NUMBER ) );
     }};
 
-    public static String pk = "id";
 
-    final long id;
+    public static Map<String, PropertyType> loginTypes = new HashMap<String, PropertyType>() {{
+        put( "userid", new PropertyType( 5, Type.NUMBER ) );
+        put( "username", new PropertyType( 255, Type.CHAR ) );
+        put( "timestamp", new PropertyType( 255, Type.CHAR ) );
+        put( "duration", new PropertyType( 5, Type.FLOAT ) );
+        put( "successful", new PropertyType( 5, Type.BOOLEAN ) );
+    }};
+
+    public static String userPK = "id";
+
+    public static List<String> loginPK = Collections.singletonList( "timestamp" );
+
+    public final long id;
     private Map<String, String> properties;
 
 
     public User( Random random ) {
-        super();
-        this.random = random;
         this.id = random.nextInt();
-        this.properties = Network.generateFixedTypedProperties( random, types );
+        this.properties = Network.generateFixedTypedProperties( random, userTypes );
     }
 
 
-    public static List<String> getSql( List<User> users ) {
-        return users.stream().map( User::asSqlValues ).collect( Collectors.toList() );
+    public static List<String> getSql( List<User> users, Function<User, String> asSqlValues ) {
+        return users.stream().map( asSqlValues ).collect( Collectors.toList() );
     }
 
 
-    public String asSqlValues() {
+    public String userToSql() {
         List<String> query = new ArrayList<>();
         for ( Entry<String, String> entry : properties.entrySet() ) {
-            query.add( entry.getValue() );
+            query.add( userTypes.get( entry.getKey() ).getType() == Type.CHAR ? "\"" + entry.getValue() + "\"" : entry.getValue() );
         }
         return String.join( ",", query );
     }
@@ -104,13 +114,13 @@ public class User {
         sql.append( users.get( 0 ).getTable( true ) );
         surreal.append( users.get( 0 ).getTable( false ) );
 
-        sql.append( " (" ).append( String.join( ",", types.keySet() ) ).append( ")" );
+        sql.append( " (" ).append( String.join( ",", userTypes.keySet() ) ).append( ")" );
         sql.append( " VALUES " );
 
-        String values = users.stream().map( s -> "(" + s.asSqlValues() + ")" ).collect( Collectors.joining( "," ) );
+        String values = users.stream().map( s -> "(" + s.userToSql() + ")" ).collect( Collectors.joining( "," ) );
         sql.append( values );
 
-        surreal.append( " (" ).append( String.join( ",", types.keySet() ) ).append( ")" );
+        surreal.append( " (" ).append( String.join( ",", userTypes.keySet() ) ).append( ")" );
         surreal.append( " VALUES " );
         surreal.append( values );
 
@@ -127,14 +137,14 @@ public class User {
 
 
     public List<Query> changeUser( Random random ) {
-        int changedPerProperties = random.nextInt( types.size() ) + 1;
+        int changedPerProperties = random.nextInt( userTypes.size() ) + 1;
 
         StringBuilder sql = new StringBuilder( " SET " );
 
         Map<String, String> updates = new HashMap<>();
         for ( int j = 0; j < changedPerProperties; j++ ) {
-            String key = new ArrayList<>( types.keySet() ).get( j );
-            PropertyType property = types.get( key );
+            String key = new ArrayList<>( userTypes.keySet() ).get( j );
+            PropertyType property = userTypes.get( key );
             updates.put( key, property.getType().asString( random, 0, property.getLength(), Type.OBJECT ) );
         }
 
@@ -152,10 +162,9 @@ public class User {
 
 
     private List<Query> buildQueries( List<Map<String, String>> adds ) {
-
         StringBuilder sql = new StringBuilder();
 
-        sql.append( " (" ).append( String.join( ",", types.keySet() ) ).append( ")" );
+        sql.append( " (" ).append( String.join( ",", userTypes.keySet() ) ).append( ")" );
         sql.append( " VALUES " );
         int i = 0;
         for ( Map<String, String> element : adds ) {
@@ -190,12 +199,21 @@ public class User {
     }
 
 
+    public List<Query> getComplex1( Random random ) {
+        String keyVal = getRandomFixed( random );
+        String projects = getRandomFixedProjects( random );
+        return Collections.singletonList( RawQuery.builder()
+                .surrealQl( "SELECT " + projects + " FROM " + getTable( false ) + " WHERE " + keyVal )
+                .sql( "SELECT " + projects + " FROM " + getTable( true ) + " WHERE " + keyVal ).build() );
+    }
+
+
     private String getRandomFixedProjects( Random random ) {
         if ( random.nextBoolean() ) {
             return "*";
         }
 
-        List<String> keys = new ArrayList<>( types.keySet() );
+        List<String> keys = new ArrayList<>( userTypes.keySet() );
         int amount = random.nextInt( keys.size() ) + 1;
 
         List<String> projects = new ArrayList<>();
@@ -222,9 +240,57 @@ public class User {
         List<Map<String, String>> adds = new ArrayList<>();
 
         for ( int i = 0; i < newProps; i++ ) {
-            adds.add( Network.generateFixedTypedProperties( random, types ) );
+            adds.add( Network.generateFixedTypedProperties( random, userTypes ) );
         }
         return buildQueries( adds );
+    }
+
+
+    @Value
+    public static class Login {
+
+        long userId;
+        long deviceId;
+
+        String timestamp;
+
+        long duration;
+
+        boolean successful;
+
+
+        public static Login createRandomLogin( long userid, long deviceId, Network network ) {
+            boolean successful = network.getRandom().nextFloat() < 0.8;
+            return new Login( userid, deviceId, network.createRandomTimestamp(), network.getRandom().nextInt( 24 ), successful );
+        }
+
+
+        public Map<String, String> asStrings() {
+            Map<String, String> values = new HashMap<>();
+            for ( Entry<String, PropertyType> entry : User.loginTypes.entrySet() ) {
+                switch ( entry.getKey() ) {
+                    case "userId":
+                        values.put( entry.getKey(), String.valueOf( getUserId() ) );
+                        break;
+                    case "deviceId":
+                        values.put( entry.getKey(), String.valueOf( getDeviceId() ) );
+                        break;
+                    case "timestamp":
+                        values.put( entry.getKey(), getTimestamp() );
+                        break;
+                    case "duration":
+                        values.put( entry.getKey(), String.valueOf( getDuration() ) );
+                        break;
+                    case "successful":
+                        values.put( entry.getKey(), String.valueOf( successful ) );
+                        break;
+                    default:
+                        throw new RuntimeException();
+                }
+            }
+            return values;
+        }
+
     }
 
 }

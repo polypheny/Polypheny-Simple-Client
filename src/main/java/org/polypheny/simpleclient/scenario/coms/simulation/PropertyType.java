@@ -55,7 +55,7 @@ public class PropertyType {
 
 
     public enum Type {
-        CHAR( "VARCHAR(", ")" ), FLOAT( "FLOAT(", ")" ), NUMBER( "INT" ), ARRAY( "ARRAY" ), OBJECT( "" );
+        CHAR( "VARCHAR(", ")" ), FLOAT( "FLOAT(", ")" ), NUMBER( "INT" ), ARRAY( "ARRAY" ), OBJECT( "" ), BOOLEAN( "BOOLEAN" );
 
 
         private final String start;
@@ -77,6 +77,8 @@ public class PropertyType {
             switch ( this ) {
                 case CHAR:
                     return new JsonPrimitive( "value" + random.nextInt() );
+                case BOOLEAN:
+                    return new JsonPrimitive( random.nextBoolean() );
                 case FLOAT:
                     return new JsonPrimitive( Network.config.allowNegative ? random.nextFloat() : random.nextFloat( 0, 1000 ) );
                 case NUMBER:
@@ -118,6 +120,8 @@ public class PropertyType {
                     return "'value" + random.nextInt( size ) + "'";
                 case FLOAT:
                     return String.valueOf( Network.config.allowNegative ? random.nextFloat( 5 ) : random.nextFloat( 0, 5 ) );
+                case BOOLEAN:
+                    return String.valueOf( random.nextBoolean() );
                 case NUMBER:
                     return String.valueOf( Network.config.allowNegative ? random.nextInt( 1000 ) : random.nextInt( 0, 1000 ) );
                 case ARRAY:
@@ -150,6 +154,8 @@ public class PropertyType {
                     return "string";
                 case FLOAT:
                     return "float";
+                case BOOLEAN:
+                    return "bool";
                 case NUMBER:
                     return "int";
                 case ARRAY:
