@@ -55,7 +55,7 @@ public class PropertyType {
 
 
     public enum Type {
-        CHAR( "VARCHAR(", ")" ), FLOAT( "FLOAT(", ")" ), NUMBER( "INT" ), ARRAY( "ARRAY" ), OBJECT( "" ), BOOLEAN( "BOOLEAN" );
+        CHAR( "VARCHAR(", ")" ), FLOAT( "DOUBLE" ), NUMBER( "INT" ), ARRAY( "ARRAY" ), OBJECT( "" ), BOOLEAN( "BOOLEAN" ), TIMESTAMP( "TIMESTAMP" );
 
 
         private final String start;
@@ -73,7 +73,7 @@ public class PropertyType {
         }
 
 
-        public JsonElement asJson( Random random, int nestingDepth ) {
+        public JsonElement asJson( Random random, int nestingDepth, Type... excepts ) {
             switch ( this ) {
                 case CHAR:
                     return new JsonPrimitive( "value" + random.nextInt() );
@@ -86,17 +86,27 @@ public class PropertyType {
                 case ARRAY:
                     JsonArray array = new JsonArray();
                     int fill = random.nextInt( 10 );
+
+                    Type[] types = new Type[excepts.length + 2];
+                    System.arraycopy( excepts, 0, types, 0, excepts.length );
+                    types[excepts.length] = OBJECT;
+                    types[excepts.length + 1] = ARRAY;
+
                     for ( int i = 0; i < fill; i++ ) {
-                        Type child = getRandom( random, OBJECT, ARRAY );
+                        Type child = getRandom( random, types );
                         array.add( child.asJson( random, nestingDepth ) );
                     }
                     return array;
                 case OBJECT:
                     JsonObject object = new JsonObject();
                     int f = random.nextInt( 10 );
+                    Type[] objects = new Type[excepts.length + 1];
+                    System.arraycopy( excepts, 0, objects, 0, excepts.length );
+                    objects[excepts.length] = OBJECT;
+
                     for ( int i = 0; i < f; i++ ) {
-                        Type child = nestingDepth <= 0 ? getRandom( random, OBJECT ) : getRandom( random );
-                        object.add( "key" + i, child.asJson( random, nestingDepth - 1 ) );
+                        Type child = nestingDepth <= 0 ? getRandom( random, objects ) : getRandom( random, excepts );
+                        object.add( "key" + i, child.asJson( random, nestingDepth - 1, objects ) );
                     }
                     return object;
             }
@@ -158,6 +168,8 @@ public class PropertyType {
                     return "bool";
                 case NUMBER:
                     return "int";
+                case TIMESTAMP:
+                    return "datetime";
                 case ARRAY:
                 case OBJECT:
                     throw new RuntimeException();

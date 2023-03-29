@@ -183,9 +183,13 @@ public class Coms extends Scenario {
 
             log.info( "Preparing query list for the benchmark..." );
 
-            List<QueryListEntry> relQueries = getRelQueries( queries );
-            List<QueryListEntry> docQueries = getDocQueries( queries );
-            List<QueryListEntry> graphQueries = getGraphQueries( queries );
+            Function<Query, List<Integer>> toInter = q -> q.getTypes().stream().map( t -> ComsType.valueOf( t ).getI() ).collect( Collectors.toList() );
+
+            queries.forEach( q -> q.getTypes().forEach( l -> queryTypes.put( ComsType.valueOf( l ).getI(), l ) ) );
+
+            List<QueryListEntry> relQueries = getRelQueries( queries, toInter );
+            List<QueryListEntry> docQueries = getDocQueries( queries, toInter );
+            List<QueryListEntry> graphQueries = getGraphQueries( queries, toInter );
 
             dumpQueries( outputDirectory, relQueries, q -> q.query.getSql() );
             dumpQueries( outputDirectory, docQueries, q -> q.query.getMongoQl() );
@@ -224,21 +228,18 @@ public class Coms extends Scenario {
     }
 
 
-    private List<QueryListEntry> getGraphQueries( List<Query> queries ) {
-        queryTypes.put( 1, "graph" );
-        return queries.stream().filter( q -> q.getCypher() != null ).map( q -> new QueryListEntry( q, 1 ) ).collect( Collectors.toList() );
+    private List<QueryListEntry> getGraphQueries( List<Query> queries, Function<Query, List<Integer>> toInter ) {
+        return queries.stream().filter( q -> q.getCypher() != null ).map( q -> new QueryListEntry( q, toInter.apply( q ) ) ).collect( Collectors.toList() );
     }
 
 
-    private List<QueryListEntry> getDocQueries( List<Query> queries ) {
-        queryTypes.put( 2, "doc" );
-        return queries.stream().filter( q -> q.getMongoQl() != null ).map( q -> new QueryListEntry( q, 2 ) ).collect( Collectors.toList() );
+    private List<QueryListEntry> getDocQueries( List<Query> queries, Function<Query, List<Integer>> toInter ) {
+        return queries.stream().filter( q -> q.getMongoQl() != null ).map( q -> new QueryListEntry( q, toInter.apply( q ) ) ).collect( Collectors.toList() );
     }
 
 
-    private List<QueryListEntry> getRelQueries( List<Query> queries ) {
-        queryTypes.put( 3, "relational" );
-        return queries.stream().filter( q -> q.getSql() != null ).map( q -> new QueryListEntry( q, 3 ) ).collect( Collectors.toList() );
+    private List<QueryListEntry> getRelQueries( List<Query> queries, Function<Query, List<Integer>> toInter ) {
+        return queries.stream().filter( q -> q.getSql() != null ).map( q -> new QueryListEntry( q, toInter.apply( q ) ) ).collect( Collectors.toList() );
     }
 
 

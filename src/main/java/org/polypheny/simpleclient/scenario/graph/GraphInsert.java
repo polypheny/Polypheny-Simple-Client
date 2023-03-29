@@ -66,7 +66,7 @@ public class GraphInsert extends BatchableInsert {
 
     @Override
     public String getEntity() {
-        throw new RuntimeException( "getTable() is not supported for graph queries!" );
+        throw new RuntimeException( "getUserTable() is not supported for graph queries!" );
     }
 
 

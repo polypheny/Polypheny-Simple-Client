@@ -27,6 +27,7 @@ package org.polypheny.simpleclient.scenario.coms.simulation;
 import static org.polypheny.simpleclient.scenario.coms.simulation.entites.Graph.REL_POSTFIX;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -39,6 +40,7 @@ import lombok.experimental.NonFinal;
 import org.jetbrains.annotations.NotNull;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.RawQuery;
+import org.polypheny.simpleclient.scenario.coms.ComsType;
 import org.polypheny.simpleclient.scenario.coms.simulation.NetworkGenerator.Device;
 import org.polypheny.simpleclient.scenario.coms.simulation.NetworkGenerator.Network;
 import org.polypheny.simpleclient.scenario.coms.simulation.entites.Graph;
@@ -106,7 +108,9 @@ public abstract class GraphElement {
 
         return Collections.singletonList( RawQuery.builder()
                 .surrealQl( "SELECT * FROM " + getTable( false ) + " WHERE _id =" + getId() )
-                .cypher( cypher.toString() ).build() );
+                .cypher( cypher.toString() )
+                .types( Arrays.asList( ComsType.QUERY.toString(), ComsType.GRAPH.toString() ) )
+                .build() );
     }
 
 
@@ -121,7 +125,7 @@ public abstract class GraphElement {
 
     public String asDyn() {
         return Stream.concat( new HashMap<String, String>() {{
-                    put( "id", String.valueOf( getId() ) );
+                    put( "i", String.valueOf( getId() ) );
                 }}.entrySet().stream(),
                 dynProperties.entrySet().stream() ).map( e -> e.getKey() + ":" + e.getValue() ).collect( Collectors.joining( "," ) );
     }

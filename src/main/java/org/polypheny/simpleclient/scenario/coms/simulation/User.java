@@ -26,7 +26,10 @@ package org.polypheny.simpleclient.scenario.coms.simulation;
 
 import static org.polypheny.simpleclient.scenario.coms.simulation.entites.Graph.REL_POSTFIX;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -37,8 +40,10 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.Value;
 import org.jetbrains.annotations.NotNull;
+import org.polypheny.simpleclient.cli.Mode;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.RawQuery;
+import org.polypheny.simpleclient.scenario.coms.ComsType;
 import org.polypheny.simpleclient.scenario.coms.simulation.NetworkGenerator.Network;
 import org.polypheny.simpleclient.scenario.coms.simulation.PropertyType.Type;
 import org.polypheny.simpleclient.scenario.coms.simulation.entites.Graph;
@@ -59,15 +64,14 @@ public class User {
 
     public static Map<String, PropertyType> loginTypes = new HashMap<String, PropertyType>() {{
         put( "userid", new PropertyType( 5, Type.NUMBER ) );
-        put( "username", new PropertyType( 255, Type.CHAR ) );
-        put( "timestamp", new PropertyType( 255, Type.CHAR ) );
+        put( "accesstime", new PropertyType( 5, Type.TIMESTAMP ) );
         put( "duration", new PropertyType( 5, Type.FLOAT ) );
         put( "successful", new PropertyType( 5, Type.BOOLEAN ) );
     }};
 
     public static String userPK = "id";
 
-    public static List<String> loginPK = Collections.singletonList( "timestamp" );
+    public static List<String> loginPK = Collections.singletonList( "accesstime" );
 
     public final long id;
     private Map<String, String> properties;
@@ -87,7 +91,7 @@ public class User {
     public String userToSql() {
         List<String> query = new ArrayList<>();
         for ( Entry<String, String> entry : properties.entrySet() ) {
-            query.add( userTypes.get( entry.getKey() ).getType() == Type.CHAR ? "\"" + entry.getValue() + "\"" : entry.getValue() );
+            query.add( entry.getValue() );
         }
         return String.join( ",", query );
     }
@@ -104,15 +108,19 @@ public class User {
         sql += where;
         surreal += where;
 
-        return Collections.singletonList( RawQuery.builder().sql( sql ).surrealQl( surreal ).build() );
+        return Collections.singletonList( RawQuery.builder()
+                .sql( sql )
+                .surrealQl( surreal )
+                .types( Arrays.asList( ComsType.MODIFY.toString(), ComsType.RELATIONAL.toString() ) )
+                .build() );
     }
 
 
     public static Query getRelQuery( List<User> users ) {
         StringBuilder sql = new StringBuilder( "INSERT INTO " );
         StringBuilder surreal = new StringBuilder( "INSERT INTO " );
-        sql.append( users.get( 0 ).getTable( true ) );
-        surreal.append( users.get( 0 ).getTable( false ) );
+        sql.append( users.get( 0 ).getUserTable( true ) );
+        surreal.append( users.get( 0 ).getUserTable( false ) );
 
         sql.append( " (" ).append( String.join( ",", userTypes.keySet() ) ).append( ")" );
         sql.append( " VALUES " );
@@ -126,13 +134,21 @@ public class User {
 
         return RawQuery.builder()
                 .sql( sql.toString() )
-                .surrealQl( surreal.toString() ).build();
+                .surrealQl( surreal.toString() )
+                .types( Arrays.asList( ComsType.MODIFY.toString(), ComsType.RELATIONAL.toString() ) )
+                .build();
     }
 
 
     @NotNull
-    protected String getTable( boolean withPrefix ) {
+    protected String getUserTable( boolean withPrefix ) {
         return (withPrefix ? namespace + REL_POSTFIX + "." : "") + "user" + REL_POSTFIX;
+    }
+
+
+    @NotNull
+    protected String getLoginTable( boolean withPrefix ) {
+        return (withPrefix ? namespace + REL_POSTFIX + "." : "") + "login" + REL_POSTFIX;
     }
 
 
@@ -156,8 +172,10 @@ public class User {
         properties.putAll( updates );
 
         return Collections.singletonList( RawQuery.builder()
-                .sql( "UPDATE " + getTable( true ) + sql )
-                .surrealQl( "UPDATE " + getTable( false ) + sql ).build() );
+                .sql( "UPDATE " + getUserTable( true ) + sql )
+                .surrealQl( "UPDATE " + getUserTable( false ) + sql )
+                .types( Arrays.asList( ComsType.MODIFY.toString(), ComsType.CHANGE_USER.toString(), ComsType.RELATIONAL.toString() ) )
+                .build() );
     }
 
 
@@ -174,19 +192,23 @@ public class User {
             sql.append( "(" ).append( String.join( ", ", element.values() ) ).append( ")" );
             i++;
         }
-        String label = getTable( false );
+        String label = getUserTable( false );
         String sqlLabel = GraphElement.namespace + REL_POSTFIX + "." + label;
 
         return Collections.singletonList( RawQuery.builder()
                 .sql( "INSERT INTO " + sqlLabel + sql )
-                .surrealQl( "INSERT INTO " + label + sql ).build() );
+                .surrealQl( "INSERT INTO " + label + sql )
+                .types( Arrays.asList( ComsType.MODIFY.toString(), ComsType.RELATIONAL.toString() ) )
+                .build() );
     }
 
 
     public List<Query> getReadAllFixed() {
         return Collections.singletonList( RawQuery.builder()
-                .surrealQl( "SELECT * FROM " + getTable( false ) + " WHERE _id =" + id )
-                .sql( "SELECT * FROM " + getTable( true ) + " WHERE id = " + id ).build() );
+                .surrealQl( "SELECT * FROM " + getUserTable( false ) + " WHERE _id =" + id )
+                .sql( "SELECT * FROM " + getUserTable( true ) + " WHERE id = " + id )
+                .types( Arrays.asList( ComsType.QUERY.toString(), ComsType.RELATIONAL.toString() ) )
+                .build() );
     }
 
 
@@ -194,17 +216,87 @@ public class User {
         String keyVal = getRandomFixed( random );
         String projects = getRandomFixedProjects( random );
         return Collections.singletonList( RawQuery.builder()
-                .surrealQl( "SELECT " + projects + " FROM " + getTable( false ) + " WHERE " + keyVal )
-                .sql( "SELECT " + projects + " FROM " + getTable( true ) + " WHERE " + keyVal ).build() );
+                .surrealQl( "SELECT " + projects + " FROM " + getUserTable( false ) + " WHERE " + keyVal )
+                .sql( "SELECT " + projects + " FROM " + getUserTable( true ) + " WHERE " + keyVal )
+                .types( Arrays.asList( ComsType.QUERY.toString(), ComsType.RELATIONAL.toString() ) )
+                .build() );
     }
 
 
-    public List<Query> getComplex1( Random random ) {
-        String keyVal = getRandomFixed( random );
-        String projects = getRandomFixedProjects( random );
+    /**
+     * Successful logins by user and by month
+     *
+     * @return
+     */
+    public List<Query> getComplex1() {
+
+        String sql = "SELECT \n"
+                + "    userid, \n"
+                + "    YEAR(accesstime) AS Years, \n"
+                + "    MONTH(accesstime) AS Months, \n"
+                + "    COUNT(*) AS Successful_Logins\n"
+                + "FROM \n"
+                + "    %s\n"
+                + "WHERE \n"
+                + "    successful = true\n"
+                + "GROUP BY \n"
+                + "    userid, \n"
+                + "    YEAR(accesstime), \n"
+                + "    MONTH(accesstime)";
+
+        String surreal = "SELECT \n"
+                + "    userid, \n"
+                + "    time::year(accesstime) AS years, \n"
+                + "    time::month(accesstime) AS months, \n"
+                + "    count() AS Successful_Logins\n"
+                + "FROM \n"
+                + "    %s\n"
+                + "WHERE \n"
+                + "    successful = true\n"
+                + "GROUP BY \n"
+                + "    userid, \n"
+                + "    years, \n"
+                + "    months";
+
         return Collections.singletonList( RawQuery.builder()
-                .surrealQl( "SELECT " + projects + " FROM " + getTable( false ) + " WHERE " + keyVal )
-                .sql( "SELECT " + projects + " FROM " + getTable( true ) + " WHERE " + keyVal ).build() );
+                .surrealQl( String.format( surreal, getLoginTable( false ) ) )
+                .sql( String.format( sql, getLoginTable( true ) ) )
+                .types( Arrays.asList( ComsType.COMPLEX_LOGIN_1.toString(), ComsType.RELATIONAL.toString() ) )
+                .build() );
+    }
+
+
+    public List<Query> getComplex2() {
+
+        String sql = "SELECT \n"
+                + "    userid, \n"
+                + "    HOUR(accesstime) AS hours, \n"
+                + "    AVG(duration) AS avgDuration\n"
+                + "FROM \n"
+                + "    %s\n"
+                + "WHERE \n"
+                + "    successful = true\n"
+                + "GROUP BY \n"
+                + "    userid, \n"
+                + "    HOUR(accesstime)";
+
+        String surreal = "SELECT \n"
+                + "    userid, \n"
+                + "    time::hour(accesstime) AS hours, \n"
+                + "    math::mean(duration) AS avgDuration\n"
+                + "FROM \n"
+                + "    %s\n"
+                + "WHERE \n"
+                + "    successful = true\n"
+                + "GROUP BY \n"
+                + "    userid, \n"
+                + "    hours";
+
+        return Collections.singletonList( RawQuery.builder()
+                .surrealQl( String.format( surreal, getLoginTable( false ) ) )
+                .sql( String.format( sql, getLoginTable( true ) ) )
+                .types( Arrays.asList( ComsType.COMPLEX_LOGIN_2.toString(), ComsType.RELATIONAL.toString() ) )
+                .build() );
     }
 
 
@@ -252,34 +344,43 @@ public class User {
         long userId;
         long deviceId;
 
-        String timestamp;
+        LocalDateTime timestamp;
 
-        long duration;
+        long mins;
 
         boolean successful;
 
 
         public static Login createRandomLogin( long userid, long deviceId, Network network ) {
             boolean successful = network.getRandom().nextFloat() < 0.8;
-            return new Login( userid, deviceId, network.createRandomTimestamp(), network.getRandom().nextInt( 24 ), successful );
+            return new Login( userid, deviceId, network.createRandomTimestamp(), successful ? network.getRandom().nextInt( 24 ) : 0, successful );
         }
 
 
-        public Map<String, String> asStrings() {
+        public Map<String, String> asStrings( Mode mode ) {
             Map<String, String> values = new HashMap<>();
             for ( Entry<String, PropertyType> entry : User.loginTypes.entrySet() ) {
                 switch ( entry.getKey() ) {
-                    case "userId":
+                    case "userid":
                         values.put( entry.getKey(), String.valueOf( getUserId() ) );
                         break;
-                    case "deviceId":
+                    case "deviceid":
                         values.put( entry.getKey(), String.valueOf( getDeviceId() ) );
                         break;
-                    case "timestamp":
-                        values.put( entry.getKey(), getTimestamp() );
+                    case "accesstime":
+                        String timestamp = "";
+                        if ( mode == Mode.POLYPHENY ) {
+                            timestamp = " TIMESTAMP '" + this.timestamp.format( DateTimeFormatter.ofPattern( "yyyy-MM-dd hh:mm:ss" ) ) + "'";
+                        } else if ( mode == Mode.SURREALDB ) {
+                            timestamp = "'" + this.timestamp.format( DateTimeFormatter.ofPattern( "yyyy-MM-dd hh:mm:ss" ) ).replace( " ", "T" ) + "Z" + "'";
+                        } else {
+                            throw new RuntimeException();
+                        }
+
+                        values.put( entry.getKey(), timestamp );
                         break;
                     case "duration":
-                        values.put( entry.getKey(), String.valueOf( getDuration() ) );
+                        values.put( entry.getKey(), String.valueOf( getMins() ) );
                         break;
                     case "successful":
                         values.put( entry.getKey(), String.valueOf( successful ) );

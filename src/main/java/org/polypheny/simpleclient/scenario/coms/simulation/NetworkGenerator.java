@@ -26,6 +26,8 @@ package org.polypheny.simpleclient.scenario.coms.simulation;
 
 import com.google.gson.JsonObject;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -255,8 +257,8 @@ public class NetworkGenerator {
             Map<String, String> properties = new HashMap<>();
 
             for ( int i = 0; i < amount; i++ ) {
-                Type type = Type.getRandom( random, Type.OBJECT );
-                properties.put( "key" + i, type.asString( random, 3, 250, Type.OBJECT, Type.ARRAY ) );
+                Type type = Type.getRandom( random, Type.OBJECT, Type.TIMESTAMP );
+                properties.put( "key" + i, type.asString( random, 3, 250, Type.OBJECT, Type.ARRAY, Type.TIMESTAMP ) );
             }
             return properties;
         }
@@ -301,8 +303,8 @@ public class NetworkGenerator {
 
             for ( int i = 0; i < random.nextInt( 10 ) + 1; i++ ) {
                 String key = "key" + random.nextInt( 10 );
-                Type type = Type.getRandom( random );
-                object.add( key, type.asJson( random, nestingDepth ) );
+                Type type = Type.getRandom( random, Type.TIMESTAMP );
+                object.add( key, type.asJson( random, nestingDepth, Type.TIMESTAMP ) );
             }
 
             return object;
@@ -478,8 +480,10 @@ public class NetworkGenerator {
             }};
 
             Map<Function<User, List<Query>>, Integer> usersTask = new HashMap<Function<User, List<Query>>, Integer>() {{
-                put( User::getReadAllFixed, 1 );
-                put( u -> u.getReadSpecificPropFixed( random ), 1 );
+                put( User::getReadAllFixed, 4 );
+                put( u -> u.getReadSpecificPropFixed( random ), 3 );
+                put( User::getComplex1, 1 );
+                put( User::getComplex2, 1 );
             }};
 
             for ( int i = 0; i < 3 + random.nextInt( 10 ); i++ ) {
@@ -645,20 +649,13 @@ public class NetworkGenerator {
         }
 
 
-        public String createRandomTimestamp() {
+        public LocalDateTime createRandomTimestamp() {
             long date = random.nextLong( startDay, endDay );
-            return LocalDate.ofEpochDay( date ).toString();
+
+            return LocalDate.ofEpochDay( date ).atTime( LocalTime.of( random.nextInt( 3, 23 ), random.nextInt( 0, 60 ) ) );
         }
 
     }
-
-    //// Backbone
-
-    //// Distributors
-
-    //// Devices
-
-    //// Connections
 
 
     enum Connection {
