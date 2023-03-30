@@ -68,6 +68,10 @@ public class ComsConfig extends AbstractConfig {
     public int loginsPerUser;
     public long duration;
     public double newLogins;
+    public boolean createIndexes;
+    public double olapRate;
+
+    public double inverseOlapRate;
 
 
     public ComsConfig( String system, Properties properties, int multiplier ) {
@@ -78,6 +82,8 @@ public class ComsConfig extends AbstractConfig {
         threadDistribution = Arrays.stream( getStringProperty( properties, "threadDistribution" ).split( "_" ) ).map( Integer::parseInt ).collect( Collectors.toList() );
 
         seed = getLongProperty( properties, "seed" );
+
+        createIndexes = getBooleanProperty( properties, "createIndexes" );
 
         networkScale = getIntProperty( properties, "networkScale" );
         pcDynConfigsMax = getIntProperty( properties, "pcDynConfigsMax" );
@@ -117,6 +123,10 @@ public class ComsConfig extends AbstractConfig {
         loginsPerUser = getIntProperty( properties, "loginsPerUser" );
 
         duration = getIntProperty( properties, "duration" );
+
+        olapRate = getDoubleProperty( properties, "olapRate" );
+
+        inverseOlapRate = 1 - olapRate;
     }
 
 
@@ -128,6 +138,8 @@ public class ComsConfig extends AbstractConfig {
         seed = Long.parseLong( parsedConfig.get( "seed" ) );
 
         threadDistribution = Arrays.stream( parsedConfig.get( "threadDistribution" ).split( "_" ) ).map( Integer::parseInt ).collect( Collectors.toList() );
+
+        createIndexes = Boolean.getBoolean( parsedConfig.get( "createIndexes" ) );
 
         networkScale = Integer.parseInt( parsedConfig.get( "networkScale" ) );
         pcDynConfigsMax = Integer.parseInt( parsedConfig.get( "pcDynConfigsMax" ) );
@@ -166,6 +178,10 @@ public class ComsConfig extends AbstractConfig {
         newLogins = parsePercent( parsedConfig.get( "newLogins" ) );
 
         loginsPerUser = Integer.parseInt( parsedConfig.get( "loginsPerUser" ) );
+
+        olapRate = parsePercent( "olapRate" );
+
+        inverseOlapRate = 1 - olapRate;
     }
 
 

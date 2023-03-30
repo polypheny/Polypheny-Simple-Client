@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.Value;
@@ -51,6 +52,7 @@ import org.polypheny.simpleclient.scenario.coms.simulation.entites.Graph;
 public class User {
 
     public static final String namespace = "coms";
+    private static final AtomicLong idBuilder = new AtomicLong();
 
 
     public static Map<String, PropertyType> userTypes = new HashMap<String, PropertyType>() {{
@@ -78,8 +80,9 @@ public class User {
 
 
     public User( Random random ) {
-        this.id = random.nextInt();
+        this.id = idBuilder.getAndIncrement();
         this.properties = Network.generateFixedTypedProperties( random, userTypes );
+        this.properties.put( "id", String.valueOf( id ) );
     }
 
 
@@ -90,8 +93,8 @@ public class User {
 
     public String userToSql() {
         List<String> query = new ArrayList<>();
-        for ( Entry<String, String> entry : properties.entrySet() ) {
-            query.add( entry.getValue() );
+        for ( String key : userTypes.keySet() ) {
+            query.add( properties.get( key ) );
         }
         return String.join( ",", query );
     }
@@ -113,30 +116,6 @@ public class User {
                 .surrealQl( surreal )
                 .types( Arrays.asList( QueryTypes.MODIFY, QueryTypes.RELATIONAL ) )
                 .build() );
-    }
-
-
-    public static Query getRelQuery( List<User> users ) {
-        StringBuilder sql = new StringBuilder( "INSERT INTO " );
-        StringBuilder surreal = new StringBuilder( "INSERT INTO " );
-        sql.append( users.get( 0 ).getUserTable( true ) );
-        surreal.append( users.get( 0 ).getUserTable( false ) );
-
-        sql.append( " (" ).append( String.join( ",", userTypes.keySet() ) ).append( ")" );
-        sql.append( " VALUES " );
-
-        String values = users.stream().map( s -> "(" + s.userToSql() + ")" ).collect( Collectors.joining( "," ) );
-        sql.append( values );
-
-        surreal.append( " (" ).append( String.join( ",", userTypes.keySet() ) ).append( ")" );
-        surreal.append( " VALUES " );
-        surreal.append( values );
-
-        return RawQuery.builder()
-                .sql( sql.toString() )
-                .surrealQl( surreal.toString() )
-                .types( Arrays.asList( QueryTypes.MODIFY, QueryTypes.RELATIONAL ) )
-                .build();
     }
 
 

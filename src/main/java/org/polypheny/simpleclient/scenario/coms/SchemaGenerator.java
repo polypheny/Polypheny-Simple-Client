@@ -32,8 +32,8 @@ import org.polypheny.simpleclient.executor.PolyphenyDbExecutor;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.RawQuery;
 import org.polypheny.simpleclient.scenario.coms.Coms.PolyphenyAdapters;
-import org.polypheny.simpleclient.scenario.coms.simulation.entites.Graph;
 import org.polypheny.simpleclient.scenario.coms.simulation.NetworkGenerator.Network;
+import org.polypheny.simpleclient.scenario.coms.simulation.entites.Graph;
 
 public class SchemaGenerator {
 
@@ -57,7 +57,7 @@ public class SchemaGenerator {
 
         List<Query> graphQueries = graph.getSchemaGraphQueries( adapters.getGraphAdapter(), namespace + Graph.GRAPH_POSTFIX );
         List<Query> docQueries = graph.getSchemaDocQueries( adapters.getDocAdapter(), namespace + Graph.DOC_POSTFIX );
-        List<Query> relQueries = graph.getSchemaRelQueries( adapters.getRelAdapter(), namespace + Graph.REL_POSTFIX, graph.getUsers() );
+        List<Query> relQueries = graph.getSchemaRelQueries( adapters.getRelAdapter(), namespace + Graph.REL_POSTFIX, graph.getUsers(), config );
 
         for ( Query query : graphQueries ) {
             executor.executeQuery( query );

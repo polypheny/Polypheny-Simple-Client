@@ -25,6 +25,7 @@
 package org.polypheny.simpleclient.scenario.coms.simulation;
 
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -346,6 +347,15 @@ public class NetworkGenerator {
                 object.add( key, type.asJson( random, nestingDepth, Type.TIMESTAMP ) );
             }
 
+            if ( random.nextBoolean() ) {
+                JsonObject user = new JsonObject();
+                user.add( "id", new JsonPrimitive( random.nextInt() ) );
+                object.add( "user", user );
+                JsonObject error = new JsonObject();
+                user.add( "message", random.nextBoolean() ? new JsonPrimitive( "error code: out of memory..." ) : new JsonPrimitive( "code: runtime error" ) );
+                object.add( "error", error );
+            }
+
             return object;
         }
 
@@ -513,25 +523,25 @@ public class NetworkGenerator {
             List<List<? extends Node>> nodes = Arrays.asList( mobiles, ioTs, pcs, aps, servers, switches );
 
             List<List<? extends Edge>> edges = Arrays.asList( lans, wlans );
-            Map<Function<GraphElement, List<Query>>, Integer> graphTasks = new HashMap<Function<GraphElement, List<Query>>, Integer>() {{
-                put( GraphElement::getReadAllDynamic, 4 );
-                put( GraphElement::countConnectedSimilars, 1 );
-                put( graphElement -> graphElement.findNeighborsOfSpecificType( Network.this ), 1 );
+            Map<Function<GraphElement, List<Query>>, Double> graphTasks = new HashMap<Function<GraphElement, List<Query>>, Double>() {{
+                put( GraphElement::getReadAllDynamic, 12 * config.inverseOlapRate );
+                put( GraphElement::countConnectedSimilars, 4 * config.olapRate );
+                put( graphElement -> graphElement.findNeighborsOfSpecificType( Network.this ), 4 * config.olapRate );
             }};
 
-            Map<Function<Node, List<Query>>, Integer> logTasks = new HashMap<Function<Node, List<Query>>, Integer>() {{
-                put( Node::getComplex1, 1 );
-                put( Node::getComplex2, 1 );
-                put( Node::readFullLog, 1 );
-                put( Node::getReadAllNested, 1 );
-                put( e -> e.readPartialLog( random ), 4 );
+            Map<Function<Node, List<Query>>, Double> logTasks = new HashMap<Function<Node, List<Query>>, Double>() {{
+                put( Node::getComplex1, 4 * config.olapRate );
+                put( Node::getComplex2, 4 * config.olapRate );
+                put( Node::readFullLog, 12 * config.inverseOlapRate );
+                put( Node::getReadAllNested, 8 * config.inverseOlapRate );
+                put( e -> e.readPartialLog( random ), 8 * config.inverseOlapRate );
             }};
 
-            Map<Function<User, List<Query>>, Integer> usersTask = new HashMap<Function<User, List<Query>>, Integer>() {{
-                put( User::getReadAllFixed, 4 );
-                put( u -> u.getReadSpecificPropFixed( random ), 3 );
-                put( User::getComplex1, 1 );
-                put( User::getComplex2, 1 );
+            Map<Function<User, List<Query>>, Double> usersTask = new HashMap<Function<User, List<Query>>, Double>() {{
+                put( User::getReadAllFixed, 12 * config.inverseOlapRate );
+                put( u -> u.getReadSpecificPropFixed( random ), 8 * config.inverseOlapRate );
+                put( User::getComplex1, 4 * config.olapRate );
+                put( User::getComplex2, 4 * config.olapRate );
             }};
 
             for ( int i = 0; i < 3 + random.nextInt( 10 ); i++ ) {
@@ -583,7 +593,7 @@ public class NetworkGenerator {
         }
 
 
-        private <T> T getRandomTask( Random random, Map<T, Integer> tasks ) {
+        private <T> T getRandomTask( Random random, Map<T, Double> tasks ) {
             List<T> elements = new ArrayList<>();
 
             tasks.forEach( ( k, v ) -> {
@@ -706,6 +716,8 @@ public class NetworkGenerator {
                     "\tpcs: " + pcs.size() + " with " + summarize( pcs ) + ",\n" +
                     "\tlans: " + lans.size() + " with " + summarize( lans ) + ",\n" +
                     "\twlans: " + wlans.size() + " with " + summarize( wlans ) + ",\n" +
+                    "\tusers: " + users.size() + ",\n" +
+                    "\tlogins: " + this.nodes.stream().flatMap( Collection::stream ).mapToInt( n -> n.logins.size() ).sum() + ",\n" +
                     '}';
         }
 

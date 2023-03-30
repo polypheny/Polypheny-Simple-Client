@@ -39,6 +39,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import kotlin.Pair;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.Value;
 import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
@@ -47,6 +48,7 @@ import org.polypheny.simpleclient.cli.Mode;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.RawQuery;
 import org.polypheny.simpleclient.query.RawQuery.RawQueryBuilder;
+import org.polypheny.simpleclient.scenario.coms.ComsConfig;
 import org.polypheny.simpleclient.scenario.coms.QueryTypes;
 import org.polypheny.simpleclient.scenario.coms.simulation.GraphElement;
 import org.polypheny.simpleclient.scenario.coms.simulation.NetworkGenerator.Network;
@@ -58,10 +60,10 @@ import org.polypheny.simpleclient.scenario.coms.simulation.User.Login;
 @Value
 public class Graph {
 
-    public static final String DOC_POSTFIX = "Doc";
-    public static final String REL_POSTFIX = "Rel";
+    public static final String DOC_POSTFIX = "doc";
+    public static final String REL_POSTFIX = "rel";
 
-    public static final String GRAPH_POSTFIX = "Graph";
+    public static final String GRAPH_POSTFIX = "graph";
     Map<Long, Node> nodes;
     Map<Long, Edge> edges;
 
@@ -233,6 +235,7 @@ public class Graph {
 
 
     public List<Query> getSchemaGraphQueries( String onStore, String namespace ) {
+        List<Query> queries = new ArrayList<>();
         RawQueryBuilder builder = RawQuery.builder();
 
         if ( onStore != null ) {
@@ -243,7 +246,9 @@ public class Graph {
 
         builder.surrealQl( "DEFINE DATABASE " + namespace + "; DEFINE TABLE node SCHEMALESS;" );
 
-        return Collections.singletonList( builder.build() );
+        queries.add( builder.build() );
+
+        return queries;
     }
 
 
@@ -273,7 +278,7 @@ public class Graph {
     }
 
 
-    public List<Query> getSchemaRelQueries( String onStore, String namespace, Map<Long, User> users ) {
+    public List<Query> getSchemaRelQueries( String onStore, String namespace, Map<Long, User> users, ComsConfig config ) {
         List<Query> queries = new ArrayList<>();
         queries.add( RawQuery.builder()
                 .sql( "CREATE SCHEMA " + namespace )
@@ -287,13 +292,30 @@ public class Graph {
         //// BUILD USER TABLE
         queries.add( buildTable( store, label, sqlLabel, User.userTypes, Collections.singletonList( User.userPK ) ) );
 
+        if ( config.createIndexes ) {
+            createIndex( queries, label, sqlLabel, User.userPK, true );
+        }
+
         label = "login";
         sqlLabel = namespace + "." + label;
 
         //// BUILD LOGIN TABLE
         queries.add( buildTable( store, label, sqlLabel, User.loginTypes, User.loginPK ) );
 
+        if ( config.createIndexes ) {
+            createIndex( queries, label, sqlLabel, User.loginPK.get( 0 ), false );
+        }
+
         return queries;
+    }
+
+
+    private static void createIndex( List<Query> queries, String label, String sqlLabel, String column, boolean isUnique ) {
+        RawQueryBuilder builder;
+        builder = RawQuery.builder()
+                .sql( String.format( "ALTER TABLE %s ADD %s INDEX idx_%s ON (%s)", sqlLabel + Graph.REL_POSTFIX, isUnique ? " UNIQUE " : "", column, column ) )
+                .surrealQl( String.format( "DEFINE INDEX idx_%s ON TABLE %s COLUMNS %s UNIQUE", label + Graph.REL_POSTFIX, column, column ) );
+        queries.add( builder.build() );
     }
 
 
@@ -319,6 +341,7 @@ public class Graph {
 
         public List<JsonObject> nestedQueries;
 
+        @Getter
         public List<Login> logins;
 
 
@@ -382,7 +405,7 @@ public class Graph {
             String docs = String.join( ",", asMongos() );
 
             String surreal = "INSERT INTO " + collection + " [" + docs + "]";
-            String mongo = "db." + collection + ".insertMany([" + docs + "])";
+            String mongo = "db." + collection + ".insertMany([" + docs + "]);";
 
             return Collections.singletonList( RawQuery.builder()
                     .mongoQl( mongo )
@@ -559,33 +582,21 @@ public class Graph {
          */
         public List<Query> getComplex2() {
             String mongo = "db.%s.aggregate([\n"
-                    + "  { $group: { _id: \"$users.id\", count: { $sum: 1 } } },\n"
-                    + "  {\n"
-                    + "    $group: {\n"
-                    + "      _id: null,\n"
-                    + "      user_counts: {\n"
-                    + "        $push: {\n"
-                    + "          user: \"$_id\",\n"
-                    + "          count: \"$count\",\n"
-                    + "          percentage: {\n"
-                    + "            $multiply: [\n"
-                    + "              { $divide: [\"$count\", { $sum: \"$count\" }] },\n"
-                    + "              100\n"
-                    + "            ]\n"
-                    + "          }\n"
-                    + "        }\n"
-                    + "      }\n"
-                    + "    }\n"
-                    + "  }\n"
-                    + "])";
+                    + "  { $match: { error: { message: { $regex: '/memory/i' } } } },\n"
+                    + "  { $group: { \"_id\": \"$user.id\", count: { $sum: 1 } } },\n"
+                    + "  { $sort: { count: -1 } },\n"
+                    + "  { $limit: 10 }\n"
+                    + "])\n";
 
-            String surreal = "SELECT user.username, COUNT() AS counted, \n"
-                    + "    (COUNT() / math::SUM(COUNT()) OVER()) * 100 AS percentage\n"
-                    + "FROM %s\n"
-                    + "GROUP BY user.username";
+            String surreal = "SELECT user.id AS id, count() AS counted\n"
+                    + "FROM " + getCollection() + "\n"
+                    + "WHERE error.message CONTAINS 'memory'\n"
+                    + "GROUP BY id\n"
+                    + "ORDER BY counted DESC\n"
+                    + "LIMIT 10;\n";
 
             return Collections.singletonList( RawQuery.builder()
-                    .surrealQl( String.format( surreal, getCollection() ) )
+                    .surrealQl( surreal )
                     .mongoQl( String.format( mongo, getCollection() ) )
                     .types( Arrays.asList( QueryTypes.COMPLEX_LOGIN_2, QueryTypes.DOCUMENT ) )
                     .build() );
