@@ -128,6 +128,9 @@ public class NetworkGenerator {
 
         List<User> users = new ArrayList<>();
 
+        List<List<? extends Node>> nodes = Arrays.asList( servers, switches, aps, ioTs, mobiles, pcs );
+        List<List<? extends Edge>> edges = Arrays.asList( lans, wlans );
+
         public static ComsConfig config;
         int scale;
 
@@ -298,7 +301,43 @@ public class NetworkGenerator {
         }
 
 
-        public static JsonObject generateNestedProperties( Random random, int nestingDepth ) {
+        /**
+         * <pre><code>
+         * {
+         *   "timestamp": "2023-03-30T10:30:00Z",
+         *   "error": {
+         *          message: "TypeError: Cannot read property 'length' of undefined",
+         *          type: "Runtime Error",
+         *          code: "ERR001"
+         *   },
+         *   "stackTrace": [
+         *     "at module.exports (/home/user/app.js:10:11)",
+         *     "at Object.<anonymous> (/home/user/index.js:5:16)",
+         *     "at Module._compile (internal/modules/cjs/loader.js:1072:14)",
+         *     "at Object.Module._extensions..js (internal/modules/cjs/loader.js:1101:10)",
+         *     "at Module.load (internal/modules/cjs/loader.js:937:32)",
+         *     "at Function.Module._load (internal/modules/cjs/loader.js:778:12)",
+         *     "at Function.executeUserEntryPoint [as runMain] (internal/modules/run_main.js:76:12)",
+         *     "at internal/main/run_main_module.js:17:47"
+         *   ],
+         *   "users": [
+         *      324,
+         *      2314
+         *   ],
+         *   "system": {
+         *     "os": "Ubuntu",
+         *     "osVersion": "20.04",
+         *     "appVersion": "1.2.3"
+         *   },
+         * }
+         * </pre></code>
+         *
+         * @param random
+         * @param nestingDepth
+         * @return
+         */
+
+        public static JsonObject generateNestedLogProperties( Random random, int nestingDepth ) {
             JsonObject object = new JsonObject();
 
             for ( int i = 0; i < random.nextInt( 10 ) + 1; i++ ) {
@@ -471,11 +510,20 @@ public class NetworkGenerator {
 
 
         private void readEntities( List<Query> queries ) {
-            List<List<? extends GraphElement>> elements = Arrays.asList( mobiles, ioTs, pcs, aps, servers, switches, wlans, lans );
-            Map<Function<GraphElement, List<Query>>, Integer> tasks = new HashMap<Function<GraphElement, List<Query>>, Integer>() {{
-                put( GraphElement::getReadAllDynamic, 1 );
-                put( GraphElement::getReadAllNested, 1 );
-                put( GraphElement::readFullLog, 1 );
+            List<List<? extends Node>> nodes = Arrays.asList( mobiles, ioTs, pcs, aps, servers, switches );
+
+            List<List<? extends Edge>> edges = Arrays.asList( lans, wlans );
+            Map<Function<GraphElement, List<Query>>, Integer> graphTasks = new HashMap<Function<GraphElement, List<Query>>, Integer>() {{
+                put( GraphElement::getReadAllDynamic, 4 );
+                put( GraphElement::countConnectedSimilars, 1 );
+                put( graphElement -> graphElement.findNeighborsOfSpecificType( Network.this ), 1 );
+            }};
+
+            Map<Function<Node, List<Query>>, Integer> logTasks = new HashMap<Function<Node, List<Query>>, Integer>() {{
+                put( Node::getComplex1, 1 );
+                put( Node::getComplex2, 1 );
+                put( Node::readFullLog, 1 );
+                put( Node::getReadAllNested, 1 );
                 put( e -> e.readPartialLog( random ), 4 );
             }};
 
@@ -487,27 +535,48 @@ public class NetworkGenerator {
             }};
 
             for ( int i = 0; i < 3 + random.nextInt( 10 ); i++ ) {
-                int randomType = random.nextInt( elements.size() );
-
-                List<? extends GraphElement> list = elements.get( randomType );
-                if ( list.size() == 0 ) {
-                    continue;
-                }
 
                 for ( int j = 0; j < 1 + random.nextInt( config.readQueries ); j++ ) {
-                    if ( random.nextBoolean() ) {
-                        int randomElement = random.nextInt( list.size() );
+                    int randomElement;
+                    int randomType;
+                    switch ( random.nextInt( 3 ) ) {
+                        case 0:
+                            randomType = random.nextInt( nodes.size() );
 
-                        GraphElement element = list.get( randomElement );
+                            List<? extends Node> list = nodes.get( randomType );
+                            if ( list.size() == 0 ) {
+                                continue;
+                            }
 
-                        Function<GraphElement, List<Query>> task = getRandomTask( random, tasks );
-                        queries.addAll( task.apply( element ) );
-                    } else {
-                        int randomElement = random.nextInt( users.size() );
+                            randomElement = random.nextInt( list.size() );
 
-                        Function<User, List<Query>> task = getRandomTask( random, usersTask );
-                        queries.addAll( task.apply( users.get( randomElement ) ) );
+                            Node element = list.get( randomElement );
+
+                            Function<Node, List<Query>> nodeTask = getRandomTask( random, logTasks );
+                            queries.addAll( nodeTask.apply( element ) );
+                            break;
+                        case 1:
+                            randomElement = random.nextInt( users.size() );
+
+                            Function<User, List<Query>> userTask = getRandomTask( random, usersTask );
+                            queries.addAll( userTask.apply( users.get( randomElement ) ) );
+                            break;
+                        case 2:
+                            List<List<? extends GraphElement>> elements = Stream.concat( nodes.stream(), edges.stream() ).collect( Collectors.toList() );
+                            randomType = random.nextInt( elements.size() );
+
+                            List<? extends GraphElement> selectedElement = elements.get( randomType );
+                            if ( selectedElement.size() == 0 ) {
+                                continue;
+                            }
+
+                            randomElement = random.nextInt( selectedElement.size() );
+
+                            Function<GraphElement, List<Query>> elementsTask = getRandomTask( random, graphTasks );
+                            queries.addAll( elementsTask.apply( selectedElement.get( randomElement ) ) );
+                            break;
                     }
+
                 }
 
             }

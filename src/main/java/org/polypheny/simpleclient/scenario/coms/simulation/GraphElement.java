@@ -40,7 +40,7 @@ import lombok.experimental.NonFinal;
 import org.jetbrains.annotations.NotNull;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.RawQuery;
-import org.polypheny.simpleclient.scenario.coms.ComsType;
+import org.polypheny.simpleclient.scenario.coms.QueryTypes;
 import org.polypheny.simpleclient.scenario.coms.simulation.NetworkGenerator.Device;
 import org.polypheny.simpleclient.scenario.coms.simulation.NetworkGenerator.Network;
 import org.polypheny.simpleclient.scenario.coms.simulation.entites.Graph;
@@ -109,7 +109,7 @@ public abstract class GraphElement {
         return Collections.singletonList( RawQuery.builder()
                 .surrealQl( "SELECT * FROM " + getTable( false ) + " WHERE _id =" + getId() )
                 .cypher( cypher.toString() )
-                .types( Arrays.asList( ComsType.QUERY.toString(), ComsType.GRAPH.toString() ) )
+                .types( Arrays.asList( QueryTypes.QUERY, QueryTypes.GRAPH ) )
                 .build() );
     }
 
@@ -123,7 +123,7 @@ public abstract class GraphElement {
     public abstract Query getGraphQuery();
 
 
-    public String asDyn() {
+    public String asDynamic() {
         return Stream.concat( new HashMap<String, String>() {{
                     put( "i", String.valueOf( getId() ) );
                 }}.entrySet().stream(),
@@ -137,5 +137,11 @@ public abstract class GraphElement {
 
 
     public abstract List<Device> getPossibleConnectionTypes();
+
+
+    public abstract List<Query> countConnectedSimilars();
+
+
+    public abstract List<Query> findNeighborsOfSpecificType( Network network );
 
 }

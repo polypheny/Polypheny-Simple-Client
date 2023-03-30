@@ -43,7 +43,7 @@ public class PC extends Node {
     public PC( Random random, Network network ) {
         super(
                 Network.generateProperties( random, Network.config.pcDynConfigsMax ),
-                Network.generateNestedProperties( random, Network.config.nestingDepth ), network, true );
+                Network.generateNestedLogProperties( random, Network.config.nestingDepth ), network, true );
         this.random = random;
     }
 

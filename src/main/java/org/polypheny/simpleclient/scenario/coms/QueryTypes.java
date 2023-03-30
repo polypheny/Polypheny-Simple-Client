@@ -26,7 +26,7 @@ package org.polypheny.simpleclient.scenario.coms;
 
 import lombok.Getter;
 
-public enum ComsType {
+public enum QueryTypes {
     RELATIONAL( 0 ),
     GRAPH( 1 ),
     DOCUMENT( 2 ),
@@ -43,7 +43,7 @@ public enum ComsType {
     private final int i;
 
 
-    ComsType( int i ) {
+    QueryTypes( int i ) {
         this.i = i;
     }
 }

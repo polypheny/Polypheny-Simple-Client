@@ -31,6 +31,7 @@ import kong.unirest.HttpRequest;
 import lombok.Builder;
 import lombok.Getter;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.polypheny.simpleclient.scenario.coms.QueryTypes;
 
 
 public class RawQuery extends Query {
@@ -52,7 +53,7 @@ public class RawQuery extends Query {
 
     @Getter
     @Builder.Default
-    private List<String> types = Collections.emptyList();
+    private List<QueryTypes> types = Collections.emptyList();
 
 
     public RawQuery( String sql, HttpRequest<?> rest, boolean expectResultSet ) {
@@ -61,7 +62,7 @@ public class RawQuery extends Query {
 
 
     @Builder
-    public RawQuery( String sql, HttpRequest<?> rest, String mongoQl, String cypher, String surrealQl, List<String> types, boolean expectResultSet ) {
+    public RawQuery( String sql, HttpRequest<?> rest, String mongoQl, String cypher, String surrealQl, List<QueryTypes> types, boolean expectResultSet ) {
         super( expectResultSet );
         this.sql = sql;
         this.rest = rest;

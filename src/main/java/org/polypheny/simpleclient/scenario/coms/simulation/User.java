@@ -43,7 +43,7 @@ import org.jetbrains.annotations.NotNull;
 import org.polypheny.simpleclient.cli.Mode;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.RawQuery;
-import org.polypheny.simpleclient.scenario.coms.ComsType;
+import org.polypheny.simpleclient.scenario.coms.QueryTypes;
 import org.polypheny.simpleclient.scenario.coms.simulation.NetworkGenerator.Network;
 import org.polypheny.simpleclient.scenario.coms.simulation.PropertyType.Type;
 import org.polypheny.simpleclient.scenario.coms.simulation.entites.Graph;
@@ -111,7 +111,7 @@ public class User {
         return Collections.singletonList( RawQuery.builder()
                 .sql( sql )
                 .surrealQl( surreal )
-                .types( Arrays.asList( ComsType.MODIFY.toString(), ComsType.RELATIONAL.toString() ) )
+                .types( Arrays.asList( QueryTypes.MODIFY, QueryTypes.RELATIONAL ) )
                 .build() );
     }
 
@@ -135,7 +135,7 @@ public class User {
         return RawQuery.builder()
                 .sql( sql.toString() )
                 .surrealQl( surreal.toString() )
-                .types( Arrays.asList( ComsType.MODIFY.toString(), ComsType.RELATIONAL.toString() ) )
+                .types( Arrays.asList( QueryTypes.MODIFY, QueryTypes.RELATIONAL ) )
                 .build();
     }
 
@@ -174,7 +174,7 @@ public class User {
         return Collections.singletonList( RawQuery.builder()
                 .sql( "UPDATE " + getUserTable( true ) + sql )
                 .surrealQl( "UPDATE " + getUserTable( false ) + sql )
-                .types( Arrays.asList( ComsType.MODIFY.toString(), ComsType.CHANGE_USER.toString(), ComsType.RELATIONAL.toString() ) )
+                .types( Arrays.asList( QueryTypes.MODIFY, QueryTypes.CHANGE_USER, QueryTypes.RELATIONAL ) )
                 .build() );
     }
 
@@ -198,7 +198,7 @@ public class User {
         return Collections.singletonList( RawQuery.builder()
                 .sql( "INSERT INTO " + sqlLabel + sql )
                 .surrealQl( "INSERT INTO " + label + sql )
-                .types( Arrays.asList( ComsType.MODIFY.toString(), ComsType.RELATIONAL.toString() ) )
+                .types( Arrays.asList( QueryTypes.MODIFY, QueryTypes.RELATIONAL ) )
                 .build() );
     }
 
@@ -207,7 +207,7 @@ public class User {
         return Collections.singletonList( RawQuery.builder()
                 .surrealQl( "SELECT * FROM " + getUserTable( false ) + " WHERE _id =" + id )
                 .sql( "SELECT * FROM " + getUserTable( true ) + " WHERE id = " + id )
-                .types( Arrays.asList( ComsType.QUERY.toString(), ComsType.RELATIONAL.toString() ) )
+                .types( Arrays.asList( QueryTypes.QUERY, QueryTypes.RELATIONAL ) )
                 .build() );
     }
 
@@ -218,7 +218,7 @@ public class User {
         return Collections.singletonList( RawQuery.builder()
                 .surrealQl( "SELECT " + projects + " FROM " + getUserTable( false ) + " WHERE " + keyVal )
                 .sql( "SELECT " + projects + " FROM " + getUserTable( true ) + " WHERE " + keyVal )
-                .types( Arrays.asList( ComsType.QUERY.toString(), ComsType.RELATIONAL.toString() ) )
+                .types( Arrays.asList( QueryTypes.QUERY, QueryTypes.RELATIONAL ) )
                 .build() );
     }
 
@@ -261,7 +261,7 @@ public class User {
         return Collections.singletonList( RawQuery.builder()
                 .surrealQl( String.format( surreal, getLoginTable( false ) ) )
                 .sql( String.format( sql, getLoginTable( true ) ) )
-                .types( Arrays.asList( ComsType.COMPLEX_LOGIN_1.toString(), ComsType.RELATIONAL.toString() ) )
+                .types( Arrays.asList( QueryTypes.COMPLEX_LOGIN_1, QueryTypes.RELATIONAL ) )
                 .build() );
     }
 
@@ -295,7 +295,7 @@ public class User {
         return Collections.singletonList( RawQuery.builder()
                 .surrealQl( String.format( surreal, getLoginTable( false ) ) )
                 .sql( String.format( sql, getLoginTable( true ) ) )
-                .types( Arrays.asList( ComsType.COMPLEX_LOGIN_2.toString(), ComsType.RELATIONAL.toString() ) )
+                .types( Arrays.asList( QueryTypes.COMPLEX_LOGIN_2, QueryTypes.RELATIONAL ) )
                 .build() );
     }
 

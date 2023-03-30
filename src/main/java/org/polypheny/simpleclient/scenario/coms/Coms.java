@@ -183,9 +183,9 @@ public class Coms extends Scenario {
 
             log.info( "Preparing query list for the benchmark..." );
 
-            Function<Query, List<Integer>> toInter = q -> q.getTypes().stream().map( t -> ComsType.valueOf( t ).getI() ).collect( Collectors.toList() );
+            Function<Query, List<Integer>> toInter = q -> q.getTypes().stream().map( QueryTypes::getI ).collect( Collectors.toList() );
 
-            queries.forEach( q -> q.getTypes().forEach( l -> queryTypes.put( ComsType.valueOf( l ).getI(), l ) ) );
+            queries.forEach( q -> q.getTypes().forEach( l -> queryTypes.put( l.getI(), l.toString() ) ) );
 
             List<QueryListEntry> relQueries = getRelQueries( queries, toInter );
             List<QueryListEntry> docQueries = getDocQueries( queries, toInter );

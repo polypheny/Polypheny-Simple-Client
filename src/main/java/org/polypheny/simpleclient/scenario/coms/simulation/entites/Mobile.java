@@ -43,7 +43,7 @@ public class Mobile extends Node {
     public Mobile( Random random, Network network ) {
         super(
                 Network.generateProperties( random, Network.config.mobileDynConfigsMax ),
-                Network.generateNestedProperties( random, Network.config.nestingDepth ), network, true );
+                Network.generateNestedLogProperties( random, Network.config.nestingDepth ), network, true );
         this.random = random;
     }
 

@@ -47,7 +47,7 @@ import org.polypheny.simpleclient.cli.Mode;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.RawQuery;
 import org.polypheny.simpleclient.query.RawQuery.RawQueryBuilder;
-import org.polypheny.simpleclient.scenario.coms.ComsType;
+import org.polypheny.simpleclient.scenario.coms.QueryTypes;
 import org.polypheny.simpleclient.scenario.coms.simulation.GraphElement;
 import org.polypheny.simpleclient.scenario.coms.simulation.NetworkGenerator.Network;
 import org.polypheny.simpleclient.scenario.coms.simulation.PropertyType;
@@ -78,7 +78,7 @@ public class Graph {
                 Stream.concat( nodes.getSecond().stream(), edges.getSecond().stream() ), ( l, r ) -> RawQuery.builder()
                         .cypher( l )
                         .surrealQl( r )
-                        .types( Arrays.asList( ComsType.MODIFY.toString(), ComsType.GRAPH.toString() ) )
+                        .types( Arrays.asList( QueryTypes.MODIFY, QueryTypes.GRAPH ) )
                         .build() ).collect( Collectors.toList() );
     }
 
@@ -100,15 +100,15 @@ public class Graph {
                         "(n1)-[r%d:%s{%s}]->(n2)",
                         i,
                         String.join( ":", edge.getLabels() ),
-                        edge.asDyn() ) );
+                        edge.asDynamic() ) );
 
                 //// SurrealDB INSERT INTO dev [{name: 'Amy'}, {name: 'Mary', id: 'Mary'}]; ARE ALWAYS DIRECTED
                 surreal.append( String.format(
-                        " (SELECT * FROM node WHERE i = %s)->write->(SELECT * FROM node WHERE i = %s) CONTENT { labels: [ %s ], %s ",
+                        " (SELECT * FROM node WHERE i = %s)->edge->(SELECT * FROM node WHERE i = %s) CONTENT { labels: [ %s ], %s ",
                         edge.from,
                         edge.to,
                         edge.getLabels().stream().map( l -> "\"" + l + "\"" ).collect( Collectors.joining( "," ) ),
-                        edge.asDyn() ) );
+                        edge.asDynamic() ) );
 
                 surrealDBs.add( surreal.append( "};" ).toString() );
                 cyphers.add( cypher.toString() );
@@ -139,13 +139,13 @@ public class Graph {
                 cypher.append( String.format(
                         "(n%d:%s{%s})",
                         i, String.join( ":", node.getLabels() ),
-                        node.asDyn() ) );
+                        node.asDynamic() ) );
 
                 //// SurrealDB INSERT INTO dev [{name: 'Amy'}, {name: 'Mary', id: 'Mary'}];
                 surreal.append( String.format(
                         "{ labels: [ %s ], %s }",
                         node.getLabels().stream().map( l -> "\"" + l + "\"" ).collect( Collectors.joining( "," ) ),
-                        node.asDyn() ) );
+                        node.asDynamic() ) );
 
                 i++;
             }
@@ -184,7 +184,7 @@ public class Graph {
             queries.add( RawQuery.builder()
                     .mongoQl( mongo.append( "])" ).toString() )
                     .surrealQl( surreal.append( "]" ).toString() )
-                    .types( Arrays.asList( ComsType.MODIFY.toString(), ComsType.DOCUMENT.toString() ) )
+                    .types( Arrays.asList( QueryTypes.MODIFY, QueryTypes.DOCUMENT ) )
                     .build() );
         }
 
@@ -207,7 +207,7 @@ public class Graph {
         RawQueryBuilder builder = RawQuery.builder()
                 .sql( buildRelInsert( sqlLabel, User.getSql( users, User::userToSql ), User.userTypes ) )
                 .surrealQl( buildRelInsert( label, User.getSql( users, User::userToSql ), User.userTypes ) )
-                .types( Arrays.asList( ComsType.MODIFY.toString(), ComsType.RELATIONAL.toString() ) );
+                .types( Arrays.asList( QueryTypes.MODIFY, QueryTypes.RELATIONAL ) );
         queries.add( builder.build() );
 
         label = "login" + REL_POSTFIX;
@@ -215,7 +215,7 @@ public class Graph {
         builder = RawQuery.builder()
                 .sql( buildRelInsert( sqlLabel, Node.getLoginAsSql( nodes, Mode.POLYPHENY ), User.loginTypes ) )
                 .surrealQl( buildRelInsert( label, Node.getLoginAsSql( nodes, Mode.SURREALDB ), User.loginTypes ) )
-                .types( Arrays.asList( ComsType.MODIFY.toString(), ComsType.RELATIONAL.toString() ) );
+                .types( Arrays.asList( QueryTypes.MODIFY, QueryTypes.RELATIONAL ) );
         queries.add( builder.build() );
 
         return queries;
@@ -241,7 +241,7 @@ public class Graph {
             builder.cypher( String.format( "CREATE DATABASE %s IF NOT EXISTS", namespace ) );
         }
 
-        builder.surrealQl( "DEFINE DATABASE " + namespace );
+        builder.surrealQl( "DEFINE DATABASE " + namespace + "; DEFINE TABLE node SCHEMALESS;" );
 
         return Collections.singletonList( builder.build() );
     }
@@ -259,7 +259,7 @@ public class Graph {
             queries.add( RawQuery.builder()
                     .mongoQl( "db.createCollection(" + collection + ")" + store )
                     .surrealQl( "DEFINE TABLE " + collection + " SCHEMALESS" )
-                    .types( Arrays.asList( ComsType.MODIFY.toString(), ComsType.DOCUMENT.toString() ) )
+                    .types( Arrays.asList( QueryTypes.MODIFY, QueryTypes.DOCUMENT ) )
                     .build() );
         }
 
@@ -367,13 +367,13 @@ public class Graph {
             return RawQuery.builder()
                     .cypher( cypher )
                     .surrealQl( surreal.append( "]" ).toString() )
-                    .types( Arrays.asList( ComsType.MODIFY.toString(), ComsType.GRAPH.toString() ) )
+                    .types( Arrays.asList( QueryTypes.MODIFY, QueryTypes.GRAPH ) )
                     .build();
         }
 
 
         public List<Query> addLog( Random random, int nestingDepth ) {
-            JsonObject log = Network.generateNestedProperties( random, nestingDepth );
+            JsonObject log = Network.generateNestedLogProperties( random, nestingDepth );
 
             nestedQueries.add( log );
 
@@ -387,7 +387,7 @@ public class Graph {
             return Collections.singletonList( RawQuery.builder()
                     .mongoQl( mongo )
                     .surrealQl( surreal )
-                    .types( Arrays.asList( ComsType.MODIFY.toString(), ComsType.DOCUMENT.toString() ) )
+                    .types( Arrays.asList( QueryTypes.MODIFY, QueryTypes.DOCUMENT ) )
                     .build() );
 
         }
@@ -433,7 +433,7 @@ public class Graph {
             return Collections.singletonList( RawQuery.builder()
                     .mongoQl( mongo )
                     .surrealQl( surreal )
-                    .types( Arrays.asList( ComsType.MODIFY.toString(), ComsType.DOCUMENT.toString() ) )
+                    .types( Arrays.asList( QueryTypes.MODIFY, QueryTypes.DOCUMENT ) )
                     .build() );
 
         }
@@ -449,7 +449,7 @@ public class Graph {
             return Collections.singletonList( RawQuery.builder()
                     .mongoQl( mongo )
                     .surrealQl( surreal )
-                    .types( Arrays.asList( ComsType.MODIFY.toString(), ComsType.DOCUMENT.toString() ) )
+                    .types( Arrays.asList( QueryTypes.MODIFY, QueryTypes.DOCUMENT ) )
                     .build() );
         }
 
@@ -466,7 +466,7 @@ public class Graph {
             return Collections.singletonList( RawQuery.builder()
                     .mongoQl( mongo )
                     .surrealQl( surreal )
-                    .types( Arrays.asList( ComsType.MODIFY.toString(), ComsType.DOCUMENT.toString() ) )
+                    .types( Arrays.asList( QueryTypes.MODIFY, QueryTypes.DOCUMENT ) )
                     .build() );
         }
 
@@ -481,7 +481,7 @@ public class Graph {
             return RawQuery.builder()
                     .mongoQl( mongo.append( "])" ).toString() )
                     .surrealQl( surreal.append( "]" ).toString() )
-                    .types( Arrays.asList( ComsType.MODIFY.toString(), ComsType.DOCUMENT.toString() ) )
+                    .types( Arrays.asList( QueryTypes.MODIFY, QueryTypes.DOCUMENT ) )
                     .build();
         }
 
@@ -500,17 +500,17 @@ public class Graph {
                     RawQuery.builder()
                             .cypher( cypher )
                             .surrealQl( surrealGraph )
-                            .types( Arrays.asList( ComsType.MODIFY.toString(), ComsType.GRAPH.toString() ) )
+                            .types( Arrays.asList( QueryTypes.MODIFY, QueryTypes.GRAPH ) )
                             .build(),
                     RawQuery.builder()
                             .mongoQl( mongo )
                             .surrealQl( surrealDoc )
-                            .types( Arrays.asList( ComsType.MODIFY.toString(), ComsType.DOCUMENT.toString() ) )
+                            .types( Arrays.asList( QueryTypes.MODIFY, QueryTypes.DOCUMENT ) )
                             .build(),
                     RawQuery.builder()
                             .sql( sql )
                             .surrealQl( surrealRel )
-                            .types( Arrays.asList( ComsType.MODIFY.toString(), ComsType.RELATIONAL.toString() ) )
+                            .types( Arrays.asList( QueryTypes.MODIFY, QueryTypes.RELATIONAL ) )
                             .build()
             );
         }
@@ -521,8 +521,76 @@ public class Graph {
             return Collections.singletonList( RawQuery.builder()
                     .surrealQl( "SELECT * FROM " + getCollection() + " WHERE id = " + getId() )
                     .mongoQl( "db." + getCollection() + ".find({ id: " + getId() + "})" )
-                    .types( Arrays.asList( ComsType.QUERY.toString(), ComsType.DOCUMENT.toString() ) )
+                    .types( Arrays.asList( QueryTypes.QUERY, QueryTypes.DOCUMENT ) )
                     .build() );
+        }
+
+
+        /**
+         * Identify the top 10 most common errors
+         *
+         * @return
+         */
+        public List<Query> getComplex1() {
+            String mongo = "db.%s.aggregate([\n"
+                    + "  { $group: { _id: \"$error.message\", count: { $sum: 1 } } },\n"
+                    + "  { $sort: { count: -1 } },\n"
+                    + "  { $limit: 10 }\n"
+                    + "])";
+
+            String surreal = "SELECT errorMessage, count() AS counted\n"
+                    + "FROM %s\n"
+                    + "GROUP BY errorMessage\n"
+                    + "ORDER BY counted DESC\n"
+                    + "LIMIT 10";
+
+            return Collections.singletonList( RawQuery.builder()
+                    .surrealQl( String.format( surreal, getCollection() ) )
+                    .mongoQl( String.format( mongo, getCollection() ) )
+                    .types( Arrays.asList( QueryTypes.COMPLEX_LOGIN_1, QueryTypes.DOCUMENT ) )
+                    .build() );
+        }
+
+
+        /**
+         * Calculate the percentage of errors caused by each user
+         *
+         * @return
+         */
+        public List<Query> getComplex2() {
+            String mongo = "db.%s.aggregate([\n"
+                    + "  { $group: { _id: \"$users.id\", count: { $sum: 1 } } },\n"
+                    + "  {\n"
+                    + "    $group: {\n"
+                    + "      _id: null,\n"
+                    + "      user_counts: {\n"
+                    + "        $push: {\n"
+                    + "          user: \"$_id\",\n"
+                    + "          count: \"$count\",\n"
+                    + "          percentage: {\n"
+                    + "            $multiply: [\n"
+                    + "              { $divide: [\"$count\", { $sum: \"$count\" }] },\n"
+                    + "              100\n"
+                    + "            ]\n"
+                    + "          }\n"
+                    + "        }\n"
+                    + "      }\n"
+                    + "    }\n"
+                    + "  }\n"
+                    + "])";
+
+            String surreal = "SELECT user.username, COUNT() AS counted, \n"
+                    + "    (COUNT() / math::SUM(COUNT()) OVER()) * 100 AS percentage\n"
+                    + "FROM %s\n"
+                    + "GROUP BY user.username";
+
+            return Collections.singletonList( RawQuery.builder()
+                    .surrealQl( String.format( surreal, getCollection() ) )
+                    .mongoQl( String.format( mongo, getCollection() ) )
+                    .types( Arrays.asList( QueryTypes.COMPLEX_LOGIN_2, QueryTypes.DOCUMENT ) )
+                    .build() );
+
+
         }
 
 
@@ -535,9 +603,37 @@ public class Graph {
             RawQueryBuilder builder = RawQuery.builder()
                     .sql( buildRelInsert( sqlLabel, Node.getLoginAsSql( Collections.singletonList( this ), Mode.POLYPHENY ), User.loginTypes ) )
                     .surrealQl( buildRelInsert( label, Node.getLoginAsSql( Collections.singletonList( this ), Mode.SURREALDB ), User.loginTypes ) )
-                    .types( Arrays.asList( ComsType.QUERY.toString(), ComsType.DOCUMENT.toString() ) );
+                    .types( Arrays.asList( QueryTypes.QUERY, QueryTypes.DOCUMENT ) );
 
             return Collections.singletonList( builder.build() );
+        }
+
+
+        @Override
+        public List<Query> countConnectedSimilars() {
+            return Collections.singletonList(
+                    RawQuery.builder()
+                            .cypher( String.format( "MATCH (n:%s) RETURN COUNT(n)", getLabels().get( 0 ) ) )
+                            .surrealQl( String.format( "Select count() FROM %s WHERE labels CONTAINS '%s'", "nodes", getLabels().get( 0 ) ) )
+                            .types( Arrays.asList( QueryTypes.GRAPH, QueryTypes.MODIFY ) )
+                            .build() );
+        }
+
+
+        @Override
+        public List<Query> findNeighborsOfSpecificType( Network network ) {
+            int randomType = network.getRandom().nextInt( network.getEdges().size() );
+            List<? extends Node> elements = network.getNodes().get( randomType );
+            if ( elements.isEmpty() ) {
+                return Collections.emptyList();
+            }
+
+            return Collections.singletonList(
+                    RawQuery.builder()
+                            .cypher( String.format( "MATCH (n:%s)-[rel]-() RETURN rel", elements.get( 0 ).getLabels().get( 0 ) ) )
+                            .surrealQl( String.format( "Select count() FROM %s WHERE labels CONTAINS '%s'", "node", elements.get( 0 ).getLabels().get( 0 ) ) )
+                            .types( Arrays.asList( QueryTypes.GRAPH, QueryTypes.MODIFY ) )
+                            .build() );
         }
 
     }
@@ -577,7 +673,7 @@ public class Graph {
 
             //// SurrealDB INSERT INTO dev [{name: 'Amy'}, {name: 'Mary', id: 'Mary'}]; ARE ALWAYS DIRECTED
             surreal.append( String.format(
-                    " (SELECT * FROM node WHERE id = %s)->write->(SELECT * FROM node WHERE id = %s) CONTENT { labels: [ %s ], %s ",
+                    " (SELECT * FROM nodes WHERE id = %s)->edge->(SELECT * FROM node WHERE id = %s) CONTENT { labels: [ %s ], %s ",
                     from,
                     to,
                     getLabels().stream().map( l -> "\"" + l + "\"" ).collect( Collectors.joining( "," ) ),
@@ -588,7 +684,7 @@ public class Graph {
             return RawQuery.builder()
                     .cypher( cypher )
                     .surrealQl( surreal.toString() )
-                    .types( Arrays.asList( ComsType.MODIFY.toString(), ComsType.GRAPH.toString() ) )
+                    .types( Arrays.asList( QueryTypes.MODIFY, QueryTypes.GRAPH ) )
                     .build();
         }
 
@@ -604,11 +700,50 @@ public class Graph {
             String surrealRel = String.format( "DELETE FROM %s WHERE id = %s;", getTable( false ), getId() );
 
             return Arrays.asList(
-                    RawQuery.builder().cypher( cypher ).surrealQl( surrealGraph ).build(),
-                    RawQuery.builder().mongoQl( mongo ).surrealQl( surrealDoc ).build(),
-                    RawQuery.builder().sql( sql ).surrealQl( surrealRel ).build()
+                    RawQuery.builder()
+                            .cypher( cypher )
+                            .surrealQl( surrealGraph )
+                            .types( Arrays.asList( QueryTypes.GRAPH, QueryTypes.MODIFY ) )
+                            .build(),
+                    RawQuery.builder()
+                            .mongoQl( mongo )
+                            .surrealQl( surrealDoc )
+                            .types( Arrays.asList( QueryTypes.DOCUMENT, QueryTypes.MODIFY ) )
+                            .build(),
+                    RawQuery.builder()
+                            .sql( sql )
+                            .surrealQl( surrealRel )
+                            .types( Arrays.asList( QueryTypes.RELATIONAL, QueryTypes.MODIFY ) )
+                            .build()
             );
 
+        }
+
+
+        @Override
+        public List<Query> countConnectedSimilars() {
+            return Collections.singletonList(
+                    RawQuery.builder()
+                            .cypher( String.format( "MATCH ()-[n:%s]-() RETURN COUNT(n)", getLabels().get( 0 ) ) )
+                            .surrealQl( String.format( "SELECT count(in) + count(out) FROM %s WHERE labels CONTAINS '%s'", "edge", getLabels().get( 0 ) ) )
+                            .types( Arrays.asList( QueryTypes.GRAPH, QueryTypes.MODIFY ) )
+                            .build() );
+        }
+
+
+        @Override
+        public List<Query> findNeighborsOfSpecificType( Network network ) {
+            int randomType = network.getRandom().nextInt( network.getNodes().size() );
+            List<? extends Node> elements = network.getNodes().get( randomType );
+            if ( elements.isEmpty() ) {
+                return Collections.emptyList();
+            }
+            return Collections.singletonList(
+                    RawQuery.builder()
+                            .cypher( String.format( "MATCH (n:%s)-[rel {i:%s}]-() RETURN rel", elements.get( 0 ).getLabels().get( 0 ), getId() ) )
+                            .surrealQl( String.format( "SELECT * FROM %s WHERE i = %s AND (in.labels CONTAINS '%s' OR out.labels CONTAINS '%s' )  ", "edge", getId(), elements.get( 0 ).getLabels().get( 0 ), elements.get( 0 ).getLabels().get( 0 ) ) )
+                            .types( Arrays.asList( QueryTypes.GRAPH, QueryTypes.MODIFY ) )
+                            .build() );
         }
 
     }

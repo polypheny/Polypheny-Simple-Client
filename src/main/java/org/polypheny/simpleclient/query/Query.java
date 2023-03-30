@@ -37,6 +37,7 @@ import kong.unirest.Unirest;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.polypheny.simpleclient.scenario.coms.QueryTypes;
 
 
 @Slf4j
@@ -65,7 +66,7 @@ public abstract class Query {
     public abstract String getMongoQl();
 
 
-    public List<String> getTypes() {
+    public List<QueryTypes> getTypes() {
         return Collections.emptyList();
     }
 

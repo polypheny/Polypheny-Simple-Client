@@ -42,7 +42,7 @@ public class AP extends Node {
 
     public AP( Random random, Network network ) {
         super( Network.generateProperties( random, Network.config.apDynConfigs ),
-                Network.generateNestedProperties( random, Network.config.nestingDepth ), network, true );
+                Network.generateNestedLogProperties( random, Network.config.nestingDepth ), network, true );
         this.random = random;
     }
 
