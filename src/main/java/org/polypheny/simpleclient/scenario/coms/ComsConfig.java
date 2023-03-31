@@ -172,14 +172,14 @@ public class ComsConfig extends AbstractConfig {
         newDevice = parsePercent( parsedConfig.get( "newDevice" ) );
         removeDevice = parsePercent( parsedConfig.get( "removeDevice" ) );
 
-        removeUsers = Double.parseDouble( parsedConfig.get( "removeUsers" ) );
+        removeUsers = parsePercent( parsedConfig.get( "removeUsers" ) );
         readQueries = Integer.parseInt( parsedConfig.get( "readQueries" ) );
 
         newLogins = parsePercent( parsedConfig.get( "newLogins" ) );
 
         loginsPerUser = Integer.parseInt( parsedConfig.get( "loginsPerUser" ) );
 
-        olapRate = parsePercent( "olapRate" );
+        olapRate = parsePercent( parsedConfig.get( "olapRate") );
 
         inverseOlapRate = 1 - olapRate;
     }
