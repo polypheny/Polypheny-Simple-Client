@@ -64,8 +64,11 @@ public class ComsConfig extends AbstractConfig {
     public double newDevice;
     public double removeDevice;
     public double removeUsers;
+    public double addUsers;
     public int readQueries;
     public int loginsPerUser;
+
+    public int users;
     public long duration;
     public double newLogins;
     public boolean createIndexes;
@@ -115,12 +118,14 @@ public class ComsConfig extends AbstractConfig {
         removeDevice = getDoubleProperty( properties, "removeDevice" );
 
         removeUsers = getDoubleProperty( properties, "removeUsers" );
+        addUsers = getDoubleProperty( properties, "addUsers" );
 
         readQueries = getIntProperty( properties, "readQueries" );
 
         newLogins = getDoubleProperty( properties, "newLogins" );
 
         loginsPerUser = getIntProperty( properties, "loginsPerUser" );
+        users = getIntProperty( properties, "users" );
 
         duration = getIntProperty( properties, "duration" );
 
@@ -173,13 +178,16 @@ public class ComsConfig extends AbstractConfig {
         removeDevice = parsePercent( parsedConfig.get( "removeDevice" ) );
 
         removeUsers = parsePercent( parsedConfig.get( "removeUsers" ) );
+        addUsers = parsePercent( parsedConfig.get( "addUsers" ) );
+
         readQueries = Integer.parseInt( parsedConfig.get( "readQueries" ) );
 
         newLogins = parsePercent( parsedConfig.get( "newLogins" ) );
 
         loginsPerUser = Integer.parseInt( parsedConfig.get( "loginsPerUser" ) );
+        users = Integer.parseInt( parsedConfig.get( "users" ) );
 
-        olapRate = parsePercent( parsedConfig.get( "olapRate") );
+        olapRate = parsePercent( parsedConfig.get( "olapRate" ) );
 
         inverseOlapRate = 1 - olapRate;
     }

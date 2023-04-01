@@ -43,7 +43,6 @@ import org.polypheny.simpleclient.query.RawQuery;
 import org.polypheny.simpleclient.scenario.coms.QueryTypes;
 import org.polypheny.simpleclient.scenario.coms.simulation.NetworkGenerator.Device;
 import org.polypheny.simpleclient.scenario.coms.simulation.NetworkGenerator.Network;
-import org.polypheny.simpleclient.scenario.coms.simulation.entites.Graph;
 import org.polypheny.simpleclient.scenario.coms.simulation.entites.Graph.Node;
 
 @Value
@@ -70,7 +69,7 @@ public abstract class GraphElement {
 
     @NotNull
     public String getCollection() {
-        return getLabels().get( 0 ) + Graph.DOC_POSTFIX;
+        return Network.LOGS_NAME;
     }
 
 
@@ -100,14 +99,14 @@ public abstract class GraphElement {
     public List<Query> getReadAllDynamic() {
         StringBuilder cypher = new StringBuilder( "MATCH " );
         if ( this instanceof Node ) {
-            cypher.append( "(n{id:" ).append( getId() ).append( "})" );
+            cypher.append( "(n {i:" ).append( getId() ).append( "})" );
         } else {
-            cypher.append( "()-[n{id:" ).append( getId() ).append( "}]-()" );
+            cypher.append( "()-[n {i:" ).append( getId() ).append( "}]-()" );
         }
         cypher.append( " RETURN n" );
 
         return Collections.singletonList( RawQuery.builder()
-                .surrealQl( "SELECT * FROM " + getTable( false ) + " WHERE _id =" + getId() )
+                .surrealQl( "SELECT * FROM " + getTable( false, Network.NODES_NAME ) + " WHERE id =" + getId() )
                 .cypher( cypher.toString() )
                 .types( Arrays.asList( QueryTypes.QUERY, QueryTypes.GRAPH ) )
                 .build() );
@@ -115,8 +114,8 @@ public abstract class GraphElement {
 
 
     @NotNull
-    protected String getTable( boolean withPrefix ) {
-        return (withPrefix ? namespace + REL_POSTFIX + "." : "") + "user" + REL_POSTFIX;
+    protected String getTable( boolean withPrefix, String table ) {
+        return (withPrefix ? namespace + REL_POSTFIX + "." : "") + table + REL_POSTFIX;
     }
 
 

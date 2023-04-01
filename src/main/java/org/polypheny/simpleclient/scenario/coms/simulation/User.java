@@ -52,7 +52,7 @@ import org.polypheny.simpleclient.scenario.coms.simulation.entites.Graph;
 public class User {
 
     public static final String namespace = "coms";
-    private static final AtomicLong idBuilder = new AtomicLong();
+    public static final AtomicLong idBuilder = new AtomicLong();
 
 
     public static Map<String, PropertyType> userTypes = new HashMap<String, PropertyType>() {{
@@ -67,6 +67,7 @@ public class User {
     public static Map<String, PropertyType> loginTypes = new HashMap<String, PropertyType>() {{
         put( "userid", new PropertyType( 5, Type.NUMBER ) );
         put( "accesstime", new PropertyType( 5, Type.TIMESTAMP ) );
+        put( "deviceid", new PropertyType( 5, Type.NUMBER ) );
         put( "duration", new PropertyType( 5, Type.FLOAT ) );
         put( "successful", new PropertyType( 5, Type.BOOLEAN ) );
     }};

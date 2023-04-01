@@ -24,6 +24,7 @@
 
 package org.polypheny.simpleclient.scenario.coms.simulation;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import java.time.LocalDate;
@@ -34,10 +35,12 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -93,6 +96,10 @@ public class NetworkGenerator {
     @Value
     public static class Network {
 
+        public static final String LOGS_NAME = "logs";
+        public static final String NODES_NAME = "node";
+        public static final String LOGINS_NAME = "login";
+        public static final String EDGES_NAME = "edge";
         long startDay = LocalDate.now().toEpochDay();
         long endDay;
 
@@ -347,12 +354,24 @@ public class NetworkGenerator {
                 object.add( key, type.asJson( random, nestingDepth, Type.TIMESTAMP ) );
             }
 
+            // add random users, which are logged in on device
+            Set<Integer> users = new HashSet<>();
+            for ( int i = 0; i < random.nextInt( 7 ); i++ ) {
+                users.add( random.nextInt( User.idBuilder.intValue() ) );
+            }
+            JsonArray userArray = new JsonArray();
+            users.forEach( userArray::add );
+            object.add( "users", userArray );
+
             if ( random.nextBoolean() ) {
                 JsonObject user = new JsonObject();
-                user.add( "id", new JsonPrimitive( random.nextInt() ) );
+                user.add( "id", new JsonPrimitive( random.nextInt( User.idBuilder.intValue() ) ) );
                 object.add( "user", user );
                 JsonObject error = new JsonObject();
-                user.add( "message", random.nextBoolean() ? new JsonPrimitive( "error code: out of memory..." ) : new JsonPrimitive( "code: runtime error" ) );
+                error.add( "message",
+                        random.nextBoolean()
+                                ? new JsonPrimitive( "error code: out of memory..." )
+                                : new JsonPrimitive( "code: runtime error" ) );
                 object.add( "error", error );
             }
 
@@ -408,7 +427,7 @@ public class NetworkGenerator {
 
 
         private void handleAddUsers( List<Query> queries ) {
-            queries.addAll( doRandomly( users, users.size() * config.removeUsers, this::addUser ) );
+            queries.addAll( doRandomly( users, users.size() * config.addUsers, this::addUser ) );
         }
 
 

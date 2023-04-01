@@ -28,6 +28,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Streams;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -161,34 +162,31 @@ public class Graph {
     public List<Query> getDocQueries( int docCreateBatch ) {
         List<Query> queries = new ArrayList<>();
 
-        for ( List<Node> nodes : Lists.partition( new ArrayList<>( this.nodes.values() ), docCreateBatch ) ) {
-            String collection = nodes.get( 0 ).getCollection();
-            StringBuilder mongo = new StringBuilder( "db." + collection + ".insertMany([" );
-            StringBuilder surreal = new StringBuilder( "INSERT INTO " + collection + " [" );
-            int i = 0;
-            for ( Node node : nodes ) {
-                if ( node.nestedQueries.isEmpty() ) {
-                    continue;
-                }
-                if ( i != 0 ) {
-                    mongo.append( ", " );
-                    surreal.append( ", " );
-                }
-
-                mongo.append( node.asMongos().get( 0 ) );
-                surreal.append( node.asMongos().get( 0 ) );
-                i++;
-            }
-            if ( i == 0 ) {
+        StringBuilder mongo = new StringBuilder( "db." + Network.LOGS_NAME + ".insertMany([" );
+        StringBuilder surreal = new StringBuilder( "INSERT INTO " + Network.LOGS_NAME + " [" );
+        int i = 0;
+        for ( Node node : this.nodes.values() ) {
+            if ( node.nestedQueries.isEmpty() ) {
                 continue;
             }
+            if ( i != 0 ) {
+                mongo.append( ", " );
+                surreal.append( ", " );
+            }
 
-            queries.add( RawQuery.builder()
-                    .mongoQl( mongo.append( "])" ).toString() )
-                    .surrealQl( surreal.append( "]" ).toString() )
-                    .types( Arrays.asList( QueryTypes.MODIFY, QueryTypes.DOCUMENT ) )
-                    .build() );
+            mongo.append( node.asMongos().get( 0 ) );
+            surreal.append( node.asMongos().get( 0 ) );
+            i++;
         }
+        if ( i == 0 ) {
+            return Collections.emptyList();
+        }
+
+        queries.add( RawQuery.builder()
+                .mongoQl( mongo.append( "])" ).toString() )
+                .surrealQl( surreal.append( "]" ).toString() )
+                .types( Arrays.asList( QueryTypes.MODIFY, QueryTypes.DOCUMENT ) )
+                .build() );
 
         return queries;
     }
@@ -260,13 +258,11 @@ public class Graph {
 
         String store = onStore != null ? ".store(" + onStore + ")" : "";
 
-        for ( String collection : getGraphElementStream().flatMap( n -> n.getLabels().stream().map( l -> l + DOC_POSTFIX ) ).collect( Collectors.toSet() ) ) {
-            queries.add( RawQuery.builder()
-                    .mongoQl( "db.createCollection(" + collection + ")" + store )
-                    .surrealQl( "DEFINE TABLE " + collection + " SCHEMALESS" )
-                    .types( Arrays.asList( QueryTypes.MODIFY, QueryTypes.DOCUMENT ) )
-                    .build() );
-        }
+        queries.add( RawQuery.builder()
+                .mongoQl( "db.createCollection(" + Network.LOGS_NAME + ")" + store )
+                .surrealQl( "DEFINE TABLE " + Network.LOGS_NAME + " SCHEMALESS" )
+                .types( Arrays.asList( QueryTypes.MODIFY, QueryTypes.DOCUMENT ) )
+                .build() );
 
         return queries;
     }
@@ -314,7 +310,7 @@ public class Graph {
         RawQueryBuilder builder;
         builder = RawQuery.builder()
                 .sql( String.format( "ALTER TABLE %s ADD %s INDEX idx_%s ON (%s)", sqlLabel + Graph.REL_POSTFIX, isUnique ? " UNIQUE " : "", column, column ) )
-                .surrealQl( String.format( "DEFINE INDEX idx_%s ON TABLE %s COLUMNS %s UNIQUE", label + Graph.REL_POSTFIX, column, column ) );
+                .surrealQl( String.format( "DEFINE INDEX idx_%s ON TABLE %s COLUMNS %s", column, label + Graph.REL_POSTFIX, column ) );
         queries.add( builder.build() );
     }
 
@@ -351,6 +347,7 @@ public class Graph {
                 Network network,
                 boolean isAccessedFrequently ) {
             super( dynProperties );
+            nestedQueries.add( "deviceid", new JsonPrimitive( id ) );
             this.nestedQueries = new ArrayList<>( Collections.singletonList( nestedQueries ) );
             this.logins = network.generateAccess( id, network.getUsers(), isAccessedFrequently );
         }
@@ -427,7 +424,6 @@ public class Graph {
                 return Collections.emptyList();
             }
             int i = random.nextInt( nestedQueries.size() );
-            String collection = getCollection();
 
             JsonObject nestedLog = nestedQueries.remove( i );
 
@@ -450,8 +446,8 @@ public class Graph {
                 return Collections.emptyList();
             }
 
-            String surreal = "DELETE " + collection + " WHERE " + filter.entrySet().stream().map( e -> e.getKey() + "=" + e.getValue() ).collect( Collectors.joining( " AND " ) );
-            String mongo = "db." + collection + ".deleteMany(" + filter + ")";
+            String surreal = "DELETE " + Network.LOGS_NAME + " WHERE " + filter.entrySet().stream().map( e -> e.getKey() + "=" + e.getValue() ).collect( Collectors.joining( " AND " ) );
+            String mongo = "db." + Network.LOGS_NAME + ".deleteMany(" + filter + ")";
 
             return Collections.singletonList( RawQuery.builder()
                     .mongoQl( mongo )
@@ -495,9 +491,8 @@ public class Graph {
 
 
         public Query getDocQuery() {
-            String collection = getLabels().get( 0 ) + DOC_POSTFIX;
-            StringBuilder mongo = new StringBuilder( "db." + collection + ".insertMany([" );
-            StringBuilder surreal = new StringBuilder( "INSERT INTO " + collection ).append( " [" );
+            StringBuilder mongo = new StringBuilder( "db." + getCollection() + ".insertMany([" );
+            StringBuilder surreal = new StringBuilder( "INSERT INTO " + getCollection() ).append( " [" );
             mongo.append( String.join( ",", asMongos() ) );
             surreal.append( String.join( ",", asMongos() ) );
 
@@ -512,12 +507,12 @@ public class Graph {
         @Override
         public List<Query> getRemoveQuery() {
             String cypher = String.format( "MATCH (n {i: %s}) DELETE n", getId() );
-            String mongo = String.format( "db.%s.deleteMany({id: %s})", getLabels().get( 0 ) + DOC_POSTFIX, getId() );
-            String sql = String.format( "DELETE FROM %s WHERE id = %s", getTable( true ), getId() );
+            String mongo = String.format( "db.%s.deleteMany({deviceid: %s})", getCollection(), getId() );
+            String sql = String.format( "DELETE FROM %s WHERE deviceid = %s", getTable( true, Network.LOGINS_NAME ), getId() );
 
             String surrealGraph = String.format( "DELETE node WHERE i = %s;", getId() );
-            String surrealDoc = String.format( "DELETE %s WHERE id = %s;", getLabels().get( 0 ) + DOC_POSTFIX, getId() );
-            String surrealRel = String.format( "DELETE FROM %s WHERE id = %s;", getTable( false ), getId() );
+            String surrealDoc = String.format( "DELETE %s WHERE deviceid = %s;", getCollection(), getId() );
+            String surrealRel = String.format( "DELETE FROM %s WHERE deviceid = %s;", getTable( false, Network.LOGINS_NAME ), getId() );
 
             return Arrays.asList(
                     RawQuery.builder()
@@ -625,7 +620,7 @@ public class Graph {
             return Collections.singletonList(
                     RawQuery.builder()
                             .cypher( String.format( "MATCH (n:%s) RETURN COUNT(n)", getLabels().get( 0 ) ) )
-                            .surrealQl( String.format( "Select count() FROM %s WHERE labels CONTAINS '%s'", "nodes", getLabels().get( 0 ) ) )
+                            .surrealQl( String.format( "Select count() FROM %s WHERE labels CONTAINS '%s'", "node", getLabels().get( 0 ) ) )
                             .types( Arrays.asList( QueryTypes.GRAPH, QueryTypes.MODIFY ) )
                             .build() );
         }
@@ -684,7 +679,7 @@ public class Graph {
 
             //// SurrealDB INSERT INTO dev [{name: 'Amy'}, {name: 'Mary', id: 'Mary'}]; ARE ALWAYS DIRECTED
             surreal.append( String.format(
-                    " (SELECT * FROM nodes WHERE id = %s)->edge->(SELECT * FROM node WHERE id = %s) CONTENT { labels: [ %s ], %s ",
+                    " (SELECT * FROM node WHERE id = %s)->edge->(SELECT * FROM node WHERE id = %s) CONTENT { labels: [ %s ], %s ",
                     from,
                     to,
                     getLabels().stream().map( l -> "\"" + l + "\"" ).collect( Collectors.joining( "," ) ),
@@ -702,13 +697,13 @@ public class Graph {
 
         @Override
         public List<Query> getRemoveQuery() {
-            String cypher = String.format( "MATCH ()-[n {id: %s}]-() DELETE n", getId() );
-            String mongo = String.format( "db.%s.deleteMany({id: %s})", getLabels().get( 0 ) + DOC_POSTFIX, getId() );
-            String sql = String.format( "DELETE FROM %s WHERE id = %s", getTable( true ), getId() );
+            String cypher = String.format( "MATCH ()-[n {i: %s}]-() DELETE n", getId() );
+            String mongo = String.format( "db.%s.deleteMany({id: %s})", Network.LOGS_NAME, getId() );
+            String sql = String.format( "DELETE FROM %s WHERE deviceid = %s", getTable( true, Network.LOGINS_NAME ), getId() );
 
-            String surrealGraph = String.format( "DELETE node WHERE id = %s;", getId() );
-            String surrealDoc = String.format( "DELETE %s WHERE id = %s;", getLabels().get( 0 ) + DOC_POSTFIX, getId() );
-            String surrealRel = String.format( "DELETE FROM %s WHERE id = %s;", getTable( false ), getId() );
+            String surrealGraph = String.format( "DELETE edges WHERE id = %s;", getId() );
+            String surrealDoc = String.format( "DELETE %s WHERE id = %s;", Network.LOGS_NAME, getId() );
+            String surrealRel = String.format( "DELETE FROM %s WHERE deviceid = %s;", getTable( false, Network.LOGINS_NAME ), getId() );
 
             return Arrays.asList(
                     RawQuery.builder()
