@@ -45,6 +45,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import kotlin.Pair;
 import lombok.NonNull;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -539,26 +540,24 @@ public class NetworkGenerator {
             List<List<? extends Node>> nodes = Arrays.asList( mobiles, ioTs, pcs, aps, servers, switches );
 
             List<List<? extends Edge>> edges = Arrays.asList( lans, wlans );
-            Map<Function<GraphElement, List<Query>>, Double> graphTasks = new HashMap<Function<GraphElement, List<Query>>, Double>() {{
-                put( GraphElement::getReadAllDynamic, 12 * config.inverseOlapRate );
-                put( GraphElement::countConnectedSimilars, 4 * config.olapRate );
-                put( graphElement -> graphElement.findNeighborsOfSpecificType( Network.this ), 4 * config.olapRate );
-            }};
+            // we have to ensure randomness, map is not suited for this scenario
+            List<Pair<Function<GraphElement, List<Query>>, Double>> graphTasks = new ArrayList<>();
+            graphTasks.add( new Pair<>( GraphElement::getReadAllDynamic, 12 * config.inverseOlapRate ) );
+            graphTasks.add( new Pair<>( GraphElement::countConnectedSimilars, 4 * config.olapRate ) );
+            graphTasks.add( new Pair<>( graphElement -> graphElement.findNeighborsOfSpecificType( Network.this ), 4 * config.olapRate ) );
 
-            Map<Function<Node, List<Query>>, Double> logTasks = new HashMap<Function<Node, List<Query>>, Double>() {{
-                put( Node::getComplex1, 4 * config.olapRate );
-                put( Node::getComplex2, 4 * config.olapRate );
-                put( Node::readFullLog, 12 * config.inverseOlapRate );
-                put( Node::getReadAllNested, 8 * config.inverseOlapRate );
-                put( e -> e.readPartialLog( random ), 8 * config.inverseOlapRate );
-            }};
+            List<Pair<Function<Node, List<Query>>, Double>> logTasks = new ArrayList<>();
+            logTasks.add( new Pair<>( Node::getComplex1, 4 * config.olapRate ) );
+            logTasks.add( new Pair<>( Node::getComplex2, 4 * config.olapRate ) );
+            logTasks.add( new Pair<>( Node::readFullLog, 12 * config.inverseOlapRate ) );
+            logTasks.add( new Pair<>( Node::getReadAllNested, 8 * config.inverseOlapRate ) );
+            logTasks.add( new Pair<>( e -> e.readPartialLog( random ), 8 * config.inverseOlapRate ) );
 
-            Map<Function<User, List<Query>>, Double> usersTask = new HashMap<Function<User, List<Query>>, Double>() {{
-                put( User::getReadAllFixed, 12 * config.inverseOlapRate );
-                put( u -> u.getReadSpecificPropFixed( random ), 8 * config.inverseOlapRate );
-                put( User::getComplex1, 4 * config.olapRate );
-                put( User::getComplex2, 4 * config.olapRate );
-            }};
+            List<Pair<Function<User, List<Query>>, Double>> usersTask = new ArrayList<>();
+            usersTask.add( new Pair<>( User::getReadAllFixed, 12 * config.inverseOlapRate ) );
+            usersTask.add( new Pair<>( u -> u.getReadSpecificPropFixed( random ), 8 * config.inverseOlapRate ) );
+            usersTask.add( new Pair<>( User::getComplex1, 4 * config.olapRate ) );
+            usersTask.add( new Pair<>( User::getComplex2, 4 * config.olapRate ) );
 
             for ( int i = 0; i < 3 + random.nextInt( 10 ); i++ ) {
 
@@ -609,12 +608,12 @@ public class NetworkGenerator {
         }
 
 
-        private <T> T getRandomTask( Random random, Map<T, Double> tasks ) {
+        private <T> T getRandomTask( Random random, List<Pair<T, Double>> tasks ) {
             List<T> elements = new ArrayList<>();
 
-            tasks.forEach( ( k, v ) -> {
-                for ( int i = 0; i < v; i++ ) {
-                    elements.add( k );
+            tasks.forEach( v -> {
+                for ( int i = 0; i < v.getSecond(); i++ ) {
+                    elements.add( v.getFirst() );
                 }
             } );
 
