@@ -105,7 +105,7 @@ public class User {
         String sql = "DELETE FROM ";
         String surreal = sql;
 
-        sql += namespace + ".user" + Graph.REL_POSTFIX;
+        sql += namespace + REL_POSTFIX + ".user" + Graph.REL_POSTFIX;
         surreal += "user" + Graph.REL_POSTFIX;
 
         String where = " WHERE id = " + id;
@@ -159,19 +159,12 @@ public class User {
     }
 
 
-    private List<Query> buildQueries( List<Map<String, String>> adds ) {
+    private List<Query> buildQueries( Map<String, String> elements ) {
         StringBuilder sql = new StringBuilder();
 
         sql.append( " (" ).append( String.join( ",", userTypes.keySet() ) ).append( ")" );
         sql.append( " VALUES " );
-        int i = 0;
-        for ( Map<String, String> element : adds ) {
-            if ( i != 0 ) {
-                sql.append( ", " );
-            }
-            sql.append( "(" ).append( String.join( ", ", element.values() ) ).append( ")" );
-            i++;
-        }
+        sql.append( "(" ).append( String.join( ", ", elements.values() ) ).append( ")" );
         String label = getUserTable( false );
         String sqlLabel = GraphElement.namespace + REL_POSTFIX + "." + label;
 
@@ -307,14 +300,7 @@ public class User {
 
 
     public List<Query> getInsertQuery( Random random ) {
-        int newProps = random.nextInt( 5 ) + 1;
-
-        List<Map<String, String>> adds = new ArrayList<>();
-
-        for ( int i = 0; i < newProps; i++ ) {
-            adds.add( Network.generateFixedTypedProperties( random, userTypes ) );
-        }
-        return buildQueries( adds );
+        return buildQueries( properties );
     }
 
 

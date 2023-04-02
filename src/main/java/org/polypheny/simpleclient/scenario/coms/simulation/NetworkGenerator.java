@@ -455,7 +455,8 @@ public class NetworkGenerator {
         }
 
 
-        private List<Query> addUser( User user ) {
+        private List<Query> addUser( User temp ) {
+            User user = new User( random );
             users.add( user );
 
             return user.getInsertQuery( random );
