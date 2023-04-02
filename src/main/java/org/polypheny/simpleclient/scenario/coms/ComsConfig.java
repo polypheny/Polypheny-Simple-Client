@@ -69,6 +69,8 @@ public class ComsConfig extends AbstractConfig {
     public int loginsPerUser;
 
     public int users;
+    public int servers;
+    public int clients;
     public long duration;
     public double newLogins;
     public boolean createIndexes;
@@ -126,6 +128,8 @@ public class ComsConfig extends AbstractConfig {
 
         loginsPerUser = getIntProperty( properties, "loginsPerUser" );
         users = getIntProperty( properties, "users" );
+        servers = getIntProperty( properties, "servers" );
+        clients = getIntProperty( properties, "clients" );
 
         duration = getIntProperty( properties, "duration" );
 
@@ -186,6 +190,8 @@ public class ComsConfig extends AbstractConfig {
 
         loginsPerUser = Integer.parseInt( parsedConfig.get( "loginsPerUser" ) );
         users = Integer.parseInt( parsedConfig.get( "users" ) );
+        servers = Integer.parseInt( parsedConfig.get( "servers" ) );
+        clients = Integer.parseInt( parsedConfig.get( "clients" ) );
 
         olapRate = parsePercent( parsedConfig.get( "olapRate" ) );
 

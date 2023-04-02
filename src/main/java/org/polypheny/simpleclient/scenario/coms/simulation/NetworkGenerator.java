@@ -100,24 +100,14 @@ public class NetworkGenerator {
         public static final String NODES_NAME = "node";
         public static final String LOGINS_NAME = "login";
         public static final String EDGES_NAME = "edge";
+
+        public static final double MOBILE_DISTRIBUTION = 0.4;
         long startDay = LocalDate.now().toEpochDay();
         long endDay;
 
         public static AtomicLong idBuilder = new AtomicLong();
-        public static long SERVERS = 1;
-
-        public static long USERS = 10;
-
-        public static long CLIENTS = 10;
 
 
-        public static double MOBILE_DISTRIBUTION = 0.4;
-
-        public static long MOBILES = (long) (CLIENTS * 1.5);
-
-        public static long APS = CLIENTS / 10;
-
-        public static long SWITCHES = CLIENTS / 10;
         Random random;
         List<Server> servers = new ArrayList<>();
         List<Switch> switches = new ArrayList<>();
@@ -150,16 +140,22 @@ public class NetworkGenerator {
 
             endDay = startDay + config.duration;
 
-            generateObject( USERS, () -> users.add( new User( random ) ) );
+            long mobiles = (long) (config.clients * 1.5);
 
-            generateObject( SERVERS, () -> servers.add( new Server( random, this ) ) );
-            generateObject( SWITCHES, () -> switches.add( new Switch( random, this ) ) );
-            generateObject( APS, () -> aps.add( new AP( random, this ) ) );
+            long aps = config.clients / 10;
 
-            generateObject( CLIENTS, () -> pcs.add( new PC( random, this ) ) );
+            long switches = config.clients / 10;
 
-            generateObject( MOBILES * MOBILE_DISTRIBUTION, () -> mobiles.add( new Mobile( random, this ) ) );
-            generateObject( MOBILES * (1 - MOBILE_DISTRIBUTION), () -> ioTs.add( new IoT( random, this ) ) );
+            generateObject( config.users, () -> users.add( new User( random ) ) );
+
+            generateObject( config.servers, () -> servers.add( new Server( random, this ) ) );
+            generateObject( switches, () -> this.switches.add( new Switch( random, this ) ) );
+            generateObject( aps, () -> this.aps.add( new AP( random, this ) ) );
+
+            generateObject( config.clients, () -> pcs.add( new PC( random, this ) ) );
+
+            generateObject( mobiles * MOBILE_DISTRIBUTION, () -> this.mobiles.add( new Mobile( random, this ) ) );
+            generateObject( mobiles * (1 - MOBILE_DISTRIBUTION), () -> ioTs.add( new IoT( random, this ) ) );
 
             generateConnection( this.servers, this.servers, this.servers.size(), Connection.LAN );
 
