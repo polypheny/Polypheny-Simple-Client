@@ -162,31 +162,34 @@ public class Graph {
     public List<Query> getDocQueries( int docCreateBatch ) {
         List<Query> queries = new ArrayList<>();
 
-        StringBuilder mongo = new StringBuilder( "db." + Network.LOGS_NAME + ".insertMany([" );
-        StringBuilder surreal = new StringBuilder( "INSERT INTO " + Network.LOGS_NAME + " [" );
-        int i = 0;
-        for ( Node node : this.nodes.values() ) {
-            if ( node.nestedQueries.isEmpty() ) {
-                continue;
+        for ( List<Node> partNodes : Lists.partition( new ArrayList<>( nodes.values() ), docCreateBatch ) ) {
+            StringBuilder mongo = new StringBuilder( "db." + Network.LOGS_NAME + ".insertMany([" );
+            StringBuilder surreal = new StringBuilder( "INSERT INTO " + Network.LOGS_NAME + " [" );
+            int i = 0;
+            for ( Node node : partNodes ) {
+                if ( node.nestedQueries.isEmpty() ) {
+                    continue;
+                }
+                if ( i != 0 ) {
+                    mongo.append( ", " );
+                    surreal.append( ", " );
+                }
+
+                mongo.append( node.asMongos().get( 0 ) );
+                surreal.append( node.asMongos().get( 0 ) );
+                i++;
             }
-            if ( i != 0 ) {
-                mongo.append( ", " );
-                surreal.append( ", " );
+            if ( i == 0 ) {
+                return Collections.emptyList();
             }
 
-            mongo.append( node.asMongos().get( 0 ) );
-            surreal.append( node.asMongos().get( 0 ) );
-            i++;
-        }
-        if ( i == 0 ) {
-            return Collections.emptyList();
+            queries.add( RawQuery.builder()
+                    .mongoQl( mongo.append( "])" ).toString() )
+                    .surrealQl( surreal.append( "]" ).toString() )
+                    .types( Arrays.asList( QueryTypes.MODIFY, QueryTypes.DOCUMENT ) )
+                    .build() );
         }
 
-        queries.add( RawQuery.builder()
-                .mongoQl( mongo.append( "])" ).toString() )
-                .surrealQl( surreal.append( "]" ).toString() )
-                .types( Arrays.asList( QueryTypes.MODIFY, QueryTypes.DOCUMENT ) )
-                .build() );
 
         return queries;
     }
@@ -201,22 +204,27 @@ public class Graph {
     public static List<Query> buildRelInserts( int relCreateBatch, List<User> users, List<Node> nodes ) {
         List<Query> queries = new ArrayList<>();
 
-        String label = "user" + REL_POSTFIX;
-        String sqlLabel = "coms" + REL_POSTFIX + "." + label;
-        //// BUILD USER TABLE INSERTS
-        RawQueryBuilder builder = RawQuery.builder()
-                .sql( buildRelInsert( sqlLabel, User.getSql( users, User::userToSql ), User.userTypes ) )
-                .surrealQl( buildRelInsert( label, User.getSql( users, User::userToSql ), User.userTypes ) )
-                .types( Arrays.asList( QueryTypes.MODIFY, QueryTypes.RELATIONAL ) );
-        queries.add( builder.build() );
+        for ( List<User> partUsers : Lists.partition( users, relCreateBatch ) ) {
+            String label = "user" + REL_POSTFIX;
+            String sqlLabel = "coms" + REL_POSTFIX + "." + label;
+            //// BUILD USER TABLE INSERTS
+            RawQueryBuilder builder = RawQuery.builder()
+                    .sql( buildRelInsert( sqlLabel, User.getSql( partUsers, User::userToSql ), User.userTypes ) )
+                    .surrealQl( buildRelInsert( label, User.getSql( partUsers, User::userToSql ), User.userTypes ) )
+                    .types( Arrays.asList( QueryTypes.MODIFY, QueryTypes.RELATIONAL ) );
+            queries.add( builder.build() );
+        }
 
-        label = "login" + REL_POSTFIX;
-        sqlLabel = "coms" + REL_POSTFIX + "." + label;
-        builder = RawQuery.builder()
-                .sql( buildRelInsert( sqlLabel, Node.getLoginAsSql( nodes, Mode.POLYPHENY ), User.loginTypes ) )
-                .surrealQl( buildRelInsert( label, Node.getLoginAsSql( nodes, Mode.SURREALDB ), User.loginTypes ) )
-                .types( Arrays.asList( QueryTypes.MODIFY, QueryTypes.RELATIONAL ) );
-        queries.add( builder.build() );
+        for ( List<Node> partNodes : Lists.partition( nodes, relCreateBatch ) ) {
+            String label = "login" + REL_POSTFIX;
+            String sqlLabel = "coms" + REL_POSTFIX + "." + label;
+            RawQueryBuilder builder = RawQuery.builder()
+                    .sql( buildRelInsert( sqlLabel, Node.getLoginAsSql( partNodes, Mode.POLYPHENY ), User.loginTypes ) )
+                    .surrealQl( buildRelInsert( label, Node.getLoginAsSql( partNodes, Mode.SURREALDB ), User.loginTypes ) )
+                    .types( Arrays.asList( QueryTypes.MODIFY, QueryTypes.RELATIONAL ) );
+            queries.add( builder.build() );
+        }
+
 
         return queries;
     }
