@@ -156,12 +156,12 @@ public class MultiBenchConfig extends AbstractConfig {
 
             int numberOfWriteQueries = Double.valueOf( MultiBenchConfig.this.numberOfDocBenchQueries * writeRatio ).intValue();
 
-            //numberOfUpdateQueries = Double.valueOf(numberOfWriteQueries / 20.0 ).intValue();
-            numberOfUpdateQueries = 0;
+            numberOfUpdateQueries = Double.valueOf(numberOfWriteQueries / 50.0 ).intValue();
+            //numberOfUpdateQueries = 0;
             numberOfPutQueries = numberOfWriteQueries - numberOfUpdateQueries;
             numberOfFindQueries = MultiBenchConfig.this.numberOfDocBenchQueries - (numberOfUpdateQueries + numberOfPutQueries);
 
-            numberOfDocuments = 1_000_000;
+            numberOfDocuments = 500_000;
             minNumberOfAttributes = 5;
             maxNumberOfAttributes = 25;
             sizeOfAttributesPool = 500;
@@ -254,7 +254,7 @@ public class MultiBenchConfig extends AbstractConfig {
             listSize = 3;
 
             int numberOfWriteQueries = Double.valueOf( MultiBenchConfig.this.numberOfGraphBenchQueries * writeRatio ).intValue();
-            int numberOfReadQueries = numberOfGraphBenchQueries - numberOfWriteQueries;
+            int numberOfReadQueries = MultiBenchConfig.this.numberOfGraphBenchQueries - numberOfWriteQueries;
 
             // queries
             numberOfNodeFilterQueries = numberOfReadQueries / 4;
@@ -304,12 +304,12 @@ public class MultiBenchConfig extends AbstractConfig {
 
         private void settings() {
             int numberOfWriteQueries = Double.valueOf( MultiBenchConfig.this.numberOfGavelQueries * writeRatio ).intValue();
-            int numberOfReadQueries = numberOfGavelQueries - numberOfWriteQueries;
+            int numberOfReadQueries = MultiBenchConfig.this.numberOfGavelQueries - numberOfWriteQueries;
 
-            numberOfGetAuctionQueries = numberOfReadQueries / 5;
-            numberOfGetBidQueries = numberOfReadQueries / 5;
-            numberOfGetUserQueries = numberOfReadQueries / 5;
-            numberOfGetCurrentlyHighestBidOnAuctionQueries = numberOfReadQueries / 5;
+            numberOfGetAuctionQueries = numberOfReadQueries / 7;
+            numberOfGetBidQueries = numberOfReadQueries / 7;
+            numberOfGetUserQueries = numberOfReadQueries / 7;
+            numberOfGetCurrentlyHighestBidOnAuctionQueries = numberOfReadQueries / 7;
 
             int remaining = numberOfReadQueries - (numberOfGetAuctionQueries + numberOfGetBidQueries + numberOfGetUserQueries + numberOfGetCurrentlyHighestBidOnAuctionQueries);
 
@@ -323,15 +323,16 @@ public class MultiBenchConfig extends AbstractConfig {
 
             totalNumOfPriceBetweenAndNotInCategoryQueries = remaining / 8;
             totalNumOfHighestOverallBidQueries = remaining / 8;
-            totalNumOfTopHundredSellerByNumberOfAuctionsQueries = remaining - (numberOfGetAllBidsOnAuctionQueries + numberOfSearchAuctionQueries + numberOfCountAuctionsQueries + numberOfCountBidsQueries + numberOfTopTenCitiesByNumberOfCustomersQueries + totalNumOfPriceBetweenAndNotInCategoryQueries + totalNumOfHighestOverallBidQueries);
+            totalNumOfTopHundredSellerByNumberOfAuctionsQueries = remaining - (numberOfGetAllBidsOnAuctionQueries + numberOfSearchAuctionQueries + numberOfGetTheNextHundredEndingAuctionsOfACategoryQueries + numberOfCountAuctionsQueries + numberOfCountBidsQueries + numberOfTopTenCitiesByNumberOfCustomersQueries + totalNumOfPriceBetweenAndNotInCategoryQueries + totalNumOfHighestOverallBidQueries);
 
             // DML
-            numberOfAddAuctionQueries = (numberOfWriteQueries / 4) * 3;
-            remaining = numberOfWriteQueries - numberOfAddAuctionQueries;
+            numberOfAddBidQueries = (numberOfWriteQueries / 8) * 4;
+            numberOfAddAuctionQueries = (numberOfWriteQueries / 8) * 2;
+            remaining = numberOfWriteQueries - (numberOfAddBidQueries + numberOfAddAuctionQueries);
             numberOfChangePasswordQueries = remaining / 4;
             numberOfChangeAuctionQueries = remaining / 4;
-            numberOfAddUserQueries = remaining / 4;
-            numberOfAddBidQueries = remaining - (numberOfChangePasswordQueries + numberOfChangeAuctionQueries + numberOfAddUserQueries + numberOfAddBidQueries);
+            numberOfAddUserQueries =  remaining - (numberOfChangePasswordQueries + numberOfChangeAuctionQueries + numberOfAddUserQueries);
+
 
             // Data Generation
             numberOfUsers = 1_000;

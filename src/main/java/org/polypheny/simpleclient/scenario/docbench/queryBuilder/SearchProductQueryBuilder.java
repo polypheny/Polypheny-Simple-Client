@@ -48,7 +48,8 @@ public class SearchProductQueryBuilder extends QueryBuilder {
 
     @Override
     public Query getNewQuery() {
-        String attribute = "attribute" + random.nextInt( config.sizeOfAttributesPool );
+        //String attribute = "attribute" + random.nextInt( config.sizeOfAttributesPool );
+        String attribute = "attribute1";
         String value = valuesPool.get( random.nextInt( config.sizeOfValuesPool ) );
 
         // Find all products (documents) having a field with the name "attribute" and containing "value"

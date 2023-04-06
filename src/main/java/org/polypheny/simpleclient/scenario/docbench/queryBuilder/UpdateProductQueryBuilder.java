@@ -48,7 +48,8 @@ public class UpdateProductQueryBuilder extends QueryBuilder {
 
     @Override
     public Query getNewQuery() {
-        String attribute = "attribute" + random.nextInt( config.sizeOfAttributesPool );
+        //String attribute = "attribute" + random.nextInt( config.sizeOfAttributesPool );
+        String attribute = "attribute1";
         String value1 = valuesPool.get( random.nextInt( config.sizeOfValuesPool ) );
         String value2 = valuesPool.get( random.nextInt( config.sizeOfValuesPool ) );
 

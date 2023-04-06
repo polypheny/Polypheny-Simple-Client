@@ -161,14 +161,14 @@ public class MultiBench extends Scenario {
             knnBench.warmUp( progressReporter );
         }
 
-        if ( gavel != null ) {
-            log.info( "Gavel Warm-up..." );
-            gavel.warmUp( progressReporter );
-        }
-
         if ( graphBench != null ) {
             log.info( "GraphBench Warm-up..." );
             graphBench.warmUp( progressReporter );
+        }
+
+        if ( gavel != null ) {
+            log.info( "Gavel Warm-up..." );
+            gavel.warmUp( progressReporter );
         }
     }
 
@@ -177,10 +177,10 @@ public class MultiBench extends Scenario {
     public long execute( ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory, int numberOfThreads ) {
         long runtime = 0;
 
-        if ( graphBench != null ) {
+        if ( gavel != null ) {
             progressReporter.update( 0 );
-            log.info( "Executing GraphBench..." );
-            runtime += graphBench.execute( progressReporter, csvWriter, outputDirectory, numberOfThreads );
+            log.info( "Executing Gavel..." );
+            runtime += gavel.execute( progressReporter, csvWriter, outputDirectory, numberOfThreads );
         }
 
         if ( docBench != null ) {
@@ -195,10 +195,10 @@ public class MultiBench extends Scenario {
             runtime += knnBench.execute( progressReporter, csvWriter, outputDirectory, numberOfThreads );
         }
 
-        if ( gavel != null ) {
+        if ( graphBench != null ) {
             progressReporter.update( 0 );
-            log.info( "Executing Gavel..." );
-            runtime += gavel.execute( progressReporter, csvWriter, outputDirectory, numberOfThreads );
+            log.info( "Executing GraphBench..." );
+            runtime += graphBench.execute( progressReporter, csvWriter, outputDirectory, numberOfThreads );
         }
 
         return runtime;
