@@ -76,8 +76,8 @@ public class NetworkGenerator {
 
     /**
      * Network architecture relies on a low amount of main architecture
-     * with a low connectivity
-     * Depending on size of users a amount of Switches and APs is deploy.
+     * with a low connectivity.
+     * Depending on size of users, switches and APs are deployed.
      *
      * @param config
      */
@@ -337,12 +337,7 @@ public class NetworkGenerator {
          *   },
          * }
          * </pre></code>
-         *
-         * @param random
-         * @param nestingDepth
-         * @return
          */
-
         public static JsonObject generateNestedLogProperties( Random random, int nestingDepth ) {
             JsonObject object = new JsonObject();
 
@@ -561,7 +556,6 @@ public class NetworkGenerator {
             usersTask.add( new Pair<>( User::getComplex2, 4 * config.olapRate ) );
 
             for ( int i = 0; i < 3 + random.nextInt( 10 ); i++ ) {
-
                 for ( int j = 0; j < 1 + random.nextInt( config.readQueries ); j++ ) {
                     int randomElement;
                     int randomType;
@@ -602,9 +596,7 @@ public class NetworkGenerator {
                             queries.addAll( elementsTask.apply( selectedElement.get( randomElement ) ) );
                             break;
                     }
-
                 }
-
             }
         }
 
@@ -635,7 +627,6 @@ public class NetworkGenerator {
             for ( List<? extends Node> nodes : Arrays.asList( mobiles, ioTs, pcs, aps, servers ) ) {
                 queries.addAll( doRandomly( nodes, nodes.size() * config.newDevice, e -> addElement( e, (List<Node>) nodes ) ) );
             }
-
         }
 
 
@@ -686,9 +677,7 @@ public class NetworkGenerator {
                     queries.addAll( wlan.asQuery() );
                     wlans.add( wlan );
                 }
-
             }
-
             return queries;
         }
 
@@ -739,7 +728,6 @@ public class NetworkGenerator {
 
 
         private <E extends GraphElement> String summarize( List<E> elements ) {
-
             double avgGraph = elements.stream().mapToInt( e -> e.getDynProperties().size() ).average().orElse( 0d );
             double avgDoc = elements.stream().filter( e -> e instanceof Node ).map( e -> (Node) e ).mapToInt( e -> e.getNestedQueries().size() ).average().orElse( 0 ); // only Node do have this
             return "{ avgGraphProps: " + Precision.round( avgGraph, 2 ) + ", avgDocProps: " + Precision.round( avgDoc, 2 ) + " }";

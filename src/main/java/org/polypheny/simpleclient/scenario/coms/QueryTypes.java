@@ -46,4 +46,5 @@ public enum QueryTypes {
     QueryTypes( int i ) {
         this.i = i;
     }
+
 }

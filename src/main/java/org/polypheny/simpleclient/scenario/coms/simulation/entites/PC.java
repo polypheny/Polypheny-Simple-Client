@@ -29,9 +29,9 @@ import java.util.List;
 import java.util.Random;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
-import org.polypheny.simpleclient.scenario.coms.simulation.entites.Graph.Node;
 import org.polypheny.simpleclient.scenario.coms.simulation.NetworkGenerator.Device;
 import org.polypheny.simpleclient.scenario.coms.simulation.NetworkGenerator.Network;
+import org.polypheny.simpleclient.scenario.coms.simulation.entites.Graph.Node;
 
 @EqualsAndHashCode(callSuper = true)
 @Value
@@ -41,9 +41,10 @@ public class PC extends Node {
 
 
     public PC( Random random, Network network ) {
-        super(
-                Network.generateProperties( random, Network.config.pcDynConfigsMax ),
-                Network.generateNestedLogProperties( random, Network.config.nestingDepth ), network, true );
+        super( Network.generateProperties( random, Network.config.pcDynConfigsMax ),
+                Network.generateNestedLogProperties( random, Network.config.nestingDepth ),
+                network,
+                true );
         this.random = random;
     }
 

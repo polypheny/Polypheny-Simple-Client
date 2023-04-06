@@ -55,7 +55,6 @@ public class SurrealDBExecutor implements Executor {
 
 
     private void floatDB() {
-
         for ( int i = 0; i < 1; i++ ) {
             String data = "CREATE person CONTENT {\n"
                     + "\tname: 'Tobie',\n"
@@ -76,7 +75,6 @@ public class SurrealDBExecutor implements Executor {
             }
         }
         log.warn( "success" );
-
     }
 
 
@@ -87,16 +85,13 @@ public class SurrealDBExecutor implements Executor {
         } catch ( Exception e ) {
             throw new ExecutorException( e );
         }
-
     }
 
 
     @Override
     public long executeQuery( Query query ) throws ExecutorException {
         long start = System.nanoTime();
-
         execute( query.getSurrealQl() );
-
         return System.nanoTime() - start;
     }
 
@@ -117,7 +112,6 @@ public class SurrealDBExecutor implements Executor {
         } catch ( UnirestException e ) {
             throw new RuntimeException( e );
         }
-
     }
 
 
@@ -226,7 +220,6 @@ public class SurrealDBExecutor implements Executor {
             } catch ( InterruptedException | IOException e ) {
                 throw new RuntimeException( e );
             }
-
         }
 
 
@@ -253,6 +246,5 @@ public class SurrealDBExecutor implements Executor {
         }
 
     }
-
 
 }

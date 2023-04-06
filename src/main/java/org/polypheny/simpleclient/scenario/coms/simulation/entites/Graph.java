@@ -72,7 +72,6 @@ public class Graph {
 
 
     public List<Query> getGraphQueries( int graphCreateBatch ) {
-
         Pair<List<String>, List<String>> nodes = buildNodeQueries( this.nodes, graphCreateBatch );
         Pair<List<String>, List<String>> edges = buildEdgeQueries( this.edges, graphCreateBatch );
 
@@ -120,7 +119,6 @@ public class Graph {
 
         }
         return new Pair<>( cyphers, surrealDBs );
-
     }
 
 
@@ -190,7 +188,6 @@ public class Graph {
                     .build() );
         }
 
-
         return queries;
     }
 
@@ -224,7 +221,6 @@ public class Graph {
                     .types( Arrays.asList( QueryTypes.MODIFY, QueryTypes.RELATIONAL ) );
             queries.add( builder.build() );
         }
-
 
         return queries;
     }
@@ -554,8 +550,6 @@ public class Graph {
 
         /**
          * Identify the top 10 most common errors
-         *
-         * @return
          */
         public List<Query> getComplex1() {
             String mongo = "db.%s.aggregate([\n"
@@ -580,8 +574,6 @@ public class Graph {
 
         /**
          * Calculate the percentage of errors caused by each user
-         *
-         * @return
          */
         public List<Query> getComplex2() {
             String mongo = "db.%s.aggregate([\n"
@@ -730,7 +722,6 @@ public class Graph {
                             .types( Arrays.asList( QueryTypes.RELATIONAL, QueryTypes.MODIFY ) )
                             .build()
             );
-
         }
 
 

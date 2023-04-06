@@ -55,7 +55,7 @@ public class User {
     public static final AtomicLong idBuilder = new AtomicLong();
 
 
-    public static Map<String, PropertyType> userTypes = new HashMap<String, PropertyType>() {{
+    public static Map<String, PropertyType> userTypes = new HashMap<>() {{
         put( "id", new PropertyType( 5, Type.NUMBER ) );
         put( "firstname", new PropertyType( 12, Type.CHAR ) );
         put( "lastname", new PropertyType( 12, Type.CHAR ) );
@@ -64,7 +64,7 @@ public class User {
     }};
 
 
-    public static Map<String, PropertyType> loginTypes = new HashMap<String, PropertyType>() {{
+    public static Map<String, PropertyType> loginTypes = new HashMap<>() {{
         put( "userid", new PropertyType( 5, Type.NUMBER ) );
         put( "accesstime", new PropertyType( 5, Type.TIMESTAMP ) );
         put( "deviceid", new PropertyType( 5, Type.NUMBER ) );
@@ -198,11 +198,8 @@ public class User {
 
     /**
      * Successful logins by user and by month
-     *
-     * @return
      */
     public List<Query> getComplex1() {
-
         String sql = "SELECT \n"
                 + "    userid, \n"
                 + "    YEAR(accesstime) AS Years, \n"
@@ -240,7 +237,6 @@ public class User {
 
 
     public List<Query> getComplex2() {
-
         String sql = "SELECT \n"
                 + "    userid, \n"
                 + "    HOUR(accesstime) AS hours, \n"

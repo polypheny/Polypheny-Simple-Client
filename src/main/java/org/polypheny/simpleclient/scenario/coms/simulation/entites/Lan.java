@@ -29,9 +29,9 @@ import java.util.List;
 import java.util.Random;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
-import org.polypheny.simpleclient.scenario.coms.simulation.entites.Graph.Edge;
 import org.polypheny.simpleclient.scenario.coms.simulation.NetworkGenerator.Device;
 import org.polypheny.simpleclient.scenario.coms.simulation.NetworkGenerator.Network;
+import org.polypheny.simpleclient.scenario.coms.simulation.entites.Graph.Edge;
 
 @EqualsAndHashCode(callSuper = true)
 @Value
@@ -41,8 +41,7 @@ public class Lan extends Edge {
 
 
     public Lan( long from, long to, boolean directed, Random random ) {
-        super(
-                Network.generateProperties( random, Network.config.connectionConfigs ),
+        super( Network.generateProperties( random, Network.config.connectionConfigs ),
                 from,
                 to,
                 directed );

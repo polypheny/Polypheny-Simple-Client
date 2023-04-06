@@ -55,7 +55,13 @@ public class PropertyType {
 
 
     public enum Type {
-        CHAR( "VARCHAR(", ")" ), FLOAT( "DOUBLE" ), NUMBER( "INT" ), ARRAY( "ARRAY" ), OBJECT( "" ), BOOLEAN( "BOOLEAN" ), TIMESTAMP( "TIMESTAMP" );
+        CHAR( "VARCHAR(", ")" ),
+        FLOAT( "DOUBLE" ),
+        NUMBER( "INT" ),
+        ARRAY( "ARRAY" ),
+        OBJECT( "" ),
+        BOOLEAN( "BOOLEAN" ),
+        TIMESTAMP( "TIMESTAMP" );
 
 
         private final String start;
@@ -80,9 +86,11 @@ public class PropertyType {
                 case BOOLEAN:
                     return new JsonPrimitive( random.nextBoolean() );
                 case FLOAT:
-                    return new JsonPrimitive( NetworkGenerator.Network.config.allowNegative ? random.nextFloat() : Math.abs( random.nextFloat() * 1000 ) );
+                    float fval = random.nextFloat() * 1000;
+                    return new JsonPrimitive( NetworkGenerator.Network.config.allowNegative ? fval : Math.abs( fval ) );
                 case NUMBER:
-                    return new JsonPrimitive( NetworkGenerator.Network.config.allowNegative ? random.nextInt() : Math.abs( random.nextInt( 5 ) ) );
+                    int ival = random.nextInt() * 5;
+                    return new JsonPrimitive( NetworkGenerator.Network.config.allowNegative ? ival : Math.abs( ival ) );
                 case ARRAY:
                     JsonArray array = new JsonArray();
                     int fill = random.nextInt( 10 );

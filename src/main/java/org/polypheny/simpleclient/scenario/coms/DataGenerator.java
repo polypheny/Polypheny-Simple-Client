@@ -32,8 +32,8 @@ import org.polypheny.simpleclient.executor.ExecutorException;
 import org.polypheny.simpleclient.main.ProgressBar;
 import org.polypheny.simpleclient.main.ProgressReporter;
 import org.polypheny.simpleclient.query.Query;
-import org.polypheny.simpleclient.scenario.coms.simulation.entites.Graph;
 import org.polypheny.simpleclient.scenario.coms.simulation.NetworkGenerator;
+import org.polypheny.simpleclient.scenario.coms.simulation.entites.Graph;
 
 @Slf4j
 public class DataGenerator {

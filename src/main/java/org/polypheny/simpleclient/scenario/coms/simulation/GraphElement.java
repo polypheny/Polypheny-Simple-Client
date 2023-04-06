@@ -49,7 +49,6 @@ import org.polypheny.simpleclient.scenario.coms.simulation.entites.Graph.Node;
 @NonFinal
 public abstract class GraphElement {
 
-
     public long id = Network.idBuilder.getAndIncrement();
 
     public static final String namespace = "coms";
