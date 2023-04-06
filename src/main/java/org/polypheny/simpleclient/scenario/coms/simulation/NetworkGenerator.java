@@ -41,6 +41,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -746,9 +747,8 @@ public class NetworkGenerator {
 
 
         public LocalDateTime createRandomTimestamp() {
-            long date = random.nextLong( startDay, endDay );
-
-            return LocalDate.ofEpochDay( date ).atTime( LocalTime.of( random.nextInt( 3, 23 ), random.nextInt( 0, 60 ) ) );
+            long date = ThreadLocalRandom.current().nextLong( startDay, endDay );
+            return LocalDate.ofEpochDay( date ).atTime( LocalTime.of( ThreadLocalRandom.current().nextInt( 3, 23 ), ThreadLocalRandom.current().nextInt( 0, 60 ) ) );
         }
 
     }

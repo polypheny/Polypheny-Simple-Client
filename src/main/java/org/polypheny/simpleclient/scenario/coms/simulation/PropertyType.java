@@ -34,7 +34,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
 import lombok.Value;
-import org.polypheny.simpleclient.scenario.coms.simulation.NetworkGenerator.Network;
+
 
 @Value
 public class PropertyType {
@@ -80,9 +80,9 @@ public class PropertyType {
                 case BOOLEAN:
                     return new JsonPrimitive( random.nextBoolean() );
                 case FLOAT:
-                    return new JsonPrimitive( Network.config.allowNegative ? random.nextFloat() : random.nextFloat( 0, 1000 ) );
+                    return new JsonPrimitive( NetworkGenerator.Network.config.allowNegative ? random.nextFloat() : Math.abs( random.nextFloat() * 1000 ) );
                 case NUMBER:
-                    return new JsonPrimitive( Network.config.allowNegative ? random.nextInt() : random.nextInt( 0, 5 ) );
+                    return new JsonPrimitive( NetworkGenerator.Network.config.allowNegative ? random.nextInt() : Math.abs( random.nextInt( 5 ) ) );
                 case ARRAY:
                     JsonArray array = new JsonArray();
                     int fill = random.nextInt( 10 );
@@ -129,11 +129,13 @@ public class PropertyType {
                 case CHAR:
                     return "'value" + random.nextInt( size ) + "'";
                 case FLOAT:
-                    return String.valueOf( Network.config.allowNegative ? random.nextFloat( 5 ) : random.nextFloat( 0, 5 ) );
+                    float fval = random.nextFloat() * 5;
+                    return String.valueOf( NetworkGenerator.Network.config.allowNegative ? fval : Math.abs( fval ) );
                 case BOOLEAN:
                     return String.valueOf( random.nextBoolean() );
                 case NUMBER:
-                    return String.valueOf( Network.config.allowNegative ? random.nextInt( 1000 ) : random.nextInt( 0, 1000 ) );
+                    int ival = random.nextInt() * 1000;
+                    return String.valueOf( NetworkGenerator.Network.config.allowNegative ? ival : Math.abs( ival ) );
                 case ARRAY:
                     List<String> array = new ArrayList<>();
                     int fill = random.nextInt( 10 );
@@ -177,6 +179,5 @@ public class PropertyType {
             throw new RuntimeException();
         }
     }
-
 
 }

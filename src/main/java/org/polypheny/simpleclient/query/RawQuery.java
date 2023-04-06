@@ -52,7 +52,6 @@ public class RawQuery extends Query {
     private final String surrealQl;
 
     @Getter
-    @Builder.Default
     private List<QueryTypes> types = Collections.emptyList();
 
 
