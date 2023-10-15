@@ -25,7 +25,14 @@
 package org.polypheny.simpleclient.executor;
 
 import com.google.gson.JsonObject;
-import kong.unirest.*;
+import java.io.IOException;
+import java.util.Locale;
+import java.util.function.Function;
+import kong.unirest.HttpRequest;
+import kong.unirest.HttpResponse;
+import kong.unirest.JsonNode;
+import kong.unirest.Unirest;
+import kong.unirest.UnirestException;
 import kong.unirest.json.JSONArray;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -34,10 +41,6 @@ import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.query.MultipartInsert;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.RawQuery;
-
-import java.io.IOException;
-import java.util.Locale;
-import java.util.function.Function;
 
 
 @Slf4j
@@ -179,7 +182,7 @@ public abstract class PolyphenyDbHttpExecutor implements PolyphenyDbExecutor {
     HttpRequest<?> buildQuery( String mql, String namespace ) {
         JsonObject data = new JsonObject();
         data.addProperty( "query", mql );
-        data.addProperty( "database", namespace );
+        data.addProperty( "namespace", namespace );
 
         return Unirest.post( "{protocol}://{host}:{port}/" + name.toLowerCase( Locale.ROOT ) )
                 .header( "Content-Type", "application/json" )
