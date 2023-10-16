@@ -55,7 +55,7 @@ public class PolyphenyDbCypherExecutor extends PolyphenyDbHttpExecutor {
     protected HttpRequest<?> buildQuery( String query, String namespace ) {
         JsonObject data = new JsonObject();
         data.addProperty( "query", query );
-        data.addProperty( "database", namespace );
+        data.addProperty( "namespace", namespace );
         return Unirest.post( "{protocol}://{host}:{port}/cypher" )
                 .header( "Content-Type", "application/json" )
                 .body( data );
@@ -91,8 +91,8 @@ public class PolyphenyDbCypherExecutor extends PolyphenyDbHttpExecutor {
 
             rows.add( Objects.requireNonNull( query.getCypherRowExpression() ) );
         }
-        if ( rows.size() > 0 ) {
-            executeQuery( RawQuery.builder().mongoQl( Query.buildCypherManyInsert( rows ) ).build() );
+        if ( !rows.isEmpty() ) {
+            executeQuery( RawQuery.builder().cypher( Query.buildCypherManyInsert( rows ) ).build() );
         }
     }
 
