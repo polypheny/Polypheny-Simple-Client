@@ -55,7 +55,7 @@ public class PolyphenyDbCypherExecutor extends PolyphenyDbHttpExecutor {
     protected HttpRequest<?> buildQuery( String query, String namespace ) {
         JsonObject data = new JsonObject();
         data.addProperty( "query", query );
-        data.addProperty( "namespace", namespace );
+        data.addProperty( "database", namespace );
         return Unirest.post( "{protocol}://{host}:{port}/cypher" )
                 .header( "Content-Type", "application/json" )
                 .body( data );

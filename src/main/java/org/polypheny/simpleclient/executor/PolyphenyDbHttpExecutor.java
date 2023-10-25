@@ -182,7 +182,7 @@ public abstract class PolyphenyDbHttpExecutor implements PolyphenyDbExecutor {
     HttpRequest<?> buildQuery( String mql, String namespace ) {
         JsonObject data = new JsonObject();
         data.addProperty( "query", mql );
-        data.addProperty( "namespace", namespace );
+        data.addProperty( "database", namespace );
 
         return Unirest.post( "{protocol}://{host}:{port}/" + name.toLowerCase( Locale.ROOT ) )
                 .header( "Content-Type", "application/json" )

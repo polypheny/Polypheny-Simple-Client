@@ -151,7 +151,7 @@ public class PolyphenyDbMongoQlExecutor extends PolyphenyDbHttpExecutor {
                 throw new RuntimeException( "Different tables in multi-inserts. This should not happen!" );
             }
         }
-        if ( documents.size() > 0 ) {
+        if ( !documents.isEmpty() ) {
             executeQuery( RawQuery.builder().mongoQl( Query.buildMongoQlManyInsert( currentDocument, documents ) ).build() );
         }
     }
