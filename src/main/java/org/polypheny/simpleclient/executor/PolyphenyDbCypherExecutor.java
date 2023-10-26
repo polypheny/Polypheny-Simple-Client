@@ -91,8 +91,8 @@ public class PolyphenyDbCypherExecutor extends PolyphenyDbHttpExecutor {
 
             rows.add( Objects.requireNonNull( query.getCypherRowExpression() ) );
         }
-        if ( rows.size() > 0 ) {
-            executeQuery( RawQuery.builder().mongoQl( Query.buildCypherManyInsert( rows ) ).build() );
+        if ( !rows.isEmpty() ) {
+            executeQuery( RawQuery.builder().cypher( Query.buildCypherManyInsert( rows ) ).build() );
         }
     }
 
