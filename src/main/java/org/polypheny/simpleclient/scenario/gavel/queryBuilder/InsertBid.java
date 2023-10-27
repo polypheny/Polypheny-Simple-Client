@@ -105,7 +105,7 @@ public class InsertBid extends QueryBuilder {
                     + amount + ","
                     + "timestamp '" + date.format( DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss" ) ) + "',"
                     + userId + ","
-                    + auctionId // This could gets a bug if e.g. parallelized
+                    + auctionId // This could become a bug if e.g. parallelized
                     + ")";
         }
 

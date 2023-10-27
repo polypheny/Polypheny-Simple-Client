@@ -62,7 +62,7 @@ import org.polypheny.simpleclient.scenario.graph.GraphBench.EvaluationThreadMoni
 public class Coms extends Scenario {
 
     public static final String NAMESPACE = "coms";
-    public static final double EPSILLON = 0.000001;
+    public static final double EPSILON = 0.000001;
 
     private final Random random;
     private final ComsConfig config;
@@ -256,7 +256,7 @@ public class Coms extends Scenario {
         int i = 0;
         float amount = 0;
         for ( int t : threadDistribution ) {
-            if ( (amount + (part * t) > (1 - EPSILLON)) && (1 - amount > (part * t) / 2) ) {
+            if ( (amount + (part * t) > (1 - EPSILON)) && (1 - amount > (part * t) / 2) ) {
                 // execute in new Thread, "significantly" bigger than 1
                 organized.add( queryLists[i] );
                 amount += (part * t);

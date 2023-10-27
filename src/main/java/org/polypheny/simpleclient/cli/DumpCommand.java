@@ -44,7 +44,7 @@ import lombok.extern.slf4j.Slf4j;
 
 
 @Slf4j
-@Command(name = "dump", description = "Dump tupels of an entity to a file.")
+@Command(name = "dump", description = "Dump tuples of an entity to a file.")
 public class DumpCommand implements CliRunnable {
 
     @SuppressWarnings("SpringAutowiredFieldsWarningInspection")

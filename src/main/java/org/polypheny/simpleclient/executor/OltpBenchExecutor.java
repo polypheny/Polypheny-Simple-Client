@@ -87,7 +87,7 @@ public abstract class OltpBenchExecutor implements Executor {
     @Override
     public long executeQueryAndGetNumber( Query query ) throws ExecutorException {
         throw new ExecutorException( "Unsupported Operation" );
-    };
+    }
 
 
     @Override

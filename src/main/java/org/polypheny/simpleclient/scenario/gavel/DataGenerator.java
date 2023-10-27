@@ -173,9 +173,9 @@ class DataGenerator {
             LocalDateTime dt;
             LocalDateTime dtLast = startDate;
 
-            // Bids should be in a temporal order. In order to avoid the case where it randomly pics the end date we calculate
-            // an offset of seconds we need to add to the end data in every iteration. This leeds to a somehow even distribution of the
-            // bits over time.
+            // Bids should be in a temporal order. In order to avoid the case where it randomly picks the end date we calculate
+            // an offset of seconds we need to add to the end data in every iteration. This leeds to a somehow even distribution
+            // of the bits over time.
             long difference = ChronoUnit.SECONDS.between( startDate, endDate );
             long offset = difference / numberOfBids;
 

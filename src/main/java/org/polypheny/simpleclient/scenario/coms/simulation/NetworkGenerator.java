@@ -78,8 +78,6 @@ public class NetworkGenerator {
      * Network architecture relies on a low amount of main architecture
      * with a low connectivity.
      * Depending on size of users, switches and APs are deployed.
-     *
-     * @param config
      */
     public NetworkGenerator( ComsConfig config ) {
         this.random = new Random( config.seed );

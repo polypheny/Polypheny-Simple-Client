@@ -24,14 +24,13 @@
 
 package org.polypheny.simpleclient.executor;
 
+import java.io.File;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.control.client.PolyphenyControlConnector;
 import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.scenario.AbstractConfig;
 import org.polypheny.simpleclient.scenario.oltpbench.AbstractOltpBenchConfig;
-
-import java.io.File;
 
 
 @Slf4j

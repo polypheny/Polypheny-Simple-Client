@@ -24,13 +24,12 @@
 
 package org.polypheny.simpleclient.executor;
 
-import lombok.extern.slf4j.Slf4j;
-import org.polypheny.simpleclient.main.CsvWriter;
-import org.polypheny.simpleclient.query.RawQuery;
-
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
+import lombok.extern.slf4j.Slf4j;
+import org.polypheny.simpleclient.main.CsvWriter;
+import org.polypheny.simpleclient.query.RawQuery;
 
 
 @Slf4j

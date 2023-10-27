@@ -75,7 +75,6 @@ public class GraphBench extends Scenario {
 
     private final GraphBenchConfig config;
 
-    ;
     private long executeRuntime;
     private final Map<Integer, String> queryTypes;
 
