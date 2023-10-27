@@ -1,6 +1,6 @@
 # Polypheny Simple Client
 
-A simple benchmarking and testing client for Polypheny-DB. It includes support for three benchmarks:
+A simple benchmarking and testing client for Polypheny-DB. It includes support for the following benchmarks:
 
 * **Gavel**: The Gavel benchmark simulates the workload of a fictional auction house.
 * **kNN-Bench**: A benchmark tailored towards typical workloads of multimedia retrieval applications and especially k-Nearest-Neighbor search.

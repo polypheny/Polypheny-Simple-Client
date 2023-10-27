@@ -3,7 +3,7 @@ description = "A lightweight Polypheny-DB benchmarking client"
 
 def versionMajor = 4
 def versionMinor = 1
-def versionQualifier = ""
+def versionQualifier = "-SNAPSHOT"
 version = versionMajor + "." + versionMinor + versionQualifier
 
 
@@ -11,20 +11,20 @@ buildscript {
     repositories {
         mavenCentral()
         maven {
-            url "https://plugins.gradle.org/m2/"
+            url = uri("https://plugins.gradle.org/m2/")
         }
     }
     dependencies {
         // Shadowing; used to make a fat jar (https://github.com/johnrengelman/shadow)
-        classpath group: "gradle.plugin.com.github.johnrengelman", name: "shadow", version: "7.1.2"
+        classpath group: "com.github.johnrengelman", name: "shadow", version: "8.1.1"
         // Lombok (https://plugins.gradle.org/plugin/io.freefair.lombok)
-        classpath group: "io.freefair.gradle", name: "lombok-plugin", version: "8.0.1"
+        classpath group: "io.freefair.gradle", name: "lombok-plugin", version: "8.4"
         // https://plugins.gradle.org/plugin/org.jetbrains.gradle.plugin.idea-ext
         classpath group: "gradle.plugin.org.jetbrains.gradle.plugin.idea-ext", name: "gradle-idea-ext", version: "1.1.7"
         // licensee plugin
-        classpath group: "app.cash.licensee", name: "licensee-gradle-plugin", version: "1.6.0"
+        classpath group: "app.cash.licensee", name: "licensee-gradle-plugin", version: "1.8.0"
         // license report
-        classpath group: "com.jaredsburrows", name: "gradle-license-plugin", version: "0.9.0"
+        classpath group: "com.jaredsburrows", name: "gradle-license-plugin", version: "0.9.3"
     }
 }
 
@@ -43,7 +43,7 @@ apply plugin: 'app.cash.licensee'
 apply plugin: "com.jaredsburrows.license"
 
 
-tasks.withType(JavaCompile) {
+tasks.withType(JavaCompile).configureEach {
     options.encoding = "UTF-8"
 }
 
@@ -74,7 +74,7 @@ dependencies {
     implementation group: 'com.konghq', name: 'unirest-java', version: '3.13.10' // License: MIT
 
     // JDBC Drivers
-    implementation group: 'org.polypheny', name: 'polypheny-jdbc-driver', version: '1.5.2' // License: Apache 2.0
+    implementation group: 'org.polypheny', name: 'polypheny-jdbc-driver', version: '1.5.3' // License: Apache 2.0
     implementation group: 'org.postgresql', name: 'postgresql', version: '42.3.3'
     implementation group: 'monetdb', name: 'monetdb-jdbc', version: '2.29' // License: Mozilla Public License 2.0
 
@@ -96,7 +96,7 @@ dependencies {
     implementation group: 'org.jcodec', name: 'jcodec-javase', version: '0.2.5' // License: BSD-2-Clause License
 
     // CSV
-    implementation group: 'com.opencsv', name: 'opencsv', version: '5.0' // License: Apache 2.0
+    implementation group: 'com.opencsv', name: 'opencsv', version: '5.8' // License: Apache 2.0
 
     // Logging
     implementation group: 'org.slf4j', name: 'slf4j-api', version: '1.7.36' // License: MIT
@@ -104,10 +104,10 @@ dependencies {
     implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.17.2' // License: Apache 2.0
 
     // Extracting ZIPs
-    implementation group: 'net.lingala.zip4j', name: 'zip4j', version: '2.10.0'
+    implementation group: 'net.lingala.zip4j', name: 'zip4j', version: '2.11.5'
 
     // Testing
-    testImplementation group: 'junit', name: 'junit', version: '4.13.1'
+    testImplementation group: 'junit', name: 'junit', version: '4.13.2'
 }
 
 
@@ -165,7 +165,7 @@ jar {
         attributes "Multi-Release": "true"
         attributes "Implementation-Version": project.version
     }
-}
+}/*
 task sourcesJar(type: Jar, dependsOn: classes) {
     classifier "sources"
     from sourceSets.main.allSource
@@ -173,10 +173,10 @@ task sourcesJar(type: Jar, dependsOn: classes) {
 task javadocJar(type: Jar, dependsOn: javadoc) {
     classifier "javadoc"
     from javadoc.destinationDir
-}
+}*/
 shadowJar {
     zip64 true
-    classifier ""
+    archiveClassifier.set('')
     mergeServiceFiles {
         setPath("META-INF/services")
         include("io.grpc.*")
@@ -186,8 +186,8 @@ assemble.dependsOn shadowJar
 artifacts {
     //archives jar // regular jar containing only the compiled source
     archives shadowJar // fat jar which additionally contains all dependencies
-    archives sourcesJar // jar file containing the java doc files
-    archives javadocJar // jar file containing the source files
+    //archives sourcesJar // jar file containing the java doc files
+    //archives javadocJar // jar file containing the source files
 }
 
 
