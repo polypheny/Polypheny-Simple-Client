@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 
-<Configuration packages="org.polypheny.simpleclient.main" status="INFO">
+<Configuration status="INFO">
     <Appenders>
         <Console name="ConsoleAppender" target="SYSTEM_OUT" follow="true">
             <PatternLayout pattern="%highlight{%d{HH:mm:ss.SSS} %level [%t]: %msg%n}{FATAL=bg_red, ERROR=red, WARN=yellow bold, INFO=black, DEBUG=green bold, TRACE=blue}" disableAnsi="false"/>
