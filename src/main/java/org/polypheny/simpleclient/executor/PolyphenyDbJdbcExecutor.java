@@ -35,8 +35,6 @@ import org.polypheny.simpleclient.query.RawQuery;
 @Slf4j
 public class PolyphenyDbJdbcExecutor extends JdbcExecutor implements PolyphenyDbExecutor {
 
-    private boolean useNewDeploySyntax = false;
-
 
     private PolyphenyDbJdbcExecutor( String polyphenyHost, CsvWriter csvWriter, boolean prepareStatements ) {
         super( csvWriter, prepareStatements );
@@ -93,18 +91,6 @@ public class PolyphenyDbJdbcExecutor extends JdbcExecutor implements PolyphenyDb
         } catch ( ExecutorException e ) {
             log.error( "Exception while setting config \"" + key + "\"!", e );
         }
-    }
-
-
-    @Override
-    public void setNewDeploySyntax( boolean useNewDeploySyntax ) {
-        this.useNewDeploySyntax = useNewDeploySyntax;
-    }
-
-
-    @Override
-    public boolean useNewDeploySyntax() {
-        return useNewDeploySyntax;
     }
 
 

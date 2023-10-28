@@ -58,8 +58,6 @@ public abstract class PolyphenyDbHttpExecutor implements PolyphenyDbExecutor {
     protected final PolyphenyDbJdbcExecutorFactory jdbcExecutorFactory;
     protected final CsvWriter csvWriter;
 
-    private boolean useNewDeploySyntax = false;
-
 
     public PolyphenyDbHttpExecutor(String name, Function<Query, String> queryAccessor, String host, CsvWriter csvWriter) {
         this.name = name;
@@ -197,16 +195,6 @@ public abstract class PolyphenyDbHttpExecutor implements PolyphenyDbExecutor {
         request.routeParam("host", "127.0.0.1");
         request.routeParam("port", "13137");
         return request;
-    }
-
-
-    public void setNewDeploySyntax(boolean useNewDeploySyntax) {
-        this.useNewDeploySyntax = useNewDeploySyntax;
-    }
-
-    @Override
-    public boolean useNewDeploySyntax() {
-        return useNewDeploySyntax;
     }
 
 

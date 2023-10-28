@@ -38,7 +38,6 @@ public class OltpBenchPolyphenyDbExecutor extends OltpBenchExecutor implements P
 
     private final PolyphenyDbJdbcExecutorFactory jdbcExecutorFactory;
     private final String host;
-    private boolean useNewDeploySyntax = false;
 
 
     public OltpBenchPolyphenyDbExecutor( String host ) {
@@ -140,16 +139,6 @@ public class OltpBenchPolyphenyDbExecutor extends OltpBenchExecutor implements P
                 log.error("Exception while closing JDBC executor", e);
             }
         }
-    }
-
-    @Override
-    public void setNewDeploySyntax(boolean useNewDeploySyntax) {
-        this.useNewDeploySyntax = useNewDeploySyntax;
-    }
-
-    @Override
-    public boolean useNewDeploySyntax() {
-        return useNewDeploySyntax;
     }
 
 

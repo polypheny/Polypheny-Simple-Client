@@ -212,19 +212,6 @@ public class PolyphenyDbMultiExecutorFactory extends ExecutorFactory {
             jdbc.setConfig( key, value );
         }
 
-
-        @Override
-        public void setNewDeploySyntax( boolean useNewDeploySyntax ) {
-            jdbc.setNewDeploySyntax( useNewDeploySyntax );
-        }
-
-
-        @Override
-        public boolean useNewDeploySyntax() {
-            return jdbc.useNewDeploySyntax();
-        }
-
-
     }
 
 }

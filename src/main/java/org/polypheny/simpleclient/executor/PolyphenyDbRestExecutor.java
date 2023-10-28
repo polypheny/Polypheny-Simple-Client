@@ -53,8 +53,6 @@ public class PolyphenyDbRestExecutor implements PolyphenyDbExecutor {
 
     private final CsvWriter csvWriter;
 
-    private boolean useNewDeploySyntax = false;
-
 
     public PolyphenyDbRestExecutor(String host, CsvWriter csvWriter) {
         super();
@@ -278,16 +276,6 @@ public class PolyphenyDbRestExecutor implements PolyphenyDbExecutor {
                 log.error("Exception while closing JDBC executor", e);
             }
         }
-    }
-
-    @Override
-    public void setNewDeploySyntax(boolean useNewDeploySyntax) {
-        this.useNewDeploySyntax = useNewDeploySyntax;
-    }
-
-    @Override
-    public boolean useNewDeploySyntax() {
-        return useNewDeploySyntax;
     }
 
 

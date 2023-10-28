@@ -60,6 +60,7 @@ import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.PolyphenyDbJd
 import org.polypheny.simpleclient.executor.PolyphenyDbMongoQlExecutor.PolyphenyDbMongoQlExecutorFactory;
 import org.polypheny.simpleclient.executor.PolyphenyDbMultiExecutorFactory;
 import org.polypheny.simpleclient.executor.PolyphenyDbRestExecutor.PolyphenyDbRestExecutorFactory;
+import org.polypheny.simpleclient.executor.PolyphenyVersionSwitch;
 import org.polypheny.simpleclient.executor.PostgresExecutor.PostgresExecutorFactory;
 import org.polypheny.simpleclient.executor.PostgresExecutor.PostgresInstance;
 import org.polypheny.simpleclient.executor.SurrealDBExecutor.SurrealDBExecutorFactory;
@@ -382,12 +383,12 @@ public class ChronosAgent extends AbstractChronosAgent {
                 ((PolyphenyDbInstance) databaseInstance).setWorkloadMonitoring( config.workloadMonitoringWarmup );
 
                 // Enable icarus training -- to be removed
-                if ( config.router != null && config.router.equals( "icarus" ) && config.pdbBranch.equalsIgnoreCase( "old-routing" ) ) {
+                if ( config.router != null && config.router.equals( "icarus" ) && PolyphenyVersionSwitch.getInstance().hasIcarusRoutingSettings ) {
                     ((PolyphenyDbInstance) databaseInstance).setIcarusRoutingTraining( true );
                 }
 
                 // Enable Post Cost Aggregation
-                if ( config.postCostAggregation.equals( "onWarmup" ) && !config.pdbBranch.equalsIgnoreCase( "old-routing" ) ) {
+                if ( config.postCostAggregation.equals( "onWarmup" ) && !PolyphenyVersionSwitch.getInstance().hasIcarusRoutingSettings ) {
                     ((PolyphenyDbInstance) databaseInstance).setPostCostAggregation( true );
                 }
 
@@ -415,12 +416,12 @@ public class ChronosAgent extends AbstractChronosAgent {
                 }
 
                 // Disable Post Cost Aggregation
-                if ( config.postCostAggregation.equals( "onWarmup" ) && !config.pdbBranch.equalsIgnoreCase( "old-routing" ) ) {
+                if ( config.postCostAggregation.equals( "onWarmup" ) && !PolyphenyVersionSwitch.getInstance().hasIcarusRoutingSettings ) {
                     ((PolyphenyDbInstance) databaseInstance).setPostCostAggregation( false );
                 }
 
                 // Disable icarus training  -- to be removed
-                if ( config.router != null && config.router.equals( "icarus" ) && config.pdbBranch.equalsIgnoreCase( "old-routing" ) ) {
+                if ( config.router != null && config.router.equals( "icarus" ) && PolyphenyVersionSwitch.getInstance().hasIcarusRoutingSettings ) {
                     ((PolyphenyDbInstance) databaseInstance).setIcarusRoutingTraining( false );
                 }
             }

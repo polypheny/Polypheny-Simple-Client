@@ -65,7 +65,7 @@ public interface PolyphenyDbExecutor extends Executor {
     default String deployHsqldb() throws ExecutorException {
         String storeName = "hsqldb" + storeCounter.getAndIncrement();
         String config = "{maxConnections:\"25\",trxControlMode:locks,trxIsolationLevel:read_committed,type:Memory,tableType:Memory,mode:embedded}";
-        if ( useNewDeploySyntax() ) {
+        if ( PolyphenyVersionSwitch.getInstance().useNewDeploySyntax ) {
             deployAdapter(
                     storeName,
                     "HSQLDB",
@@ -93,7 +93,7 @@ public interface PolyphenyDbExecutor extends Executor {
             name = "monetdb";
             config = "{\"database\":\"test\",\"host\":\"localhost\",\"maxConnections\":\"25\",\"password\":\"monetdb\",\"username\":\"monetdb\",\"port\":\"50000\",\"mode\":\"remote\"}";
         }
-        if ( useNewDeploySyntax() ) {
+        if ( PolyphenyVersionSwitch.getInstance().useNewDeploySyntax ) {
             deployAdapter(
                     name,
                     "MONETDB",
@@ -120,7 +120,7 @@ public interface PolyphenyDbExecutor extends Executor {
             name = "postgres";
             config = "{\"database\":\"test\",\"host\":\"localhost\",\"maxConnections\":\"25\",\"password\":\"postgres\",\"username\":\"postgres\",\"port\":\"5432\",\"mode\":\"remote\"}";
         }
-        if ( useNewDeploySyntax() ) {
+        if ( PolyphenyVersionSwitch.getInstance().useNewDeploySyntax ) {
             deployAdapter(
                     name,
                     "POSTGRESQL",
@@ -147,7 +147,7 @@ public interface PolyphenyDbExecutor extends Executor {
             name = "cassandra";
             config = "{\"mode\":\"embedded\",\"host\":\"localhost\",\"port\":\"9042\",\"keyspace\":\"cassandra\",\"username\":\"cassandra\",\"password\":\"cass\"}";
         }
-        if ( useNewDeploySyntax() ) {
+        if ( PolyphenyVersionSwitch.getInstance().useNewDeploySyntax ) {
             deployAdapter(
                     name,
                     "CASSANDRA",
@@ -167,7 +167,7 @@ public interface PolyphenyDbExecutor extends Executor {
     default String deployFileStore() throws ExecutorException {
         String storeName = "file" + storeCounter.getAndIncrement();
         String config = "{\"mode\":\"embedded\"}";
-        if ( useNewDeploySyntax() ) {
+        if ( PolyphenyVersionSwitch.getInstance().useNewDeploySyntax ) {
             deployAdapter(
                     storeName,
                     "FILE",
@@ -187,7 +187,7 @@ public interface PolyphenyDbExecutor extends Executor {
     default String deployCottontail() throws ExecutorException {
         String storeName = "cottontail" + storeCounter.getAndIncrement();
         String config = "{\"type\":\"Embedded\",\"host\":\"localhost\",\"port\":\"" + nextPort.getAndIncrement() + "\",\"database\":\"cottontail\",\"engine\":\"MAPDB\",\"mode\":\"embedded\"}";
-        if ( useNewDeploySyntax() ) {
+        if ( PolyphenyVersionSwitch.getInstance().useNewDeploySyntax ) {
             deployAdapter(
                     storeName,
                     "COTTONTAIL",
@@ -207,7 +207,7 @@ public interface PolyphenyDbExecutor extends Executor {
     default String deployMongoDb() throws ExecutorException {
         String storeName = "mongodb" + storeCounter.getAndIncrement();
         String config = "{\"mode\":\"docker\",\"instanceId\":\"0\",\"port\":\"" + nextPort.getAndIncrement() + "\",\"persistent\":\"false\",\"trxLifetimeLimit\":\"1209600\"}";
-        if ( useNewDeploySyntax() ) {
+        if ( PolyphenyVersionSwitch.getInstance().useNewDeploySyntax ) {
             deployAdapter(
                     storeName,
                     "MONGODB",
@@ -226,7 +226,7 @@ public interface PolyphenyDbExecutor extends Executor {
     default String deployNeo4j() throws ExecutorException {
         String storeName = "neo4j" + storeCounter.getAndIncrement();
         String config = "{\"mode\":\"docker\",\"instanceId\":\"0\",\"port\":\"" + nextPort.getAndIncrement() + "\"}";
-        if ( useNewDeploySyntax() ) {
+        if ( PolyphenyVersionSwitch.getInstance().useNewDeploySyntax ) {
             deployAdapter(
                     storeName,
                     "NEO4J",
@@ -257,6 +257,9 @@ public interface PolyphenyDbExecutor extends Executor {
             this.polyphenyControlConnector = polyphenyControlConnector;
             this.config = config;
 
+            // Initialize feature switch
+            PolyphenyVersionSwitch.initialize( config );
+
             // Stop Polypheny
             stopPolypheny( polyphenyControlConnector );
 
@@ -280,7 +283,6 @@ public interface PolyphenyDbExecutor extends Executor {
 
             // Configure data stores
             PolyphenyDbExecutor executor = (PolyphenyDbExecutor) executorFactory.createExecutorInstance();
-            executor.setNewDeploySyntax( !config.pdbBranch.equalsIgnoreCase( "old-routing" ) );
             try {
                 // Remove hsqldb store
                 executor.dropStore( "hsqldb" );
@@ -405,7 +407,7 @@ public interface PolyphenyDbExecutor extends Executor {
                 // Disable statistics (active tracking)
                 executor.setConfig( "statistics/activeTracking", "false" );
                 // Set router
-                if ( config.pdbBranch.equalsIgnoreCase( "old-routing" ) ) { // Old routing, to be removed
+                if ( PolyphenyVersionSwitch.getInstance().hasIcarusRoutingSettings ) { // Old routing, to be removed
                     switch ( config.router ) {
                         case "simple":
                             executor.setConfig( "routing/router", "org.polypheny.db.router.SimpleRouter$SimpleRouterFactory" );
@@ -557,7 +559,7 @@ public interface PolyphenyDbExecutor extends Executor {
 
         private boolean isReady() {
             try {
-                HttpResponse<String> response = Unirest.get( "http://" + ChronosCommand.hostname + ":8080/product" ).asString();
+                HttpResponse<String> response = Unirest.get( "http://" + ChronosCommand.hostname + ":" + PolyphenyVersionSwitch.getInstance().isReadyPort + "/product" ).asString();
                 if ( response.isSuccess() ) {
                     return true;
                 }
@@ -573,7 +575,7 @@ public interface PolyphenyDbExecutor extends Executor {
             PolyphenyDbExecutor executor = (PolyphenyDbExecutor) new PolyphenyDbJdbcExecutorFactory( ChronosCommand.hostname, false ).createExecutorInstance();
             try {
                 // Disable icarus training
-                if ( config.pdbBranch.equalsIgnoreCase( "old-routing" ) ) {  // Old routing -- to be removed
+                if ( PolyphenyVersionSwitch.getInstance().hasIcarusRoutingSettings ) {  // Old routing -- to be removed
                     executor.setConfig( "icarusRouting/training", b ? "true" : "false" );
                     executor.executeCommit();
                 } else {
@@ -626,10 +628,5 @@ public interface PolyphenyDbExecutor extends Executor {
         }
 
     }
-
-
-    void setNewDeploySyntax( boolean useNewDeploySyntax );
-
-    boolean useNewDeploySyntax();
 
 }

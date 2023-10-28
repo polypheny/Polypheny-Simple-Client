@@ -136,7 +136,6 @@ public class Coms extends Scenario {
         }
 
         try {
-            executor.jdbc.setNewDeploySyntax( true );
             return new PolyphenyAdapters(
                     executor.deployAdapter( config.relStore ),
                     executor.deployAdapter( config.docStore ),
