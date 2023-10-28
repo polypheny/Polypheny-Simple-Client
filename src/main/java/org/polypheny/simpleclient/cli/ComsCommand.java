@@ -35,7 +35,6 @@ import java.util.Objects;
 import java.util.Properties;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
 import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
 import org.polypheny.simpleclient.executor.MultiExecutorFactory;
@@ -132,7 +131,6 @@ public class ComsCommand implements CliRunnable {
     }
 
 
-    @NotNull
     private ExecutorFactory getExecutorFactory( boolean createDocker ) {
         ExecutorFactory executorFactory;
         switch ( config.mode ) {

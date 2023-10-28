@@ -36,6 +36,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import kong.unirest.HttpResponse;
 import kong.unirest.Unirest;
+import kong.unirest.json.JSONArray;
+import kong.unirest.json.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.control.client.PolyphenyControlConnector;
 import org.polypheny.simpleclient.cli.ChronosCommand;
@@ -88,7 +90,12 @@ public interface PolyphenyDbExecutor extends Executor {
         String name;
         if ( deployStoresUsingDocker ) {
             name = "monetdb" + storeCounter.getAndIncrement();
-            config = "{\"port\":\"" + nextPort.getAndIncrement() + "\",\"maxConnections\":\"25\",\"password\":\"polypheny\",\"mode\":\"docker\",\"instanceId\":\"0\"}";
+            if ( PolyphenyVersionSwitch.getInstance().useNewAdapterDeployParameters ) {
+                int dockerInstanceId = getDockerInstanceId();
+                config = "{\"mode\":\"docker\",\"instanceId\":\"" + dockerInstanceId + "\",\"maxConnections\":\"25\"}";
+            } else {
+                config = "{\"port\":\"" + nextPort.getAndIncrement() + "\",\"maxConnections\":\"25\",\"password\":\"polypheny\",\"mode\":\"docker\",\"instanceId\":\"0\"}";
+            }
         } else {
             name = "monetdb";
             config = "{\"database\":\"test\",\"host\":\"localhost\",\"maxConnections\":\"25\",\"password\":\"monetdb\",\"username\":\"monetdb\",\"port\":\"50000\",\"mode\":\"remote\"}";
@@ -115,7 +122,12 @@ public interface PolyphenyDbExecutor extends Executor {
         String name;
         if ( deployStoresUsingDocker ) {
             name = "postgres" + storeCounter.getAndIncrement();
-            config = "{\"port\":\"" + nextPort.getAndIncrement() + "\",\"maxConnections\":\"25\",\"password\":\"postgres\",\"mode\":\"docker\",\"instanceId\":\"0\"}";
+            if ( PolyphenyVersionSwitch.getInstance().useNewAdapterDeployParameters ) {
+                int dockerInstanceId = getDockerInstanceId();
+                config = "{\"mode\":\"docker\",\"instanceId\":\"" + dockerInstanceId + "\",\"maxConnections\":\"25\"}";
+            } else {
+                config = "{\"port\":\"" + nextPort.getAndIncrement() + "\",\"maxConnections\":\"25\",\"password\":\"postgres\",\"mode\":\"docker\",\"instanceId\":\"0\"}";
+            }
         } else {
             name = "postgres";
             config = "{\"database\":\"test\",\"host\":\"localhost\",\"maxConnections\":\"25\",\"password\":\"postgres\",\"username\":\"postgres\",\"port\":\"5432\",\"mode\":\"remote\"}";
@@ -206,7 +218,13 @@ public interface PolyphenyDbExecutor extends Executor {
 
     default String deployMongoDb() throws ExecutorException {
         String storeName = "mongodb" + storeCounter.getAndIncrement();
-        String config = "{\"mode\":\"docker\",\"instanceId\":\"0\",\"port\":\"" + nextPort.getAndIncrement() + "\",\"persistent\":\"false\",\"trxLifetimeLimit\":\"1209600\"}";
+        String config;
+        if ( PolyphenyVersionSwitch.getInstance().useNewAdapterDeployParameters ) {
+            int dockerInstanceId = getDockerInstanceId();
+            config = "{\"mode\":\"docker\",\"instanceId\":\"" + dockerInstanceId + "\",\"trxLifetimeLimit\":\"1209600\"}";
+        } else {
+            config = "{\"mode\":\"docker\",\"instanceId\":\"0\",\"port\":\"" + nextPort.getAndIncrement() + "\",\"persistent\":\"false\",\"trxLifetimeLimit\":\"1209600\"}";
+        }
         if ( PolyphenyVersionSwitch.getInstance().useNewDeploySyntax ) {
             deployAdapter(
                     storeName,
@@ -225,7 +243,13 @@ public interface PolyphenyDbExecutor extends Executor {
 
     default String deployNeo4j() throws ExecutorException {
         String storeName = "neo4j" + storeCounter.getAndIncrement();
-        String config = "{\"mode\":\"docker\",\"instanceId\":\"0\",\"port\":\"" + nextPort.getAndIncrement() + "\"}";
+        String config;
+        if ( PolyphenyVersionSwitch.getInstance().useNewAdapterDeployParameters ) {
+            int dockerInstanceId = getDockerInstanceId();
+            config = "{\"mode\":\"docker\",\"instanceId\":\"" + dockerInstanceId + "\"}";
+        } else {
+            config = "{\"mode\":\"docker\",\"instanceId\":\"0\",\"port\":\"" + nextPort.getAndIncrement() + "\"}";
+        }
         if ( PolyphenyVersionSwitch.getInstance().useNewDeploySyntax ) {
             deployAdapter(
                     storeName,
@@ -240,6 +264,21 @@ public interface PolyphenyDbExecutor extends Executor {
         }
         storeNames.add( storeName );
         return storeName;
+    }
+
+
+    default int getDockerInstanceId() {
+        String url = "http://localhost:" + PolyphenyVersionSwitch.getInstance().uiPort + "/getDockerInstances";
+        HttpResponse<String> response = Unirest.get( url ).asString();
+
+        if ( response.getStatus() == 200 ) {
+            JSONArray jsonArray = new JSONArray( response.getBody() );
+            if ( !jsonArray.isEmpty() ) {
+                JSONObject jsonObject = jsonArray.getJSONObject( 0 );
+                return jsonObject.getInt( "id" );
+            }
+        }
+        throw new RuntimeException( "Failed to fetch docker instance id" );
     }
 
 
@@ -559,12 +598,27 @@ public interface PolyphenyDbExecutor extends Executor {
 
         private boolean isReady() {
             try {
-                HttpResponse<String> response = Unirest.get( "http://" + ChronosCommand.hostname + ":" + PolyphenyVersionSwitch.getInstance().isReadyPort + "/product" ).asString();
-                if ( response.isSuccess() ) {
+                HttpResponse<String> response = Unirest.get( "http://" + ChronosCommand.hostname + ":" + PolyphenyVersionSwitch.getInstance().uiPort + "/product" ).asString();
+                if ( response.isSuccess() && checkIfDockerIsReady() ) {
                     return true;
                 }
             } catch ( Exception e ) {
                 // ignore
+            }
+            return false;
+        }
+
+
+        private boolean checkIfDockerIsReady() {
+            String url = "http://localhost:" + PolyphenyVersionSwitch.getInstance().uiPort + "/getDockerInstances";
+            HttpResponse<String> response = Unirest.get( url ).asString();
+
+            if ( response.getStatus() == 200 ) {
+                JSONArray jsonArray = new JSONArray( response.getBody() );
+                if ( !jsonArray.isEmpty() ) {
+                    JSONObject jsonObject = jsonArray.getJSONObject( 0 );
+                    return true;
+                }
             }
             return false;
         }
