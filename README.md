@@ -13,7 +13,7 @@ A simple benchmarking and testing client for Polypheny-DB. It includes support f
 * [**TPC-C**](http://www.tpc.org/tpcc/): A well-known on-line transaction processing (OLTP) benchmark.
 * [**TPC-H**](http://www.tpc.org/tpch/): A decision support benchmark consisting of a suite of business oriented ad-hoc queries and concurrent data modifications.
 * [**YCSB**](https://github.com/brianfrankcooper/YCSB): Benchmark for evaluating the performance of "key-value" and "cloud" serving stores.
-* [**MMSBench-Net**] A benchmark for multi-model database systems simulating a network monitoring application.
+* [**MMSBench-Net**](https://gvdb23.informatik.uni-stuttgart.de/wp-content/uploads/2023/06/GvDB2023_Lengweiler.pdf) A benchmark for multi-model database systems simulating a network monitoring application.
 
 This benchmarking client contains a [Chronos](https://chronos-eaas.org/) connector. This allows to easily execute evaluation campaigns.
 
