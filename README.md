@@ -65,7 +65,7 @@ This client can be used by specifying the name of the benchmark as first paramet
 java -jar polypheny-simple-client.jar  BENCHMARK  TASK  [ MULTIPLIER ] 
 ```
 
-Use the `help` command to get an overview on all available parameters for a benchmark. For example:
+Use the `help` command to get an overview of all available parameters for a benchmark. For example:
 
 ```
 java -jar polypheny-simple-client.jar help gavel  
@@ -90,7 +90,7 @@ Please note that we have a [code of conduct](https://github.com/polypheny/Admin/
 
 ## Credits
 
-_Polypheny Simple Client_ builds upon the great work of several other open source projects:
+_Polypheny Simple Client_ builds upon the great work of several other open-source projects:
 
 * [Airline](https://rvesse.github.io/airline/): Annotation-driven Java library for building command line interfaces.
 * [Apache Commons](http://commons.apache.org/): A bunch of useful Java utility classes.
@@ -103,6 +103,8 @@ _Polypheny Simple Client_ builds upon the great work of several other open sourc
 * [Shadow](https://imperceptiblethoughts.com/shadow/): Gradle plugin for creating fat JARs.
 * [SLF4J](http://www.slf4j.org/): Provides a logging API by means of a facade pattern.
 * [Unirest](http://kong.github.io/unirest-java/): A lightweight HTTP client library.
+* [zip4j](https://github.com/srikanth-lingala/zip4j): A Java library for zip files and streams.
+
 
 ## License
 
