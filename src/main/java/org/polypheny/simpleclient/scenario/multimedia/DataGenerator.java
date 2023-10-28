@@ -133,7 +133,7 @@ public class DataGenerator {
 
 
     private void executeInsertList() throws ExecutorException {
-        if ( batchList.size() == 0 ) {
+        if ( batchList.isEmpty() ) {
             return;
         }
         long startTime = System.nanoTime();

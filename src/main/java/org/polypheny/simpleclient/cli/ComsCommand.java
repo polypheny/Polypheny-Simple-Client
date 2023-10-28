@@ -68,7 +68,6 @@ public class ComsCommand implements CliRunnable {
     public String neo4j = "127.0.0.1";
     @Option(name = { "-m", "--mongo" }, title = "IP or Hostname + Port", arity = 1, description = "IP or Hostname of the MongoDB server (default: 127.0.0.1).")
     public String mongoDB = "127.0.0.1";
-
     @Option(name = { "-po", "--postgres" }, title = "IP or Hostname + Port", arity = 1, description = "IP or Hostname of the PostgreSQL server (default: 127.0.0.1).")
     public String postgres = "127.0.0.1";
 
@@ -79,7 +78,7 @@ public class ComsCommand implements CliRunnable {
 
     @Override
     public int run() throws SQLException {
-        if ( args == null || args.size() < 1 ) {
+        if ( args == null || args.isEmpty() ) {
             System.err.println( "Missing task" );
             System.exit( 1 );
         }

@@ -57,13 +57,13 @@ public class GraphCommand implements CliRunnable {
     public boolean writeCsv = false;
 
 
-    @Option(name = { "--queryList" }, arity = 0, description = "Dump all Gavel queries as SQL into a file (default: false).")
+    @Option(name = { "--queryList" }, arity = 0, description = "Dump all queries into a file (default: false).")
     public boolean dumpQueryList = false;
 
 
     @Override
     public int run() throws SQLException {
-        if ( args == null || args.size() < 1 ) {
+        if ( args == null || args.isEmpty() ) {
             System.err.println( "Missing task" );
             System.exit( 1 );
         }

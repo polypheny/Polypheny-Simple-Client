@@ -57,7 +57,7 @@ public class KnnCommand implements CliRunnable {
     public boolean writeCsv = false;
 
 
-    @Option(name = { "--queryList" }, arity = 0, description = "Dump all Gavel queries as SQL into a file (default: false).")
+    @Option(name = { "--queryList" }, arity = 0, description = "Dump all queries into a file (default: false).")
     public boolean dumpQueryList = false;
 
 

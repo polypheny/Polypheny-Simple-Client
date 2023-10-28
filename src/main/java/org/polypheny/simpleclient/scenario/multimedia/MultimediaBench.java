@@ -78,15 +78,18 @@ public class MultimediaBench extends Scenario {
 
 
     public MultimediaBench( Executor.ExecutorFactory executorFactory, MultimediaConfig config, boolean commitAfterEveryQuery, boolean dumpQueryList ) {
-        //never dump mm queries, because the dumps can get very large for large binary inserts
+        // Never dump mm queries, because the dumps can get very large for large binary inserts
         super( executorFactory, commitAfterEveryQuery, false, QueryMode.TABLE );
+        if ( dumpQueryList ) {
+            log.warn( "Ignoring dump query parameter for MultiMediaBench since the dump would get extremely large!" );
+        }
         this.config = config;
 
         measuredTimes = Collections.synchronizedList( new LinkedList<>() );
         queryTypes = new HashMap<>();
         measuredTimePerQueryType = new ConcurrentHashMap<>();
 
-        //make sure the tmp folder exists
+        // Make sure the tmp folder exists
         new File( System.getProperty( "user.home" ), ".polypheny/tmp/" ).mkdirs();
     }
 
@@ -407,7 +410,7 @@ public class MultimediaBench extends Scenario {
     private void addNumberOfTimes( List<QueryListEntry> list, QueryBuilder queryBuilder, int numberOfTimes ) {
         int id = queryTypes.size() + 1;
         String sql = queryBuilder.getNewQuery().getSql();
-        //cut long queries with binary data
+        // Cut long queries with binary data
         queryTypes.put( id, sql.substring( 0, Math.min( 500, sql.length() ) ) );
         measuredTimePerQueryType.put( id, Collections.synchronizedList( new LinkedList<>() ) );
         for ( int i = 0; i < numberOfTimes; i++ ) {

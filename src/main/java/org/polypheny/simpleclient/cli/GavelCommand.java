@@ -63,13 +63,13 @@ public class GavelCommand implements CliRunnable {
     @Option(name = { "--writeCSV" }, arity = 0, description = "Write a CSV file containing execution times for all executed queries (default: false).")
     public boolean writeCsv = false;
 
-    @Option(name = { "--queryList" }, arity = 0, description = "Dump all Gavel queries as SQL into a file (default: false).")
+    @Option(name = { "--queryList" }, arity = 0, description = "Dump all queries into a file (default: false).")
     public boolean dumpQueryList = false;
 
 
     @Override
     public int run() {
-        if ( args == null || args.size() < 1 ) {
+        if ( args == null || args.isEmpty() ) {
             System.err.println( "Missing task" );
             System.exit( 1 );
         }

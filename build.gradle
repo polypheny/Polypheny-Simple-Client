@@ -99,6 +99,9 @@ dependencies {
     // CSV
     implementation group: 'com.opencsv', name: 'opencsv', version: '5.8' // License: Apache 2.0
 
+    // JSON
+    implementation group: 'com.google.code.gson', name: 'gson', version: '2.10.1' // License: Apache 2.0
+
     // Logging
     implementation group: 'org.slf4j', name: 'slf4j-api', version: '2.0.9' // License: MIT
     implementation group: 'org.apache.logging.log4j', name: 'log4j-slf4j2-impl', version: '2.21.1' // License: Apache 2.0

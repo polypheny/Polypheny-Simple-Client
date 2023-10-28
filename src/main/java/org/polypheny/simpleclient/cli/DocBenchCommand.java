@@ -63,7 +63,7 @@ public class DocBenchCommand implements CliRunnable {
 
     @Override
     public int run() throws SQLException {
-        if ( args == null || args.size() < 1 ) {
+        if ( args == null || args.isEmpty() ) {
             System.err.println( "Missing task" );
             System.exit( 1 );
         }
