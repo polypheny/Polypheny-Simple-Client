@@ -56,6 +56,9 @@ public class ChronosCommand implements CliRunnable {
     @Option(name = { "-s", "--supports" }, description = "Comma-separated list of system identifiers supported by this client. Depends on the Chronos instance.")
     private String supports = "";
 
+    @Option(name = { "-up", "--uiport" }, description = "Port of the UI, which is used to check status of Polypheny.")
+    public static String uiPort = "7659";
+
     @Option(name = { "--host" }, title = "IP or Port", description = "Hostname or IP address of the host running the system(s) to be benchmarked (default: 127.0.0.1).")
     public static String hostname = "127.0.0.1";
 

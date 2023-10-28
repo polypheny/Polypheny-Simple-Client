@@ -557,7 +557,7 @@ public interface PolyphenyDbExecutor extends Executor {
 
         private boolean isReady() {
             try {
-                HttpResponse<String> response = Unirest.get( "http://" + ChronosCommand.hostname + ":8080/product" ).asString();
+                HttpResponse<String> response = Unirest.get( "http://" + ChronosCommand.hostname + ":" + ChronosCommand.uiPort + "/product" ).asString();
                 if ( response.isSuccess() ) {
                     return true;
                 }
