@@ -545,6 +545,7 @@ public interface PolyphenyDbExecutor extends Executor {
                 conf.put( "pcrtl.buildmode", "pdb" );
             }
             conf.put( "pcrtl.clean.mode", "branchChange" );
+            conf.put( "pcrtl.plugins.purge", "afterBuilding" );
             String args = "";
             if ( resetCatalog ) {
                 args += "-resetCatalog ";
