@@ -126,7 +126,10 @@ public abstract class AbstractConfig {
         numberOfThreads = Integer.parseInt( cdl.get( "numberOfThreads" ) );
         numberOfWarmUpIterations = Integer.parseInt( cdlGetOrDefault( cdl, "numberOfWarmUpIterations", "4" ) );
 
-        dataStores.addAll( Arrays.asList( cdl.get( "dataStore" ).split( "_" ) ) );
+        String dataStoresStr = cdlGetOrDefault( cdl, "dataStore", null );
+        if ( dataStoresStr != null ) {
+            dataStores.addAll( Arrays.asList( dataStoresStr.split( "_" ) ) );
+        }
         planAndImplementationCaching = cdlGetOrDefault( cdl, "planAndImplementationCaching", "Both" );
 
         router = cdl.get( "router" ); // For old routing, to be removed
