@@ -39,6 +39,7 @@ import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.apache.commons.lang3.tuple.Triple;
+import org.polypheny.control.client.ClientData;
 import org.polypheny.control.client.ClientType;
 import org.polypheny.control.client.LogHandler;
 import org.polypheny.control.client.PolyphenyControlConnector;
@@ -150,7 +151,9 @@ public class ChronosAgent extends AbstractChronosAgent {
                 }
 
             };
-            polyphenyControlConnector = new PolyphenyControlConnector( ChronosCommand.hostname + ":8070", ClientType.BENCHMARKER, logHandler );
+
+            ClientData clientData = new ClientData( ClientType.BENCHMARKER, ChronosCommand.controlUsername, ChronosCommand.controlPassword );
+            polyphenyControlConnector = new PolyphenyControlConnector( ChronosCommand.hostname + ":8070", clientData, logHandler );
         } catch ( URISyntaxException e ) {
             log.error( "Exception while connecting to Polypheny Control", e );
         }

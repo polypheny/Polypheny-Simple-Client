@@ -59,6 +59,12 @@ public class ChronosCommand implements CliRunnable {
     @Option(name = { "--host" }, title = "IP or Port", description = "Hostname or IP address of the host running the system(s) to be benchmarked (default: 127.0.0.1).")
     public static String hostname = "127.0.0.1";
 
+    @Option(name = { "--control-username" }, title = "Polypheny Control Username", description = "The username to be used for authentication with Polypheny Control.")
+    public static String controlUsername = "";
+
+    @Option(name = { "--control-password" }, title = "Polypheny Control Password", description = "The password to be used for authentication with Polypheny Control.")
+    public static String controlPassword = "";
+
     @Option(name = { "--writeCSV" }, arity = 0, description = "Write a CSV file containing execution times for all executed queries (default: false).")
     public boolean writeCsv = false;
 

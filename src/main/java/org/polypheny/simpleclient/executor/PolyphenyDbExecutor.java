@@ -305,6 +305,10 @@ public interface PolyphenyDbExecutor extends Executor {
             // Update Polypheny Control settings
             configurePolyphenyControl( polyphenyControlConnector, config, config.resetCatalog );
 
+            // Purge Polypheny folder
+
+            polyphenyControlConnector.purgePolyphenyFolder();
+
             // Pull branch and update polypheny
             polyphenyControlConnector.updatePolypheny();
 

@@ -66,7 +66,7 @@ dependencies {
     implementation group: 'commons-io', name: 'commons-io', version: '2.15.1'  // License: Apache 2.0
 
     // Polypheny Control Connector
-    implementation group: 'org.polypheny', name: 'control-connector', version: '1.3.0'  // License: Apache 2.0
+    implementation group: 'org.polypheny', name: 'control-connector', version: '2.1.0'  // License: Apache 2.0
 
     // Chronos
     implementation group: 'org.chronos-eaas', name: 'chronos-agent', version: '2.4.2' // License: MIT
@@ -131,7 +131,7 @@ licensee {
     allowDependency('javax.annotation', 'javax.annotation-api', '1.2') { because 'CDDL license' }
     allowDependency('org.jcodec', 'jcodec', '0.2.5') { because 'BSD 2-Clause' }
     allowDependency('org.jcodec', 'jcodec-javase', '0.2.5') { because 'BSD 2-Clause' }
-    allowDependency('org.java-websocket', 'Java-WebSocket', '1.5.3') { because 'MIT License' }
+    allowDependency('org.java-websocket', 'Java-WebSocket', '1.5.4') { because 'MIT License' }
     allowDependency('org.bouncycastle', 'bcpkix-jdk15on', '1.61') { because 'MIT License' }
     allowDependency('org.bouncycastle', 'bcprov-jdk15on', '1.61') { because 'MIT License' }
     allowDependency('org.postgresql', 'postgresql', '42.7.0') { because 'BSD 2-Clause' }

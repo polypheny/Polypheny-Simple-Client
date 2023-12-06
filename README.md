@@ -27,6 +27,8 @@ This client can either be started in a stand-alone mode for quick testing or in 
 SYNOPSIS
         polypheny-simple-client.jar chronos [ {-cc | --chronos} <chronos> ]
                 [ {-e | --environment} <environment> ] [ --host <IP or Port> ] 
+                [ --control-username <Polypheny Control Username> ] 
+                [ --control-password <Polypheny Control Password> ] 
                 [ {-p | --port} <port> ] [ --queryList ] {-s | --supports} <supports> 
                 [ --writeCSV ]
 
@@ -41,6 +43,12 @@ OPTIONS
         --host <IP or Port>
             Hostname or IP address of the host running the system(s) to be
             benchmarked (default: 127.0.0.1).
+            
+        --control-username <Polypheny Control Username>
+            The username to be used for authentication with Polypheny Control.
+            
+        --control-password <Polypheny Control Password>
+            The password to be used for authentication with Polypheny Control.
 
         -p <port>, --port <port>
             Port of the REST API of the Chronos Control server (default: 443).
