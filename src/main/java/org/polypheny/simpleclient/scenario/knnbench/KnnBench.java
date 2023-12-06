@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019-2021 The Polypheny Project
+ * Copyright (c) 2019-2023 The Polypheny Project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"), to deal
@@ -100,9 +100,9 @@ public class KnnBench extends Scenario {
         Executor executor = null;
         try {
             executor = executorFactory.createExecutorInstance();
-            executor.executeQuery( (new CreateMetadata( config.dataStoreMetadata )).getNewQuery() );
-            executor.executeQuery( (new CreateIntFeature( config.dataStoreFeature, config.dimensionFeatureVectors )).getNewQuery() );
-            executor.executeQuery( (new CreateRealFeature( config.dataStoreFeature, config.dimensionFeatureVectors )).getNewQuery() );
+            executor.executeQuery( (new CreateMetadata( findMatchingDataStoreName( config.dataStoreMetadata ) )).getNewQuery() );
+            executor.executeQuery( (new CreateIntFeature( findMatchingDataStoreName( config.dataStoreFeature ), config.dimensionFeatureVectors )).getNewQuery() );
+            executor.executeQuery( (new CreateRealFeature( findMatchingDataStoreName( config.dataStoreFeature ), config.dimensionFeatureVectors )).getNewQuery() );
         } catch ( ExecutorException e ) {
             throw new RuntimeException( "Exception while creating schema", e );
         } finally {

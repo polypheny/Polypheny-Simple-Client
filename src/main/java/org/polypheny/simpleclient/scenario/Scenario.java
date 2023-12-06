@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019-2022 The Polypheny Project
+ * Copyright (c) 2019-2023 The Polypheny Project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"), to deal
@@ -40,6 +40,7 @@ import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.executor.Executor.DatabaseInstance;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
 import org.polypheny.simpleclient.executor.ExecutorException;
+import org.polypheny.simpleclient.executor.PolyphenyDbExecutor;
 import org.polypheny.simpleclient.main.ChronosAgent;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.main.ProgressReporter;
@@ -137,6 +138,26 @@ public abstract class Scenario {
 
 
     public abstract int getNumberOfInsertThreads();
+
+
+    protected static String findMatchingDataStoreName( String name ) {
+        String match = null;
+
+        for ( String item : PolyphenyDbExecutor.storeNames ) {
+            if ( item.startsWith( name ) ) {
+                if ( match != null ) {
+                    throw new RuntimeException( "More than one matching data store found for " + name );
+                }
+                match = item;
+            }
+        }
+
+        if ( match == null ) {
+            throw new RuntimeException( "No matching data store found for " + name );
+        }
+
+        return match;
+    }
 
 
     protected static void commitAndCloseExecutor( Executor executor ) {

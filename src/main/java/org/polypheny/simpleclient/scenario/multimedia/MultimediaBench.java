@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019-2021 The Polypheny Project
+ * Copyright (c) 2019-2023 The Polypheny Project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"), to deal
@@ -104,7 +104,7 @@ public class MultimediaBench extends Scenario {
         Executor executor = null;
         try {
             executor = executorFactory.createExecutorInstance();
-            String onStore = String.format( " ON STORE \"%s\"", config.dataStore );
+            String onStore = String.format( " ON STORE \"%s\"", findMatchingDataStoreName( config.dataStore ) );
             executor.executeQuery( (new CreateTable( "ALTER CONFIG 'validation/validateMultimediaContentType' SET FALSE" )).getNewQuery() );
             executor.executeQuery( (new CreateTable( "CREATE TABLE IF NOT EXISTS \"users\" (\"id\" INTEGER NOT NULL, \"firstName\" VARCHAR(1000) NOT NULL, \"lastName\" VARCHAR(1000) NOT NULL, \"email\" VARCHAR(1000) NOT NULL, \"password\" VARCHAR(1000) NOT NULL, \"profile_pic\" IMAGE NOT NULL, PRIMARY KEY(\"id\"))" + onStore )).getNewQuery() );
             executor.executeQuery( (new CreateTable( "CREATE TABLE IF NOT EXISTS \"album\" (\"id\" INTEGER NOT NULL, \"user_id\" INTEGER NOT NULL, \"name\" VARCHAR(200) NOT NULL, PRIMARY KEY(\"id\"))" + onStore )).getNewQuery() );
@@ -118,13 +118,15 @@ public class MultimediaBench extends Scenario {
             executor.executeQuery( (new CreateTable( "TRUNCATE TABLE \"followers\"" )).getNewQuery() );
 
             if ( !config.multimediaStore.equals( "same" ) && !config.dataStore.equals( config.multimediaStore ) ) {
-                executor.executeQuery( (new CreateTable( "ALTER TABLE public.\"users\" ADD PLACEMENT (\"profile_pic\") ON STORE \"" + config.multimediaStore + "\"" )).getNewQuery() );
-                executor.executeQuery( (new CreateTable( "ALTER TABLE public.\"media\" ADD PLACEMENT (\"img\", \"video\", \"sound\") ON STORE \"" + config.multimediaStore + "\"" )).getNewQuery() );
-                executor.executeQuery( (new CreateTable( "ALTER TABLE public.\"timeline\" ADD PLACEMENT (\"img\", \"video\", \"sound\") ON STORE \"" + config.multimediaStore + "\"" )).getNewQuery() );
+                String ds = findMatchingDataStoreName( config.dataStore );
+                String dsMultimedia = findMatchingDataStoreName( config.multimediaStore );
+                executor.executeQuery( (new CreateTable( "ALTER TABLE public.\"users\" ADD PLACEMENT (\"profile_pic\") ON STORE \"" + dsMultimedia + "\"" )).getNewQuery() );
+                executor.executeQuery( (new CreateTable( "ALTER TABLE public.\"media\" ADD PLACEMENT (\"img\", \"video\", \"sound\") ON STORE \"" + dsMultimedia + "\"" )).getNewQuery() );
+                executor.executeQuery( (new CreateTable( "ALTER TABLE public.\"timeline\" ADD PLACEMENT (\"img\", \"video\", \"sound\") ON STORE \"" + dsMultimedia + "\"" )).getNewQuery() );
 
-                executor.executeQuery( (new CreateTable( "ALTER TABLE public.\"users\" MODIFY PLACEMENT (\"id\", \"firstName\", \"lastName\", \"email\", \"password\") ON STORE \"" + config.dataStore + "\"" )).getNewQuery() );
-                executor.executeQuery( (new CreateTable( "ALTER TABLE public.\"media\" MODIFY PLACEMENT (\"id\", \"timestamp\", \"album_id\") ON STORE \"" + config.dataStore + "\"" )).getNewQuery() );
-                executor.executeQuery( (new CreateTable( "ALTER TABLE public.\"timeline\" MODIFY PLACEMENT (\"id\", \"timestamp\", \"user_id\", \"message\") ON STORE \"" + config.dataStore + "\"" )).getNewQuery() );
+                executor.executeQuery( (new CreateTable( "ALTER TABLE public.\"users\" MODIFY PLACEMENT (\"id\", \"firstName\", \"lastName\", \"email\", \"password\") ON STORE \"" + ds + "\"" )).getNewQuery() );
+                executor.executeQuery( (new CreateTable( "ALTER TABLE public.\"media\" MODIFY PLACEMENT (\"id\", \"timestamp\", \"album_id\") ON STORE \"" + ds + "\"" )).getNewQuery() );
+                executor.executeQuery( (new CreateTable( "ALTER TABLE public.\"timeline\" MODIFY PLACEMENT (\"id\", \"timestamp\", \"user_id\", \"message\") ON STORE \"" + ds + "\"" )).getNewQuery() );
             }
 
             if ( includingKeys ) {
