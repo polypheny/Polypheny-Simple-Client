@@ -2,8 +2,8 @@ group "org.polypheny"
 description = "A lightweight Polypheny-DB benchmarking client"
 
 def versionMajor = 4
-def versionMinor = 3
-def versionQualifier = ""
+def versionMinor = 4
+def versionQualifier = "-SNAPSHOT"
 version = versionMajor + "." + versionMinor + versionQualifier
 
 
