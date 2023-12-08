@@ -32,12 +32,16 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import kong.unirest.HttpResponse;
 import kong.unirest.Unirest;
 import kong.unirest.json.JSONArray;
 import kong.unirest.json.JSONObject;
+import lombok.Data;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.control.client.PolyphenyControlConnector;
 import org.polypheny.simpleclient.cli.ChronosCommand;
@@ -291,6 +295,9 @@ public interface PolyphenyDbExecutor extends Executor {
         private final PolyphenyControlConnector polyphenyControlConnector;
         private final AbstractConfig config;
 
+        @Getter
+        private final StatusGatherer statusGatherer;
+
 
         public PolyphenyDbInstance( PolyphenyControlConnector polyphenyControlConnector, ExecutorFactory executorFactory, File outputDirectory, AbstractConfig config ) {
             this.polyphenyControlConnector = polyphenyControlConnector;
@@ -385,6 +392,9 @@ public interface PolyphenyDbExecutor extends Executor {
             } catch ( InterruptedException e ) {
                 throw new RuntimeException( "Unexpected interrupt", e );
             }
+
+            // Create status gather, however, do not start it
+            statusGatherer = new StatusGatherer();
         }
 
 
@@ -565,6 +575,7 @@ public interface PolyphenyDbExecutor extends Executor {
 
         @Override
         public void tearDown() {
+            statusGatherer.terminate();
             stopPolypheny( polyphenyControlConnector );
             for ( String store : config.dataStores ) {
                 tearDownStore( store );
@@ -687,6 +698,100 @@ public interface PolyphenyDbExecutor extends Executor {
             }
         }
 
+
     }
+
+
+    @Slf4j
+    class StatusGatherer {
+
+        private ScheduledExecutorService statusGatheringService;
+        private final List<PolyphenyStatus> statuses = new ArrayList<>();
+
+        private final String url;
+
+
+        private StatusGatherer() {
+            url = "http://" + ChronosCommand.hostname + ":" + PolyphenyVersionSwitch.getInstance().uiPort + "/status";
+        }
+
+
+        public PolyphenyStatus gatherOnce() {
+            JSONObject jsonResponse = Unirest.get( url ).asJson().getBody().getObject();
+            return new PolyphenyStatus(
+                    jsonResponse.getString( "uuid" ),
+                    jsonResponse.getString( "version" ),
+                    jsonResponse.getString( "hash" ),
+                    jsonResponse.getLong( "currentMemory" ),
+                    jsonResponse.getInt( "numOfActiveTrx" ),
+                    jsonResponse.getLong( "trxCount" ),
+                    jsonResponse.getInt( "implementationCacheSize" ),
+                    jsonResponse.getInt( "queryPlanCacheSize" ),
+                    jsonResponse.getInt( "routingPlanCacheSize" ),
+                    jsonResponse.getInt( "monitoringQueueSize" )
+            );
+        }
+
+
+        public void startStatusDataGathering( int intervalSeconds ) {
+            if ( statusGatheringService != null && !statusGatheringService.isTerminated() ) {
+                throw new RuntimeException( "Status gathering is already running!" );
+            }
+            log.info( "Start gather status data from Polypheny every " + intervalSeconds + " seconds." );
+            Runnable statusGatherer = new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        statuses.add( gatherOnce() );
+                    } catch ( Exception e ) {
+                        log.error( "Unable to gather status data from Polypheny", e );
+                    }
+                }
+            };
+            statusGatheringService = Executors.newScheduledThreadPool( 1 );
+            statusGatheringService.scheduleAtFixedRate( statusGatherer, 0, intervalSeconds, TimeUnit.SECONDS );
+        }
+
+
+        public List<PolyphenyStatus> stopGathering() {
+            log.info( "Stop gathering status data from Polypheny." );
+            if ( statusGatheringService != null ) {
+                statusGatheringService.shutdown();
+            } else {
+                throw new RuntimeException( "Status gathering has never been started" );
+            }
+            return statuses;
+        }
+
+
+        // Only use to forcefully stop gathering in case the benchmark gets aborted (e.g., due to an error)
+        public void terminate() {
+            if ( statusGatheringService != null && !statusGatheringService.isTerminated() ) {
+                statusGatheringService.shutdown();
+            }
+        }
+
+
+        @Data
+        public static class PolyphenyStatus {
+
+            private final String uuid;
+            private final String version;
+            private final String hash;
+
+            private final long currentMemory;
+
+            private final int numOfActiveTrx;
+            private final long trxCount;
+
+            private final int implementationCacheSize;
+            private final int queryPlanCacheSize;
+            private final int routingPlanCacheSize;
+            private final int monitoringQueueSize;
+
+        }
+
+    }
+
 
 }

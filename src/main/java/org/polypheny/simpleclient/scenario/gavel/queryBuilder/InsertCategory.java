@@ -39,7 +39,6 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 import kong.unirest.HttpRequest;
-import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.BatchableInsert;
 import org.polypheny.simpleclient.query.QueryBuilder;
@@ -107,7 +106,7 @@ public class InsertCategory extends QueryBuilder {
         public String getSqlRowExpression() {
             return "("
                     + categoryId + ","
-                    + "'" + StringEscapeUtils.escapeSql( category ) + "'"
+                    + "'" + category + "'"
                     + ")";
         }
 

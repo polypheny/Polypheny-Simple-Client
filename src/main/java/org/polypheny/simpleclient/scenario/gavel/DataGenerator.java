@@ -105,6 +105,9 @@ class DataGenerator {
 
     void generateUsers( int numberOfUsers ) throws ExecutorException {
         int mod = numberOfUsers / progressReporter.base;
+        if ( mod == 0 ) {
+            mod++; // Avoid division by zero
+        }
         InsertUser queryBuilder = new InsertUser();
         for ( int i = 0; i < numberOfUsers; i++ ) {
             if ( aborted ) {
@@ -121,6 +124,9 @@ class DataGenerator {
 
     void generateAuctions( int start, int end ) throws ExecutorException {
         int mod = ((end - start) + 1) / progressReporter.base;
+        if ( mod == 0 ) {
+            mod++; // Avoid division by zero
+        }
 
         int numberOfCategories = config.numberOfCategories;
         int numberOfUsers = config.numberOfUsers;

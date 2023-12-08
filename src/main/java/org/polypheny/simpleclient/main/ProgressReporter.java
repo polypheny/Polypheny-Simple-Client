@@ -90,7 +90,7 @@ public abstract class ProgressReporter {
                 try {
                     Thread.sleep( 1000 );
                 } catch ( InterruptedException e ) {
-                    throw new RuntimeException( "Unexpected interrupt", e );
+                    log.error( "Unexpected interrupt", e );
                 }
             }
         }
@@ -128,7 +128,7 @@ public abstract class ProgressReporter {
                 try {
                     Thread.sleep( 1000 );
                 } catch ( InterruptedException e ) {
-                    throw new RuntimeException( "Unexpected interrupt", e );
+                    log.error( "Unexpected interrupt", e );
                 }
             }
         }

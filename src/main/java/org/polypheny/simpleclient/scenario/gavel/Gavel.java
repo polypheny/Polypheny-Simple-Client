@@ -276,8 +276,9 @@ public class Gavel extends Scenario {
                     executor.executeCommit();
                 }
             } catch ( ExecutorException e ) {
-                e.printStackTrace();
                 throw new RuntimeException( "Error while executing warm-up queries", e );
+            } catch ( Exception e ) {
+                log.error( "Exception while executing warmup queries", e );
             } finally {
                 commitAndCloseExecutor( executor );
             }
@@ -549,6 +550,8 @@ public class Gavel extends Scenario {
                         log.error( "Error while rollback", e );
                     }
                     log.error( "Exception while generating data", e );
+                } catch ( Throwable e ) {
+                    log.error( "Exception while inserting users", e );
                 } finally {
                     try {
                         executor.closeConnection();
@@ -594,6 +597,8 @@ public class Gavel extends Scenario {
                         log.error( "Error while rollback", e );
                     }
                     log.error( "Exception while generating data", e );
+                } catch ( Throwable e ) {
+                    log.error( "Exception while inserting auctions", e );
                 } finally {
                     try {
                         executor.closeConnection();

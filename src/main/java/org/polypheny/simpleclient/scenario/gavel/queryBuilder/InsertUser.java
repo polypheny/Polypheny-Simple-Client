@@ -46,7 +46,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 import kong.unirest.HttpRequest;
-import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.BatchableInsert;
 import org.polypheny.simpleclient.query.QueryBuilder;
@@ -224,7 +224,7 @@ public class InsertUser extends QueryBuilder {
         private String escapeAndConvert( String s ) {
             try {
                 synchronized ( DECODER ) {
-                    return DECODER.decode( ENCODER.encode( CharBuffer.wrap( StringEscapeUtils.escapeSql( s ) ) ) ).toString();
+                    return DECODER.decode( ENCODER.encode( CharBuffer.wrap( StringUtils.replace( s, "'", "''" ) ) ) ).toString();
                 }
             } catch ( CharacterCodingException e ) {
                 throw new RuntimeException( e );

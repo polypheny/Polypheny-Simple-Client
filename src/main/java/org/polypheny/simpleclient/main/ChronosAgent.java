@@ -33,6 +33,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
@@ -57,6 +59,8 @@ import org.polypheny.simpleclient.executor.OltpBenchPostgresExecutor.OltpBenchPo
 import org.polypheny.simpleclient.executor.PolyphenyDbCypherExecutor.PolyphenyDbCypherExecutorFactory;
 import org.polypheny.simpleclient.executor.PolyphenyDbExecutor;
 import org.polypheny.simpleclient.executor.PolyphenyDbExecutor.PolyphenyDbInstance;
+import org.polypheny.simpleclient.executor.PolyphenyDbExecutor.StatusGatherer;
+import org.polypheny.simpleclient.executor.PolyphenyDbExecutor.StatusGatherer.PolyphenyStatus;
 import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory;
 import org.polypheny.simpleclient.executor.PolyphenyDbMongoQlExecutor.PolyphenyDbMongoQlExecutorFactory;
 import org.polypheny.simpleclient.executor.PolyphenyDbMultiExecutorFactory;
@@ -345,9 +349,12 @@ public class ChronosAgent extends AbstractChronosAgent {
                 throw new RuntimeException( "Unknown system: " + config.system );
         }
 
-        // Set workload monitoring
         if ( databaseInstance instanceof PolyphenyDbInstance ) {
+            // Set workload monitoring
             ((PolyphenyDbInstance) databaseInstance).setWorkloadMonitoring( config.workloadMonitoringLoadingData );
+
+            // Start Polypheny status data gathering
+            ((PolyphenyDbInstance) databaseInstance).getStatusGatherer().startStatusDataGathering( 60 );
         }
 
         // Insert data
@@ -475,6 +482,7 @@ public class ChronosAgent extends AbstractChronosAgent {
             databaseInstance.tearDown();
             throw e;
         }
+
         return new ImmutableTriple<>( scenario, config, databaseInstance );
     }
 
@@ -493,6 +501,47 @@ public class ChronosAgent extends AbstractChronosAgent {
         } catch ( Exception e ) {
             databaseInstance.tearDown();
             throw e;
+        }
+
+        if ( databaseInstance instanceof PolyphenyDbInstance && PolyphenyVersionSwitch.getInstance().hasStatusEndpoint ) {
+            StatusGatherer statusGatherer = ((PolyphenyDbInstance) databaseInstance).getStatusGatherer();
+
+            // Stop gathering
+            List<PolyphenyStatus> statuses = statusGatherer.stopGathering();
+
+            // Analyze and store readings
+            List<Long> currentMemoryReadings = new ArrayList<>( statuses.size() );
+            List<Integer> numOfActiveTrxReadings = new ArrayList<>( statuses.size() );
+            for ( PolyphenyStatus status : statuses ) {
+                currentMemoryReadings.add( status.getCurrentMemory() );
+                numOfActiveTrxReadings.add( status.getNumOfActiveTrx() );
+            }
+            properties.put( "pdbStatus_currentMemory", currentMemoryReadings );
+            properties.put( "pdbStatus_numOfActiveTrx", numOfActiveTrxReadings );
+
+            // Wait one minute for garbage collection to run
+            try {
+                TimeUnit.MINUTES.sleep( 1 );
+            } catch ( InterruptedException e ) {
+                throw new RuntimeException( "Unexpected interrupt", e );
+            }
+
+            // Do a final gathering
+            try {
+                PolyphenyStatus status = statusGatherer.gatherOnce();
+                properties.put( "pdbStatus_uuid", status.getUuid() );
+                properties.put( "pdbStatus_version", status.getVersion() );
+                properties.put( "pdbStatus_hash", status.getHash() );
+                properties.put( "pdbStatus_currentMemory_final", status.getCurrentMemory() );
+                properties.put( "pdbStatus_numOfActiveTrx_final", status.getNumOfActiveTrx() );
+                properties.put( "pdbStatus_trxCount_final", status.getTrxCount() );
+                properties.put( "pdbStatus_implementationCacheSize_final", status.getImplementationCacheSize() );
+                properties.put( "pdbStatus_queryPlanCacheSize_final", status.getQueryPlanCacheSize() );
+                properties.put( "pdbStatus_routingPlanCacheSize_final", status.getRoutingPlanCacheSize() );
+                properties.put( "pdbStatus_monitoringQueueSize_final", status.getMonitoringQueueSize() );
+            } catch ( Exception e ) {
+                log.error( "Unable to gather final status data from Polypheny", e );
+            }
         }
 
         return new ImmutableTriple<>( scenario, config, databaseInstance );
