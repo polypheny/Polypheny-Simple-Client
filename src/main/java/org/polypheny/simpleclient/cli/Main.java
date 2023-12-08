@@ -55,7 +55,10 @@ public class Main {
         builder.withCommands( HelpCommand.class );
         builder.withDefaultCommand( HelpCommand.class );
 
-        CliRunnable cmd = builder.build().parse( args );
+        Cli<CliRunnable> cli = builder.build();
+        HelpCommand.global = cli.getMetadata();
+
+        CliRunnable cmd = cli.parse( args );
         cmd.run();
     }
 

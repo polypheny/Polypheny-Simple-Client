@@ -25,6 +25,7 @@
 package org.polypheny.simpleclient.cli;
 
 import com.github.rvesse.airline.HelpOption;
+import com.github.rvesse.airline.annotations.AirlineModule;
 import com.github.rvesse.airline.annotations.Arguments;
 import com.github.rvesse.airline.annotations.Command;
 import com.github.rvesse.airline.annotations.Option;
@@ -33,7 +34,6 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Properties;
-import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
@@ -50,8 +50,8 @@ import org.polypheny.simpleclient.scenario.coms.ComsConfig;
 public class ComsCommand implements CliRunnable {
 
     public static final String NAMESPACE = "coms";
-    @SuppressWarnings("SpringAutowiredFieldsWarningInspection")
-    @Inject
+
+    @AirlineModule
     private HelpOption<AbstractOltpBenchCommand> help;
 
     @Arguments(description = "Task { schema | data | workload } and multiplier.")

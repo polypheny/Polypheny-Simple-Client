@@ -25,6 +25,7 @@
 
 package org.polypheny.simpleclient.cli;
 
+import com.github.rvesse.airline.annotations.AirlineModule;
 import com.github.rvesse.airline.annotations.Arguments;
 import com.github.rvesse.airline.annotations.Command;
 import com.github.rvesse.airline.annotations.Option;
@@ -32,15 +33,13 @@ import com.github.rvesse.airline.model.GlobalMetadata;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import javax.inject.Inject;
 
 
 @Command(name = "help", description = "A command that provides help on other commands")
 public class HelpCommand implements CliRunnable {
 
-    @SuppressWarnings("SpringAutowiredFieldsWarningInspection")
-    @Inject
-    private GlobalMetadata<CliRunnable> global;
+    @AirlineModule
+    public static GlobalMetadata<CliRunnable> global;
 
     @Arguments(description = "Provides the name of the commands you want to provide help for")
     private List<String> commandNames = new ArrayList<>();

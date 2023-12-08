@@ -25,12 +25,12 @@
 package org.polypheny.simpleclient.cli;
 
 import com.github.rvesse.airline.HelpOption;
+import com.github.rvesse.airline.annotations.AirlineModule;
 import com.github.rvesse.airline.annotations.Arguments;
 import com.github.rvesse.airline.annotations.Command;
 import com.github.rvesse.airline.annotations.Option;
 import java.sql.SQLException;
 import java.util.List;
-import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
 import org.polypheny.simpleclient.executor.PolyphenyDbMultiExecutorFactory;
@@ -41,8 +41,7 @@ import org.polypheny.simpleclient.main.MultiBenchScenario;
 @Command(name = "multibench", description = "Gavel Multibench Benchmark simulating an heterogeneous workload by combining different benchmarks.")
 public class MultiBenchCommand implements CliRunnable {
 
-    @SuppressWarnings("SpringAutowiredFieldsWarningInspection")
-    @Inject
+    @AirlineModule
     private HelpOption<MultiBenchCommand> help;
 
     @Arguments(description = "Task { schema | data | workload } and multiplier.")

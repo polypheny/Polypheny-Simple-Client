@@ -26,11 +26,11 @@
 package org.polypheny.simpleclient.cli;
 
 import com.github.rvesse.airline.HelpOption;
+import com.github.rvesse.airline.annotations.AirlineModule;
 import com.github.rvesse.airline.annotations.Arguments;
 import com.github.rvesse.airline.annotations.Command;
 import com.github.rvesse.airline.annotations.Option;
 import java.util.List;
-import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
@@ -44,8 +44,7 @@ import org.polypheny.simpleclient.main.GavelScenario;
 @Command(name = "gavel", description = "Mode for quick testing of Polypheny-DB using the Gavel benchmark.")
 public class GavelCommand implements CliRunnable {
 
-    @SuppressWarnings("SpringAutowiredFieldsWarningInspection")
-    @Inject
+    @AirlineModule
     private HelpOption<GavelCommand> help;
 
     @Arguments(description = "Task { schema | data | workload | warmup } and multiplier and { view | materialized }.")

@@ -27,20 +27,19 @@ package org.polypheny.simpleclient.cli;
 
 import ch.unibas.dmi.dbis.chronos.agent.AbstractChronosAgent;
 import com.github.rvesse.airline.HelpOption;
+import com.github.rvesse.airline.annotations.AirlineModule;
 import com.github.rvesse.airline.annotations.Command;
 import com.github.rvesse.airline.annotations.Option;
 import com.github.rvesse.airline.annotations.restrictions.Required;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import javax.inject.Inject;
 import org.polypheny.simpleclient.main.ChronosAgent;
 
 
 @Command(name = "chronos", description = "Start as a Chronos Agent")
 public class ChronosCommand implements CliRunnable {
 
-    @SuppressWarnings("SpringAutowiredFieldsWarningInspection")
-    @Inject
+    @AirlineModule
     private HelpOption<ChronosCommand> help;
 
     @Option(name = { "-cc", "--chronos" }, description = "Hostname or IP-Address of the Chronos Control (default: chronos.dmi.unibas.ch).")
