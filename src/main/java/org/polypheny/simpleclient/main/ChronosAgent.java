@@ -60,6 +60,7 @@ import org.polypheny.simpleclient.executor.PolyphenyDbCypherExecutor.PolyphenyDb
 import org.polypheny.simpleclient.executor.PolyphenyDbExecutor;
 import org.polypheny.simpleclient.executor.PolyphenyDbExecutor.PolyphenyDbInstance;
 import org.polypheny.simpleclient.executor.PolyphenyDbExecutor.StatusGatherer;
+import org.polypheny.simpleclient.executor.PolyphenyDbExecutor.StatusGatherer.PolyphenyFullStatus;
 import org.polypheny.simpleclient.executor.PolyphenyDbExecutor.StatusGatherer.PolyphenyStatus;
 import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory;
 import org.polypheny.simpleclient.executor.PolyphenyDbMongoQlExecutor.PolyphenyDbMongoQlExecutorFactory;
@@ -512,12 +513,15 @@ public class ChronosAgent extends AbstractChronosAgent {
             // Analyze and store readings
             List<Long> currentMemoryReadings = new ArrayList<>( statuses.size() );
             List<Integer> numOfActiveTrxReadings = new ArrayList<>( statuses.size() );
+            List<Integer> monitoringQueueSizeReadings = new ArrayList<>( statuses.size() );
             for ( PolyphenyStatus status : statuses ) {
                 currentMemoryReadings.add( status.getCurrentMemory() );
                 numOfActiveTrxReadings.add( status.getNumOfActiveTrx() );
+                monitoringQueueSizeReadings.add( status.getMonitoringQueueSize() );
             }
             properties.put( "pdbStatus_currentMemory", currentMemoryReadings );
             properties.put( "pdbStatus_numOfActiveTrx", numOfActiveTrxReadings );
+            properties.put( "pdbStatus_monitoringQueueSize", monitoringQueueSizeReadings );
 
             // Wait one minute for garbage collection to run
             try {
@@ -528,7 +532,7 @@ public class ChronosAgent extends AbstractChronosAgent {
 
             // Do a final gathering
             try {
-                PolyphenyStatus status = statusGatherer.gatherOnce();
+                PolyphenyFullStatus status = statusGatherer.gatherFullOnce();
                 properties.put( "pdbStatus_uuid", status.getUuid() );
                 properties.put( "pdbStatus_version", status.getVersion() );
                 properties.put( "pdbStatus_hash", status.getHash() );

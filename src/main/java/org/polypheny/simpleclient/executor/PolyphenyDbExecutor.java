@@ -41,6 +41,7 @@ import kong.unirest.Unirest;
 import kong.unirest.json.JSONArray;
 import kong.unirest.json.JSONObject;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.control.client.PolyphenyControlConnector;
@@ -712,23 +713,31 @@ public interface PolyphenyDbExecutor extends Executor {
 
 
         private StatusGatherer() {
-            url = "http://" + ChronosCommand.hostname + ":" + PolyphenyVersionSwitch.getInstance().uiPort + "/status";
+            url = "http://" + ChronosCommand.hostname + ":" + PolyphenyVersionSwitch.getInstance().uiPort + "/status/";
         }
 
 
         public PolyphenyStatus gatherOnce() {
-            JSONObject jsonResponse = Unirest.get( url ).asJson().getBody().getObject();
             return new PolyphenyStatus(
-                    jsonResponse.getString( "uuid" ),
-                    jsonResponse.getString( "version" ),
-                    jsonResponse.getString( "hash" ),
-                    jsonResponse.getLong( "currentMemory" ),
-                    jsonResponse.getInt( "numOfActiveTrx" ),
-                    jsonResponse.getLong( "trxCount" ),
-                    jsonResponse.getInt( "implementationCacheSize" ),
-                    jsonResponse.getInt( "queryPlanCacheSize" ),
-                    jsonResponse.getInt( "routingPlanCacheSize" ),
-                    jsonResponse.getInt( "monitoringQueueSize" )
+                    Long.parseLong( Unirest.get( url + "memory-current" ).asString().getBody() ),
+                    Integer.parseInt( Unirest.get( url + "transactions-active" ).asString().getBody() ),
+                    Integer.parseInt( Unirest.get( url + "monitoring-queue" ).asString().getBody() )
+            );
+        }
+
+
+        public PolyphenyFullStatus gatherFullOnce() {
+            return new PolyphenyFullStatus(
+                    Unirest.get( url + "uuid" ).asString().getBody(),
+                    Unirest.get( url + "version" ).asString().getBody(),
+                    Unirest.get( url + "hash" ).asString().getBody(),
+                    Long.parseLong( Unirest.get( url + "memory-current" ).asString().getBody() ),
+                    Long.parseLong( Unirest.get( url + "transactions-total" ).asString().getBody() ),
+                    Integer.parseInt( Unirest.get( url + "transactions-since-restart" ).asString().getBody() ),
+                    Integer.parseInt( Unirest.get( url + "cache-implementation" ).asString().getBody() ),
+                    Integer.parseInt( Unirest.get( url + "cache-queryplan" ).asString().getBody() ),
+                    Integer.parseInt( Unirest.get( url + "cache-routingplan" ).asString().getBody() ),
+                    Integer.parseInt( Unirest.get( url + "monitoring-queue" ).asString().getBody() )
             );
         }
 
@@ -775,19 +784,38 @@ public interface PolyphenyDbExecutor extends Executor {
         @Data
         public static class PolyphenyStatus {
 
+            protected final long currentMemory;
+            protected final int numOfActiveTrx;
+            protected final int monitoringQueueSize;
+
+        }
+
+
+        @EqualsAndHashCode(callSuper = true)
+        @Getter
+        public static class PolyphenyFullStatus extends PolyphenyStatus {
+
+            PolyphenyFullStatus( String uui, String version, String hash, long currentMemory, long trxCount, int numOfActiveTrx, int implementationCacheSize, int queryPlanCacheSize, int routingPlanCacheSize, int monitoringQueueSize ) {
+                super( currentMemory, numOfActiveTrx, monitoringQueueSize );
+                this.uuid = uui;
+                this.version = version;
+                this.hash = hash;
+                this.trxCount = trxCount;
+                this.implementationCacheSize = implementationCacheSize;
+                this.queryPlanCacheSize = queryPlanCacheSize;
+                this.routingPlanCacheSize = routingPlanCacheSize;
+            }
+
+
             private final String uuid;
             private final String version;
             private final String hash;
 
-            private final long currentMemory;
-
-            private final int numOfActiveTrx;
             private final long trxCount;
 
             private final int implementationCacheSize;
             private final int queryPlanCacheSize;
             private final int routingPlanCacheSize;
-            private final int monitoringQueueSize;
 
         }
 
