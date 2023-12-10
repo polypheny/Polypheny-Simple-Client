@@ -96,9 +96,6 @@ dependencies {
     implementation group: 'org.jcodec', name: 'jcodec', version: '0.2.5' // License: BSD-2-Clause License
     implementation group: 'org.jcodec', name: 'jcodec-javase', version: '0.2.5' // License: BSD-2-Clause License
 
-    // CSV
-    implementation group: 'com.opencsv', name: 'opencsv', version: '5.9' // License: Apache 2.0
-
     // JSON
     implementation group: 'com.google.code.gson', name: 'gson', version: '2.10.1' // License: Apache 2.0
 

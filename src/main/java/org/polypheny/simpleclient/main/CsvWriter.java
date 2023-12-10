@@ -24,7 +24,7 @@
 
 package org.polypheny.simpleclient.main;
 
-import com.opencsv.CSVWriter;
+import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -35,15 +35,15 @@ import lombok.extern.slf4j.Slf4j;
 public class CsvWriter {
 
     private AtomicInteger queryNumber;
-    private CSVWriter writer;
+    private BufferedWriter writer;
 
 
     CsvWriter( String path ) {
         try {
             queryNumber = new AtomicInteger();
-            writer = new CSVWriter( new FileWriter( path ) );
+            writer = new BufferedWriter( new FileWriter( path ) );
             String[] entries = new String[]{ "Number", "Measured Time", "Query" };
-            writer.writeNext( entries );
+            writeLine( entries );
         } catch ( IOException e ) {
             log.error( "Exception while writing csv file", e );
         }
@@ -51,9 +51,19 @@ public class CsvWriter {
 
 
     public void appendToCsv( String query, long measuredTime ) {
-        writer.writeNext( new String[]{ queryNumber.incrementAndGet() + "", "" + measuredTime, query } );
+        writeLine( new String[]{ queryNumber.incrementAndGet() + "", "" + measuredTime, query } );
     }
 
+
+    private void writeLine( String[] entries ) {
+        try {
+            String line = String.join( ",", entries );
+            writer.write( line );
+            writer.newLine();
+        } catch ( IOException e ) {
+            log.error( "Exception while writing to csv file", e );
+        }
+    }
 
     public void flush() throws IOException {
         writer.flush();

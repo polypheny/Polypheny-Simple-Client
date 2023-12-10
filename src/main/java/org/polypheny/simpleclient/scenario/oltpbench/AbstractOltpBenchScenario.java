@@ -24,8 +24,7 @@
 
 package org.polypheny.simpleclient.scenario.oltpbench;
 
-import com.opencsv.CSVReader;
-import com.opencsv.exceptions.CsvValidationException;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -174,17 +173,20 @@ public abstract class AbstractOltpBenchScenario extends Scenario {
 
         Map<String, List<Long>> latencyPerTransactionType = new HashMap<>();
         List<Long> latency = new ArrayList<>();
-        try ( CSVReader csvReader = new CSVReader( new FileReader( csvFile ) ) ) {
-            String[] values;
-            csvReader.readNextSilently();
-            while ( (values = csvReader.readNext()) != null ) {
+        try ( BufferedReader br = new BufferedReader( new FileReader( csvFile ) ) ) {
+            String line;
+            br.readLine(); // Skip the header line
+            while ( (line = br.readLine()) != null ) {
+                String[] values = line.split( "," );
+
+                // Assuming values[1] is the transaction type and values[3] is the latency
                 if ( !latencyPerTransactionType.containsKey( values[1] ) ) {
                     latencyPerTransactionType.put( values[1], new ArrayList<>() );
                 }
                 latencyPerTransactionType.get( values[1] ).add( Long.parseLong( values[3] ) );
                 latency.add( Long.parseLong( values[3] ) );
             }
-        } catch ( IOException | CsvValidationException e ) {
+        } catch ( IOException e ) {
             throw new RuntimeException( "Error while reading csv file", e );
         }
 
