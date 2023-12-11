@@ -355,7 +355,9 @@ public class ChronosAgent extends AbstractChronosAgent {
             ((PolyphenyDbInstance) databaseInstance).setWorkloadMonitoring( config.workloadMonitoringLoadingData );
 
             // Start Polypheny status data gathering
-            ((PolyphenyDbInstance) databaseInstance).getStatusGatherer().startStatusDataGathering( 60 );
+            if ( PolyphenyVersionSwitch.getInstance().hasStatusEndpoint ) {
+                ((PolyphenyDbInstance) databaseInstance).getStatusGatherer().startStatusDataGathering( 60 );
+            }
         }
 
         // Insert data
