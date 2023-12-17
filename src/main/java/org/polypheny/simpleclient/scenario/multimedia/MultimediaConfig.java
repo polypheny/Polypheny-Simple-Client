@@ -60,7 +60,6 @@ public class MultimediaConfig extends AbstractConfig {
 
         dataStore = getStringProperty( properties, "dataStore" );
         multimediaStore = getStringProperty( properties, "multimediaStore" );
-        dataStores.add( dataStore );
         if ( !multimediaStore.equals( "same" ) ) {
             dataStores.add( multimediaStore );
         }
@@ -88,7 +87,6 @@ public class MultimediaConfig extends AbstractConfig {
 
         dataStore = cdl.get( "dataStore" );
         multimediaStore = cdl.get( "multimediaStore" );
-        dataStores.add( dataStore );
         if ( !multimediaStore.equals( "same" ) ) {
             dataStores.add( multimediaStore );
         }
