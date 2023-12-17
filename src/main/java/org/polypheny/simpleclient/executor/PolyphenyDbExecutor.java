@@ -314,7 +314,6 @@ public interface PolyphenyDbExecutor extends Executor {
             configurePolyphenyControl( polyphenyControlConnector, config, config.resetCatalog );
 
             // Purge Polypheny folder
-
             polyphenyControlConnector.purgePolyphenyFolder();
 
             // Pull branch and update polypheny
@@ -406,6 +405,19 @@ public interface PolyphenyDbExecutor extends Executor {
             } catch ( InterruptedException e ) {
                 throw new RuntimeException( "Unexpected interrupt", e );
             }
+            if ( polyphenyControlConnector.checkForAnyRunningPolyphenyInstances() > 0 ) {
+                // Wait another two minutes for Polypheny to stop
+                try {
+                    TimeUnit.MINUTES.sleep( 2 );
+                } catch ( InterruptedException e ) {
+                    throw new RuntimeException( "Unexpected interrupt", e );
+                }
+            }
+            if ( polyphenyControlConnector.checkForAnyRunningPolyphenyInstances() > 0 ) {
+                throw new RuntimeException( "There are still running instances of Polypheny. Manual intervention is required!" );
+                //log.error( "There are still running instances of Polypheny. Manual intervention is required!" );
+                //System.exit( 1 );
+            }
         }
 
 
@@ -427,7 +439,7 @@ public interface PolyphenyDbExecutor extends Executor {
             }
             // Wait another five seconds for post-startup process to finish
             try {
-                TimeUnit.SECONDS.sleep( 5 );
+                TimeUnit.SECONDS.sleep( 20 );
             } catch ( InterruptedException e ) {
                 throw new RuntimeException( "Unexpected interrupt", e );
             }
