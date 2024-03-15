@@ -45,8 +45,8 @@ public class PolyphenyVersionSwitch {
 
 
     private PolyphenyVersionSwitch( AbstractConfig config ) {
-        uiPort = config.pdbBranch.equals( "refactor" ) ? 7659 : 8080;
-        hasStatusEndpoint = config.pdbBranch.equals( "refactor" );
+        uiPort = config.pdbBranch.equals( "master-before-refactor" ) ? 8080 : 7659;
+        hasStatusEndpoint = !config.pdbBranch.equals( "master-before-refactor" );
         hasIcarusRoutingSettings = config.pdbBranch.equalsIgnoreCase( "old-routing" );
         useNewDeploySyntax = !hasIcarusRoutingSettings;
         useNewAdapterDeployParameters = true;
