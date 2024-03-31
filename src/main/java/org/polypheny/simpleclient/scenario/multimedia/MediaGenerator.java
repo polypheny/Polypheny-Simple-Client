@@ -75,7 +75,14 @@ public final class MediaGenerator {
 
 
     private static File randomFile( String extension ) {
-        return new File( System.getProperty( "user.home" ), ".polypheny/tmp/" + UUID.randomUUID().toString() + "." + extension );
+        File dir = new File( System.getProperty( "user.home" ), ".polypheny/tmp/" );
+        if ( !dir.exists() ) {
+            dir.mkdir();
+        } else if ( !dir.isDirectory() ) {
+            throw new RuntimeException( ".polypheny/tmp/ exists but it is not a directory. Manual intervention is required!" );
+        }
+
+        return new File( System.getProperty( "user.home" ), ".polypheny/tmp/" + UUID.randomUUID() + "." + extension );
     }
 
 
