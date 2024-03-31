@@ -112,9 +112,9 @@ public class InsertMedia extends QueryBuilder {
                     + id + ","
                     + "timestamp '" + timestamp.toString() + "',"
                     + album_id + ","
-                    + MediaGenerator.insertByteHexString( MediaGenerator.getAndDeleteFile( img, 2 ) ) + ","
-                    + MediaGenerator.insertByteHexString( MediaGenerator.getAndDeleteFile( video, 2 ) ) + ","
-                    + MediaGenerator.insertByteHexString( MediaGenerator.getAndDeleteFile( audio, 2 ) )
+                    + MediaGenerator.insertByteHexString( MediaGenerator.getAndDeleteFile( img, 1 ) ) + ","
+                    + MediaGenerator.insertByteHexString( MediaGenerator.getAndDeleteFile( video, 1 ) ) + ","
+                    + MediaGenerator.insertByteHexString( MediaGenerator.getAndDeleteFile( audio, 1 ) )
                     + ")";
         }
 

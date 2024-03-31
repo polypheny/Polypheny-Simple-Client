@@ -75,7 +75,7 @@ public final class MediaGenerator {
 
 
     private static File randomFile( String extension ) {
-        File dir = new File( System.getProperty( "user.home" ), ".polypheny/tmp/" );
+        File dir = new File( System.getProperty( "user.home" ), ".polypheny/tmp" );
         if ( !dir.exists() ) {
             dir.mkdir();
         } else if ( !dir.isDirectory() ) {
@@ -146,7 +146,7 @@ public final class MediaGenerator {
             }
             encoder.finish();
         } catch ( IOException e ) {
-            log.error( "Exception while generating random video file", e );
+            throw new RuntimeException( "Exception while generating random video file", e );
         } finally {
             NIOUtils.closeQuietly( sink );
         }
@@ -195,8 +195,7 @@ public final class MediaGenerator {
         try {
             bytes = Files.readAllBytes( file.toPath() );
         } catch ( IOException e ) {
-            log.error( "Exception while deleting file", e );
-            return null;
+            throw new RuntimeException( "Exception while reading file", e );
         }
         file.delete();
         return bytes;
@@ -214,8 +213,7 @@ public final class MediaGenerator {
         try {
             bytes = Files.readAllBytes( file.toPath() );
         } catch ( IOException e ) {
-            log.error( "Exception while deleting file", e );
-            return null;
+            throw new RuntimeException( "Exception while reading file", e );
         }
         if ( !fileMap.containsKey( file.getAbsolutePath() ) ) {
             fileMap.put( file.getAbsolutePath(), getNTimes - 1 );

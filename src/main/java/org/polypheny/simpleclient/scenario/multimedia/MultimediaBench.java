@@ -305,7 +305,7 @@ public class MultimediaBench extends Scenario {
                 }
                 try {
                     executor.executeQuery( queryListEntry.query );
-                } catch ( ExecutorException e ) {
+                } catch ( ExecutorException | RuntimeException e ) {
                     log.error( "Caught exception while executing queries", e );
                     threadMonitor.notifyAboutError( e );
                     try {

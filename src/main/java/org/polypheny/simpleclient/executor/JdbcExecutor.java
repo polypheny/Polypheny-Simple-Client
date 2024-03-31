@@ -77,8 +77,6 @@ public abstract class JdbcExecutor implements Executor {
     @Override
     public long executeQuery( Query query ) throws ExecutorException {
         try {
-            log.debug( query.getSql().substring( 0, Math.min( 500, query.getSql().length() ) ) );
-
             ArrayList<File> files = new ArrayList<>();
             long start = System.nanoTime();
 
