@@ -188,8 +188,10 @@ public class MultiBenchConfig extends AbstractConfig {
 
 
         private void settings() {
-            //dataStoreFeature
-            //dataStoreMetadata
+            if ( dataStores.size() == 1 ) {
+                dataStoreFeature = dataStores.get( 0 );
+                dataStoreMetadata = dataStores.get( 0 );
+            }
 
             randomSeedInsert = MultiBenchConfig.this.seed;
             randomSeedQuery = MultiBenchConfig.this.seed + 1;
