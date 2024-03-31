@@ -69,13 +69,13 @@ public class SelectRandomTimeline extends QueryBuilder {
 
         @Override
         public String getSql() {
-            return "SELECT \"message\", \"img\", \"video\", \"sound\" FROM \"timeline\" WHERE \"id\" = " + id;
+            return "SELECT \"message\", \"img\", \"video\", \"audio\" FROM \"timeline\" WHERE \"id\" = " + id;
         }
 
 
         @Override
         public String getParameterizedSqlQuery() {
-            return "SELECT \"message\", \"img\", \"video\", \"sound\" FROM \"timeline\" WHERE \"id\" = ?";
+            return "SELECT \"message\", \"img\", \"video\", \"audio\" FROM \"timeline\" WHERE \"id\" = ?";
         }
 
 
@@ -94,7 +94,7 @@ public class SelectRandomTimeline extends QueryBuilder {
             joiner.add( table + "message" );
             joiner.add( table + "img" );
             joiner.add( table + "video" );
-            joiner.add( table + "sound" );
+            joiner.add( table + "audio" );
             return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.timeline" )
                     .queryString( "public.timeline.id", "=" + id )
                     .queryString( "_project", joiner.toString() );

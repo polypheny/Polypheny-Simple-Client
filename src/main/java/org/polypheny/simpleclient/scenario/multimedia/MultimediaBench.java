@@ -108,8 +108,8 @@ public class MultimediaBench extends Scenario {
             executor.executeQuery( (new CreateTable( "ALTER CONFIG 'validation/validateMultimediaContentType' SET FALSE" )).getNewQuery() );
             executor.executeQuery( (new CreateTable( "CREATE TABLE IF NOT EXISTS \"users\" (\"id\" INTEGER NOT NULL, \"firstName\" VARCHAR(1000) NOT NULL, \"lastName\" VARCHAR(1000) NOT NULL, \"email\" VARCHAR(1000) NOT NULL, \"password\" VARCHAR(1000) NOT NULL, \"profile_pic\" IMAGE NOT NULL, PRIMARY KEY(\"id\"))" + onStore )).getNewQuery() );
             executor.executeQuery( (new CreateTable( "CREATE TABLE IF NOT EXISTS \"album\" (\"id\" INTEGER NOT NULL, \"user_id\" INTEGER NOT NULL, \"name\" VARCHAR(200) NOT NULL, PRIMARY KEY(\"id\"))" + onStore )).getNewQuery() );
-            executor.executeQuery( (new CreateTable( "CREATE TABLE IF NOT EXISTS \"media\" (\"id\" INTEGER NOT NULL, \"timestamp\" TIMESTAMP NOT NULL, \"album_id\" INTEGER NOT NULL, \"img\" IMAGE, \"video\" VIDEO, \"sound\" SOUND, PRIMARY KEY(\"id\"))" + onStore )).getNewQuery() );
-            executor.executeQuery( (new CreateTable( "CREATE TABLE IF NOT EXISTS \"timeline\" (\"id\" INTEGER NOT NULL, \"timestamp\" TIMESTAMP NOT NULL, \"user_id\" INTEGER NOT NULL, \"message\" VARCHAR(2000), \"img\" IMAGE, \"video\" VIDEO, \"sound\" SOUND, PRIMARY KEY(\"id\"))" + onStore )).getNewQuery() );
+            executor.executeQuery( (new CreateTable( "CREATE TABLE IF NOT EXISTS \"media\" (\"id\" INTEGER NOT NULL, \"timestamp\" TIMESTAMP NOT NULL, \"album_id\" INTEGER NOT NULL, \"img\" IMAGE, \"video\" VIDEO, \"audio\" AUDIO, PRIMARY KEY(\"id\"))" + onStore )).getNewQuery() );
+            executor.executeQuery( (new CreateTable( "CREATE TABLE IF NOT EXISTS \"timeline\" (\"id\" INTEGER NOT NULL, \"timestamp\" TIMESTAMP NOT NULL, \"user_id\" INTEGER NOT NULL, \"message\" VARCHAR(2000), \"img\" IMAGE, \"video\" VIDEO, \"audio\" AUDIO, PRIMARY KEY(\"id\"))" + onStore )).getNewQuery() );
             executor.executeQuery( (new CreateTable( "CREATE TABLE IF NOT EXISTS \"followers\" (\"user_id\" INTEGER NOT NULL,\"friend_id\" INTEGER NOT NULL, PRIMARY KEY(\"user_id\", \"friend_id\"))" + onStore )).getNewQuery() );
             executor.executeQuery( (new CreateTable( "TRUNCATE TABLE \"users\"" )).getNewQuery() );
             executor.executeQuery( (new CreateTable( "TRUNCATE TABLE \"album\"" )).getNewQuery() );
@@ -121,8 +121,8 @@ public class MultimediaBench extends Scenario {
                 String ds = findMatchingDataStoreName( config.dataStore );
                 String dsMultimedia = findMatchingDataStoreName( config.multimediaStore );
                 executor.executeQuery( (new CreateTable( "ALTER TABLE public.\"users\" ADD PLACEMENT (\"profile_pic\") ON STORE \"" + dsMultimedia + "\"" )).getNewQuery() );
-                executor.executeQuery( (new CreateTable( "ALTER TABLE public.\"media\" ADD PLACEMENT (\"img\", \"video\", \"sound\") ON STORE \"" + dsMultimedia + "\"" )).getNewQuery() );
-                executor.executeQuery( (new CreateTable( "ALTER TABLE public.\"timeline\" ADD PLACEMENT (\"img\", \"video\", \"sound\") ON STORE \"" + dsMultimedia + "\"" )).getNewQuery() );
+                executor.executeQuery( (new CreateTable( "ALTER TABLE public.\"media\" ADD PLACEMENT (\"img\", \"video\", \"audio\") ON STORE \"" + dsMultimedia + "\"" )).getNewQuery() );
+                executor.executeQuery( (new CreateTable( "ALTER TABLE public.\"timeline\" ADD PLACEMENT (\"img\", \"video\", \"audio\") ON STORE \"" + dsMultimedia + "\"" )).getNewQuery() );
 
                 executor.executeQuery( (new CreateTable( "ALTER TABLE public.\"users\" MODIFY PLACEMENT (\"id\", \"firstName\", \"lastName\", \"email\", \"password\") ON STORE \"" + ds + "\"" )).getNewQuery() );
                 executor.executeQuery( (new CreateTable( "ALTER TABLE public.\"media\" MODIFY PLACEMENT (\"id\", \"timestamp\", \"album_id\") ON STORE \"" + ds + "\"" )).getNewQuery() );

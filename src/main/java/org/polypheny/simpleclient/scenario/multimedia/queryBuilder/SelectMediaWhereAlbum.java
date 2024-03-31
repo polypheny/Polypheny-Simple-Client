@@ -70,13 +70,13 @@ public class SelectMediaWhereAlbum extends QueryBuilder {
 
         @Override
         public String getSql() {
-            return "SELECT \"timestamp\", \"img\", \"video\", \"sound\" FROM \"public\".\"media\" WHERE \"album_id\" = " + albumId + " LIMIT " + LIMIT;
+            return "SELECT \"timestamp\", \"img\", \"video\", \"audio\" FROM \"public\".\"media\" WHERE \"album_id\" = " + albumId + " LIMIT " + LIMIT;
         }
 
 
         @Override
         public String getParameterizedSqlQuery() {
-            return "SELECT \"timestamp\", \"img\", \"video\", \"sound\" FROM \"public\".\"media\" WHERE \"album_id\" = ? LIMIT " + LIMIT;
+            return "SELECT \"timestamp\", \"img\", \"video\", \"audio\" FROM \"public\".\"media\" WHERE \"album_id\" = ? LIMIT " + LIMIT;
         }
 
 
@@ -95,7 +95,7 @@ public class SelectMediaWhereAlbum extends QueryBuilder {
             joiner.add( table + "timestamp" );
             joiner.add( table + "img" );
             joiner.add( table + "video" );
-            joiner.add( table + "sound" );
+            joiner.add( table + "audio" );
             return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.media" )
                     .queryString( "public.media.album_id", "=" + albumId )
                     .queryString( "_project", joiner.toString() )

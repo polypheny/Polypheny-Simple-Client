@@ -91,17 +91,17 @@ public class InsertRandomTimeline extends QueryBuilder {
 
     private static class InsertRandomTimelineQuery extends MultipartInsert {
 
-        private static final String SQL = "INSERT INTO \"timeline\" (\"id\", \"timestamp\", \"user_id\", \"message\", \"img\", \"video\", \"sound\") VALUES ";
+        private static final String SQL = "INSERT INTO \"timeline\" (\"id\", \"timestamp\", \"user_id\", \"message\", \"img\", \"video\", \"audio\") VALUES ";
         private final int timelineId;
         private final Timestamp timestamp;
         private final int userId;
         private final String message;
         private final File img;
         private final File video;
-        private final File sound;
+        private final File audio;
 
 
-        public InsertRandomTimelineQuery( int timelineId, Timestamp timestamp, int userId, String message, File img, File video, File sound ) {
+        public InsertRandomTimelineQuery( int timelineId, Timestamp timestamp, int userId, String message, File img, File video, File audio ) {
             super( false );
             this.timelineId = timelineId;
             this.timestamp = timestamp;
@@ -109,10 +109,10 @@ public class InsertRandomTimeline extends QueryBuilder {
             this.message = message;
             this.img = img;
             this.video = video;
-            this.sound = sound;
+            this.audio = audio;
             setFile( "img", img );
             setFile( "video", video );
-            setFile( "sound", sound );
+            setFile( "audio", audio );
         }
 
 
@@ -131,7 +131,7 @@ public class InsertRandomTimeline extends QueryBuilder {
                     + "'" + message + "',"
                     + MediaGenerator.insertByteHexString( MediaGenerator.getAndDeleteFile( img, 1 ) ) + ","
                     + MediaGenerator.insertByteHexString( MediaGenerator.getAndDeleteFile( video, 1 ) ) + ","
-                    + MediaGenerator.insertByteHexString( MediaGenerator.getAndDeleteFile( sound, 1 ) )
+                    + MediaGenerator.insertByteHexString( MediaGenerator.getAndDeleteFile( audio, 1 ) )
                     + ")";
         }
 
@@ -151,7 +151,7 @@ public class InsertRandomTimeline extends QueryBuilder {
             map.put( 4, new ImmutablePair<>( DataTypes.VARCHAR, message ) );
             map.put( 5, new ImmutablePair<>( DataTypes.FILE, img ) );
             map.put( 6, new ImmutablePair<>( DataTypes.FILE, video ) );
-            map.put( 7, new ImmutablePair<>( DataTypes.FILE, sound ) );
+            map.put( 7, new ImmutablePair<>( DataTypes.FILE, audio ) );
             return map;
         }
 
@@ -178,7 +178,7 @@ public class InsertRandomTimeline extends QueryBuilder {
             set.add( table + "message", new JsonPrimitive( message ) );
             set.add( table + "img", new JsonPrimitive( "img" ) );
             set.add( table + "video", new JsonPrimitive( "video" ) );
-            set.add( table + "sound", new JsonPrimitive( "sound" ) );
+            set.add( table + "audio", new JsonPrimitive( "audio" ) );
             return set;
         }
 

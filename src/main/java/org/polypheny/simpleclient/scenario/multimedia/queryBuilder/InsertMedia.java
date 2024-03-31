@@ -77,26 +77,26 @@ public class InsertMedia extends QueryBuilder {
 
     private static class InsertMediaQuery extends MultipartInsert {
 
-        private static final String SQL = "INSERT INTO \"media\" (\"id\", \"timestamp\", \"album_id\", \"img\", \"video\", \"sound\") VALUES ";
+        private static final String SQL = "INSERT INTO \"media\" (\"id\", \"timestamp\", \"album_id\", \"img\", \"video\", \"audio\") VALUES ";
         private final int id;
         private final Timestamp timestamp;
         private final int album_id;
         private final File img;
         private final File video;
-        private final File sound;
+        private final File audio;
 
 
-        public InsertMediaQuery( int id, Timestamp timestamp, int album_id, File img, File video, File sound ) {
+        public InsertMediaQuery( int id, Timestamp timestamp, int album_id, File img, File video, File audio ) {
             super( false );
             this.id = id;
             this.timestamp = timestamp;
             this.album_id = album_id;
             this.img = img;
             this.video = video;
-            this.sound = sound;
+            this.audio = audio;
             setFile( "img", img );
             setFile( "video", video );
-            setFile( "sound", sound );
+            setFile( "audio", this.audio );
         }
 
 
@@ -114,7 +114,7 @@ public class InsertMedia extends QueryBuilder {
                     + album_id + ","
                     + MediaGenerator.insertByteHexString( MediaGenerator.getAndDeleteFile( img, 2 ) ) + ","
                     + MediaGenerator.insertByteHexString( MediaGenerator.getAndDeleteFile( video, 2 ) ) + ","
-                    + MediaGenerator.insertByteHexString( MediaGenerator.getAndDeleteFile( sound, 2 ) )
+                    + MediaGenerator.insertByteHexString( MediaGenerator.getAndDeleteFile( audio, 2 ) )
                     + ")";
         }
 
@@ -133,7 +133,7 @@ public class InsertMedia extends QueryBuilder {
             map.put( 3, new ImmutablePair<>( DataTypes.INTEGER, album_id ) );
             map.put( 4, new ImmutablePair<>( DataTypes.FILE, img ) );
             map.put( 5, new ImmutablePair<>( DataTypes.FILE, video ) );
-            map.put( 6, new ImmutablePair<>( DataTypes.FILE, sound ) );
+            map.put( 6, new ImmutablePair<>( DataTypes.FILE, audio ) );
             return map;
         }
 
@@ -159,7 +159,7 @@ public class InsertMedia extends QueryBuilder {
             set.add( table + "album_id", new JsonPrimitive( album_id ) );
             set.add( table + "img", new JsonPrimitive( "img" ) );
             set.add( table + "video", new JsonPrimitive( "video" ) );
-            set.add( table + "sound", new JsonPrimitive( "sound" ) );
+            set.add( table + "audio", new JsonPrimitive( "audio" ) );
             return set;
         }
 
