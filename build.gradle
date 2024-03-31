@@ -3,7 +3,7 @@ description = "A lightweight Polypheny-DB benchmarking client"
 
 def versionMajor = 4
 def versionMinor = 8
-def versionQualifier = "-SNAPSHOT"
+def versionQualifier = ""
 version = versionMajor + "." + versionMinor + versionQualifier
 
 
