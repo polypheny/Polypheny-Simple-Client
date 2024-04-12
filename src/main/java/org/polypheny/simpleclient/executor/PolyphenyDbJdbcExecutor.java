@@ -24,11 +24,13 @@
 
 package org.polypheny.simpleclient.executor;
 
-import java.sql.DriverManager;
+import java.lang.reflect.InvocationTargetException;
+import java.sql.Driver;
 import java.sql.SQLException;
 import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.main.CsvWriter;
+import org.polypheny.simpleclient.main.CustomClassLoader;
 import org.polypheny.simpleclient.query.RawQuery;
 
 
@@ -39,19 +41,34 @@ public class PolyphenyDbJdbcExecutor extends JdbcExecutor implements PolyphenyDb
     private PolyphenyDbJdbcExecutor( String polyphenyHost, CsvWriter csvWriter, boolean prepareStatements ) {
         super( csvWriter, prepareStatements );
 
+        Driver driver;
         try {
-            Class.forName( "org.polypheny.jdbc.Driver" );
+            CustomClassLoader loader = new CustomClassLoader( ClassLoader.getSystemClassLoader() );
+            Class driverClass;
+            if ( PolyphenyVersionSwitch.getInstance().usePrismJdbcDriver ) {
+                driverClass = Class.forName( "org.polypheny.jdbc.PolyphenyDriver", true, loader );
+            } else {
+                driverClass = Class.forName( "org.polypheny.jdbc.Driver", true, loader );
+            }
+            driver = (Driver) driverClass.getDeclaredConstructor().newInstance();
         } catch ( ClassNotFoundException e ) {
             throw new RuntimeException( "Driver not found.", e );
+        } catch ( InvocationTargetException | InstantiationException | IllegalAccessException | NoSuchMethodException e ) {
+            throw new RuntimeException( e );
         }
 
         try {
-            String url = "jdbc:polypheny://" + polyphenyHost + "/?serialization=PROTOBUF";
-
+            String url;
+            if ( PolyphenyVersionSwitch.getInstance().usePrismJdbcDriver ) {
+                url = "jdbc:polypheny://" + polyphenyHost + "/";
+            } else {
+                url = "jdbc:polypheny://" + polyphenyHost + "/?serialization=PROTOBUF";
+            }
             Properties props = new Properties();
             props.setProperty( "user", "pa" );
+            props.setProperty( "password", "" );
+            connection = driver.connect( url, props );
 
-            connection = DriverManager.getConnection( url, props );
             executeStatement = connection.createStatement();
             executeStatement.setFetchSize( 100 );
         } catch ( SQLException e ) {

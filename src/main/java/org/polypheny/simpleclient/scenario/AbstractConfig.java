@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
+import org.polypheny.simpleclient.executor.PolyphenyVersionSwitch;
 
 
 @Slf4j
@@ -75,8 +76,8 @@ public abstract class AbstractConfig {
         this.scenario = scenario;
         this.system = system;
 
-        pdbBranch = null;
-        puiBranch = null;
+        pdbBranch = "master";
+        puiBranch = "master";
         buildUi = false;
         resetCatalog = false;
         memoryCatalog = false;
@@ -102,6 +103,9 @@ public abstract class AbstractConfig {
         workloadMonitoringExecutingWorkload = false;
         workloadMonitoringLoadingData = true;
         workloadMonitoringWarmup = true;
+
+        // This is hacky but ensures that VersionSwitch is initialized when running tasks from CLI.
+        PolyphenyVersionSwitch.initialize( this );
     }
 
 

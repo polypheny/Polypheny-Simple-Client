@@ -60,6 +60,12 @@ java {
 }
 
 
+configurations {
+    oldPolyphenyJdbcDriver
+    newPolyphenyJdbcDriver
+}
+
+
 dependencies {
     // Commons
     implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.14.0' // License: Apache 2.0
@@ -75,7 +81,8 @@ dependencies {
     implementation group: 'com.konghq', name: 'unirest-java', version: '3.14.5' // License: MIT
 
     // JDBC Drivers
-    implementation group: 'org.polypheny', name: 'polypheny-jdbc-driver', version: '1.5.3' // License: Apache 2.0
+    oldPolyphenyJdbcDriver group: 'org.polypheny', name: 'polypheny-jdbc-driver', version: '1.5.3' // License: Apache 2.0
+    newPolyphenyJdbcDriver group: 'org.polypheny', name: 'polypheny-jdbc-driver', version: '2.0-RC1' // License: Apache 2.0
     implementation group: 'org.postgresql', name: 'postgresql', version: '42.7.0' // License: BSD-2-Clause License
     implementation group: 'monetdb', name: 'monetdb-jdbc', version: '3.3' // License: Mozilla Public License 2.0
 
@@ -186,6 +193,16 @@ shadowJar {
         setPath("META-INF/services")
         include("io.grpc.*")
     }
+    // Include everything from 'libs' but rename JARs to another extension to trick the plugin
+    from('libs') {
+        eachFile { FileCopyDetails fcd ->
+            if (fcd.name.endsWith('.jar')) {
+                int lastIndex = fcd.name.lastIndexOf('.')
+                fcd.name = fcd.name[0..lastIndex] + 'zip' // Rename .jar to .zip
+            }
+        }
+        into 'libs'
+    }
 }
 assemble.dependsOn shadowJar
 artifacts {
@@ -195,6 +212,32 @@ artifacts {
     //archives javadocJar // jar file containing the source files
 }
 
+
+task copyPolyphenyOldJdbcDriver(type: Copy) {
+    // Ensure directory is created before copying
+    doFirst {
+        mkdir 'libs/polyphenyJdbcDrivers'
+    }
+
+    from configurations.oldPolyphenyJdbcDriver
+    into 'libs/polyphenyJdbcDrivers'
+    rename { String fileName ->
+        'old-driver.jar'
+    }
+}
+task copyPolyphenyNewJdbcDriver(type: Copy) {
+    // Ensure directory is created before copying
+    doFirst {
+        mkdir 'libs/polyphenyJdbcDrivers'
+    }
+    from configurations.newPolyphenyJdbcDriver
+    into 'libs/polyphenyJdbcDrivers'
+    rename { String fileName ->
+        'new-driver.jar'
+    }
+}
+compileJava.dependsOn(copyPolyphenyOldJdbcDriver)
+compileJava.dependsOn(copyPolyphenyNewJdbcDriver)
 
 /**
  * IntelliJ

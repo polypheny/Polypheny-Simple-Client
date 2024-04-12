@@ -37,6 +37,7 @@ public class PolyphenyVersionSwitch {
     public final boolean hasIcarusRoutingSettings;
     public final boolean useNewDeploySyntax;
     public final boolean useNewAdapterDeployParameters;
+    public final boolean usePrismJdbcDriver;
 
 
     public static void initialize( AbstractConfig config ) {
@@ -50,6 +51,7 @@ public class PolyphenyVersionSwitch {
         hasIcarusRoutingSettings = config.pdbBranch.equalsIgnoreCase( "old-routing" );
         useNewDeploySyntax = !hasIcarusRoutingSettings;
         useNewAdapterDeployParameters = true;
+        usePrismJdbcDriver = config.pdbBranch.equals( "proto-without-grpc" );
     }
 
 }
