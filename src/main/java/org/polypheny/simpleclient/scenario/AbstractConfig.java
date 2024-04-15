@@ -76,7 +76,7 @@ public abstract class AbstractConfig {
         this.scenario = scenario;
         this.system = system;
 
-        pdbBranch = "master";
+        pdbBranch = "proto-without-grpc";
         puiBranch = "master";
         buildUi = false;
         resetCatalog = false;
