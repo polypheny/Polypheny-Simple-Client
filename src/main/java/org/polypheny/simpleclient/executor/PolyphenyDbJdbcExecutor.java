@@ -68,6 +68,7 @@ public class PolyphenyDbJdbcExecutor extends JdbcExecutor implements PolyphenyDb
             props.setProperty( "user", "pa" );
             props.setProperty( "password", "" );
             connection = driver.connect( url, props );
+            connection.setAutoCommit( false );
 
             executeStatement = connection.createStatement();
             executeStatement.setFetchSize( 100 );
