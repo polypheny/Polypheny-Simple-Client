@@ -38,6 +38,7 @@ public class PolyphenyVersionSwitch {
     public final boolean useNewDeploySyntax;
     public final boolean useNewAdapterDeployParameters;
     public final boolean usePrismJdbcDriver;
+    public final String dockerInstancesEndpoint;
 
 
     public static void initialize( AbstractConfig config ) {
@@ -52,6 +53,7 @@ public class PolyphenyVersionSwitch {
         useNewDeploySyntax = !hasIcarusRoutingSettings;
         useNewAdapterDeployParameters = true;
         usePrismJdbcDriver = config.pdbBranch.equals( "proto-without-grpc" );
+        dockerInstancesEndpoint = config.pdbBranch.equals( "master-before-refactor" ) ? "/getDockerInstances" : "/docker/instances";
     }
 
 }

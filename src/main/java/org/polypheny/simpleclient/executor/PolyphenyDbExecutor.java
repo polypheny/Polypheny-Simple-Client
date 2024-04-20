@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019-2022 The Polypheny Project
+ * Copyright (c) 2019-2024 The Polypheny Project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"), to deal
@@ -640,7 +640,7 @@ public interface PolyphenyDbExecutor extends Executor {
 
 
         private boolean checkIfDockerIsReady() {
-            String url = "http://localhost:" + PolyphenyVersionSwitch.getInstance().uiPort + "/getDockerInstances";
+            String url = "http://localhost:" + PolyphenyVersionSwitch.getInstance().uiPort + PolyphenyVersionSwitch.getInstance().dockerInstancesEndpoint;
             HttpResponse<String> response = Unirest.get( url ).asString();
 
             if ( response.getStatus() == 200 ) {
