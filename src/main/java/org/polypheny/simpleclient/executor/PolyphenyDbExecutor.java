@@ -273,7 +273,7 @@ public interface PolyphenyDbExecutor extends Executor {
 
 
     default int getDockerInstanceId() {
-        String url = "http://localhost:" + PolyphenyVersionSwitch.getInstance().uiPort + "/getDockerInstances";
+        String url = "http://localhost:" + PolyphenyVersionSwitch.getInstance().uiPort + PolyphenyVersionSwitch.getInstance().dockerInstancesEndpoint;
         HttpResponse<String> response = Unirest.get( url ).asString();
 
         if ( response.getStatus() == 200 ) {
