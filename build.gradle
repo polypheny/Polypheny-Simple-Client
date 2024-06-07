@@ -82,7 +82,7 @@ dependencies {
 
     // JDBC Drivers
     oldPolyphenyJdbcDriver group: 'org.polypheny', name: 'polypheny-jdbc-driver', version: '1.5.3' // License: Apache 2.0
-    newPolyphenyJdbcDriver group: 'org.polypheny', name: 'polypheny-jdbc-driver', version: '2.0-RC3' // License: Apache 2.0
+    newPolyphenyJdbcDriver group: 'org.polypheny', name: 'polypheny-jdbc-driver', version: '2.0' // License: Apache 2.0
     implementation group: 'org.postgresql', name: 'postgresql', version: '42.7.0' // License: BSD-2-Clause License
     implementation group: 'monetdb', name: 'monetdb-jdbc', version: '3.3' // License: Mozilla Public License 2.0
 
