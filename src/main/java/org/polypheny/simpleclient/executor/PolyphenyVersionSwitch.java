@@ -47,13 +47,13 @@ public class PolyphenyVersionSwitch {
 
 
     private PolyphenyVersionSwitch( AbstractConfig config ) {
-        uiPort = config.pdbBranch.equals( "master-before-refactor" ) ? 8080 : 7659;
-        hasStatusEndpoint = !config.pdbBranch.equals( "master-before-refactor" );
+        uiPort = 7659;
+        hasStatusEndpoint = true;
         hasIcarusRoutingSettings = config.pdbBranch.equalsIgnoreCase( "old-routing" );
         useNewDeploySyntax = !hasIcarusRoutingSettings;
         useNewAdapterDeployParameters = true;
-        usePrismJdbcDriver = config.pdbBranch.equals( "proto-without-grpc" );
-        dockerInstancesEndpoint = config.pdbBranch.equals( "master-before-refactor" ) ? "/getDockerInstances" : "/docker/instances";
+        usePrismJdbcDriver = true;
+        dockerInstancesEndpoint = "/docker/instances";
     }
 
 }
