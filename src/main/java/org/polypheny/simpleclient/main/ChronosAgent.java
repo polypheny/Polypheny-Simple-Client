@@ -570,7 +570,15 @@ public class ChronosAgent extends AbstractChronosAgent {
 
     @Override
     protected void aborted( ChronosJob chronosJob ) {
-
+        if ( getSingleJobId() != null ) {
+            try {
+                if ( polyphenyControlConnector != null ) {
+                    polyphenyControlConnector.stopPolypheny();
+                }
+            } finally {
+                System.exit( 1 );
+            }
+        }
     }
 
 
