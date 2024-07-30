@@ -70,6 +70,9 @@ public class ChronosCommand implements CliRunnable {
     @Option(name = { "--queryList" }, arity = 0, description = "Dump all queries into a file (default: false).")
     public boolean dumpQueryList = false;
 
+    @Option(name = { "--job" }, title = "Id of the job to run", description = "Run a single chronos job (default: null)")
+    public Integer jobId = null;
+
 
     @Override
     public int run() {
@@ -83,7 +86,23 @@ public class ChronosCommand implements CliRunnable {
 
         AbstractChronosAgent aca = new ChronosAgent( address, port, true, true, environment, supports.split( "," ), writeCsv, dumpQueryList );
         aca.setDaemon( false );
+        if ( jobId != null ) {
+            aca.setSingleJobId( jobId );
+        }
         aca.start();
+        while ( true ) {
+            try {
+                aca.join();
+                break;
+            } catch ( InterruptedException e ) {
+                // ignore
+            }
+        }
+
+        if (jobId != null) {
+            // Make sure simple-client exits when the job is done
+            System.exit( 0 );
+        }
 
         return 0;
     }
