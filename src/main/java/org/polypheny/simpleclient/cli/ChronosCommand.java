@@ -30,7 +30,6 @@ import com.github.rvesse.airline.HelpOption;
 import com.github.rvesse.airline.annotations.AirlineModule;
 import com.github.rvesse.airline.annotations.Command;
 import com.github.rvesse.airline.annotations.Option;
-import com.github.rvesse.airline.annotations.restrictions.Required;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import org.polypheny.simpleclient.main.ChronosAgent;
@@ -51,9 +50,8 @@ public class ChronosCommand implements CliRunnable {
     @Option(name = { "-e", "--environment" }, description = "Identifier of the Chronos evaluation environment this client belongs to (default: \"default\").")
     private String environment = "default";
 
-    @Required
     @Option(name = { "-s", "--supports" }, description = "Comma-separated list of system identifiers supported by this client. Depends on the Chronos instance.")
-    private String supports = "";
+    private String supports = null;
 
     @Option(name = { "--host" }, title = "IP or Port", description = "Hostname or IP address of the host running the system(s) to be benchmarked (default: 127.0.0.1).")
     public static String hostname = "127.0.0.1";
@@ -84,7 +82,17 @@ public class ChronosCommand implements CliRunnable {
             System.exit( 1 );
         }
 
-        AbstractChronosAgent aca = new ChronosAgent( address, port, true, true, environment, supports.split( "," ), writeCsv, dumpQueryList );
+        if ( supports == null && jobId == null ) {
+            System.err.println( "--supports or --job is required" );
+            System.exit( 1 );
+        }
+
+        if ( supports != null && jobId != null ) {
+            System.err.println( "--supports and --job are mutually exclusive" );
+            System.exit( 1 );
+        }
+
+        AbstractChronosAgent aca = new ChronosAgent( address, port, true, true, environment, supports != null ? supports.split( "," ) : new String[]{}, writeCsv, dumpQueryList );
         aca.setDaemon( false );
         if ( jobId != null ) {
             aca.setSingleJobId( jobId );
@@ -99,7 +107,7 @@ public class ChronosCommand implements CliRunnable {
             }
         }
 
-        if (jobId != null) {
+        if ( jobId != null ) {
             // Make sure simple-client exits when the job is done
             System.exit( 0 );
         }
