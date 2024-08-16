@@ -38,15 +38,19 @@ public abstract class MultipartInsert extends BatchableInsert {
 
     Map<String, File> files = new HashMap<>();
 
+
     public MultipartInsert( boolean expectResult ) {
         super( expectResult );
     }
+
 
     public void setFile( String column, File f ) {
         files.put( column, f );
     }
 
+
     public abstract Map<String, String> getRestParameters();
+
 
     public HttpRequest<?> buildMultipartInsert() {
         MultipartBody body = Unirest.post( "{protocol}://{host}:{port}/restapi/v1/multipart" ).multiPartContent();
@@ -66,6 +70,7 @@ public abstract class MultipartInsert extends BatchableInsert {
         }
         return body;
     }
+
 
     public void cleanup() {
         files.forEach( ( key, file ) -> file.delete() );

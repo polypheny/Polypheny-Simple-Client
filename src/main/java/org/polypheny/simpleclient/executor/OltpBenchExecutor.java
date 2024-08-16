@@ -80,6 +80,7 @@ public abstract class OltpBenchExecutor implements Executor {
         throw new RuntimeException( "Unsupported operation" );
     }
 
+
     @Override
     public abstract long executeQuery( Query query ) throws ExecutorException;
 
@@ -226,9 +227,9 @@ public abstract class OltpBenchExecutor implements Executor {
         @Override
         public OltpBenchExecutor createExecutorInstance( CsvWriter csvWriter ) {
             if ( csvWriter == null ) {
-                return  createExecutorInstance();
+                return createExecutorInstance();
             } else {
-                throw new RuntimeException("CSV writer is not supported with OltpBench!");
+                throw new RuntimeException( "CSV writer is not supported with OltpBench!" );
             }
         }
 

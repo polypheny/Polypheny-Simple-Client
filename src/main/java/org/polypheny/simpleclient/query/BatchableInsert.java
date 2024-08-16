@@ -42,7 +42,8 @@ public abstract class BatchableInsert extends Query {
 
     public abstract JsonObject getRestRowExpression();
 
-    public List<String> getRowValues(){
+
+    public List<String> getRowValues() {
         return null;
     }
 

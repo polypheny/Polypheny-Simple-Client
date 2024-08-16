@@ -75,7 +75,7 @@ public class AuctionMarkConfig extends AbstractOltpBenchConfig {
     }
 
 
-    public AuctionMarkConfig( Map<String, String> cdl  ) {
+    public AuctionMarkConfig( Map<String, String> cdl ) {
         super( cdl, "auctionmark", cdl.get( "store" ) );
 
         time = Long.parseLong( cdl.get( "time" ) );
@@ -101,7 +101,7 @@ public class AuctionMarkConfig extends AbstractOltpBenchConfig {
 
         // root elements
         Document doc = docBuilder.newDocument();
-        doc.setXmlStandalone(true);
+        doc.setXmlStandalone( true );
         Element rootElement = doc.createElement( "parameters" );
         doc.appendChild( rootElement );
 
@@ -144,25 +144,25 @@ public class AuctionMarkConfig extends AbstractOltpBenchConfig {
         // Transaction types
         Element transactionTypesElement = doc.createElement( "transactiontypes" );
         rootElement.appendChild( transactionTypesElement );
-        createAndAppendTransactionTypeElement(doc, transactionTypesElement, "GetItem" );
-        createAndAppendTransactionTypeElement(doc, transactionTypesElement, "GetUserInfo" );
-        createAndAppendTransactionTypeElement(doc, transactionTypesElement, "NewBid" );
-        createAndAppendTransactionTypeElement(doc, transactionTypesElement, "NewComment" );
-        createAndAppendTransactionTypeElement(doc, transactionTypesElement, "NewCommentResponse" );
-        createAndAppendTransactionTypeElement(doc, transactionTypesElement, "NewFeedback" );
-        createAndAppendTransactionTypeElement(doc, transactionTypesElement, "NewItem" );
-        createAndAppendTransactionTypeElement(doc, transactionTypesElement, "NewPurchase" );
-        createAndAppendTransactionTypeElement(doc, transactionTypesElement, "UpdateItem" );
+        createAndAppendTransactionTypeElement( doc, transactionTypesElement, "GetItem" );
+        createAndAppendTransactionTypeElement( doc, transactionTypesElement, "GetUserInfo" );
+        createAndAppendTransactionTypeElement( doc, transactionTypesElement, "NewBid" );
+        createAndAppendTransactionTypeElement( doc, transactionTypesElement, "NewComment" );
+        createAndAppendTransactionTypeElement( doc, transactionTypesElement, "NewCommentResponse" );
+        createAndAppendTransactionTypeElement( doc, transactionTypesElement, "NewFeedback" );
+        createAndAppendTransactionTypeElement( doc, transactionTypesElement, "NewItem" );
+        createAndAppendTransactionTypeElement( doc, transactionTypesElement, "NewPurchase" );
+        createAndAppendTransactionTypeElement( doc, transactionTypesElement, "UpdateItem" );
 
         StringWriter sw = new StringWriter();
         TransformerFactory tf = TransformerFactory.newInstance();
         Transformer transformer = tf.newTransformer();
-        transformer.setOutputProperty( OutputKeys.OMIT_XML_DECLARATION, "no");
-        transformer.setOutputProperty(OutputKeys.METHOD, "xml");
-        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-        transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+        transformer.setOutputProperty( OutputKeys.OMIT_XML_DECLARATION, "no" );
+        transformer.setOutputProperty( OutputKeys.METHOD, "xml" );
+        transformer.setOutputProperty( OutputKeys.INDENT, "yes" );
+        transformer.setOutputProperty( OutputKeys.ENCODING, "UTF-8" );
 
-        transformer.transform(new DOMSource(doc), new StreamResult(sw));
+        transformer.transform( new DOMSource( doc ), new StreamResult( sw ) );
         return sw.toString();
     }
 

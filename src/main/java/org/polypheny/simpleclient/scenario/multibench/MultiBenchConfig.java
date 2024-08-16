@@ -156,7 +156,7 @@ public class MultiBenchConfig extends AbstractConfig {
 
             int numberOfWriteQueries = Double.valueOf( MultiBenchConfig.this.numberOfDocBenchQueries * writeRatio ).intValue();
 
-            numberOfUpdateQueries = Double.valueOf(numberOfWriteQueries / 50.0 ).intValue();
+            numberOfUpdateQueries = Double.valueOf( numberOfWriteQueries / 50.0 ).intValue();
             //numberOfUpdateQueries = 0;
             numberOfPutQueries = numberOfWriteQueries - numberOfUpdateQueries;
             numberOfFindQueries = MultiBenchConfig.this.numberOfDocBenchQueries - (numberOfUpdateQueries + numberOfPutQueries);
@@ -333,8 +333,7 @@ public class MultiBenchConfig extends AbstractConfig {
             remaining = numberOfWriteQueries - (numberOfAddBidQueries + numberOfAddAuctionQueries);
             numberOfChangePasswordQueries = remaining / 4;
             numberOfChangeAuctionQueries = remaining / 4;
-            numberOfAddUserQueries =  remaining - (numberOfChangePasswordQueries + numberOfChangeAuctionQueries + numberOfAddUserQueries);
-
+            numberOfAddUserQueries = remaining - (numberOfChangePasswordQueries + numberOfChangeAuctionQueries + numberOfAddUserQueries);
 
             // Data Generation
             numberOfUsers = 1_000;

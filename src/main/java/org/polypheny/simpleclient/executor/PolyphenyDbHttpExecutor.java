@@ -59,10 +59,10 @@ public abstract class PolyphenyDbHttpExecutor implements PolyphenyDbExecutor {
     protected final CsvWriter csvWriter;
 
 
-    public PolyphenyDbHttpExecutor(String name, Function<Query, String> queryAccessor, String host, CsvWriter csvWriter) {
+    public PolyphenyDbHttpExecutor( String name, Function<Query, String> queryAccessor, String host, CsvWriter csvWriter ) {
         this.name = name;
         this.queryAccessor = queryAccessor;
-        this.jdbcExecutorFactory = new PolyphenyDbJdbcExecutorFactory(host, false);
+        this.jdbcExecutorFactory = new PolyphenyDbJdbcExecutorFactory( host, false );
         this.csvWriter = csvWriter;
     }
 
@@ -104,40 +104,40 @@ public abstract class PolyphenyDbHttpExecutor implements PolyphenyDbExecutor {
     public void deployStore( String name, String clazz, String config ) throws ExecutorException {
         PolyphenyDbJdbcExecutor executor = null;
         try {
-            executor = jdbcExecutorFactory.createExecutorInstance(csvWriter);
-            executor.deployStore(name, clazz, config);
+            executor = jdbcExecutorFactory.createExecutorInstance( csvWriter );
+            executor.deployStore( name, clazz, config );
             executor.executeCommit();
-        } catch (ExecutorException e) {
-            throw new ExecutorException("Error while executing query via JDBC", e);
+        } catch ( ExecutorException e ) {
+            throw new ExecutorException( "Error while executing query via JDBC", e );
         } finally {
-            PolyphenyDbJdbcExecutor.commitAndCloseJdbcExecutor(executor);
+            PolyphenyDbJdbcExecutor.commitAndCloseJdbcExecutor( executor );
         }
     }
 
 
     @Override
-    public void deployAdapter(String name, String adapterIdentifier, String type, String config) throws ExecutorException {
+    public void deployAdapter( String name, String adapterIdentifier, String type, String config ) throws ExecutorException {
         PolyphenyDbJdbcExecutor executor = null;
         try {
-            executor = jdbcExecutorFactory.createExecutorInstance(csvWriter);
-            executor.deployAdapter(name, adapterIdentifier, type, config);
+            executor = jdbcExecutorFactory.createExecutorInstance( csvWriter );
+            executor.deployAdapter( name, adapterIdentifier, type, config );
             executor.executeCommit();
-        } catch (ExecutorException e) {
-            throw new ExecutorException("Error while executing query via JDBC", e);
+        } catch ( ExecutorException e ) {
+            throw new ExecutorException( "Error while executing query via JDBC", e );
         } finally {
-            PolyphenyDbJdbcExecutor.commitAndCloseJdbcExecutor(executor);
+            PolyphenyDbJdbcExecutor.commitAndCloseJdbcExecutor( executor );
         }
     }
 
 
     @Override
-    public void setConfig(String key, String value) {
+    public void setConfig( String key, String value ) {
         PolyphenyDbJdbcExecutor executor = null;
         try {
-            executor = jdbcExecutorFactory.createExecutorInstance(csvWriter);
-            executor.setConfig(key, value);
+            executor = jdbcExecutorFactory.createExecutorInstance( csvWriter );
+            executor.setConfig( key, value );
             executor.executeCommit();
-        } catch (ExecutorException e) {
+        } catch ( ExecutorException e ) {
             log.error( "Exception while setting config \"" + key + "\"!", e );
         } finally {
             try {
@@ -188,24 +188,24 @@ public abstract class PolyphenyDbHttpExecutor implements PolyphenyDbExecutor {
     }
 
 
-    HttpRequest<?> getRequest(String query, String namespace) {
-        HttpRequest<?> request = buildQuery(query, namespace);
-        request.basicAuth("pa", "");
-        request.routeParam("protocol", "http");
-        request.routeParam("host", "127.0.0.1");
-        request.routeParam("port", "13137");
+    HttpRequest<?> getRequest( String query, String namespace ) {
+        HttpRequest<?> request = buildQuery( query, namespace );
+        request.basicAuth( "pa", "" );
+        request.routeParam( "protocol", "http" );
+        request.routeParam( "host", "127.0.0.1" );
+        request.routeParam( "port", "13137" );
         return request;
     }
 
 
     @Override
-    public long executeQueryAndGetNumber(Query query) throws ExecutorException {
+    public long executeQueryAndGetNumber( Query query ) throws ExecutorException {
         query.debug();
-        if (query instanceof MultipartInsert) {
-            throw new RuntimeException("not supported");
+        if ( query instanceof MultipartInsert ) {
+            throw new RuntimeException( "not supported" );
         }
 
-        HttpRequest<?> request = getRequest(queryAccessor.apply(query), namespace);
+        HttpRequest<?> request = getRequest( queryAccessor.apply( query ), namespace );
 
         try {
             long start = System.nanoTime();
