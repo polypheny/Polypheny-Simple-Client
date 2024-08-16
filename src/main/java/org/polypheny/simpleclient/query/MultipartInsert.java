@@ -29,9 +29,9 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import kong.unirest.HttpRequest;
-import kong.unirest.MultipartBody;
-import kong.unirest.Unirest;
+import kong.unirest.core.HttpRequest;
+import kong.unirest.core.MultipartBody;
+import kong.unirest.core.Unirest;
 
 
 public abstract class MultipartInsert extends BatchableInsert {

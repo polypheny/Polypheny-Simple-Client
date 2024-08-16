@@ -27,7 +27,7 @@ package org.polypheny.simpleclient.scenario.gavel.queryBuilder;
 
 import java.util.HashMap;
 import java.util.Map;
-import kong.unirest.HttpRequest;
+import kong.unirest.core.HttpRequest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.query.Query;
@@ -130,4 +130,3 @@ public class SelectHighestOverallBid extends QueryBuilder {
     }
 
 }
-

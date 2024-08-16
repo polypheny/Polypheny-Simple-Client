@@ -34,7 +34,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
-import kong.unirest.HttpRequest;
+import kong.unirest.core.HttpRequest;
 import lombok.Getter;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.BatchableInsert;

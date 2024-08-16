@@ -37,7 +37,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import kong.unirest.UnirestException;
+import kong.unirest.core.UnirestException;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.query.BatchableInsert;

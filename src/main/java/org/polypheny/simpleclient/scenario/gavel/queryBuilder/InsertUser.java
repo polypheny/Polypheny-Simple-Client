@@ -45,7 +45,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
-import kong.unirest.HttpRequest;
+import kong.unirest.core.HttpRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.BatchableInsert;

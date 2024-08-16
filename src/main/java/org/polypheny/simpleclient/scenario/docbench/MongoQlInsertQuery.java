@@ -26,7 +26,7 @@ package org.polypheny.simpleclient.scenario.docbench;
 
 import com.google.gson.JsonObject;
 import java.util.Map;
-import kong.unirest.HttpRequest;
+import kong.unirest.core.HttpRequest;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.ImmutablePair;

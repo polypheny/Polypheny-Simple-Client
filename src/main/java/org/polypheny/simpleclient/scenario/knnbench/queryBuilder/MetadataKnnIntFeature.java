@@ -29,7 +29,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
-import kong.unirest.HttpRequest;
+import kong.unirest.core.HttpRequest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.CottontailQuery;
 import org.polypheny.simpleclient.query.Query;

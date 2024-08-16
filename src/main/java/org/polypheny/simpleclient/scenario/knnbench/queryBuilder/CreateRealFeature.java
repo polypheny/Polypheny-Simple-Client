@@ -28,7 +28,7 @@ package org.polypheny.simpleclient.scenario.knnbench.queryBuilder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import kong.unirest.HttpRequest;
+import kong.unirest.core.HttpRequest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.CottontailQuery;
 import org.polypheny.simpleclient.query.CottontailQuery.QueryType;

@@ -38,7 +38,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
-import kong.unirest.Unirest;
+import kong.unirest.core.Unirest;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -73,7 +73,7 @@ public class MultimediaBench extends Scenario {
 
     static {
         Unirest.config().reset();
-        Unirest.config().socketTimeout( 0 );
+        Unirest.config().connectTimeout( 0 );
     }
 
 

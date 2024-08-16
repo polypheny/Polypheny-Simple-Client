@@ -27,7 +27,7 @@ package org.polypheny.simpleclient.query;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import kong.unirest.HttpRequest;
+import kong.unirest.core.HttpRequest;
 import lombok.Builder;
 import lombok.Getter;
 import org.apache.commons.lang3.tuple.ImmutablePair;

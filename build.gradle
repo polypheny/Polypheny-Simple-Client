@@ -78,7 +78,7 @@ dependencies {
     implementation group: 'org.chronos-eaas', name: 'chronos-agent', version: '2.5.0' // License: MIT
 
     // REST
-    implementation group: 'com.konghq', name: 'unirest-java', version: '3.14.5' // License: MIT
+    implementation group: 'com.konghq', name: 'unirest-java-core', version: '4.4.4' // License: MIT
 
     // JDBC Drivers
     oldPolyphenyJdbcDriver group: 'org.polypheny', name: 'polypheny-jdbc-driver', version: '1.5.3' // License: Apache 2.0

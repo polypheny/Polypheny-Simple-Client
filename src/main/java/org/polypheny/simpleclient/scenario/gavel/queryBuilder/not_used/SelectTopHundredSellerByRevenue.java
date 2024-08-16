@@ -28,7 +28,7 @@ package org.polypheny.simpleclient.scenario.gavel.queryBuilder.not_used;
 
 import java.util.HashMap;
 import java.util.Map;
-import kong.unirest.HttpRequest;
+import kong.unirest.core.HttpRequest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
