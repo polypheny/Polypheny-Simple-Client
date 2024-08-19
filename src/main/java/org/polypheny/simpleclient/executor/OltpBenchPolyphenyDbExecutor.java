@@ -67,13 +67,13 @@ public class OltpBenchPolyphenyDbExecutor extends OltpBenchExecutor implements P
     protected String getConfigXml( AbstractOltpBenchConfig config ) {
         return config.toXml(
                 "POLYPHENY",
-                "org.polypheny.jdbc.Driver",
+                "org.polypheny.jdbc.PolyphenyDriver",
                 "jdbc:polypheny://" + host + "/",
                 "pa",
                 "",
                 config.scenario + "-polypheny-ddl.sql",
                 "polypheny-dialects.xml",
-                "TRANSACTION_SERIALIZABLE"
+                "TRANSACTION_READ_COMMITTED"
         );
     }
 
