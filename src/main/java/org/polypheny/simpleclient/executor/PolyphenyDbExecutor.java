@@ -29,9 +29,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -43,9 +41,9 @@ import kong.unirest.core.json.JSONArray;
 import kong.unirest.core.json.JSONObject;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.polypheny.control.client.PolyphenyControlConnector;
 import org.polypheny.simpleclient.cli.ChronosCommand;
 import org.polypheny.simpleclient.executor.MonetdbExecutor.MonetdbInstance;
+import org.polypheny.simpleclient.executor.PolyphenyConnector.PolyphenyConnectorConfig;
 import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory;
 import org.polypheny.simpleclient.executor.PostgresExecutor.PostgresInstance;
 import org.polypheny.simpleclient.scenario.AbstractConfig;
@@ -245,14 +243,14 @@ public interface PolyphenyDbExecutor extends Executor {
     @Slf4j
     class PolyphenyDbInstance extends DatabaseInstance {
 
-        private final PolyphenyControlConnector polyphenyControlConnector;
+        private final PolyphenyConnector polyphenyControlConnector;
         private final AbstractConfig config;
 
         @Getter
         private final StatusGatherer statusGatherer;
 
 
-        public PolyphenyDbInstance( PolyphenyControlConnector polyphenyControlConnector, ExecutorFactory executorFactory, File outputDirectory, AbstractConfig config ) {
+        public PolyphenyDbInstance( PolyphenyConnector polyphenyControlConnector, ExecutorFactory executorFactory, File outputDirectory, AbstractConfig config ) {
             this.polyphenyControlConnector = polyphenyControlConnector;
             this.config = config;
 
@@ -344,7 +342,7 @@ public interface PolyphenyDbExecutor extends Executor {
         }
 
 
-        private void stopPolypheny( PolyphenyControlConnector polyphenyControlConnector ) {
+        private void stopPolypheny( PolyphenyConnector polyphenyControlConnector ) {
             polyphenyControlConnector.stopPolypheny();
             try {
                 TimeUnit.SECONDS.sleep( 3 );
@@ -367,7 +365,7 @@ public interface PolyphenyDbExecutor extends Executor {
         }
 
 
-        private void startPolypheny( PolyphenyControlConnector polyphenyControlConnector ) {
+        private void startPolypheny( PolyphenyConnector polyphenyControlConnector ) {
             polyphenyControlConnector.startPolypheny();
             // Try for 300 seconds (30 times)
             for ( int i = 0; i <= 30; i++ ) {
@@ -507,28 +505,8 @@ public interface PolyphenyDbExecutor extends Executor {
         }
 
 
-        protected void configurePolyphenyControl( PolyphenyControlConnector polyphenyControlConnector, AbstractConfig config, boolean resetCatalog ) {
-            Map<String, String> conf = new HashMap<>();
-            conf.put( "pcrtl.pdbms.branch", config.pdbBranch.trim() );
-            conf.put( "pcrtl.ui.branch", config.puiBranch.trim() );
-            conf.put( "pcrtl.java.heap", "10" );
-            if ( config.buildUi ) {
-                conf.put( "pcrtl.buildmode", "both" );
-            } else {
-                conf.put( "pcrtl.buildmode", "pdb" );
-            }
-            conf.put( "pcrtl.clean.mode", "branchChange" );
-            //conf.put( "pcrtl.plugins.purge", "onStartup" );
-            conf.put( "pcrtl.plugins.purge", "never" );
-            String args = "";
-            if ( resetCatalog ) {
-                args += "-resetCatalog ";
-            }
-            if ( config.memoryCatalog ) {
-                args += "-memoryCatalog ";
-            }
-            conf.put( "pcrtl.pdbms.args", args.trim() );
-            polyphenyControlConnector.setConfig( conf );
+        protected void configurePolyphenyControl( PolyphenyConnector polyphenyControlConnector, AbstractConfig config, boolean resetCatalog ) {
+            polyphenyControlConnector.setConfig( new PolyphenyConnectorConfig( config.pdbBranch.trim(), config.puiBranch.trim(), 10, config.buildUi, resetCatalog, config.memoryCatalog ) );
         }
 
 

@@ -71,6 +71,9 @@ public class ChronosCommand implements CliRunnable {
     @Option(name = { "--job" }, title = "Id of the job to run", description = "Run a single chronos job (default: null)")
     public Integer jobId = null;
 
+    @Option(name = { "--buildserver" }, title = "buildserver URL", description = "Use a buildserver to download JAR files and run them directly")
+    public String buildServer = null;
+
 
     @Override
     public int run() {
@@ -92,7 +95,7 @@ public class ChronosCommand implements CliRunnable {
             System.exit( 1 );
         }
 
-        AbstractChronosAgent aca = new ChronosAgent( address, port, true, true, environment, supports != null ? supports.split( "," ) : new String[]{}, writeCsv, dumpQueryList );
+        AbstractChronosAgent aca = new ChronosAgent( address, port, true, true, environment, supports != null ? supports.split( "," ) : new String[]{}, writeCsv, dumpQueryList, buildServer );
         aca.setDaemon( false );
         if ( jobId != null ) {
             aca.setSingleJobId( jobId );

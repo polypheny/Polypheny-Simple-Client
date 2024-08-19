@@ -44,7 +44,6 @@ import org.apache.commons.lang3.tuple.Triple;
 import org.polypheny.control.client.ClientData;
 import org.polypheny.control.client.ClientType;
 import org.polypheny.control.client.LogHandler;
-import org.polypheny.control.client.PolyphenyControlConnector;
 import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.cli.ChronosCommand;
 import org.polypheny.simpleclient.executor.Executor;
@@ -54,6 +53,7 @@ import org.polypheny.simpleclient.executor.MonetdbExecutor.MonetdbInstance;
 import org.polypheny.simpleclient.executor.OltpBenchPolyphenyDbExecutor.OltpBenchPolyphenyDbExecutorFactory;
 import org.polypheny.simpleclient.executor.OltpBenchPolyphenyDbExecutor.OltpBenchPolyphenyInstance;
 import org.polypheny.simpleclient.executor.OltpBenchPostgresExecutor.OltpBenchPostgresExecutorFactory;
+import org.polypheny.simpleclient.executor.PolyphenyConnector;
 import org.polypheny.simpleclient.executor.PolyphenyDbCypherExecutor.PolyphenyDbCypherExecutorFactory;
 import org.polypheny.simpleclient.executor.PolyphenyDbExecutor;
 import org.polypheny.simpleclient.executor.PolyphenyDbExecutor.PolyphenyDbInstance;
@@ -64,6 +64,8 @@ import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.PolyphenyDbJd
 import org.polypheny.simpleclient.executor.PolyphenyDbMongoQlExecutor.PolyphenyDbMongoQlExecutorFactory;
 import org.polypheny.simpleclient.executor.PolyphenyDbMultiExecutorFactory;
 import org.polypheny.simpleclient.executor.PolyphenyDbRestExecutor.PolyphenyDbRestExecutorFactory;
+import org.polypheny.simpleclient.executor.PolyphenyLocalConnector;
+import org.polypheny.simpleclient.executor.PolyphenyRemoteConnector;
 import org.polypheny.simpleclient.executor.PolyphenyVersionSwitch;
 import org.polypheny.simpleclient.executor.PostgresExecutor.PostgresExecutorFactory;
 import org.polypheny.simpleclient.executor.PostgresExecutor.PostgresInstance;
@@ -107,7 +109,7 @@ public class ChronosAgent extends AbstractChronosAgent {
     public static final boolean STORE_INDIVIDUAL_QUERY_TIMES = false;
 
     public final String[] supports;
-    private PolyphenyControlConnector polyphenyControlConnector = null;
+    private PolyphenyConnector polyphenyControlConnector = null;
 
     private final boolean writeCsv;
     private final boolean dumpQueryList;
@@ -116,7 +118,7 @@ public class ChronosAgent extends AbstractChronosAgent {
     private String dockerContainerName = null;
 
 
-    public ChronosAgent( InetAddress address, int port, boolean secure, boolean useHostname, String environment, String[] supports, boolean writeCsv, boolean dumpQueryList ) {
+    public ChronosAgent( InetAddress address, int port, boolean secure, boolean useHostname, String environment, String[] supports, boolean writeCsv, boolean dumpQueryList, String buildServer ) {
         super( address, port, secure, useHostname, environment );
         this.writeCsv = writeCsv;
         this.dumpQueryList = dumpQueryList;
@@ -158,7 +160,11 @@ public class ChronosAgent extends AbstractChronosAgent {
             };
 
             ClientData clientData = new ClientData( ClientType.BENCHMARKER, ChronosCommand.controlUsername, ChronosCommand.controlPassword );
-            polyphenyControlConnector = new PolyphenyControlConnector( ChronosCommand.hostname + ":8070", clientData, logHandler );
+            if ( buildServer != null ) {
+                polyphenyControlConnector = new PolyphenyLocalConnector( buildServer, logHandler );
+            } else {
+                polyphenyControlConnector = new PolyphenyRemoteConnector( ChronosCommand.hostname + ":8070", clientData, logHandler );
+            }
         } catch ( URISyntaxException e ) {
             log.error( "Exception while connecting to Polypheny Control", e );
         }
