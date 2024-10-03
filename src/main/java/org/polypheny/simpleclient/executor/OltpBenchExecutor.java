@@ -63,7 +63,7 @@ public abstract class OltpBenchExecutor implements Executor {
         } else if ( SystemUtils.IS_OS_MAC ) {
             OLTPBENCH_RELEASE_URL = "https://github.com/polypheny/OLTPBench/releases/download/v1.2.1/oltpbench-polypheny-1.2.1-jdk11-mac64.zip";
         } else {
-            throw new RuntimeException( "Unknown OS: " + SystemUtils.OS_NAME );
+            throw new RuntimeException( "Unsupported OS: " + SystemUtils.OS_NAME );
         }
         FILE_NAME = OLTPBENCH_RELEASE_URL.substring( OLTPBENCH_RELEASE_URL.lastIndexOf( '/' ) + 1 );
         CLIENT_DIR = System.getProperty( "user.home" ) + File.separator + ".polypheny" + File.separator + "client" + File.separator;
