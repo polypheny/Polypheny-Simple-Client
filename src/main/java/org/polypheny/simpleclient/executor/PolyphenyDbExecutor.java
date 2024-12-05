@@ -506,7 +506,7 @@ public interface PolyphenyDbExecutor extends Executor {
 
 
         protected void configurePolyphenyControl( PolyphenyConnector polyphenyControlConnector, AbstractConfig config, boolean resetCatalog ) {
-            polyphenyControlConnector.setConfig( new PolyphenyConnectorConfig( config.pdbBranch.trim(), config.puiBranch.trim(), 10, config.buildUi, resetCatalog, config.memoryCatalog ) );
+            polyphenyControlConnector.setConfig( new PolyphenyConnectorConfig( config.pdbBranch.trim(), config.puiBranch.trim(), 50, config.buildUi, resetCatalog, config.memoryCatalog ) );
         }
 
 
