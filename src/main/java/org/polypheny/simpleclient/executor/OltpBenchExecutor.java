@@ -163,6 +163,9 @@ public abstract class OltpBenchExecutor implements Executor {
             Process process = builder.start();
             StreamGobbler.startFor( process, true, null );
             int exitCode = process.waitFor();
+            if ( exitCode != 0 ) {
+                throw new RuntimeException( "Oltpbench create schema failed" );
+            }
         } catch ( IOException | InterruptedException e ) {
             throw new RuntimeException( e );
         }
@@ -180,6 +183,9 @@ public abstract class OltpBenchExecutor implements Executor {
             Process process = builder.start();
             StreamGobbler.startFor( process, true, null );
             int exitCode = process.waitFor();
+            if ( exitCode != 0 ) {
+                throw new RuntimeException( "Oltpbench load data failed" );
+            }
         } catch ( IOException | InterruptedException e ) {
             throw new RuntimeException( e );
         }
@@ -198,6 +204,9 @@ public abstract class OltpBenchExecutor implements Executor {
             Process process = builder.start();
             StreamGobbler.startFor( process, true, writer );
             int exitCode = process.waitFor();
+            if ( exitCode != 0 ) {
+                throw new RuntimeException( "Oltpbench execute workload failed" );
+            }
         } catch ( IOException | InterruptedException e ) {
             throw new RuntimeException( e );
         }
