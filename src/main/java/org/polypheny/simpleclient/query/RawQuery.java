@@ -52,7 +52,7 @@ public class RawQuery extends Query {
     private final String surrealQl;
 
     @Getter
-    private List<QueryTypes> types = Collections.emptyList();
+    private final List<QueryTypes> types;
 
 
     public RawQuery( String sql, HttpRequest<?> rest, boolean expectResultSet ) {

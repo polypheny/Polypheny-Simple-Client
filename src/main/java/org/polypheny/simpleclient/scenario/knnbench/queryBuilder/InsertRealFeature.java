@@ -153,7 +153,7 @@ public class InsertRealFeature extends QueryBuilder {
         @Override
         public CottontailQuery getCottontail() {
             Map<String, Data> dataMap = new HashMap<>();
-            dataMap.put( "id", Data.newBuilder().setIntData( (int) id ).build() );
+            dataMap.put( "id", Data.newBuilder().setIntData( id ).build() );
             dataMap.put( "feature", Data.newBuilder().setVectorData(
                     Vector.newBuilder().setFloatVector( FloatVector.newBuilder()
                             .addAllVector( Arrays.asList( feature ) )

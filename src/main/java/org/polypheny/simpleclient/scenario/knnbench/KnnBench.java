@@ -279,7 +279,7 @@ public class KnnBench extends Scenario {
             while ( !theQueryList.isEmpty() && !abort ) {
                 measuredTimeStart = System.nanoTime();
                 try {
-                    queryListEntry = theQueryList.remove( 0 );
+                    queryListEntry = theQueryList.removeFirst();
                 } catch ( IndexOutOfBoundsException e ) { // This is neither nice nor efficient...
                     // This can happen due to concurrency if two threads enter the while-loop and there is only one thread left
                     // Simply leaf the loop
@@ -378,9 +378,7 @@ public class KnnBench extends Scenario {
     public void analyze( Properties properties, File outputDirectory ) {
         properties.put( "measuredTime", calculateMean( measuredTimes ) );
 
-        measuredTimePerQueryType.forEach( ( templateId, time ) -> {
-            calculateResults( queryTypes, properties, templateId, time );
-        } );
+        measuredTimePerQueryType.forEach( ( templateId, time ) -> calculateResults( queryTypes, properties, templateId, time ) );
         properties.put( "queryTypes_maxId", queryTypes.size() );
         properties.put( "executeRuntime", executeRuntime / 1000000000.0 );
         properties.put( "numberOfQueries", measuredTimes.size() );

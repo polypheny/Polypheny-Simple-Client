@@ -63,7 +63,7 @@ public class DumpCommand implements CliRunnable {
             System.err.println( "Missing entity name" );
             System.exit( 1 );
         }
-        String table = args.get( 0 );
+        String table = args.getFirst();
 
         Connection conn = null;
         try {

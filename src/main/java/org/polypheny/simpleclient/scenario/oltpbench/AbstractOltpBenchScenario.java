@@ -55,8 +55,8 @@ public abstract class AbstractOltpBenchScenario extends Scenario {
     public AbstractOltpBenchScenario( ExecutorFactory executorFactory, AbstractOltpBenchConfig config, boolean dumpQueryList, QueryMode queryMode ) {
         super( executorFactory, true, dumpQueryList, queryMode );
         this.config = config;
-        if ( executorFactory instanceof OltpBenchExecutorFactory ) {
-            this.executorFactory = (OltpBenchExecutorFactory) executorFactory;
+        if ( executorFactory instanceof OltpBenchExecutorFactory oltpBenchExecutorFactory ) {
+            this.executorFactory = oltpBenchExecutorFactory;
         } else {
             throw new RuntimeException( "Unsupported executor factory: " + executorFactory.getClass().getName() );
         }

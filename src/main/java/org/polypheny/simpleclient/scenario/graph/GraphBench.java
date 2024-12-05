@@ -324,9 +324,7 @@ public class GraphBench extends Scenario {
     @Override
     public void analyze( Properties properties, File outputDirectory ) {
         properties.put( "measuredTime", calculateMean( measuredTimes ) );
-        measuredTimePerQueryType.forEach( ( templateId, time ) -> {
-            calculateResults( queryTypes, properties, templateId, time );
-        } );
+        measuredTimePerQueryType.forEach( ( templateId, time ) -> calculateResults( queryTypes, properties, templateId, time ) );
         properties.put( "queryTypes_maxId", queryTypes.size() );
         properties.put( "executeRuntime", executeRuntime / 1000000000.0 );
         properties.put( "numberOfQueries", measuredTimes.size() );

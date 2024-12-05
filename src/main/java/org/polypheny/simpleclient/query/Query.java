@@ -151,7 +151,7 @@ public abstract class Query {
 
     protected static String maybeQuote( Object o ) {
         if ( o instanceof String ) {
-            return "\"" + o.toString() + "\"";
+            return "\"" + o + "\"";
         }
         return o.toString();
     }

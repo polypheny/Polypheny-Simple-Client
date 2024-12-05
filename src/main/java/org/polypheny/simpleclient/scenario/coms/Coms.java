@@ -38,8 +38,6 @@ import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import lombok.AllArgsConstructor;
-import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.cli.Mode;
@@ -402,9 +400,7 @@ public class Coms extends Scenario {
     public void analyze( Properties properties, File outputDirectory ) {
         properties.put( "measuredTime", calculateMean( measuredTimes ) );
 
-        measuredTimePerQueryType.forEach( ( templateId, time ) -> {
-            calculateResults( queryTypes, properties, templateId, time );
-        } );
+        measuredTimePerQueryType.forEach( ( templateId, time ) -> calculateResults( queryTypes, properties, templateId, time ) );
         properties.put( "queryTypes_maxId", queryTypes.size() );
         properties.put( "executeRuntime", executeRuntime / 1000000000.0 );
         properties.put( "numberOfQueries", measuredTimes.size() );
@@ -418,14 +414,7 @@ public class Coms extends Scenario {
     }
 
 
-    @Value
-    @AllArgsConstructor
-    public static class PolyphenyAdapters {
-
-        String relAdapter;
-        String docAdapter;
-        String graphAdapter;
-
+    public record PolyphenyAdapters( String relAdapter, String docAdapter, String graphAdapter ) {
 
         public boolean isSet() {
             return relAdapter != null || docAdapter != null || graphAdapter != null;

@@ -62,7 +62,7 @@ public class MultiBenchCommand implements CliRunnable {
 
     @Override
     public int run() throws SQLException {
-        if ( args == null || args.size() < 1 ) {
+        if ( args == null || args.isEmpty() ) {
             System.err.println( "Missing task" );
             System.exit( 1 );
         }
@@ -79,16 +79,16 @@ public class MultiBenchCommand implements CliRunnable {
         ExecutorFactory executorFactory = new PolyphenyDbMultiExecutorFactory( polyphenyDbHost );
 
         try {
-            if ( args.get( 0 ).equalsIgnoreCase( "data" ) ) {
+            if ( args.getFirst().equalsIgnoreCase( "data" ) ) {
                 MultiBenchScenario.data( executorFactory, multiplier, true );
-            } else if ( args.get( 0 ).equalsIgnoreCase( "workload" ) ) {
+            } else if ( args.getFirst().equalsIgnoreCase( "workload" ) ) {
                 MultiBenchScenario.workload( executorFactory, multiplier, true, writeCsv, dumpQueryList );
-            } else if ( args.get( 0 ).equalsIgnoreCase( "schema" ) ) {
+            } else if ( args.getFirst().equalsIgnoreCase( "schema" ) ) {
                 MultiBenchScenario.schema( executorFactory, true );
-            } else if ( args.get( 0 ).equalsIgnoreCase( "warmup" ) ) {
+            } else if ( args.getFirst().equalsIgnoreCase( "warmup" ) ) {
                 MultiBenchScenario.warmup( executorFactory, multiplier, true, dumpQueryList );
             } else {
-                System.err.println( "Unknown task: " + args.get( 0 ) );
+                System.err.println( "Unknown task: " + args.getFirst() );
             }
         } catch ( Throwable t ) {
             log.error( "Exception while executing MultiBench!", t );

@@ -141,7 +141,7 @@ public class SurrealDBExecutor implements Executor {
 
     @Override
     public void executeInsertList( List<BatchableInsert> batchList, AbstractConfig config ) throws ExecutorException {
-        StringBuilder query = new StringBuilder( "INSERT INTO " + batchList.get( 0 ).getEntity() + " VALUES" );
+        StringBuilder query = new StringBuilder( "INSERT INTO " + batchList.getFirst().getEntity() + " VALUES" );
         for ( BatchableInsert insert : batchList ) {
             query.append( String.format( "(%s)", String.join( ", ", insert.getRowValues() ) ) );
         }

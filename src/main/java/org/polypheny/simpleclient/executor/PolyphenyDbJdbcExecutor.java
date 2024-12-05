@@ -44,7 +44,7 @@ public class PolyphenyDbJdbcExecutor extends JdbcExecutor implements PolyphenyDb
         Driver driver;
         try {
             CustomClassLoader loader = new CustomClassLoader( ClassLoader.getSystemClassLoader() );
-            Class driverClass;
+            Class<?> driverClass;
             if ( PolyphenyVersionSwitch.getInstance().usePrismJdbcDriver ) {
                 driverClass = Class.forName( "org.polypheny.jdbc.PolyphenyDriver", true, loader );
             } else {

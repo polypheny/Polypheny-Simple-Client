@@ -95,7 +95,7 @@ public class ComsCommand implements CliRunnable {
         ExecutorFactory executorFactory;
 
         try {
-            switch ( args.get( 0 ).toLowerCase() ) {
+            switch ( args.getFirst().toLowerCase() ) {
                 case "schema":
                     executorFactory = getExecutorFactory( true );
                     ComsScenario.schema( executorFactory, config );
@@ -113,7 +113,7 @@ public class ComsCommand implements CliRunnable {
                     ComsScenario.workload( executorFactory, config, multiplier, writeCsv );
                     break;
                 default:
-                    System.err.println( "Unknown task: " + args.get( 0 ) );
+                    System.err.println( "Unknown task: " + args.getFirst() );
             }
 
         } catch ( Throwable t ) {
@@ -132,25 +132,14 @@ public class ComsCommand implements CliRunnable {
 
 
     private ExecutorFactory getExecutorFactory( boolean createDocker ) {
-        ExecutorFactory executorFactory;
-        switch ( config.mode ) {
-
-            case POLYPHENY:
-                executorFactory = new PolyphenyDbMultiExecutorFactory( polyphenyDbHost );
-                break;
-            case NATIVE:
-                executorFactory = new MultiExecutorFactory(
-                        new PostgresExecutor.PostgresExecutorFactory( postgres, false ),
-                        new NeoExecutorFactory( neo4j ),
-                        new MongoQlExecutorFactory( mongoDB ) );
-                break;
-            case SURREALDB:
-                executorFactory = new SurrealDBExecutorFactory( surrealHost, "8989", createDocker );
-                break;
-            default:
-                throw new IllegalArgumentException();
-        }
-        return executorFactory;
+        return switch ( config.mode ) {
+            case POLYPHENY -> new PolyphenyDbMultiExecutorFactory( polyphenyDbHost );
+            case NATIVE -> new MultiExecutorFactory(
+                    new PostgresExecutor.PostgresExecutorFactory( postgres, false ),
+                    new NeoExecutorFactory( neo4j ),
+                    new MongoQlExecutorFactory( mongoDB ) );
+            case SURREALDB -> new SurrealDBExecutorFactory( surrealHost, "8989", createDocker );
+        };
     }
 
 
