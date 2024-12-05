@@ -71,12 +71,12 @@ public class InsertCategory extends QueryBuilder {
 
     @Override
     public BatchableInsert getNewQuery() {
-        if ( categories.size() == 0 ) {
+        if ( categories.isEmpty() ) {
             throw new RuntimeException( "List of categories is empty" );
         }
         return new InsertCategoryQuery(
                 nextCategoryId.getAndIncrement(),
-                categories.remove( 0 )
+                categories.removeFirst()
         );
     }
 

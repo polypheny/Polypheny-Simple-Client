@@ -584,7 +584,7 @@ public class NetworkGenerator {
                             randomType = random.nextInt( elements.size() );
 
                             List<? extends GraphElement> selectedElement = elements.get( randomType );
-                            if ( selectedElement.size() == 0 ) {
+                            if ( selectedElement.isEmpty() ) {
                                 continue;
                             }
 

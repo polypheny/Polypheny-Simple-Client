@@ -53,15 +53,14 @@ public class MultiBench extends Scenario {
     public MultiBench( Executor.ExecutorFactory multiExecutorFactory, MultiBenchConfig config, boolean commitAfterEveryQuery, boolean dumpQueryList ) {
         super( multiExecutorFactory, commitAfterEveryQuery, dumpQueryList, QueryMode.TABLE );
 
-        if ( !(multiExecutorFactory instanceof PolyphenyDbMultiExecutorFactory) ) {
+        if ( !(multiExecutorFactory instanceof PolyphenyDbMultiExecutorFactory polyphenyDbMultiExecutorFactory) ) {
             throw new RuntimeException( "This benchmark requires a multi executor" );
         }
-        PolyphenyDbMultiExecutorFactory executorFactory = (PolyphenyDbMultiExecutorFactory) multiExecutorFactory;
 
         // Initialize underlying benchmarks
         if ( config.numberOfGavelQueries > 0 ) {
             gavel = new Gavel(
-                    executorFactory.getJdbcExecutorFactory(),
+                    polyphenyDbMultiExecutorFactory.getJdbcExecutorFactory(),
                     config.getGavelConfig(),
                     commitAfterEveryQuery,
                     dumpQueryList,
@@ -72,7 +71,7 @@ public class MultiBench extends Scenario {
         }
         if ( config.numberOfGraphBenchQueries > 0 ) {
             graphBench = new GraphBench(
-                    executorFactory.getCypherExecutorFactory(),
+                    polyphenyDbMultiExecutorFactory.getCypherExecutorFactory(),
                     config.getGraphBenchConfig(),
                     commitAfterEveryQuery,
                     dumpQueryList
@@ -82,7 +81,7 @@ public class MultiBench extends Scenario {
         }
         if ( config.numberOfDocBenchQueries > 0 ) {
             docBench = new DocBench(
-                    executorFactory.getMongoQlExecutorFactory(),
+                    polyphenyDbMultiExecutorFactory.getMongoQlExecutorFactory(),
                     config.getDocBenchConfig(),
                     commitAfterEveryQuery,
                     dumpQueryList
@@ -92,7 +91,7 @@ public class MultiBench extends Scenario {
         }
         if ( config.numberOfKnnBenchQueries > 0 ) {
             knnBench = new KnnBench(
-                    executorFactory.getJdbcExecutorFactory(),
+                    polyphenyDbMultiExecutorFactory.getJdbcExecutorFactory(),
                     config.getKnnBenchConfig(),
                     commitAfterEveryQuery,
                     dumpQueryList

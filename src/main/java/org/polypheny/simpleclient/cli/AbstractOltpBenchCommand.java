@@ -73,14 +73,14 @@ public abstract class AbstractOltpBenchCommand implements CliRunnable {
         };
 
         try {
-            if ( args.get( 0 ).equalsIgnoreCase( "data" ) ) {
+            if ( args.getFirst().equalsIgnoreCase( "data" ) ) {
                 data( executorFactory, multiplier );
-            } else if ( args.get( 0 ).equalsIgnoreCase( "workload" ) ) {
+            } else if ( args.getFirst().equalsIgnoreCase( "workload" ) ) {
                 workload( executorFactory, multiplier );
-            } else if ( args.get( 0 ).equalsIgnoreCase( "schema" ) ) {
+            } else if ( args.getFirst().equalsIgnoreCase( "schema" ) ) {
                 schema( executorFactory );
             } else {
-                System.err.println( "Unknown task: " + args.get( 0 ) );
+                System.err.println( "Unknown task: " + args.getFirst() );
             }
         } catch ( Throwable t ) {
             log.error( "Exception while executing OltpBench!", t );

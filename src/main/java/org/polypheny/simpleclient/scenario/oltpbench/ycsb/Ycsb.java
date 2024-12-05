@@ -47,7 +47,7 @@ public class Ycsb extends AbstractOltpBenchScenario {
 
 
     @Override
-    protected void preSchemaCreationTasks( DatabaseInstance databaseInstance, ExecutorFactory executorFactory ) throws ExecutorException {
+    protected void preSchemaCreationTasks( DatabaseInstance databaseInstance, ExecutorFactory executorFactory ) {
         Executor executor = executorFactory.createExecutorInstance();
         try {
             // Set table placement strategy

@@ -74,7 +74,7 @@ public class EvaluationThread extends Thread {
         while ( !queries.isEmpty() && !abort ) {
             measuredTimeStart = System.nanoTime();
             try {
-                queryListEntry = queries.remove( 0 );
+                queryListEntry = queries.removeFirst();
             } catch ( IndexOutOfBoundsException e ) { // This is neither nice nor efficient...
                 // This can happen due to concurrency if two threads enter the while-loop and there is only one thread left
                 // Simply leaf the loop

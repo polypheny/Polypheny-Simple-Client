@@ -151,9 +151,9 @@ public abstract class PolyphenyDbHttpExecutor implements PolyphenyDbExecutor {
 
     @Override
     public long executeQuery( Query query ) throws ExecutorException {
-        if ( query instanceof MultipartInsert ) {
-            long l = executeQuery( new RawQuery( null, ((MultipartInsert) query).buildMultipartInsert(), query.isExpectResultSet() ) );
-            ((MultipartInsert) query).cleanup();
+        if ( query instanceof MultipartInsert multipartInsert ) {
+            long l = executeQuery( new RawQuery( null, multipartInsert.buildMultipartInsert(), query.isExpectResultSet() ) );
+            multipartInsert.cleanup();
             return l;
         }
         long time;
@@ -219,7 +219,7 @@ public abstract class PolyphenyDbHttpExecutor implements PolyphenyDbExecutor {
             // Get result of a count query
             JSONArray res = result.getBody().getObject().getJSONArray( "data" );
             if ( res.length() != 1 ) {
-                throw new ExecutorException( "Invalid result: " + res.toString() );
+                throw new ExecutorException( "Invalid result: " + res );
             }
 
             return res.getJSONArray( 0 ).getLong( 0 );

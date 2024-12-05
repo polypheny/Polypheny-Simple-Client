@@ -76,7 +76,7 @@ public abstract class Scenario {
 
 
     protected void calculateResults( Map<Integer, String> queryTypes, Properties properties, int templateId, List<Long> time ) {
-        if ( time.size() > 0 ) {
+        if ( !time.isEmpty() ) {
             LongSummaryStatistics summaryStatistics = time.stream().mapToLong( Long::longValue ).summaryStatistics();
             double mean = summaryStatistics.getAverage();
             long max = summaryStatistics.getMax();

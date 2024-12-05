@@ -71,9 +71,9 @@ public class PolyphenyDbRestExecutor implements PolyphenyDbExecutor {
     @Override
     public long executeQuery( Query query ) throws ExecutorException {
         //query.debug();
-        if ( query instanceof MultipartInsert ) {
-            long l = executeQuery( new RawQuery( null, ((MultipartInsert) query).buildMultipartInsert(), query.isExpectResultSet() ) );
-            ((MultipartInsert) query).cleanup();
+        if ( query instanceof MultipartInsert multipartInsert ) {
+            long l = executeQuery( new RawQuery( null, multipartInsert.buildMultipartInsert(), query.isExpectResultSet() ) );
+            multipartInsert.cleanup();
             return l;
         }
         long time;
@@ -121,9 +121,9 @@ public class PolyphenyDbRestExecutor implements PolyphenyDbExecutor {
     @Override
     public long executeQueryAndGetNumber( Query query ) throws ExecutorException {
         query.debug();
-        if ( query instanceof MultipartInsert ) {
-            long l = executeQuery( new RawQuery( null, ((MultipartInsert) query).buildMultipartInsert(), query.isExpectResultSet() ) );
-            ((MultipartInsert) query).cleanup();
+        if ( query instanceof MultipartInsert multipartInsert) {
+            long l = executeQuery( new RawQuery( null, multipartInsert.buildMultipartInsert(), query.isExpectResultSet() ) );
+            multipartInsert.cleanup();
             return l;
         }
         if ( query.getRest() != null ) {
@@ -145,11 +145,11 @@ public class PolyphenyDbRestExecutor implements PolyphenyDbExecutor {
                 // Get result of a count query
                 JSONArray res = result.getBody().getObject().getJSONArray( "result" );
                 if ( res.length() != 1 ) {
-                    throw new ExecutorException( "Invalid result: " + res.toString() );
+                    throw new ExecutorException( "Invalid result: " + res );
                 }
                 Set<String> names = res.getJSONObject( 0 ).keySet();
                 if ( names.size() != 1 ) {
-                    throw new ExecutorException( "Invalid result: " + res.toString() );
+                    throw new ExecutorException( "Invalid result: " + res );
                 }
                 return res.getJSONObject( 0 ).getLong( names.iterator().next() );
             } catch ( UnirestException e ) {
@@ -195,9 +195,9 @@ public class PolyphenyDbRestExecutor implements PolyphenyDbExecutor {
         List<JsonObject> rows = new ArrayList<>();
         for ( BatchableInsert query : batchList ) {
             query.debug();
-            if ( query instanceof MultipartInsert ) {
-                executeQuery( new RawQuery( null, ((MultipartInsert) query).buildMultipartInsert(), query.isExpectResultSet() ) );
-                ((MultipartInsert) query).cleanup();
+            if ( query instanceof MultipartInsert multipartInsert ) {
+                executeQuery( new RawQuery( null, multipartInsert.buildMultipartInsert(), query.isExpectResultSet() ) );
+                multipartInsert.cleanup();
                 continue;
             }
             if ( currentTable == null ) {
@@ -210,7 +210,7 @@ public class PolyphenyDbRestExecutor implements PolyphenyDbExecutor {
                 throw new RuntimeException( "Different tables in multi-inserts. This should not happen!" );
             }
         }
-        if ( rows.size() > 0 ) {
+        if ( !rows.isEmpty() ) {
             executeQuery( new RawQuery( null, Query.buildRestInsert( currentTable, rows ), false ) );
         }
     }

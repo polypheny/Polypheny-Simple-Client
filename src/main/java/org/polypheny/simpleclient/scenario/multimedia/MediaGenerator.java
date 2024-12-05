@@ -124,7 +124,7 @@ public final class MediaGenerator {
 
 
         @Override
-        public int read() throws IOException {
+        public int read() {
             if ( counter-- == 0 ) {
                 return -1;
             }

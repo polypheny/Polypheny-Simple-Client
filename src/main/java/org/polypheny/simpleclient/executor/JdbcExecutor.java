@@ -218,7 +218,7 @@ public abstract class JdbcExecutor implements Executor {
 
     @Override
     public void executeInsertList( List<BatchableInsert> queryList, AbstractConfig config ) throws ExecutorException {
-        if ( queryList.size() > 0 ) {
+        if ( !queryList.isEmpty() ) {
             if ( config.usePreparedBatchForDataInsertion() ) {
                 executeInsertListAsPreparedBatch( queryList );
             } else {
@@ -230,7 +230,7 @@ public abstract class JdbcExecutor implements Executor {
 
     protected void executeInsertListAsPreparedBatch( List<BatchableInsert> queryList ) throws ExecutorException {
         try {
-            PreparedStatement preparedStatement = connection.prepareStatement( queryList.get( 0 ).getParameterizedSqlQuery() );
+            PreparedStatement preparedStatement = connection.prepareStatement( queryList.getFirst().getParameterizedSqlQuery() );
             ArrayList<File> files = new ArrayList<>();
             for ( BatchableInsert insert : queryList ) {
                 Map<Integer, ImmutablePair<DataTypes, Object>> data = insert.getParameterValues();
@@ -269,9 +269,7 @@ public abstract class JdbcExecutor implements Executor {
             preparedStatement.executeBatch();
             preparedStatement.close();
             files.forEach( File::delete );
-        } catch ( SQLException | FileNotFoundException e ) {
-            throw new ExecutorException( e );
-        } catch ( IOException e ) {
+        } catch ( SQLException | IOException e ) {
             throw new ExecutorException( e );
         }
     }

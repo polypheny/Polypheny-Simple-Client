@@ -104,13 +104,13 @@ public class GavelCommand implements CliRunnable {
         }
 
         try {
-            if ( args.get( 0 ).equalsIgnoreCase( "data" ) ) {
+            if ( args.getFirst().equalsIgnoreCase( "data" ) ) {
                 GavelScenario.data( executorFactory, multiplier, true, queryMode );
-            } else if ( args.get( 0 ).equalsIgnoreCase( "workload" ) ) {
+            } else if ( args.getFirst().equalsIgnoreCase( "workload" ) ) {
                 GavelScenario.workload( executorFactory, multiplier, true, writeCsv, dumpQueryList, queryMode );
-            } else if ( args.get( 0 ).equalsIgnoreCase( "schema" ) ) {
+            } else if ( args.getFirst().equalsIgnoreCase( "schema" ) ) {
                 GavelScenario.schema( executorFactory, true, queryMode );
-            } else if ( args.get( 0 ).equalsIgnoreCase( "warmup" ) ) {
+            } else if ( args.getFirst().equalsIgnoreCase( "warmup" ) ) {
                 GavelScenario.warmup( executorFactory, multiplier, true, dumpQueryList, queryMode );
             } else {
                 System.err.println( "Unknown task: " + args.get( 0 ) );

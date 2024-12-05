@@ -81,16 +81,16 @@ public class KnnCommand implements CliRunnable {
         executorFactory = new PolyphenyDbJdbcExecutorFactory( polyphenyDbHost, false );
 
         try {
-            if ( args.get( 0 ).equalsIgnoreCase( "data" ) ) {
+            if ( args.getFirst().equalsIgnoreCase( "data" ) ) {
                 KnnBenchScenario.data( executorFactory, multiplier, true );
-            } else if ( args.get( 0 ).equalsIgnoreCase( "workload" ) ) {
+            } else if ( args.getFirst().equalsIgnoreCase( "workload" ) ) {
                 KnnBenchScenario.workload( executorFactory, multiplier, true, writeCsv, dumpQueryList );
-            } else if ( args.get( 0 ).equalsIgnoreCase( "schema" ) ) {
+            } else if ( args.getFirst().equalsIgnoreCase( "schema" ) ) {
                 KnnBenchScenario.schema( executorFactory, true );
-            } else if ( args.get( 0 ).equalsIgnoreCase( "warmup" ) ) {
+            } else if ( args.getFirst().equalsIgnoreCase( "warmup" ) ) {
                 KnnBenchScenario.warmup( executorFactory, multiplier, true, dumpQueryList );
             } else {
-                System.err.println( "Unknown task: " + args.get( 0 ) );
+                System.err.println( "Unknown task: " + args.getFirst() );
             }
         } catch ( Throwable t ) {
             log.error( "Exception while executing KnnBench!", t );

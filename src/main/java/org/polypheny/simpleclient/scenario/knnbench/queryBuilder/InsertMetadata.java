@@ -125,7 +125,7 @@ public class InsertMetadata extends QueryBuilder {
         @Override
         public CottontailQuery getCottontail() {
             Map<String, Data> dataMap = new HashMap<>();
-            dataMap.put( "id", Data.newBuilder().setIntData( (int) id ).build() );
+            dataMap.put( "id", Data.newBuilder().setIntData( id ).build() );
             dataMap.put( "textdata", Data.newBuilder().setStringData( textdata ).build() );
             InsertMessage insertMessage = InsertMessage.newBuilder()
                     .setFrom( From.newBuilder().setEntity( Entity.newBuilder().setSchema( Schema.newBuilder().setName( "public" ).build() ).setName( "knn_metadata" ).build() ).build() )

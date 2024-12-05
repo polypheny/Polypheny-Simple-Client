@@ -759,14 +759,11 @@ public interface PolyphenyDbExecutor extends Executor {
                 throw new RuntimeException( "Status gathering is already running!" );
             }
             log.info( "Start gather status data from Polypheny every " + intervalSeconds + " seconds." );
-            Runnable statusGatherer = new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        statuses.add( gatherOnce() );
-                    } catch ( Exception e ) {
-                        log.error( "Unable to gather status data from Polypheny", e );
-                    }
+            Runnable statusGatherer = () -> {
+                try {
+                    statuses.add( gatherOnce() );
+                } catch ( Exception e ) {
+                    log.error( "Unable to gather status data from Polypheny", e );
                 }
             };
             statusGatheringService = Executors.newScheduledThreadPool( 1 );

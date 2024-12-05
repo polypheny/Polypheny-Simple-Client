@@ -146,15 +146,15 @@ public class DataGenerator {
             executionTimes.add( executionTime );
         }
         //the batchList contains only queries of one type
-        String sql = batchList.get( 0 ).getParameterizedSqlQuery();
+        String sql = batchList.getFirst().getParameterizedSqlQuery();
         if ( sql == null ) {
-            sql = batchList.get( 0 ).getSql();
+            sql = batchList.getFirst().getSql();
             sql = sql.substring( 0, Math.min( 500, sql.length() ) );
         }
         if ( !queryTimes.containsKey( sql ) ) {
-            queryTimes.put( batchList.get( 0 ).getParameterizedSqlQuery(), new ArrayList<>() );
+            queryTimes.put( batchList.getFirst().getParameterizedSqlQuery(), new ArrayList<>() );
         }
-        queryTimes.get( batchList.get( 0 ).getParameterizedSqlQuery() ).addAll( executionTimes );
+        queryTimes.get( batchList.getFirst().getParameterizedSqlQuery() ).addAll( executionTimes );
         batchList.clear();
     }
 

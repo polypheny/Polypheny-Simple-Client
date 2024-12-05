@@ -42,7 +42,7 @@ public class QueryListEntry {
 
     public QueryListEntry( Query query, List<Integer> templateIds ) {
         this.query = query;
-        this.templateId = templateIds.get( 0 );
+        this.templateId = templateIds.getFirst();
         this.templateIds = templateIds;
     }
 

@@ -88,7 +88,7 @@ public class DataGenerator {
 
 
     private String getEdge( int i, int propertiesAmount ) {
-        String label = getLabels( i ).get( 0 );
+        String label = getLabels( i ).getFirst();
         String properties = String.join( ", ", getProperties( i, propertiesAmount ) );
 
         return String.format( "-[:%s {%s}]->", label, properties );

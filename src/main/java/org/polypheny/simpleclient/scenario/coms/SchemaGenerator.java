@@ -55,9 +55,9 @@ public class SchemaGenerator {
 
         Graph graph = this.network.toGraph();
 
-        List<Query> graphQueries = graph.getSchemaGraphQueries( adapters.getGraphAdapter(), namespace + Graph.GRAPH_POSTFIX );
-        List<Query> docQueries = graph.getSchemaDocQueries( adapters.getDocAdapter(), namespace + Graph.DOC_POSTFIX );
-        List<Query> relQueries = graph.getSchemaRelQueries( adapters.getRelAdapter(), namespace + Graph.REL_POSTFIX, graph.getUsers(), config );
+        List<Query> graphQueries = graph.getSchemaGraphQueries( adapters.graphAdapter(), namespace + Graph.GRAPH_POSTFIX );
+        List<Query> docQueries = graph.getSchemaDocQueries( adapters.docAdapter(), namespace + Graph.DOC_POSTFIX );
+        List<Query> relQueries = graph.getSchemaRelQueries( adapters.relAdapter(), namespace + Graph.REL_POSTFIX, graph.getUsers(), config );
 
         for ( Query query : graphQueries ) {
             executor.executeQuery( query );
