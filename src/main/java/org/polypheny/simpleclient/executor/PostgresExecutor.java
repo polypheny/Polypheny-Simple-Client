@@ -44,7 +44,7 @@ public class PostgresExecutor extends JdbcExecutor {
         }
 
         try {
-            connection = DriverManager.getConnection( "jdbc:postgresql://" + host + ":5432/test", "postgres", "postgres" );
+            connection = DriverManager.getConnection( "jdbc:postgresql://" + host + ":5432/postgres", "postgres", "postgres" );
             connection.setAutoCommit( false );
             //connection.setTransactionIsolation( Connection.TRANSACTION_SERIALIZABLE );
             executeStatement = connection.createStatement();
@@ -117,6 +117,22 @@ public class PostgresExecutor extends JdbcExecutor {
                 } catch ( ExecutorException e ) {
                     log.error( "Exception while closing connection", e );
                 }
+            }
+        }
+
+
+        public static boolean tryConnect( String host ) {
+            try {
+                Class.forName( "org.postgresql.Driver" );
+            } catch ( ClassNotFoundException e ) {
+                throw new RuntimeException( "Driver not found." );
+            }
+
+            try {
+                DriverManager.getConnection( "jdbc:postgresql://" + host + ":5432/postgres", "postgres", "postgres" );
+                return true;
+            } catch ( SQLException e ) {
+                return false;
             }
         }
 
