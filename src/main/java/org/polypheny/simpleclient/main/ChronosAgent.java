@@ -115,6 +115,8 @@ public class ChronosAgent extends AbstractChronosAgent {
     private final boolean dumpQueryList;
     private QueryMode queryMode;
 
+    private String dockerContainerName = null;
+
 
     public ChronosAgent( InetAddress address, int port, boolean secure, boolean useHostname, String environment, String[] supports, boolean writeCsv, boolean dumpQueryList ) {
         super( address, port, secure, useHostname, environment );
@@ -224,6 +226,7 @@ public class ChronosAgent extends AbstractChronosAgent {
                 executorFactory = new OltpBenchPolyphenyDbExecutorFactory( ChronosCommand.hostname );
                 break;
             case "oltpbench-postgres":
+                dockerContainerName = DockerLauncher.launch( "oltpbench-postgres", "polypheny/postgres:latest", Map.of( "POSTGRES_PASSWORD", "postgres" ), List.of( 5432 ), () -> PostgresInstance.tryConnect( ChronosCommand.hostname ) );
                 executorFactory = new OltpBenchPostgresExecutorFactory( ChronosCommand.hostname );
                 break;
             default:
@@ -564,6 +567,9 @@ public class ChronosAgent extends AbstractChronosAgent {
         DatabaseInstance databaseInstance = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getRight();
 
         databaseInstance.tearDown();
+        if ( dockerContainerName != null ) {
+            DockerLauncher.remove( dockerContainerName );
+        }
         return null;
     }
 

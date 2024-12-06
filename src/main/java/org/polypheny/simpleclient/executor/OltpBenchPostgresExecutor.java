@@ -53,7 +53,7 @@ public class OltpBenchPostgresExecutor extends OltpBenchExecutor implements Exec
         }
 
         try {
-            connection = DriverManager.getConnection( "jdbc:postgresql://" + host + ":5432/test", "postgres", "postgres" );
+            connection = DriverManager.getConnection( "jdbc:postgresql://" + host + ":5432/postgres", "postgres", "postgres" );
             connection.setAutoCommit( false );
             //connection.setTransactionIsolation( Connection.TRANSACTION_SERIALIZABLE );
             executeStatement = connection.createStatement();
@@ -92,7 +92,7 @@ public class OltpBenchPostgresExecutor extends OltpBenchExecutor implements Exec
         return config.toXml(
                 "postgres",
                 "org.postgresql.Driver",
-                "jdbc:postgresql://" + host + ":5432/test",
+                "jdbc:postgresql://" + host + ":5432/postgres",
                 "postgres",
                 "postgres",
                 config.scenario + "-postgres-ddl.sql",
