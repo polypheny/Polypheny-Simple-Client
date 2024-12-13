@@ -214,6 +214,7 @@ public class ChronosAgent extends AbstractChronosAgent {
                 executorFactory = new SurrealDBExecutorFactory( ChronosCommand.hostname, "8989", true );
                 break;
             case "postgres":
+                dockerContainerName = DockerLauncher.launch( "postgres", "polypheny/postgres:latest", Map.of( "POSTGRES_PASSWORD", "postgres" ), List.of( 5432 ), () -> PostgresInstance.tryConnect( ChronosCommand.hostname ) );
                 executorFactory = new PostgresExecutorFactory( ChronosCommand.hostname, Boolean.parseBoolean( parsedConfig.get( "prepareStatements" ) ) );
                 break;
             case "monetdb":
