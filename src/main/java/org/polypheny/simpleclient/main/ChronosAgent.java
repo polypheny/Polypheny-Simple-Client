@@ -521,9 +521,9 @@ public class ChronosAgent extends AbstractChronosAgent {
             List<Integer> numOfActiveTrxReadings = new ArrayList<>( statuses.size() );
             List<Integer> monitoringQueueSizeReadings = new ArrayList<>( statuses.size() );
             for ( PolyphenyStatus status : statuses ) {
-                currentMemoryReadings.add( status.getCurrentMemory() );
-                numOfActiveTrxReadings.add( status.getNumOfActiveTrx() );
-                monitoringQueueSizeReadings.add( status.getMonitoringQueueSize() );
+                currentMemoryReadings.add( status.currentMemory() );
+                numOfActiveTrxReadings.add( status.numOfActiveTrx() );
+                monitoringQueueSizeReadings.add( status.monitoringQueueSize() );
             }
             properties.put( "pdbStatus_currentMemory", currentMemoryReadings );
             properties.put( "pdbStatus_numOfActiveTrx", numOfActiveTrxReadings );
@@ -539,16 +539,16 @@ public class ChronosAgent extends AbstractChronosAgent {
             // Do a final gathering
             try {
                 PolyphenyFullStatus status = statusGatherer.gatherFullOnce();
-                properties.put( "pdbStatus_uuid", status.getUuid() );
-                properties.put( "pdbStatus_version", status.getVersion() );
-                properties.put( "pdbStatus_hash", status.getHash() );
-                properties.put( "pdbStatus_currentMemory_final", status.getCurrentMemory() );
-                properties.put( "pdbStatus_numOfActiveTrx_final", status.getNumOfActiveTrx() );
-                properties.put( "pdbStatus_trxCount_final", status.getTrxCount() );
-                properties.put( "pdbStatus_implementationCacheSize_final", status.getImplementationCacheSize() );
-                properties.put( "pdbStatus_queryPlanCacheSize_final", status.getQueryPlanCacheSize() );
-                properties.put( "pdbStatus_routingPlanCacheSize_final", status.getRoutingPlanCacheSize() );
-                properties.put( "pdbStatus_monitoringQueueSize_final", status.getMonitoringQueueSize() );
+                properties.put( "pdbStatus_uuid", status.uui() );
+                properties.put( "pdbStatus_version", status.version() );
+                properties.put( "pdbStatus_hash", status.hash() );
+                properties.put( "pdbStatus_currentMemory_final", status.currentMemory() );
+                properties.put( "pdbStatus_numOfActiveTrx_final", status.numOfActiveTrx() );
+                properties.put( "pdbStatus_trxCount_final", status.trxCount() );
+                properties.put( "pdbStatus_implementationCacheSize_final", status.implementationCacheSize() );
+                properties.put( "pdbStatus_queryPlanCacheSize_final", status.queryPlanCacheSize() );
+                properties.put( "pdbStatus_routingPlanCacheSize_final", status.routingPlanCacheSize() );
+                properties.put( "pdbStatus_monitoringQueueSize_final", status.monitoringQueueSize() );
             } catch ( Exception e ) {
                 log.error( "Unable to gather final status data from Polypheny", e );
             }
