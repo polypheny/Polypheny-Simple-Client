@@ -40,8 +40,6 @@ import kong.unirest.core.HttpResponse;
 import kong.unirest.core.Unirest;
 import kong.unirest.core.json.JSONArray;
 import kong.unirest.core.json.JSONObject;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.control.client.PolyphenyControlConnector;
@@ -790,45 +788,15 @@ public interface PolyphenyDbExecutor extends Executor {
         }
 
 
-        @Data
-        public static class PolyphenyStatus {
-
-            protected final long currentMemory;
-            protected final int numOfActiveTrx;
-            protected final int monitoringQueueSize;
+        public record PolyphenyStatus( long currentMemory, int numOfActiveTrx, int monitoringQueueSize ) {
 
         }
 
 
-        @EqualsAndHashCode(callSuper = true)
-        @Getter
-        public static class PolyphenyFullStatus extends PolyphenyStatus {
-
-            PolyphenyFullStatus( String uui, String version, String hash, long currentMemory, long trxCount, int numOfActiveTrx, int implementationCacheSize, int queryPlanCacheSize, int routingPlanCacheSize, int monitoringQueueSize ) {
-                super( currentMemory, numOfActiveTrx, monitoringQueueSize );
-                this.uuid = uui;
-                this.version = version;
-                this.hash = hash;
-                this.trxCount = trxCount;
-                this.implementationCacheSize = implementationCacheSize;
-                this.queryPlanCacheSize = queryPlanCacheSize;
-                this.routingPlanCacheSize = routingPlanCacheSize;
-            }
-
-
-            private final String uuid;
-            private final String version;
-            private final String hash;
-
-            private final long trxCount;
-
-            private final int implementationCacheSize;
-            private final int queryPlanCacheSize;
-            private final int routingPlanCacheSize;
+        public record PolyphenyFullStatus( String uui, String version, String hash, long currentMemory, long trxCount, int numOfActiveTrx, int implementationCacheSize, int queryPlanCacheSize, int routingPlanCacheSize, int monitoringQueueSize ) {
 
         }
 
     }
-
 
 }
