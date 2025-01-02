@@ -38,6 +38,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import kong.unirest.core.HttpResponse;
 import kong.unirest.core.Unirest;
+import kong.unirest.core.UnirestInstance;
 import kong.unirest.core.json.JSONArray;
 import kong.unirest.core.json.JSONObject;
 import lombok.Getter;
@@ -720,34 +721,37 @@ public interface PolyphenyDbExecutor extends Executor {
         private final List<PolyphenyStatus> statuses = new ArrayList<>();
 
         private final String url;
+        private final UnirestInstance unirest;
 
 
         private StatusGatherer() {
             url = "http://" + ChronosCommand.hostname + ":" + PolyphenyVersionSwitch.getInstance().uiPort + "/status/";
+            unirest = Unirest.spawnInstance();
+            unirest.config().requestTimeout( 30000 );
         }
 
 
         public PolyphenyStatus gatherOnce() {
             return new PolyphenyStatus(
-                    Long.parseLong( Unirest.get( url + "memory-current" ).asString().getBody() ),
-                    Integer.parseInt( Unirest.get( url + "transactions-active" ).asString().getBody() ),
-                    Integer.parseInt( Unirest.get( url + "monitoring-queue" ).asString().getBody() )
+                    Long.parseLong( unirest.get( url + "memory-current" ).asString().getBody() ),
+                    Integer.parseInt( unirest.get( url + "transactions-active" ).asString().getBody() ),
+                    Integer.parseInt( unirest.get( url + "monitoring-queue" ).asString().getBody() )
             );
         }
 
 
         public PolyphenyFullStatus gatherFullOnce() {
             return new PolyphenyFullStatus(
-                    Unirest.get( url + "uuid" ).asString().getBody(),
-                    Unirest.get( url + "version" ).asString().getBody(),
-                    Unirest.get( url + "hash" ).asString().getBody(),
-                    Long.parseLong( Unirest.get( url + "memory-current" ).asString().getBody() ),
-                    Integer.parseInt( Unirest.get( url + "transactions-since-restart" ).asString().getBody() ),
-                    Integer.parseInt( Unirest.get( url + "transactions-active" ).asString().getBody() ),
-                    Integer.parseInt( Unirest.get( url + "cache-implementation" ).asString().getBody() ),
-                    Integer.parseInt( Unirest.get( url + "cache-queryplan" ).asString().getBody() ),
-                    Integer.parseInt( Unirest.get( url + "cache-routingplan" ).asString().getBody() ),
-                    Integer.parseInt( Unirest.get( url + "monitoring-queue" ).asString().getBody() )
+                    unirest.get( url + "uuid" ).asString().getBody(),
+                    unirest.get( url + "version" ).asString().getBody(),
+                    unirest.get( url + "hash" ).asString().getBody(),
+                    Long.parseLong( unirest.get( url + "memory-current" ).asString().getBody() ),
+                    Integer.parseInt( unirest.get( url + "transactions-since-restart" ).asString().getBody() ),
+                    Integer.parseInt( unirest.get( url + "transactions-active" ).asString().getBody() ),
+                    Integer.parseInt( unirest.get( url + "cache-implementation" ).asString().getBody() ),
+                    Integer.parseInt( unirest.get( url + "cache-queryplan" ).asString().getBody() ),
+                    Integer.parseInt( unirest.get( url + "cache-routingplan" ).asString().getBody() ),
+                    Integer.parseInt( unirest.get( url + "monitoring-queue" ).asString().getBody() )
             );
         }
 
