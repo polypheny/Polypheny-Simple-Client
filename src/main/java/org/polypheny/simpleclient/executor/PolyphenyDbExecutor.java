@@ -511,7 +511,7 @@ public interface PolyphenyDbExecutor extends Executor {
 
 
         protected void configurePolyphenyControl( PolyphenyConnector polyphenyControlConnector, AbstractConfig config, boolean resetCatalog ) {
-            polyphenyControlConnector.setConfig( new PolyphenyConnectorConfig( config.pdbBranch.trim(), config.puiBranch.trim(), 50, config.buildUi, resetCatalog, config.memoryCatalog ) );
+            polyphenyControlConnector.setConfig( new PolyphenyConnectorConfig( config.pdbBranch.trim(), config.pdbCommit.trim(), config.puiBranch.trim(), 50, config.buildUi, resetCatalog, config.memoryCatalog ) );
         }
 
 
@@ -571,7 +571,7 @@ public interface PolyphenyDbExecutor extends Executor {
             if ( response.getStatus() == 200 ) {
                 JSONArray jsonArray = new JSONArray( response.getBody() );
                 if ( !jsonArray.isEmpty() ) {
-                    JSONObject jsonObject = jsonArray.getJSONObject( 0 );
+                    jsonArray.getJSONObject( 0 );
                     return true;
                 }
             }

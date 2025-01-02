@@ -106,15 +106,21 @@ public class PolyphenyLocalConnector implements PolyphenyConnector {
 
     public void updatePolypheny() {
         // Download JAR
-        downloadJar( buildServer, config.branchDB(), jar );
+        downloadJar( buildServer, config.branchDB(), config.commit(), jar );
     }
 
 
-    private static void downloadJar( String buildServer, String branch, File jar ) {
-        log.warn( "Getting commit id for branch {} from GitHub", branch );
+    private static void downloadJar( String buildServer, String branch, String commit, File jar ) {
+        String newCommitId;
+        if ( commit == null || commit.isEmpty() ) {
+            log.warn( "Getting commit id for branch {} from GitHub", branch );
 
-        String newCommitId = GithubApi.getCommit( branch ).sha();
-        log.warn( "Fetching commit {} on branch {} from {}", newCommitId, branch, buildServer );
+            newCommitId = GithubApi.getCommit( branch ).sha();
+            log.warn( "Fetching commit {} on branch {} from {}", newCommitId, branch, buildServer );
+        } else {
+            log.warn( "Using commit id from CDL {}: {}", branch, commit );
+            newCommitId = commit;
+        }
 
         HttpResponse<byte[]> req = Unirest.get( String.format( "%s/jar?commit=%s&branch=%s", buildServer, newCommitId, branch ) )
                 .requestTimeout( 30 * 60 * 1000 )

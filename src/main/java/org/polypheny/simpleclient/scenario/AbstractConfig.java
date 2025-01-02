@@ -42,6 +42,7 @@ public abstract class AbstractConfig {
 
     public final String pdbBranch;
     public final String puiBranch;
+    public final String pdbCommit;
     public final boolean buildUi;
     public final boolean memoryCatalog;
     public final boolean resetCatalog;
@@ -79,6 +80,7 @@ public abstract class AbstractConfig {
         this.system = system;
 
         pdbBranch = "proto-without-grpc";
+        pdbCommit = "";
         puiBranch = "master";
         buildUi = false;
         resetCatalog = false;
@@ -118,6 +120,7 @@ public abstract class AbstractConfig {
         this.scenario = scenario;
 
         pdbBranch = cdl.get( "pdbBranch" );
+        pdbCommit = cdl.get( "pdbCommit" );
         puiBranch = "master";
         buildUi = false;
         resetCatalog = true;

@@ -42,7 +42,7 @@ public interface PolyphenyConnector {
 
     int checkForAnyRunningPolyphenyInstances();
 
-    record PolyphenyConnectorConfig( String branchDB, String branchUI, int heapSizeGb, boolean buildUI, boolean resetCatalog, boolean memoryCatalog ) {
+    record PolyphenyConnectorConfig( String branchDB, String commit, String branchUI, int heapSizeGb, boolean buildUI, boolean resetCatalog, boolean memoryCatalog ) {
 
     }
 
