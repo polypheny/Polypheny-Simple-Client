@@ -18,11 +18,11 @@ buildscript {
         // Shadowing; used to make a fat jar (https://github.com/johnrengelman/shadow)
         classpath group: "com.github.johnrengelman", name: "shadow", version: "8.1.1"
         // Lombok (https://plugins.gradle.org/plugin/io.freefair.lombok)
-        classpath group: "io.freefair.gradle", name: "lombok-plugin", version: "8.7.1"
+        classpath group: "io.freefair.gradle", name: "lombok-plugin", version: "8.11"
         // https://plugins.gradle.org/plugin/org.jetbrains.gradle.plugin.idea-ext
-        classpath group: "gradle.plugin.org.jetbrains.gradle.plugin.idea-ext", name: "gradle-idea-ext", version: "1.1.8"
+        classpath group: "gradle.plugin.org.jetbrains.gradle.plugin.idea-ext", name: "gradle-idea-ext", version: "1.1.9"
         // licensee plugin
-        classpath group: "app.cash.licensee", name: "licensee-gradle-plugin", version: "1.11.0"
+        classpath group: "app.cash.licensee", name: "licensee-gradle-plugin", version: "1.12.0"
         // license report
         classpath group: "com.jaredsburrows", name: "gradle-license-plugin", version: "0.9.8"
     }
@@ -68,8 +68,8 @@ configurations {
 
 dependencies {
     // Commons
-    implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.16.0' // License: Apache 2.0
-    implementation group: 'commons-io', name: 'commons-io', version: '2.16.1'  // License: Apache 2.0
+    implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.17.0' // License: Apache 2.0
+    implementation group: 'commons-io', name: 'commons-io', version: '2.18.0'  // License: Apache 2.0
 
     // Polypheny Control Connector
     implementation group: 'org.polypheny', name: 'control-connector', version: '2.2.1'  // License: Apache 2.0
@@ -78,12 +78,12 @@ dependencies {
     implementation group: 'org.chronos-eaas', name: 'chronos-agent', version: '2.5.1' // License: MIT
 
     // REST
-    implementation group: 'com.konghq', name: 'unirest-java-core', version: '4.4.4' // License: MIT
+    implementation group: 'com.konghq', name: 'unirest-java-core', version: '4.4.5' // License: MIT
 
     // JDBC Drivers
     oldPolyphenyJdbcDriver group: 'org.polypheny', name: 'polypheny-jdbc-driver', version: '1.5.3' // License: Apache 2.0
     newPolyphenyJdbcDriver group: 'org.polypheny', name: 'polypheny-jdbc-driver', version: '2.3' // License: Apache 2.0
-    implementation group: 'org.postgresql', name: 'postgresql', version: '42.7.3' // License: BSD-2-Clause License
+    implementation group: 'org.postgresql', name: 'postgresql', version: '42.7.4' // License: BSD-2-Clause License
     implementation group: 'monetdb', name: 'monetdb-jdbc', version: '3.3' // License: Mozilla Public License 2.0
 
     // Cottontail-DB
@@ -108,8 +108,8 @@ dependencies {
 
     // Logging
     implementation group: 'org.slf4j', name: 'slf4j-api', version: '2.0.16' // License: MIT
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-slf4j2-impl', version: '2.23.1' // License: Apache 2.0
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.23.1' // License: Apache 2.0
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-slf4j2-impl', version: '2.24.3' // License: Apache 2.0
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.24.3' // License: Apache 2.0
     //annotationProcessor group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.21.1' // License: Apache 2.0
 
     // Extracting ZIPs
@@ -140,7 +140,7 @@ licensee {
     allowDependency('org.java-websocket', 'Java-WebSocket', '1.5.4') { because 'MIT License' }
     allowDependency('org.bouncycastle', 'bcpkix-jdk15on', '1.61') { because 'MIT License' }
     allowDependency('org.bouncycastle', 'bcprov-jdk15on', '1.61') { because 'MIT License' }
-    allowDependency('org.postgresql', 'postgresql', '42.7.3') { because 'BSD 2-Clause' }
+    allowDependency('org.postgresql', 'postgresql', '42.7.4') { because 'BSD 2-Clause' }
     allowDependency('org.vitrivr', 'cottontaildb', '0.10.5') { because 'MIT License' }
     allowDependency('org.vitrivr', 'cottontaildb-proto', '0.10.3') { because 'MIT License' }
     allowDependency('com.google.re2j', 're2j', '1.2') { because 'BSD 3-Clause' }
