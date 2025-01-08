@@ -441,6 +441,11 @@ public class ChronosAgent extends AbstractChronosAgent {
                 if ( config.router != null && config.router.equals( "icarus" ) && PolyphenyVersionSwitch.getInstance().hasIcarusRoutingSettings ) {
                     polyphenyDbInstance.setIcarusRoutingTraining( false );
                 }
+                PolyphenyFullStatus status = polyphenyDbInstance.getStatusGatherer().gatherFullOnce();
+                properties.put( "pdbStatus_implementationCacheSize_after_warmup", status.implementationCacheSize() );
+                properties.put( "pdbStatus_queryPlanCacheSize_after_warmup", status.queryPlanCacheSize() );
+                properties.put( "pdbStatus_routingPlanCacheSize_after_warmup", status.routingPlanCacheSize() );
+                properties.put( "pdbStatus_monitoringQueueSize_after_warmup", status.monitoringQueueSize() );
             }
         } catch ( Exception e ) {
             databaseInstance.tearDown();
