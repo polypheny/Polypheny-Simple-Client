@@ -27,8 +27,6 @@ package org.polypheny.simpleclient.scenario.multimedia;
 
 
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -48,6 +46,7 @@ import org.polypheny.simpleclient.executor.Executor.DatabaseInstance;
 import org.polypheny.simpleclient.executor.ExecutorException;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.main.ProgressReporter;
+import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 import org.polypheny.simpleclient.query.QueryListEntry;
 import org.polypheny.simpleclient.scenario.Scenario;
@@ -183,22 +182,7 @@ public class MultimediaBench extends Scenario {
 
         // This dumps the sql queries independent of the selected interface
         // always false for the MultimediaBench
-        if ( outputDirectory != null && dumpQueryList ) {
-            log.info( "Dump query list..." );
-            try {
-                FileWriter fw = new FileWriter( outputDirectory.getPath() + File.separator + "queryList" );
-                queryList.forEach( query -> {
-                    try {
-                        fw.append( query.query.getSql() ).append( "\n" );
-                    } catch ( IOException e ) {
-                        log.error( "Error while dumping query list", e );
-                    }
-                } );
-                fw.close();
-            } catch ( IOException e ) {
-                log.error( "Error while dumping query list", e );
-            }
-        }
+        dumpQueryList( outputDirectory, queryList, Query::getSql );
 
         log.info( "Executing benchmark..." );
         (new Thread( new ProgressReporter.ReportQueryListProgress( queryList, progressReporter ) )).start();

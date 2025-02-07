@@ -26,7 +26,6 @@ package org.polypheny.simpleclient.scenario.gavel;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -54,6 +53,7 @@ import org.polypheny.simpleclient.executor.PolyphenyDbMongoQlExecutor.PolyphenyD
 import org.polypheny.simpleclient.executor.PostgresExecutor.PostgresExecutorFactory;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.main.ProgressReporter;
+import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 import org.polypheny.simpleclient.query.QueryListEntry;
 import org.polypheny.simpleclient.query.RawQuery;
@@ -133,22 +133,7 @@ public class Gavel extends Scenario {
         Collections.shuffle( queryList );
 
         // This dumps the sql queries independent of the selected interface
-        if ( outputDirectory != null && dumpQueryList ) {
-            log.info( "Dump query list..." );
-            try {
-                FileWriter fw = new FileWriter( outputDirectory.getPath() + File.separator + "queryList" );
-                queryList.forEach( query -> {
-                    try {
-                        fw.append( query.query.getSql() ).append( "\n" );
-                    } catch ( IOException e ) {
-                        log.error( "Error while dumping query list", e );
-                    }
-                } );
-                fw.close();
-            } catch ( IOException e ) {
-                log.error( "Error while dumping query list", e );
-            }
-        }
+        dumpQueryList( outputDirectory, queryList, Query::getSql );
 
         log.info( "Executing benchmark..." );
         (new Thread( new ProgressReporter.ReportQueryListProgress( queryList, progressReporter ) )).start();

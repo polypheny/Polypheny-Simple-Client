@@ -26,6 +26,8 @@ package org.polypheny.simpleclient.scenario;
 
 import com.google.common.base.Joiner;
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.util.List;
@@ -33,6 +35,7 @@ import java.util.LongSummaryStatistics;
 import java.util.Map;
 import java.util.OptionalDouble;
 import java.util.Properties;
+import java.util.function.Function;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.QueryMode;
@@ -44,6 +47,8 @@ import org.polypheny.simpleclient.executor.PolyphenyDbExecutor;
 import org.polypheny.simpleclient.main.ChronosAgent;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.main.ProgressReporter;
+import org.polypheny.simpleclient.query.Query;
+import org.polypheny.simpleclient.query.QueryListEntry;
 
 
 @Slf4j
@@ -177,6 +182,27 @@ public abstract class Scenario {
                 log.error( "Error while closing connection", e );
             }
         }
+    }
+
+
+    protected void dumpQueryList( File outputDirectory, List<QueryListEntry> queryList, Function<Query, String> toString ) {
+        if ( outputDirectory != null && dumpQueryList ) {
+            log.info( "Dump query list..." );
+            try {
+                FileWriter fw = new FileWriter( outputDirectory.getPath() + File.separator + "queryList" );
+                queryList.forEach( query -> {
+                    try {
+                        fw.append( toString.apply( query.query ) ).append( "\n" );
+                    } catch ( IOException e ) {
+                        log.error( "Error while dumping query list", e );
+                    }
+                } );
+                fw.close();
+            } catch ( IOException e ) {
+                log.error( "Error while dumping query list", e );
+            }
+        }
+
     }
 
 }
