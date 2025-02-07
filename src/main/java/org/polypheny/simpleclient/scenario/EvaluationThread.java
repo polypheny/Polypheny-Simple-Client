@@ -96,7 +96,9 @@ public class EvaluationThread extends Thread {
             measuredTimes.add( measuredTime );
             measuredTimePerQueryType.get( queryListEntry.templateId ).add( measuredTime );
             for ( Integer id : queryListEntry.templateIds ) {
-                measuredTimePerQueryType.get( id ).add( measuredTime );
+                if ( id != queryListEntry.templateId ) {
+                    measuredTimePerQueryType.get( id ).add( measuredTime );
+                }
             }
             if ( commitAfterEveryQuery ) {
                 try {
