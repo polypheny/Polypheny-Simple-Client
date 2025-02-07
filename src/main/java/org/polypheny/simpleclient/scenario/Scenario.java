@@ -26,8 +26,6 @@ package org.polypheny.simpleclient.scenario;
 
 import com.google.common.base.Joiner;
 import java.io.File;
-import java.text.DecimalFormat;
-import java.text.ParseException;
 import java.util.List;
 import java.util.LongSummaryStatistics;
 import java.util.Map;
@@ -101,17 +99,9 @@ public abstract class Scenario {
 
 
     protected double calculateMean( List<Long> times ) {
-        DecimalFormat df = new DecimalFormat( "0.000" );
         OptionalDouble meanOptional = times.stream().mapToLong( Long::longValue ).average();
         if ( meanOptional.isPresent() ) {
-            // scale
-            double mean = meanOptional.getAsDouble() / 1000000.0;
-            String roundFormat = df.format( mean );
-            try {
-                return df.parse( roundFormat ).doubleValue();
-            } catch ( ParseException e ) {
-                log.error( "Exception", e );
-            }
+            return Math.round( meanOptional.getAsDouble() / 1_000 ) / 1_000.0;
         }
         return -1;
     }
@@ -125,15 +115,7 @@ public abstract class Scenario {
 
 
     protected double processDoubleValue( double value ) {
-        DecimalFormat df = new DecimalFormat( "0.000" );
-        double temp1 = value / 1_000_000;
-        String roundFormat = df.format( temp1 );
-        try {
-            return df.parse( roundFormat ).doubleValue();
-        } catch ( ParseException e ) {
-            log.error( "Exception", e );
-        }
-        return -1;
+        return Math.round( value / 1_000 ) / 1_000.0;
     }
 
 
