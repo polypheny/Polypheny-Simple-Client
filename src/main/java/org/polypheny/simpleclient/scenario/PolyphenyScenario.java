@@ -34,8 +34,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Queue;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
@@ -61,11 +63,13 @@ public abstract class PolyphenyScenario extends Scenario {
     }
 
 
-    protected long commonExecute( List<QueryListEntry> queryList, ProgressReporter progressReporter, File outputDirectory, int numberOfThreads, Function<Query, String> toString, Supplier<Executor> executor, Random random ) {
-        Collections.shuffle( queryList, random );
+    protected long commonExecute( List<QueryListEntry> queries, ProgressReporter progressReporter, File outputDirectory, int numberOfThreads, Function<Query, String> toString, Supplier<Executor> executor, Random random ) {
+        Collections.shuffle( queries, random );
 
         // This dumps the queries independent of the selected interface
-        dumpQueryList( outputDirectory, queryList, toString );
+        dumpQueryList( outputDirectory, queries, toString );
+
+        Queue<QueryListEntry> queryList = new ConcurrentLinkedQueue<>( queries );
 
         log.info( "Executing benchmark..." );
         (new Thread( new ProgressReporter.ReportQueryListProgress( queryList, progressReporter ) )).start();

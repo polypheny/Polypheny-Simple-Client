@@ -26,6 +26,7 @@ package org.polypheny.simpleclient.main;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Queue;
 import java.util.concurrent.atomic.AtomicLong;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.query.QueryListEntry;
@@ -70,12 +71,12 @@ public abstract class ProgressReporter {
 
         private final int totalNumber;
         private final ProgressReporter theProgressReporter;
-        private final List<QueryListEntry> theList;
+        private final Queue<QueryListEntry> theQueue;
 
 
-        public ReportQueryListProgress( List<QueryListEntry> list, ProgressReporter progressReporter ) {
+        public ReportQueryListProgress( Queue<QueryListEntry> list, ProgressReporter progressReporter ) {
             this.totalNumber = list.size();
-            this.theList = list;
+            this.theQueue = list;
             this.theProgressReporter = progressReporter;
         }
 
@@ -83,8 +84,8 @@ public abstract class ProgressReporter {
         @Override
         public void run() {
             while ( true ) {
-                theProgressReporter.update( totalNumber - theList.size(), totalNumber );
-                if ( theList.isEmpty() ) {
+                theProgressReporter.update( totalNumber - theQueue.size(), totalNumber );
+                if ( theQueue.isEmpty() ) {
                     break;
                 }
                 try {
@@ -97,7 +98,7 @@ public abstract class ProgressReporter {
 
 
         public void updateProgress() {
-            theProgressReporter.update( totalNumber - theList.size(), totalNumber );
+            theProgressReporter.update( totalNumber - theQueue.size(), totalNumber );
         }
 
     }

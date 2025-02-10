@@ -35,6 +35,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
@@ -276,7 +277,7 @@ public class Coms extends PolyphenyScenario {
 
         ArrayList<EvaluationThread> threads = new ArrayList<>();
         for ( List<QueryListEntry> queryList : organized ) {
-            threads.add( new EvaluationThread( queryList, executorFactory.createExecutorInstance( csvWriter, NAMESPACE ), queryTypes.keySet(), commitAfterEveryQuery ) );
+            threads.add( new EvaluationThread( new ConcurrentLinkedQueue<>( queryList ), executorFactory.createExecutorInstance( csvWriter, NAMESPACE ), queryTypes.keySet(), commitAfterEveryQuery ) );
         }
 
         EvaluationThreadMonitor threadMonitor = new EvaluationThreadMonitor( threads );
