@@ -53,8 +53,8 @@ import org.polypheny.simpleclient.main.ProgressReporter.ReportMultiQueryListProg
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryListEntry;
 import org.polypheny.simpleclient.scenario.EvaluationThread;
+import org.polypheny.simpleclient.scenario.EvaluationThreadMonitor;
 import org.polypheny.simpleclient.scenario.Scenario;
-import org.polypheny.simpleclient.scenario.graph.GraphBench.EvaluationThreadMonitor;
 
 @Slf4j
 public class Coms extends Scenario {

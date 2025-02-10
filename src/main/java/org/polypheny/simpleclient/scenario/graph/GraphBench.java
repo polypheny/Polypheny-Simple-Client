@@ -36,7 +36,6 @@ import java.util.Random;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.executor.Executor;
@@ -51,6 +50,7 @@ import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 import org.polypheny.simpleclient.query.QueryListEntry;
 import org.polypheny.simpleclient.scenario.EvaluationThread;
+import org.polypheny.simpleclient.scenario.EvaluationThreadMonitor;
 import org.polypheny.simpleclient.scenario.Scenario;
 import org.polypheny.simpleclient.scenario.graph.queryBuilder.CountNodePropertyBuilder;
 import org.polypheny.simpleclient.scenario.graph.queryBuilder.CreateGraphDatabase;
@@ -202,8 +202,8 @@ public class GraphBench extends Scenario {
             thread.closeExecutor();
         }
 
-        if ( threadMonitor.aborted ) {
-            throw new RuntimeException( "Exception while executing benchmark", threadMonitor.exception );
+        if ( threadMonitor.isAborted() ) {
+            throw new RuntimeException( "Exception while executing benchmark", threadMonitor.getException() );
         }
 
         log.info( "run time: {} s", executeRuntime / 1000000000 );
@@ -273,35 +273,6 @@ public class GraphBench extends Scenario {
                 throw new RuntimeException( "Unexpected interrupt", e );
             }
         }
-    }
-
-
-    public static class EvaluationThreadMonitor {
-
-        private final List<EvaluationThread> threads;
-        @Getter
-        private Exception exception;
-        @Getter
-        private boolean aborted;
-
-
-        public EvaluationThreadMonitor( List<EvaluationThread> threads ) {
-            this.threads = threads;
-            this.aborted = false;
-        }
-
-
-        public void abortAll() {
-            this.aborted = true;
-            threads.forEach( EvaluationThread::abort );
-        }
-
-
-        public void notifyAboutError( Exception e ) {
-            exception = e;
-            abortAll();
-        }
-
     }
 
 
