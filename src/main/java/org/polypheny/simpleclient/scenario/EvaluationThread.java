@@ -37,7 +37,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.executor.ExecutorException;
 import org.polypheny.simpleclient.query.QueryListEntry;
-import org.polypheny.simpleclient.scenario.graph.GraphBench.EvaluationThreadMonitor;
 
 @Getter
 @Slf4j
