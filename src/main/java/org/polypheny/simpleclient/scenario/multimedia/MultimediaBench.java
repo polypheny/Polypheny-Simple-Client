@@ -33,7 +33,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import kong.unirest.core.Unirest;
@@ -373,15 +372,6 @@ public class MultimediaBench extends Scenario {
             abortAll();
         }
 
-    }
-
-
-    @Override
-    public void analyze( Properties properties, File outputDirectory ) {
-        properties.put( "measuredTime", calculateMean( measuredTimes ) );
-
-        measuredTimePerQueryType.forEach( ( templateId, time ) -> calculateResults( queryTypes, properties, templateId, time ) );
-        properties.put( "queryTypes_maxId", queryTypes.size() );
     }
 
 

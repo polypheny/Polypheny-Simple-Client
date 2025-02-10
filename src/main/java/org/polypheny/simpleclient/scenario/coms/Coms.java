@@ -33,7 +33,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Properties;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
@@ -54,10 +53,10 @@ import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryListEntry;
 import org.polypheny.simpleclient.scenario.EvaluationThread;
 import org.polypheny.simpleclient.scenario.EvaluationThreadMonitor;
-import org.polypheny.simpleclient.scenario.Scenario;
+import org.polypheny.simpleclient.scenario.PolyphenyScenario;
 
 @Slf4j
-public class Coms extends Scenario {
+public class Coms extends PolyphenyScenario {
 
     public static final String NAMESPACE = "coms";
     public static final double EPSILON = 0.000001;
@@ -393,18 +392,6 @@ public class Coms extends Scenario {
                 throw new RuntimeException( "Unexpected interrupt", e );
             }
         }
-    }
-
-
-    @Override
-    public void analyze( Properties properties, File outputDirectory ) {
-        properties.put( "measuredTime", calculateMean( measuredTimes ) );
-
-        measuredTimePerQueryType.forEach( ( templateId, time ) -> calculateResults( queryTypes, properties, templateId, time ) );
-        properties.put( "queryTypes_maxId", queryTypes.size() );
-        properties.put( "executeRuntime", executeRuntime / 1000000000.0 );
-        properties.put( "numberOfQueries", measuredTimes.size() );
-        properties.put( "throughput", measuredTimes.size() / (executeRuntime / 1000000000.0) );
     }
 
 
