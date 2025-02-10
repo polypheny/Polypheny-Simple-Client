@@ -241,7 +241,7 @@ public class Coms extends Scenario {
 
 
     @SafeVarargs
-    private final void startEvaluation( ProgressReporter progressReporter, CsvWriter csvWriter, int numberOfThreads, List<Integer> threadDistribution, List<QueryListEntry>... queryLists ) {
+    private void startEvaluation( ProgressReporter progressReporter, CsvWriter csvWriter, int numberOfThreads, List<Integer> threadDistribution, List<QueryListEntry>... queryLists ) {
         log.info( "Executing benchmark..." );
         if ( threadDistribution.size() != queryLists.length ) {
             throw new RuntimeException( "ThreadDistribution needs to define an number for each data model" );
@@ -323,7 +323,7 @@ public class Coms extends Scenario {
 
 
     @SafeVarargs
-    private final List<QueryListEntry> randomlyMergeInOrder( final List<QueryListEntry>... lists ) {
+    private List<QueryListEntry> randomlyMergeInOrder( final List<QueryListEntry>... lists ) {
         List<QueryListEntry> merged = new ArrayList<>();
 
         List<List<QueryListEntry>> bucket = new ArrayList<>( Arrays.asList( lists ) );
