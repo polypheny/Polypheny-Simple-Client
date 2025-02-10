@@ -26,15 +26,12 @@
 package org.polypheny.simpleclient.scenario.knnbench;
 
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import lombok.Getter;
@@ -49,7 +46,7 @@ import org.polypheny.simpleclient.main.ProgressReporter;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 import org.polypheny.simpleclient.query.QueryListEntry;
-import org.polypheny.simpleclient.scenario.Scenario;
+import org.polypheny.simpleclient.scenario.PolyphenyScenario;
 import org.polypheny.simpleclient.scenario.knnbench.queryBuilder.CreateIntFeature;
 import org.polypheny.simpleclient.scenario.knnbench.queryBuilder.CreateMetadata;
 import org.polypheny.simpleclient.scenario.knnbench.queryBuilder.CreateRealFeature;
@@ -62,7 +59,7 @@ import org.polypheny.simpleclient.scenario.knnbench.queryBuilder.SimpleMetadata;
 
 
 @Slf4j
-public class KnnBench extends Scenario {
+public class KnnBench extends PolyphenyScenario {
 
     private final KnnBenchConfig config;
 
@@ -357,18 +354,6 @@ public class KnnBench extends Scenario {
             abortAll();
         }
 
-    }
-
-
-    @Override
-    public void analyze( Properties properties, File outputDirectory ) {
-        properties.put( "measuredTime", calculateMean( measuredTimes ) );
-
-        measuredTimePerQueryType.forEach( ( templateId, time ) -> calculateResults( queryTypes, properties, templateId, time ) );
-        properties.put( "queryTypes_maxId", queryTypes.size() );
-        properties.put( "executeRuntime", executeRuntime / 1000000000.0 );
-        properties.put( "numberOfQueries", measuredTimes.size() );
-        properties.put( "throughput", measuredTimes.size() / (executeRuntime / 1000000000.0) );
     }
 
 

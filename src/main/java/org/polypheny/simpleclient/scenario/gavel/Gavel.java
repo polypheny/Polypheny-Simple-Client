@@ -35,9 +35,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Vector;
-import java.util.concurrent.ConcurrentHashMap;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.QueryMode;
@@ -58,7 +56,7 @@ import org.polypheny.simpleclient.query.QueryListEntry;
 import org.polypheny.simpleclient.query.RawQuery;
 import org.polypheny.simpleclient.scenario.EvaluationThread;
 import org.polypheny.simpleclient.scenario.EvaluationThreadMonitor;
-import org.polypheny.simpleclient.scenario.Scenario;
+import org.polypheny.simpleclient.scenario.PolyphenyScenario;
 import org.polypheny.simpleclient.scenario.gavel.queryBuilder.ChangePasswordOfRandomUser;
 import org.polypheny.simpleclient.scenario.gavel.queryBuilder.ChangeRandomAuction;
 import org.polypheny.simpleclient.scenario.gavel.queryBuilder.CountAuction;
@@ -83,22 +81,14 @@ import org.polypheny.simpleclient.scenario.multimedia.queryBuilder.CreateTable;
 
 
 @Slf4j
-public class Gavel extends Scenario {
+public class Gavel extends PolyphenyScenario {
 
     private final GavelConfig config;
-    private long executeRuntime;
-    private final Map<Integer, String> queryTypes;
-
-    private final List<Long> measuredTimes = Collections.synchronizedList( new LinkedList<>() );
-
-    private final Map<Integer, List<Long>> measuredTimePerQueryType = new ConcurrentHashMap<>();
 
 
     public Gavel( JdbcExecutor.ExecutorFactory executorFactory, GavelConfig config, boolean commitAfterEveryQuery, boolean dumpQueryList, QueryMode queryMode ) {
         super( executorFactory, commitAfterEveryQuery, dumpQueryList, queryMode );
         this.config = config;
-
-        queryTypes = new HashMap<>();
     }
 
 
@@ -561,18 +551,6 @@ public class Gavel extends Scenario {
             abortAll();
         }
 
-    }
-
-
-    @Override
-    public void analyze( Properties properties, File outputDirectory ) {
-        properties.put( "measuredTime", calculateMean( measuredTimes ) );
-
-        measuredTimePerQueryType.forEach( ( templateId, time ) -> calculateResults( queryTypes, properties, templateId, time ) );
-        properties.put( "queryTypes_maxId", queryTypes.size() );
-        properties.put( "executeRuntime", executeRuntime / 1000000000.0 );
-        properties.put( "numberOfQueries", measuredTimes.size() );
-        properties.put( "throughput", measuredTimes.size() / (executeRuntime / 1000000000.0) );
     }
 
 

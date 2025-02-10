@@ -49,6 +49,7 @@ import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 import org.polypheny.simpleclient.query.QueryListEntry;
 import org.polypheny.simpleclient.query.RawQuery;
+import org.polypheny.simpleclient.scenario.PolyphenyScenario;
 import org.polypheny.simpleclient.scenario.Scenario;
 import org.polypheny.simpleclient.scenario.docbench.queryBuilder.PutProductQueryBuilder;
 import org.polypheny.simpleclient.scenario.docbench.queryBuilder.SearchProductQueryBuilder;
@@ -56,7 +57,7 @@ import org.polypheny.simpleclient.scenario.docbench.queryBuilder.UpdateProductQu
 
 
 @Slf4j
-public class DocBench extends Scenario {
+public class DocBench extends PolyphenyScenario {
 
     private final DocBenchConfig config;
     private final List<Long> measuredTimes;
@@ -339,12 +340,7 @@ public class DocBench extends Scenario {
 
     @Override
     public void analyze( Properties properties, File outputDirectory ) {
-        properties.put( "measuredTime", calculateMean( measuredTimes ) );
-        measuredTimePerQueryType.forEach( ( templateId, time ) -> calculateResults( queryTypes, properties, templateId, time ) );
-        properties.put( "queryTypes_maxId", queryTypes.size() );
-        properties.put( "executeRuntime", executeRuntime / 1000000000.0 );
-        properties.put( "numberOfQueries", measuredTimes.size() );
-        properties.put( "throughput", (measuredTimes.size() / (executeRuntime / 1000000000.0)) );
+        super.analyze( properties, outputDirectory );
         properties.put( "numberOfFindQueries", measuredTimePerQueryType.get( 1 ).size() );
         properties.put( "numberOfUpdateQueries", measuredTimePerQueryType.get( 2 ).size() );
         properties.put( "numberOfPutQueries", measuredTimePerQueryType.get( 3 ).size() );
