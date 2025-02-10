@@ -27,17 +27,15 @@ package org.polypheny.simpleclient.scenario.multimedia;
 
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import kong.unirest.core.Unirest;
-import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.executor.Executor;
@@ -48,7 +46,7 @@ import org.polypheny.simpleclient.main.ProgressReporter;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 import org.polypheny.simpleclient.query.QueryListEntry;
-import org.polypheny.simpleclient.scenario.Scenario;
+import org.polypheny.simpleclient.scenario.PolyphenyScenario;
 import org.polypheny.simpleclient.scenario.multimedia.queryBuilder.CreateTable;
 import org.polypheny.simpleclient.scenario.multimedia.queryBuilder.DeleteRandomTimeline;
 import org.polypheny.simpleclient.scenario.multimedia.queryBuilder.InsertRandomTimeline;
@@ -60,7 +58,7 @@ import org.polypheny.simpleclient.scenario.multimedia.queryBuilder.SelectRandomU
 
 
 @Slf4j
-public class MultimediaBench extends Scenario {
+public class MultimediaBench extends PolyphenyScenario {
 
     private final MultimediaConfig config;
 
@@ -166,7 +164,6 @@ public class MultimediaBench extends Scenario {
 
     @Override
     public long execute( ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory, int numberOfThreads ) {
-
         log.info( "Preparing query list for the benchmark..." );
         List<QueryListEntry> queryList = new Vector<>();
         addNumberOfTimes( queryList, new SelectRandomUser( config.numberOfUsers ), config.numberOfSelectUserQueries );
@@ -177,49 +174,7 @@ public class MultimediaBench extends Scenario {
         addNumberOfTimes( queryList, new DeleteRandomTimeline( config.numberOfUsers * config.postsPerUser ), config.numberOfDeleteTimelineQueries );
         addNumberOfTimes( queryList, new InsertRandomTimeline( config.numberOfUsers, config.postsPerUser, config.imgSize, config.numberOfFrames, config.fileSizeKB, false ), config.numberOfInsertTimelineQueries );
 
-        Collections.shuffle( queryList );
-
-        // This dumps the sql queries independent of the selected interface
-        // always false for the MultimediaBench
-        dumpQueryList( outputDirectory, queryList, Query::getSql );
-
-        log.info( "Executing benchmark..." );
-        (new Thread( new ProgressReporter.ReportQueryListProgress( queryList, progressReporter ) )).start();
-        long startTime = System.nanoTime();
-
-        ArrayList<EvaluationThread> threads = new ArrayList<>();
-        for ( int i = 0; i < numberOfThreads; i++ ) {
-            threads.add( new EvaluationThread( queryList, executorFactory.createExecutorInstance( csvWriter ) ) );
-        }
-
-        EvaluationThreadMonitor threadMonitor = new EvaluationThreadMonitor( threads );
-        threads.forEach( t -> t.setThreadMonitor( threadMonitor ) );
-
-        for ( EvaluationThread thread : threads ) {
-            thread.start();
-        }
-
-        for ( Thread thread : threads ) {
-            try {
-                thread.join();
-            } catch ( InterruptedException e ) {
-                throw new RuntimeException( "Unexpected interrupt", e );
-            }
-        }
-
-        long runTime = System.nanoTime() - startTime;
-
-        for ( EvaluationThread thread : threads ) {
-            thread.closeExecutor();
-        }
-
-        if ( threadMonitor.aborted ) {
-            throw new RuntimeException( "Exception while executing benchmark", threadMonitor.exception );
-        }
-
-        log.info( "run time: {} s", runTime / 1000000000 );
-
-        return runTime;
+        return commonExecute( queryList, progressReporter, outputDirectory, numberOfThreads, Query::getSql, () -> executorFactory.createExecutorInstance( csvWriter ), new Random() );
     }
 
 
@@ -252,126 +207,6 @@ public class MultimediaBench extends Scenario {
                 throw new RuntimeException( "Unexpected interrupt", e );
             }
         }
-    }
-
-
-    private class EvaluationThread extends Thread {
-
-        private final Executor executor;
-        private final List<QueryListEntry> theQueryList;
-        private boolean abort = false;
-        @Setter
-        private EvaluationThreadMonitor threadMonitor;
-
-
-        EvaluationThread( List<QueryListEntry> queryList, Executor executor ) {
-            super( "EvaluationThread" );
-            this.executor = executor;
-            theQueryList = queryList;
-        }
-
-
-        @Override
-        public void run() {
-            long measuredTimeStart;
-            long measuredTime;
-            QueryListEntry queryListEntry;
-
-            while ( !theQueryList.isEmpty() && !abort ) {
-                measuredTimeStart = System.nanoTime();
-                try {
-                    queryListEntry = theQueryList.removeFirst();
-                } catch ( IndexOutOfBoundsException e ) { // This is neither nice nor efficient...
-                    // This can happen due to concurrency if two threads enter the while-loop and there is only one thread left
-                    // Simply leaf the loop
-                    break;
-                }
-                try {
-                    executor.executeQuery( queryListEntry.query );
-                } catch ( ExecutorException | RuntimeException e ) {
-                    log.error( "Caught exception while executing queries", e );
-                    threadMonitor.notifyAboutError( e );
-                    try {
-                        executor.executeRollback();
-                    } catch ( ExecutorException ex ) {
-                        log.error( "Error while rollback", e );
-                    }
-                    throw new RuntimeException( e );
-                }
-                measuredTime = System.nanoTime() - measuredTimeStart;
-                measuredTimes.add( measuredTime );
-                measuredTimePerQueryType.get( queryListEntry.templateId ).add( measuredTime );
-                if ( commitAfterEveryQuery ) {
-                    try {
-                        executor.executeCommit();
-                    } catch ( ExecutorException e ) {
-                        log.error( "Caught exception while committing", e );
-                        threadMonitor.notifyAboutError( e );
-                        try {
-                            executor.executeRollback();
-                        } catch ( ExecutorException ex ) {
-                            log.error( "Error while rollback", e );
-                        }
-                        throw new RuntimeException( e );
-                    }
-                }
-            }
-
-            try {
-                executor.executeCommit();
-            } catch ( ExecutorException e ) {
-                log.error( "Caught exception while committing", e );
-                threadMonitor.notifyAboutError( e );
-                try {
-                    executor.executeRollback();
-                } catch ( ExecutorException ex ) {
-                    log.error( "Error while rollback", e );
-                }
-                throw new RuntimeException( e );
-            }
-
-            executor.flushCsvWriter();
-        }
-
-
-        public void abort() {
-            this.abort = true;
-        }
-
-
-        public void closeExecutor() {
-            commitAndCloseExecutor( executor );
-        }
-
-    }
-
-
-    private class EvaluationThreadMonitor {
-
-        private final List<EvaluationThread> threads;
-        @Getter
-        private Exception exception;
-        @Getter
-        private boolean aborted;
-
-
-        public EvaluationThreadMonitor( List<EvaluationThread> threads ) {
-            this.threads = threads;
-            this.aborted = false;
-        }
-
-
-        public void abortAll() {
-            this.aborted = true;
-            threads.forEach( EvaluationThread::abort );
-        }
-
-
-        public void notifyAboutError( Exception e ) {
-            exception = e;
-            abortAll();
-        }
-
     }
 
 

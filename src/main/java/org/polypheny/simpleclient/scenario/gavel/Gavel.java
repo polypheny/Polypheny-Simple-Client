@@ -35,6 +35,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Vector;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -54,8 +55,6 @@ import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 import org.polypheny.simpleclient.query.QueryListEntry;
 import org.polypheny.simpleclient.query.RawQuery;
-import org.polypheny.simpleclient.scenario.EvaluationThread;
-import org.polypheny.simpleclient.scenario.EvaluationThreadMonitor;
 import org.polypheny.simpleclient.scenario.PolyphenyScenario;
 import org.polypheny.simpleclient.scenario.gavel.queryBuilder.ChangePasswordOfRandomUser;
 import org.polypheny.simpleclient.scenario.gavel.queryBuilder.ChangeRandomAuction;
@@ -121,55 +120,7 @@ public class Gavel extends PolyphenyScenario {
         addNumberOfTimes( queryList, new SelectTopHundredSellerByNumberOfAuctions( queryMode ), config.totalNumOfTopHundredSellerByNumberOfAuctionsQueries );
         addNumberOfTimes( queryList, new SelectPriceBetweenAndNotInCategory( queryMode ), config.totalNumOfPriceBetweenAndNotInCategoryQueries );
 
-        Collections.shuffle( queryList );
-
-        // This dumps the sql queries independent of the selected interface
-        dumpQueryList( outputDirectory, queryList, Query::getSql );
-
-        log.info( "Executing benchmark..." );
-        (new Thread( new ProgressReporter.ReportQueryListProgress( queryList, progressReporter ) )).start();
-        long startTime = System.nanoTime();
-
-        ArrayList<EvaluationThread> threads = new ArrayList<>();
-        for ( int i = 0; i < numberOfThreads; i++ ) {
-            threads.add( new EvaluationThread( queryList, executorFactory.createExecutorInstance( csvWriter ), queryTypes.keySet(), commitAfterEveryQuery ) );
-        }
-
-        EvaluationThreadMonitor threadMonitor = new EvaluationThreadMonitor( threads );
-        threads.forEach( t -> t.setThreadMonitor( threadMonitor ) );
-
-        for ( EvaluationThread thread : threads ) {
-            thread.start();
-        }
-
-        for ( EvaluationThread thread : threads ) {
-            try {
-                thread.join();
-                this.measuredTimes.addAll( thread.getMeasuredTimes() );
-                thread.getMeasuredTimePerQueryType().forEach( ( k, v ) -> {
-                    if ( !this.measuredTimePerQueryType.containsKey( k ) ) {
-                        this.measuredTimePerQueryType.put( k, new ArrayList<>() );
-                    }
-                    this.measuredTimePerQueryType.get( k ).addAll( v );
-                } );
-            } catch ( InterruptedException e ) {
-                throw new RuntimeException( "Unexpected interrupt", e );
-            }
-        }
-
-        executeRuntime = System.nanoTime() - startTime;
-
-        for ( EvaluationThread thread : threads ) {
-            thread.closeExecutor();
-        }
-
-        if ( threadMonitor.isAborted() ) {
-            throw new RuntimeException( "Exception while executing benchmark", threadMonitor.getException() );
-        }
-
-        log.info( "run time: {} s", executeRuntime / 1000000000 );
-
-        return executeRuntime;
+        return commonExecute( queryList, progressReporter, outputDirectory, numberOfThreads, Query::getSql, () -> executorFactory.createExecutorInstance( csvWriter ), new Random() );
     }
 
 
