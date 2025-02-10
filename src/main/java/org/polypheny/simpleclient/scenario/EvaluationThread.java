@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import lombok.Getter;
@@ -43,7 +44,7 @@ import org.polypheny.simpleclient.query.QueryListEntry;
 public class EvaluationThread extends Thread {
 
     private final Executor executor;
-    private final List<QueryListEntry> queries;
+    private final Queue<QueryListEntry> queries;
     private boolean abort = false;
     @Setter
     private EvaluationThreadMonitor threadMonitor;
@@ -55,7 +56,7 @@ public class EvaluationThread extends Thread {
     final boolean commitAfterEveryQuery;
 
 
-    public EvaluationThread( List<QueryListEntry> queryList, Executor executor, Set<Integer> templateIds, boolean commitAfterEveryQuery ) {
+    public EvaluationThread( Queue<QueryListEntry> queryList, Executor executor, Set<Integer> templateIds, boolean commitAfterEveryQuery ) {
         super( "EvaluationThread" );
         this.executor = executor;
         this.queries = queryList;
@@ -72,11 +73,8 @@ public class EvaluationThread extends Thread {
 
         while ( !queries.isEmpty() && !abort ) {
             measuredTimeStart = System.nanoTime();
-            try {
-                queryListEntry = queries.removeFirst();
-            } catch ( IndexOutOfBoundsException e ) { // This is neither nice nor efficient...
-                // This can happen due to concurrency if two threads enter the while-loop and there is only one thread left
-                // Simply leaf the loop
+            queryListEntry = queries.poll();
+            if ( queryListEntry == null ) {
                 break;
             }
             try {
