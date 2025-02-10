@@ -178,6 +178,10 @@ public class ChronosAgent extends AbstractChronosAgent {
         // Parse CDL
         Map<String, String> parsedConfig = parseConfig( chronosJob );
 
+        if ( !parsedConfig.containsKey( "queryMode" ) ) {
+            throw new RuntimeException( "Query mode not specified" );
+        }
+
         switch ( parsedConfig.get( "queryMode" ) ) {
             case "Table":
                 queryMode = QueryMode.TABLE;
