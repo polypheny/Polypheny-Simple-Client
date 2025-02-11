@@ -25,7 +25,7 @@
 package org.polypheny.simpleclient.query;
 
 
-public record CottontailQuery( org.polypheny.simpleclient.query.CottontailQuery.QueryType type, Object query ) {
+public record CottontailQuery( QueryType type, Object query ) {
 
 
     public enum QueryType {
