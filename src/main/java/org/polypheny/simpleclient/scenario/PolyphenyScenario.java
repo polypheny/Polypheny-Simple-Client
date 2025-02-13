@@ -25,6 +25,8 @@
 package org.polypheny.simpleclient.scenario;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -121,6 +123,27 @@ public abstract class PolyphenyScenario extends Scenario {
         properties.put( "executeRuntime", executeRuntime / 1000000000.0 );
         properties.put( "numberOfQueries", measuredTimes.size() );
         properties.put( "throughput", measuredTimes.size() / (executeRuntime / 1000000000.0) );
+    }
+
+
+    private void dumpQueryList( File outputDirectory, List<QueryListEntry> queryList, Function<Query, String> toString ) {
+        if ( outputDirectory != null && dumpQueryList ) {
+            log.info( "Dump query list..." );
+            try {
+                FileWriter fw = new FileWriter( outputDirectory.getPath() + File.separator + "queryList" );
+                queryList.forEach( query -> {
+                    try {
+                        fw.append( toString.apply( query.query ) ).append( "\n" );
+                    } catch ( IOException e ) {
+                        log.error( "Error while dumping query list", e );
+                    }
+                } );
+                fw.close();
+            } catch ( IOException e ) {
+                log.error( "Error while dumping query list", e );
+            }
+        }
+
     }
 
 }
