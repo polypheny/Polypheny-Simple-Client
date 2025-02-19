@@ -416,6 +416,10 @@ public interface PolyphenyDbExecutor extends Executor {
             try {
                 // Disable statistics (active tracking)
                 executor.setConfig( "statistics/activeTracking", "false" );
+                if ( config.lockingLevel != null ) {
+                    log.warn( "Using locking level: {}", config.lockingLevel );
+                    executor.setConfig( "runtime/s2plLockingLevel", config.lockingLevel );
+                }
                 // Set router
                 if ( PolyphenyVersionSwitch.getInstance().hasIcarusRoutingSettings ) { // Old routing, to be removed
                     switch ( config.router ) {

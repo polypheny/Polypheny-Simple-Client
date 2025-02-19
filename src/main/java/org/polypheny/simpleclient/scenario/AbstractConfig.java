@@ -69,6 +69,8 @@ public abstract class AbstractConfig {
     public final boolean workloadMonitoringLoadingData;
     public final boolean workloadMonitoringWarmup;
 
+    public final String lockingLevel;
+
     public final int progressReportBase = 100;
 
 
@@ -103,6 +105,8 @@ public abstract class AbstractConfig {
         workloadMonitoringExecutingWorkload = false;
         workloadMonitoringLoadingData = true;
         workloadMonitoringWarmup = true;
+
+        lockingLevel = null;
 
         // This is hacky but ensures that VersionSwitch is initialized when running tasks from CLI.
         PolyphenyVersionSwitch.initialize( this );
@@ -150,6 +154,8 @@ public abstract class AbstractConfig {
         workloadMonitoringExecutingWorkload = Boolean.parseBoolean( cdlGetOrDefault( cdl, "workloadMonitoring", "false" ) );
         workloadMonitoringLoadingData = Boolean.parseBoolean( cdlGetOrDefault( cdl, "workloadMonitoringLoadingData", "false" ) );
         workloadMonitoringWarmup = Boolean.parseBoolean( cdlGetOrDefault( cdl, "workloadMonitoringWarmup", "true" ) );
+
+        lockingLevel = cdlGetOrDefault( cdl, "lockingLevel", null );
     }
 
 
