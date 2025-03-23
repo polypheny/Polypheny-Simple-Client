@@ -113,9 +113,18 @@ public abstract class ErrorHandlingPolyphenyScenario extends PolyphenyScenario {
 
     @Override
     public void analyze( Properties properties, File outputDirectory ) {
-        super.analyze( properties, outputDirectory );
+        properties.put( "executeRuntime [s]", executeRuntime / 1000000000.0 );
+        properties.put( "measuredTime [ns]", calculateMean( measuredTimes ) );
+
+        properties.put( "numberOfQueries", measuredTimes.size() + failedQueries );
+        properties.put( "numberOfSuccessfulQueries", measuredTimes.size() );
         properties.put( "numberOfFailedQueries", failedQueries );
-        properties.put( "querySuccessRatio", (measuredTimes.size() - failedQueries) / measuredTimes.size());
+
+        properties.put( "throughput [succ.q/s]", measuredTimes.size() / (executeRuntime / 1000000000.0) );
+        properties.put( "querySuccessRatio", measuredTimes.size() / (measuredTimes.size() + failedQueries));
+
+        measuredTimePerQueryType.forEach( ( templateId, time ) -> calculateResults( queryTypes, properties, templateId, time ) );
+        properties.put( "queryTypes_maxId", queryTypes.size() );
     }
 
 

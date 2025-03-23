@@ -59,14 +59,23 @@ public class ErrorHandlingEvaluationThread extends EvaluationThread {
 
 
     @Override
-    protected long executeAndMeasure( QueryListEntry queryListEntry ) {
+    protected void executeAndMeasure( QueryListEntry queryListEntry ) {
         long startTime = System.nanoTime();
         try {
             executor.executeQuery( queryListEntry.query );
+
+            long measuredTime = System.nanoTime() - startTime;
+            measuredTimes.add( measuredTime );
+            measuredTimePerQueryType.get( queryListEntry.templateId ).add( measuredTime );
+            for ( Integer id : queryListEntry.templateIds ) {
+                if ( !id.equals( queryListEntry.templateId ) ) {
+                    measuredTimePerQueryType.get( id ).add( measuredTime );
+                }
+            }
         } catch ( ExecutorException e ) {
             throwIfUnexpected( e, "executing queries", queryListEntry.query.getSql() );
         }
-        return System.nanoTime() - startTime;
+
     }
 
 

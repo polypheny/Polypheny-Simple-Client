@@ -81,18 +81,18 @@ public abstract class Scenario {
             long min = summaryStatistics.getMin();
             double stddev = calculateSampleStandardDeviation( time, mean );
 
-            properties.put( "queryTypes_" + templateId + "_mean", processDoubleValue( mean ) );
+            properties.put( "queryTypes_" + templateId + "_mean [ms]", processDoubleValue( mean ) );
             if ( ChronosAgent.STORE_INDIVIDUAL_QUERY_TIMES ) {
-                properties.put( "queryTypes_" + templateId + "_all", Joiner.on( ',' ).join( time ) );
+                properties.put( "queryTypes_" + templateId + "_all [ms]", Joiner.on( ',' ).join( time ) );
             }
-            properties.put( "queryTypes_" + templateId + "_stddev", processDoubleValue( stddev ) );
-            properties.put( "queryTypes_" + templateId + "_min", min / 1_000_000L );
-            properties.put( "queryTypes_" + templateId + "_max", max / 1_000_000L );
+            properties.put( "queryTypes_" + templateId + "_stddev [ms]", processDoubleValue( stddev ) );
+            properties.put( "queryTypes_" + templateId + "_min [ms]", min / 1_000_000L );
+            properties.put( "queryTypes_" + templateId + "_max [ms]", max / 1_000_000L );
         } else {
-            properties.put( "queryTypes_" + templateId + "_mean", 0 );
-            properties.put( "queryTypes_" + templateId + "_stddev", 0 );
-            properties.put( "queryTypes_" + templateId + "_min", 0 );
-            properties.put( "queryTypes_" + templateId + "_max", 0 );
+            properties.put( "queryTypes_" + templateId + "_mean [ms]", 0 );
+            properties.put( "queryTypes_" + templateId + "_stddev [ms]", 0 );
+            properties.put( "queryTypes_" + templateId + "_min [ms]", 0 );
+            properties.put( "queryTypes_" + templateId + "_max [ms]", 0 );
         }
         properties.put( "queryTypes_" + templateId + "_example", queryTypes.get( templateId ) );
     }

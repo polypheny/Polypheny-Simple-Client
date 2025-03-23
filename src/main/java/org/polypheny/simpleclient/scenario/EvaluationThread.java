@@ -67,16 +67,15 @@ public class EvaluationThread extends Thread {
 
     @Override
     public void run() {
-        while (!queries.isEmpty() && !abort) {
+        while ( !queries.isEmpty() && !abort ) {
             QueryListEntry queryListEntry = queries.poll();
-            if (queryListEntry == null) {
+            if ( queryListEntry == null ) {
                 break;
             }
 
-            long measuredTime = executeAndMeasure(queryListEntry);
-            recordMeasuredTime(queryListEntry, measuredTime);
+            executeAndMeasure( queryListEntry );
 
-            if (commitAfterEveryQuery) {
+            if ( commitAfterEveryQuery ) {
                 commitSafely();
             }
         }
@@ -85,45 +84,45 @@ public class EvaluationThread extends Thread {
         executor.flushCsvWriter();
     }
 
-    protected long executeAndMeasure(QueryListEntry queryListEntry) {
+
+    protected void executeAndMeasure( QueryListEntry queryListEntry ) {
         long startTime = System.nanoTime();
         try {
-            executor.executeQuery(queryListEntry.query);
-        } catch (ExecutorException e) {
-            log.error("Caught exception while executing queries", e);
-            threadMonitor.notifyAboutError(e);
-            rollbackSafely(e);
-            throw new RuntimeException(e);
+            executor.executeQuery( queryListEntry.query );
+        } catch ( ExecutorException e ) {
+            log.error( "Caught exception while executing queries", e );
+            threadMonitor.notifyAboutError( e );
+            rollbackSafely( e );
+            throw new RuntimeException( e );
         }
-        return System.nanoTime() - startTime;
-    }
-
-    protected void recordMeasuredTime(QueryListEntry entry, long measuredTime) {
-        measuredTimes.add(measuredTime);
-        measuredTimePerQueryType.get(entry.templateId).add(measuredTime);
-        for (Integer id : entry.templateIds) {
-            if (!id.equals(entry.templateId)) {
-                measuredTimePerQueryType.get(id).add(measuredTime);
+        long measuredTime = System.nanoTime() - startTime;
+        measuredTimes.add( measuredTime );
+        measuredTimePerQueryType.get( queryListEntry.templateId ).add( measuredTime );
+        for ( Integer id : queryListEntry.templateIds ) {
+            if ( !id.equals( queryListEntry.templateId ) ) {
+                measuredTimePerQueryType.get( id ).add( measuredTime );
             }
         }
     }
 
+
     protected void commitSafely() {
         try {
             executor.executeCommit();
-        } catch (ExecutorException e) {
-            log.error("Caught exception while committing", e);
-            threadMonitor.notifyAboutError(e);
-            rollbackSafely(e);
-            throw new RuntimeException(e);
+        } catch ( ExecutorException e ) {
+            log.error( "Caught exception while committing", e );
+            threadMonitor.notifyAboutError( e );
+            rollbackSafely( e );
+            throw new RuntimeException( e );
         }
     }
 
-    protected void rollbackSafely(Exception originalException) {
+
+    protected void rollbackSafely( Exception originalException ) {
         try {
             executor.executeRollback();
-        } catch (ExecutorException rollbackException) {
-            log.error("Error while rollback", originalException);
+        } catch ( ExecutorException rollbackException ) {
+            log.error( "Error while rollback", originalException );
         }
     }
 
