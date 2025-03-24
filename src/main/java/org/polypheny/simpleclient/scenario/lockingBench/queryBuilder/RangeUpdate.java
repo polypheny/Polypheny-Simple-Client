@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.polypheny.simpleclient.scenario.scalingBench.queryBuilder;
+package org.polypheny.simpleclient.scenario.lockingBench.queryBuilder;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -32,8 +32,8 @@ import kong.unirest.core.Unirest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
-import org.polypheny.simpleclient.scenario.scalingBench.NumberTracker;
-import org.polypheny.simpleclient.scenario.scalingBench.LockingBenchSchema;
+import org.polypheny.simpleclient.scenario.lockingBench.NumberTracker;
+import org.polypheny.simpleclient.scenario.lockingBench.LockingBenchSchema;
 
 public class RangeUpdate extends QueryBuilder {
 

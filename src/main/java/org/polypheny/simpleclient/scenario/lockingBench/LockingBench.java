@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.polypheny.simpleclient.scenario.scalingBench;
+package org.polypheny.simpleclient.scenario.lockingBench;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -51,14 +51,14 @@ import org.polypheny.simpleclient.main.ProgressReporter;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 import org.polypheny.simpleclient.query.QueryListEntry;
-import org.polypheny.simpleclient.scenario.scalingBench.NumberTracker.Mode;
-import org.polypheny.simpleclient.scenario.scalingBench.queryBuilder.FullRead;
-import org.polypheny.simpleclient.scenario.scalingBench.queryBuilder.RangeRead;
-import org.polypheny.simpleclient.scenario.scalingBench.queryBuilder.RangeUpdate;
-import org.polypheny.simpleclient.scenario.scalingBench.queryBuilder.SingleDelete;
-import org.polypheny.simpleclient.scenario.scalingBench.queryBuilder.SingleInsert;
-import org.polypheny.simpleclient.scenario.scalingBench.queryBuilder.SingleRead;
-import org.polypheny.simpleclient.scenario.scalingBench.queryBuilder.SingleUpdate;
+import org.polypheny.simpleclient.scenario.lockingBench.NumberTracker.Mode;
+import org.polypheny.simpleclient.scenario.lockingBench.queryBuilder.FullRead;
+import org.polypheny.simpleclient.scenario.lockingBench.queryBuilder.RangeRead;
+import org.polypheny.simpleclient.scenario.lockingBench.queryBuilder.RangeUpdate;
+import org.polypheny.simpleclient.scenario.lockingBench.queryBuilder.SingleDelete;
+import org.polypheny.simpleclient.scenario.lockingBench.queryBuilder.SingleInsert;
+import org.polypheny.simpleclient.scenario.lockingBench.queryBuilder.SingleRead;
+import org.polypheny.simpleclient.scenario.lockingBench.queryBuilder.SingleUpdate;
 
 
 @Slf4j

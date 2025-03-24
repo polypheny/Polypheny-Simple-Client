@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.polypheny.simpleclient.scenario.scalingBench;
+package org.polypheny.simpleclient.scenario.lockingBench;
 
 import java.util.Properties;
 import org.polypheny.simpleclient.scenario.AbstractConfig;

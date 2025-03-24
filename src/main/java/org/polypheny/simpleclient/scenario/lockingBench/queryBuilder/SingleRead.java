@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019-3/21/25, 8:10 PM The Polypheny Project
+ * Copyright (c) 2019-3/21/25, 8:07 PM The Polypheny Project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"), to deal
@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.polypheny.simpleclient.scenario.scalingBench.queryBuilder;
+package org.polypheny.simpleclient.scenario.lockingBench.queryBuilder;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -31,16 +31,16 @@ import kong.unirest.core.Unirest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
-import org.polypheny.simpleclient.scenario.scalingBench.NumberTracker;
-import org.polypheny.simpleclient.scenario.scalingBench.LockingBenchSchema;
+import org.polypheny.simpleclient.scenario.lockingBench.NumberTracker;
+import org.polypheny.simpleclient.scenario.lockingBench.LockingBenchSchema;
 
-public class SingleDelete extends QueryBuilder {
+public class SingleRead extends QueryBuilder {
 
     private final LockingBenchSchema schema;
     private final NumberTracker numberTracker;
 
 
-    public SingleDelete( LockingBenchSchema schema, NumberTracker numberTracker ) {
+    public SingleRead( LockingBenchSchema schema, NumberTracker numberTracker ) {
         this.schema = schema;
         this.numberTracker = numberTracker;
     }
@@ -50,18 +50,18 @@ public class SingleDelete extends QueryBuilder {
     public Query getNewQuery() {
         String tableName = schema.getRandomEntityFullName();
         long id = numberTracker.getRandomId();
-        return new DeleteByIdQuery( tableName, id );
+        return new SingleReadQuery( tableName, id );
     }
 
 
-    private static class DeleteByIdQuery extends Query {
+    private static class SingleReadQuery extends Query {
 
         private final String tableName;
         private final long id;
 
 
-        public DeleteByIdQuery( String tableName, long id ) {
-            super( false ); // no result expected
+        public SingleReadQuery( String tableName, long id ) {
+            super( true ); // expects result
             this.tableName = tableName;
             this.id = id;
         }
@@ -69,13 +69,13 @@ public class SingleDelete extends QueryBuilder {
 
         @Override
         public String getSql() {
-            return "DELETE FROM " + tableName + " WHERE id = " + id;
+            return "SELECT * FROM " + tableName + " WHERE id = " + id;
         }
 
 
         @Override
         public String getParameterizedSqlQuery() {
-            return "DELETE FROM " + tableName + " WHERE id = ?";
+            return "SELECT * FROM " + tableName + " WHERE id = ?";
         }
 
 
@@ -89,14 +89,14 @@ public class SingleDelete extends QueryBuilder {
 
         @Override
         public HttpRequest<?> getRest() {
-            return Unirest.delete( "{protocol}://{host}:{port}/restapi/v1/res/public." + tableName )
+            return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public." + tableName )
                     .queryString( "_where", "public." + tableName + ".id.eq." + id );
         }
 
 
         @Override
         public String getMongoQl() {
-            return "db." + tableName + ".deleteOne({ id: " + id + " })";
+            return "db." + tableName + ".find({\"id\": " + id + "})";
         }
 
     }

@@ -22,13 +22,11 @@
  * SOFTWARE.
  */
 
-package org.polypheny.simpleclient.scenario.scalingBench.queryBuilder;
+package org.polypheny.simpleclient.scenario.lockingBench.queryBuilder;
 
-import com.devskiller.jfairy.Fairy;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonObject;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
@@ -36,8 +34,8 @@ import kong.unirest.core.HttpRequest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.BatchableInsert;
 import org.polypheny.simpleclient.query.QueryBuilder;
-import org.polypheny.simpleclient.scenario.scalingBench.NumberTracker;
-import org.polypheny.simpleclient.scenario.scalingBench.LockingBenchSchema;
+import org.polypheny.simpleclient.scenario.lockingBench.NumberTracker;
+import org.polypheny.simpleclient.scenario.lockingBench.LockingBenchSchema;
 
 public class SingleInsert extends QueryBuilder {
 

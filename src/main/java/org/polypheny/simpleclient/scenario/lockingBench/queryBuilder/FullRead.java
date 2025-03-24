@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019-3/21/25, 8:07 PM The Polypheny Project
+ * Copyright (c) 2019-3/22/25, 8:54 AM The Polypheny Project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"), to deal
@@ -22,81 +22,66 @@
  * SOFTWARE.
  */
 
-package org.polypheny.simpleclient.scenario.scalingBench.queryBuilder;
+package org.polypheny.simpleclient.scenario.lockingBench.queryBuilder;
 
-import java.util.HashMap;
 import java.util.Map;
 import kong.unirest.core.HttpRequest;
 import kong.unirest.core.Unirest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
-import org.polypheny.simpleclient.scenario.scalingBench.NumberTracker;
-import org.polypheny.simpleclient.scenario.scalingBench.LockingBenchSchema;
+import org.polypheny.simpleclient.scenario.lockingBench.LockingBenchSchema;
 
-public class SingleRead extends QueryBuilder {
-
+public class FullRead extends QueryBuilder {
     private final LockingBenchSchema schema;
-    private final NumberTracker numberTracker;
 
-
-    public SingleRead( LockingBenchSchema schema, NumberTracker numberTracker ) {
+    public FullRead( LockingBenchSchema schema ) {
         this.schema = schema;
-        this.numberTracker = numberTracker;
     }
 
 
     @Override
     public Query getNewQuery() {
         String tableName = schema.getRandomEntityFullName();
-        long id = numberTracker.getRandomId();
-        return new SingleReadQuery( tableName, id );
+        return new FullReadQuery(tableName);
     }
 
-
-    private static class SingleReadQuery extends Query {
-
+    private static class FullReadQuery extends Query {
         private final String tableName;
-        private final long id;
 
-
-        public SingleReadQuery( String tableName, long id ) {
-            super( true ); // expects result
+        public FullReadQuery( String tableName ) {
+            super(true);
             this.tableName = tableName;
-            this.id = id;
         }
 
 
         @Override
         public String getSql() {
-            return "SELECT * FROM " + tableName + " WHERE id = " + id;
+            return "SELECT * FROM " + tableName;
         }
 
 
         @Override
         public String getParameterizedSqlQuery() {
-            return "SELECT * FROM " + tableName + " WHERE id = ?";
+            return "SELECT * FROM " + tableName;
         }
 
 
         @Override
         public Map<Integer, ImmutablePair<DataTypes, Object>> getParameterValues() {
-            Map<Integer, ImmutablePair<DataTypes, Object>> map = new HashMap<>();
-            map.put( 1, new ImmutablePair<>( DataTypes.BIGINT, id ) );
-            return map;
+            return Map.of();
         }
 
 
         @Override
         public HttpRequest<?> getRest() {
-            return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public." + tableName )
-                    .queryString( "_where", "public." + tableName + ".id.eq." + id );
+            return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public." + tableName );
         }
 
 
         @Override
         public String getMongoQl() {
-            return "db." + tableName + ".find({\"id\": " + id + "})";
+            return "db." + tableName + ".find({})";
         }
 
     }

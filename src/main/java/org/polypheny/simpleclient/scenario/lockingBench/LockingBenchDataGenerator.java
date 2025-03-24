@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.polypheny.simpleclient.scenario.scalingBench;
+package org.polypheny.simpleclient.scenario.lockingBench;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -30,7 +30,7 @@ import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.executor.ExecutorException;
 import org.polypheny.simpleclient.main.ProgressReporter;
 import org.polypheny.simpleclient.query.BatchableInsert;
-import org.polypheny.simpleclient.scenario.scalingBench.queryBuilder.SingleInsert;
+import org.polypheny.simpleclient.scenario.lockingBench.queryBuilder.SingleInsert;
 
 public class LockingBenchDataGenerator {
 

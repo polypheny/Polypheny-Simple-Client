@@ -22,17 +22,16 @@
  * SOFTWARE.
  */
 
-package org.polypheny.simpleclient.scenario.scalingBench;
+package org.polypheny.simpleclient.scenario.lockingBench;
 
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.IntStream;
 import lombok.Getter;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.scenario.multimedia.queryBuilder.CreateTable;
-import org.polypheny.simpleclient.scenario.scalingBench.queryBuilder.CreateNamespace;
+import org.polypheny.simpleclient.scenario.lockingBench.queryBuilder.CreateNamespace;
 
 @Getter
 public class LockingBenchSchema {

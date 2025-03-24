@@ -30,8 +30,8 @@ import java.util.Objects;
 import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
-import org.polypheny.simpleclient.scenario.scalingBench.LockingBench;
-import org.polypheny.simpleclient.scenario.scalingBench.LockingBenchConfig;
+import org.polypheny.simpleclient.scenario.lockingBench.LockingBench;
+import org.polypheny.simpleclient.scenario.lockingBench.LockingBenchConfig;
 
 @Slf4j
 public class LockingBenchScenario {
@@ -71,7 +71,7 @@ public class LockingBenchScenario {
     private static Properties getProperties(int sessionCount) {
         Properties props = new Properties();
         try {
-            props.load( Objects.requireNonNull( ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/scalingbench/scalingbench.properties" ) ) );
+            props.load( Objects.requireNonNull( ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/lockingBench/lockingbench.properties" ) ) );
             props.put("numberOfThreads", String.valueOf( sessionCount ) );
         } catch ( IOException e ) {
             log.error( "Exception while reading properties file", e );

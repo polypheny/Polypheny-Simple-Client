@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019-3/22/25, 8:54 AM The Polypheny Project
+ * Copyright (c) 2019-3/21/25, 8:10 PM The Polypheny Project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"), to deal
@@ -22,66 +22,81 @@
  * SOFTWARE.
  */
 
-package org.polypheny.simpleclient.scenario.scalingBench.queryBuilder;
+package org.polypheny.simpleclient.scenario.lockingBench.queryBuilder;
 
+import java.util.HashMap;
 import java.util.Map;
 import kong.unirest.core.HttpRequest;
 import kong.unirest.core.Unirest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
-import org.polypheny.simpleclient.scenario.scalingBench.LockingBenchSchema;
+import org.polypheny.simpleclient.scenario.lockingBench.NumberTracker;
+import org.polypheny.simpleclient.scenario.lockingBench.LockingBenchSchema;
 
-public class FullRead extends QueryBuilder {
+public class SingleDelete extends QueryBuilder {
+
     private final LockingBenchSchema schema;
+    private final NumberTracker numberTracker;
 
-    public FullRead( LockingBenchSchema schema ) {
+
+    public SingleDelete( LockingBenchSchema schema, NumberTracker numberTracker ) {
         this.schema = schema;
+        this.numberTracker = numberTracker;
     }
 
 
     @Override
     public Query getNewQuery() {
         String tableName = schema.getRandomEntityFullName();
-        return new FullReadQuery(tableName);
+        long id = numberTracker.getRandomId();
+        return new DeleteByIdQuery( tableName, id );
     }
 
-    private static class FullReadQuery extends Query {
-        private final String tableName;
 
-        public FullReadQuery( String tableName ) {
-            super(true);
+    private static class DeleteByIdQuery extends Query {
+
+        private final String tableName;
+        private final long id;
+
+
+        public DeleteByIdQuery( String tableName, long id ) {
+            super( false ); // no result expected
             this.tableName = tableName;
+            this.id = id;
         }
 
 
         @Override
         public String getSql() {
-            return "SELECT * FROM " + tableName;
+            return "DELETE FROM " + tableName + " WHERE id = " + id;
         }
 
 
         @Override
         public String getParameterizedSqlQuery() {
-            return "SELECT * FROM " + tableName;
+            return "DELETE FROM " + tableName + " WHERE id = ?";
         }
 
 
         @Override
         public Map<Integer, ImmutablePair<DataTypes, Object>> getParameterValues() {
-            return Map.of();
+            Map<Integer, ImmutablePair<DataTypes, Object>> map = new HashMap<>();
+            map.put( 1, new ImmutablePair<>( DataTypes.BIGINT, id ) );
+            return map;
         }
 
 
         @Override
         public HttpRequest<?> getRest() {
-            return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public." + tableName );
+            return Unirest.delete( "{protocol}://{host}:{port}/restapi/v1/res/public." + tableName )
+                    .queryString( "_where", "public." + tableName + ".id.eq." + id );
         }
 
 
         @Override
         public String getMongoQl() {
-            return "db." + tableName + ".find({})";
+            return "db." + tableName + ".deleteOne({ id: " + id + " })";
         }
 
     }
