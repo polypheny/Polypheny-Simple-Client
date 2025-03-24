@@ -130,7 +130,7 @@ public class SingleInsert extends QueryBuilder {
 
         @Override
         public String getParameterizedSqlQuery() {
-            return String.format( SQL, tableName ) + "(?, ?, ?, ?, ?, ?)";
+            return String.format( SQL, tableName ) + "(?, ?, ?, ?)";
         }
 
 
