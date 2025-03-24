@@ -65,6 +65,7 @@ public class ErrorHandlingEvaluationThread extends EvaluationThread {
             executor.executeQuery( queryListEntry.query );
 
             long measuredTime = System.nanoTime() - startTime;
+
             measuredTimes.add( measuredTime );
             measuredTimePerQueryType.get( queryListEntry.templateId ).add( measuredTime );
             for ( Integer id : queryListEntry.templateIds ) {

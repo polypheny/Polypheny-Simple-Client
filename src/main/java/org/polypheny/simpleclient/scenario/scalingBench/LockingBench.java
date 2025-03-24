@@ -183,11 +183,10 @@ public class LockingBench extends ErrorHandlingPolyphenyScenario {
         File analysisFile = new File(outputDirectory, fileName);
         analyze(analysis, analysisFile);
 
-        analysis.put( "number_of_sessions", config.sessionCount );
-        analysis.put( "number_of_namespaces", config.namespaceCount );
-        analysis.put("number_of_entities_per_namespace", config.entityCount );
-        analysis.put( "number_of_queries", config.numberOfQueries );
-        analysis.put( "read_write_ratio", config.readWriteRatio );
+        analysis.put( "numberOfSessions", config.sessionCount );
+        analysis.put( "numberOfNamespaces", config.namespaceCount );
+        analysis.put("numberOfEntitiesPerNamespace", config.entityCount );
+        analysis.put( "readWriteRatio", config.readWriteRatio );
 
         try (FileOutputStream out = new FileOutputStream(analysisFile)) {
             analysis.store(out, "Analysis results");
