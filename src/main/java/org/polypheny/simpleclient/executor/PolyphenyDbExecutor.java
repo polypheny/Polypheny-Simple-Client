@@ -328,6 +328,7 @@ public interface PolyphenyDbExecutor extends Executor {
                 }
             }
 
+            log.warn( "Used stores: {}", String.join( ", ", config.dataStores ) );
             pushConfiguration( executorFactory, config );
 
             // Wait 5 seconds to let the config changes take effect
