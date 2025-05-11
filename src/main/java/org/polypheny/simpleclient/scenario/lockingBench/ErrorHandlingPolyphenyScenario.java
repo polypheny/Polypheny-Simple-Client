@@ -24,7 +24,10 @@
 
 package org.polypheny.simpleclient.scenario.lockingBench;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -130,6 +133,25 @@ public abstract class ErrorHandlingPolyphenyScenario extends PolyphenyScenario {
     private double calculateSuccessRatio() {
         double unroundedRatio = (1.0 * measuredTimes.size() - failedQueries) / measuredTimes.size();
         return Math.round( unroundedRatio * 100.0 ) / 100.0;
+    }
+
+    public void storeIndividualExecutionTimes(File outputDirectory, String baseFileName) {
+        if (!outputDirectory.exists()) {
+            outputDirectory.mkdirs();
+        }
+
+        measuredTimePerQueryType.forEach((templateId, times) -> {
+            File outputFile = new File(outputDirectory, baseFileName + "_template" + templateId + ".txt");
+
+            try ( BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile))) {
+                for (Long time : times) {
+                    writer.write(time.toString());
+                    writer.newLine();
+                }
+            } catch ( IOException e) {
+                throw new RuntimeException( "Exception while exporting individual execution times.", e );
+            }
+        });
     }
 
 

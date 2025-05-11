@@ -173,12 +173,14 @@ public class LockingBench extends ErrorHandlingPolyphenyScenario {
             }
         };
 
-        String fileName = String.format(
-                "analysis_S%d_N%d_E%d_R%f.txt",
+        String baseFileName = String.format(
+                "analysis_S%d_N%d_E%d_R%f",
                 config.sessionCount,
                 config.namespaceCount,
                 config.entityCount,
                 config.readWriteRatio);
+
+        String fileName = baseFileName + ".txt";
 
         File analysisFile = new File(outputDirectory, fileName);
         analyze(analysis, analysisFile);
@@ -193,6 +195,7 @@ public class LockingBench extends ErrorHandlingPolyphenyScenario {
         } catch (IOException e) {
             log.error("Exception while generating analysis", e);
         }
+        storeIndividualExecutionTimes( outputDirectory, baseFileName );
     }
 
 
