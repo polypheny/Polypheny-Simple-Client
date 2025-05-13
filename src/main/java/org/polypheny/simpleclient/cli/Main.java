@@ -53,6 +53,7 @@ public class Main {
         builder.withCommands( YcsbCommand.class );
         builder.withCommands( DumpCommand.class );
         builder.withCommands( HelpCommand.class );
+        builder.withCommands( LockingBenchCommand.class );
         builder.withDefaultCommand( HelpCommand.class );
 
         Cli<CliRunnable> cli = builder.build();

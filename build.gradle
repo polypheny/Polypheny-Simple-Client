@@ -14,6 +14,7 @@ buildscript {
             url = uri("https://plugins.gradle.org/m2/")
         }
     }
+
     dependencies {
         // Shadowing; used to make a fat jar (https://github.com/johnrengelman/shadow)
         classpath group: "com.github.johnrengelman", name: "shadow", version: "8.1.1"
@@ -192,6 +193,7 @@ shadowJar {
     mergeServiceFiles {
         setPath("META-INF/services")
         include("io.grpc.*")
+        include("java.sql.Driver")
     }
     // Include everything from 'libs' but rename JARs to another extension to trick the plugin
     from('libs') {

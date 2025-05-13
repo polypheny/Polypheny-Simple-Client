@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019-2025 The Polypheny Project
+ * Copyright (c) 2019-3/22/25, 9:43 AM The Polypheny Project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"), to deal
@@ -22,35 +22,24 @@
  * SOFTWARE.
  */
 
-package org.polypheny.simpleclient.scenario;
+package org.polypheny.simpleclient.scenario.lockingBench;
 
-import java.util.List;
 import lombok.Getter;
 
-public class EvaluationThreadMonitor {
+@Getter
+public class Entity {
+    private static final String NAMESPACE_NAME_TEMPLATE = "ns_%d";
+    private static final String ENTITY_NAME_TEMPLATE = "ent_%d";
 
-    private final List<? extends EvaluationThread> threads;
-    @Getter
-    private Exception exception;
-    @Getter
-    private boolean aborted;
+    private final String namespaceName;
+    private final String entityName;
 
-
-    public EvaluationThreadMonitor( List<? extends EvaluationThread> threads ) {
-        this.threads = threads;
-        this.aborted = false;
+    public Entity( int namespaceIndex, int entityIndex ) {
+        this.namespaceName = String.format( NAMESPACE_NAME_TEMPLATE, namespaceIndex );
+        this.entityName = String.format( ENTITY_NAME_TEMPLATE, entityIndex );
     }
 
-
-    public void abortAll() {
-        this.aborted = true;
-        threads.forEach( EvaluationThread::abort );
+    public String getFullName() {
+        return namespaceName + "." + entityName;
     }
-
-
-    public void notifyAboutError( Exception e ) {
-        exception = e;
-        abortAll();
-    }
-
 }

@@ -52,7 +52,7 @@ public abstract class Query {
     }
 
 
-    public enum DataTypes {INTEGER, VARCHAR, TIMESTAMP, DATE, ARRAY_INT, ARRAY_REAL, BYTE_ARRAY, FILE}
+    public enum DataTypes {SMALLINT, TEXT, DECIMAL, INTEGER, BIGINT, TINYINT, BOOLEAN, VARCHAR, TIMESTAMP, DATE, ARRAY_INT, ARRAY_REAL, BYTE_ARRAY, FILE}
 
 
     public abstract String getSql();

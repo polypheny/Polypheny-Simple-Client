@@ -43,17 +43,17 @@ import org.polypheny.simpleclient.query.QueryListEntry;
 @Slf4j
 public class EvaluationThread extends Thread {
 
-    private final Executor executor;
-    private final Queue<QueryListEntry> queries;
-    private boolean abort = false;
+    protected final Executor executor;
+    protected final Queue<QueryListEntry> queries;
+    protected boolean abort = false;
     @Setter
-    private EvaluationThreadMonitor threadMonitor;
+    protected EvaluationThreadMonitor threadMonitor;
 
-    private final List<Long> measuredTimes = Collections.synchronizedList( new LinkedList<>() );
+    protected final List<Long> measuredTimes = Collections.synchronizedList( new LinkedList<>() );
 
-    private final Map<Integer, List<Long>> measuredTimePerQueryType = new ConcurrentHashMap<>();
+    protected final Map<Integer, List<Long>> measuredTimePerQueryType = new ConcurrentHashMap<>();
 
-    final boolean commitAfterEveryQuery;
+    protected final boolean commitAfterEveryQuery;
 
 
     public EvaluationThread( Queue<QueryListEntry> queryList, Executor executor, Set<Integer> templateIds, boolean commitAfterEveryQuery ) {
@@ -67,66 +67,63 @@ public class EvaluationThread extends Thread {
 
     @Override
     public void run() {
-        long measuredTimeStart;
-        long measuredTime;
-        QueryListEntry queryListEntry;
-
         while ( !queries.isEmpty() && !abort ) {
-            measuredTimeStart = System.nanoTime();
-            queryListEntry = queries.poll();
+            QueryListEntry queryListEntry = queries.poll();
             if ( queryListEntry == null ) {
                 break;
             }
-            try {
-                executor.executeQuery( queryListEntry.query );
-            } catch ( ExecutorException e ) {
-                log.error( "Caught exception while executing queries", e );
-                threadMonitor.notifyAboutError( e );
-                try {
-                    executor.executeRollback();
-                } catch ( ExecutorException ex ) {
-                    log.error( "Error while rollback", e );
-                }
-                throw new RuntimeException( e );
-            }
-            measuredTime = System.nanoTime() - measuredTimeStart;
-            measuredTimes.add( measuredTime );
-            measuredTimePerQueryType.get( queryListEntry.templateId ).add( measuredTime );
-            for ( Integer id : queryListEntry.templateIds ) {
-                if ( id != queryListEntry.templateId ) {
-                    measuredTimePerQueryType.get( id ).add( measuredTime );
-                }
-            }
+
+            executeAndMeasure( queryListEntry );
+
             if ( commitAfterEveryQuery ) {
-                try {
-                    executor.executeCommit();
-                } catch ( ExecutorException e ) {
-                    log.error( "Caught exception while committing", e );
-                    threadMonitor.notifyAboutError( e );
-                    try {
-                        executor.executeRollback();
-                    } catch ( ExecutorException ex ) {
-                        log.error( "Error while rollback", e );
-                    }
-                    throw new RuntimeException( e );
-                }
+                commitSafely();
             }
         }
 
+        commitSafely();
+        executor.flushCsvWriter();
+    }
+
+
+    protected void executeAndMeasure( QueryListEntry queryListEntry ) {
+        long startTime = System.nanoTime();
+        try {
+            executor.executeQuery( queryListEntry.query );
+        } catch ( ExecutorException e ) {
+            log.error( "Caught exception while executing queries", e );
+            threadMonitor.notifyAboutError( e );
+            rollbackSafely( e );
+            throw new RuntimeException( e );
+        }
+        long measuredTime = System.nanoTime() - startTime;
+        measuredTimes.add( measuredTime );
+        measuredTimePerQueryType.get( queryListEntry.templateId ).add( measuredTime );
+        for ( Integer id : queryListEntry.templateIds ) {
+            if ( !id.equals( queryListEntry.templateId ) ) {
+                measuredTimePerQueryType.get( id ).add( measuredTime );
+            }
+        }
+    }
+
+
+    protected void commitSafely() {
         try {
             executor.executeCommit();
         } catch ( ExecutorException e ) {
             log.error( "Caught exception while committing", e );
             threadMonitor.notifyAboutError( e );
-            try {
-                executor.executeRollback();
-            } catch ( ExecutorException ex ) {
-                log.error( "Error while rollback", e );
-            }
+            rollbackSafely( e );
             throw new RuntimeException( e );
         }
+    }
 
-        executor.flushCsvWriter();
+
+    protected void rollbackSafely( Exception originalException ) {
+        try {
+            executor.executeRollback();
+        } catch ( ExecutorException rollbackException ) {
+            log.error( "Error while rollback", originalException );
+        }
     }
 
 
