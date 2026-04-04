@@ -239,6 +239,19 @@ task copyPolyphenyNewJdbcDriver(type: Copy) {
 compileJava.dependsOn(copyPolyphenyOldJdbcDriver)
 compileJava.dependsOn(copyPolyphenyNewJdbcDriver)
 
+
+
+/* ------------ Local testing config ------------ */
+processResources {
+      dependsOn copyPolyphenyOldJdbcDriver, copyPolyphenyNewJdbcDriver
+      from('libs/polyphenyJdbcDrivers') {
+          rename { name -> name.replace('.jar', '.zip') }
+          into 'libs/polyphenyJdbcDrivers'
+      }
+  }
+/* ---------------------------------------------- */
+
+
 /**
  * IntelliJ
  */
