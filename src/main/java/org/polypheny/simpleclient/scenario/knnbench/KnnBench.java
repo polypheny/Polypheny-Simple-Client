@@ -61,19 +61,10 @@ public class KnnBench extends PolyphenyScenario {
 
     private final KnnBenchConfig config;
 
-    private final List<Long> measuredTimes;
-    private long executeRuntime;
-    private final Map<Integer, String> queryTypes;
-    private final Map<Integer, List<Long>> measuredTimePerQueryType;
-
-
     public KnnBench( Executor.ExecutorFactory executorFactory, KnnBenchConfig config, boolean commitAfterEveryQuery, boolean dumpQueryList ) {
         super( executorFactory, commitAfterEveryQuery, dumpQueryList, QueryMode.TABLE );
         this.config = config;
 
-        measuredTimes = Collections.synchronizedList( new LinkedList<>() );
-        queryTypes = new HashMap<>();
-        measuredTimePerQueryType = new ConcurrentHashMap<>();
     }
 
 
@@ -96,10 +87,9 @@ public class KnnBench extends PolyphenyScenario {
         Executor executor = null;
         try {
             executor = executorFactory.createExecutorInstance();
-            executor.executeQuery( (new CreateMetadata( findMatchingDataStoreName( config.dataStoreMetadata ) )).getNewQuery() );
-            executor.executeQuery( (new CreateIntFeature( findMatchingDataStoreName( config.dataStoreFeature ), config.dimensionFeatureVectors )).getNewQuery() );
-            executor.executeQuery( (new CreateRealFeature( findMatchingDataStoreName( config.dataStoreFeature ), config.dimensionFeatureVectors )).getNewQuery() );
-        } catch ( ExecutorException e ) {
+            executor.executeQuery( (new CreateMetadata(  config.dataStoreMetadata  )).getNewQuery() );
+            executor.executeQuery( (new CreateIntFeature(  config.dataStoreFeature , config.dimensionFeatureVectors )).getNewQuery() );
+            executor.executeQuery( (new CreateRealFeature(  config.dataStoreFeature , config.dimensionFeatureVectors )).getNewQuery() );} catch ( ExecutorException e ) {
             throw new RuntimeException( "Exception while creating schema", e );
         } finally {
             commitAndCloseExecutor( executor );
