@@ -41,7 +41,12 @@ apply plugin: "io.freefair.lombok"
 apply plugin: "com.github.johnrengelman.shadow"
 apply plugin: "app.cash.licensee"
 apply plugin: "com.jaredsburrows.license"
+apply plugin: "application"
 
+
+application {
+    mainClass = "org.polypheny.simpleclient.cli.Main"
+}
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = "UTF-8"
@@ -249,6 +254,10 @@ processResources {
           into 'libs/polyphenyJdbcDrivers'
       }
   }
+
+run {
+    dependsOn processResources
+}
 /* ---------------------------------------------- */
 
 
