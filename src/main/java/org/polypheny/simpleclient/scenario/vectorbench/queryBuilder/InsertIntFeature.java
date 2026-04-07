@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019-2021 The Polypheny Project
+ * Copyright (c) 2019-2026 The Polypheny Project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"), to deal
@@ -20,10 +20,9 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- *
  */
 
-package org.polypheny.simpleclient.scenario.knnbench.queryBuilder;
+package org.polypheny.simpleclient.scenario.vectorbench.queryBuilder;
 
 import com.google.gson.JsonObject;
 import java.util.Arrays;
@@ -34,17 +33,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import kong.unirest.core.HttpRequest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.BatchableInsert;
-import org.polypheny.simpleclient.query.CottontailQuery;
-import org.polypheny.simpleclient.query.CottontailQuery.QueryType;
 import org.polypheny.simpleclient.query.QueryBuilder;
-import org.vitrivr.cottontail.grpc.CottontailGrpc.Data;
-import org.vitrivr.cottontail.grpc.CottontailGrpc.Entity;
-import org.vitrivr.cottontail.grpc.CottontailGrpc.From;
-import org.vitrivr.cottontail.grpc.CottontailGrpc.InsertMessage;
-import org.vitrivr.cottontail.grpc.CottontailGrpc.IntVector;
-import org.vitrivr.cottontail.grpc.CottontailGrpc.Schema;
-import org.vitrivr.cottontail.grpc.CottontailGrpc.Tuple;
-import org.vitrivr.cottontail.grpc.CottontailGrpc.Vector;
 
 
 public class InsertIntFeature extends QueryBuilder {
@@ -147,22 +136,6 @@ public class InsertIntFeature extends QueryBuilder {
         @Override
         public String getMongoQl() {
             return null;
-        }
-
-
-        @Override
-        public CottontailQuery getCottontail() {
-            Map<String, Data> dataMap = new HashMap<>();
-            dataMap.put( "id", Data.newBuilder().setIntData( id ).build() );
-            dataMap.put( "feature", Data.newBuilder().setVectorData(
-                    Vector.newBuilder().setIntVector( IntVector.newBuilder()
-                            .addAllVector( Arrays.asList( feature ) )
-                            .build() ).build() ).build() );
-            InsertMessage insertMessage = InsertMessage.newBuilder()
-                    .setFrom( From.newBuilder().setEntity( Entity.newBuilder().setSchema( Schema.newBuilder().setName( "public" ).build() ).setName( "knn_intfeature" ).build() ).build() )
-                    .setTuple( Tuple.newBuilder().putAllData( dataMap ).build() )
-                    .build();
-            return new CottontailQuery( QueryType.INSERT, insertMessage );
         }
 
     }

@@ -23,7 +23,7 @@
  *
  */
 
-package org.polypheny.simpleclient.scenario.knnbench;
+package org.polypheny.simpleclient.scenario.vectorbench;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -32,16 +32,16 @@ import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.executor.ExecutorException;
 import org.polypheny.simpleclient.main.ProgressReporter;
 import org.polypheny.simpleclient.query.BatchableInsert;
-import org.polypheny.simpleclient.scenario.knnbench.queryBuilder.InsertIntFeature;
-import org.polypheny.simpleclient.scenario.knnbench.queryBuilder.InsertMetadata;
-import org.polypheny.simpleclient.scenario.knnbench.queryBuilder.InsertRealFeature;
+import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.InsertIntFeature;
+import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.InsertMetadata;
+import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.InsertRealFeature;
 
 
 @Slf4j
 public class DataGenerator {
 
     private final Executor theExecutor;
-    private final KnnBenchConfig config;
+    private final VectorBenchConfig config;
     private final ProgressReporter progressReporter;
 
     private final List<BatchableInsert> batchList;
@@ -49,7 +49,7 @@ public class DataGenerator {
     private boolean aborted;
 
 
-    DataGenerator( Executor executor, KnnBenchConfig config, ProgressReporter progressReporter ) {
+    DataGenerator(Executor executor, VectorBenchConfig config, ProgressReporter progressReporter ) {
         theExecutor = executor;
         this.config = config;
         this.progressReporter = progressReporter;

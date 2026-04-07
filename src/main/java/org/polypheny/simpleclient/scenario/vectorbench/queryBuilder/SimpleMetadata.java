@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019-2022 The Polypheny Project
+ * Copyright (c) 2019-2026 The Polypheny Project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"), to deal
@@ -22,15 +22,15 @@
  * SOFTWARE.
  */
 
-package org.polypheny.simpleclient.scenario.knnbench.queryBuilder;
+package org.polypheny.simpleclient.scenario.vectorbench.queryBuilder;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
 import kong.unirest.core.HttpRequest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
 
 
 public class SimpleMetadata extends QueryBuilder {

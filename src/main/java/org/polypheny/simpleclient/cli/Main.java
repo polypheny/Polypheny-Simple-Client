@@ -42,6 +42,7 @@ public class Main {
         builder.withCommands( ComsCommand.class );
         builder.withCommands( GavelCommand.class );
         builder.withCommands( KnnCommand.class );
+        builder.withCommands( VectorCommand.class );
         builder.withCommands( MultimediaCommand.class );
         builder.withCommands( GraphCommand.class );
         builder.withCommands( DocBenchCommand.class );

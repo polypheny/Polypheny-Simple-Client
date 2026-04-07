@@ -53,11 +53,11 @@ import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.SimpleMetada
 
 
 @Slf4j
-public class KnnBench extends PolyphenyScenario {
+public class VectorBench extends PolyphenyScenario {
 
-    private final KnnBenchConfig config;
+    private final VectorBenchConfig config;
 
-    public KnnBench(Executor.ExecutorFactory executorFactory, KnnBenchConfig config, boolean commitAfterEveryQuery, boolean dumpQueryList ) {
+    public VectorBench(Executor.ExecutorFactory executorFactory, VectorBenchConfig config, boolean commitAfterEveryQuery, boolean dumpQueryList ) {
         super( executorFactory, commitAfterEveryQuery, dumpQueryList, QueryMode.TABLE );
         this.config = config;
 

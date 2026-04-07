@@ -33,7 +33,7 @@ import org.polypheny.simpleclient.scenario.AbstractConfig;
 
 
 @Slf4j
-public class KnnBenchConfig extends AbstractConfig {
+public class VectorBenchConfig extends AbstractConfig {
 
     public String dataStoreFeature;
     public String dataStoreMetadata;
@@ -59,11 +59,18 @@ public class KnnBenchConfig extends AbstractConfig {
     public String distanceNorm;
 
 
-    public KnnBenchConfig( Properties properties, int multiplier ) {
+    public VectorBenchConfig(Properties properties, int multiplier ) {
         super( "knnBench", "polypheny-jdbc", properties );
 
-        dataStoreFeature = null;
-        dataStoreMetadata = null;
+        dataStoreFeature = getStringProperty( properties,"dataStoreFeature" );
+        dataStoreMetadata = getStringProperty( properties, "dataStoreMeta" );
+
+        if ( dataStoreFeature.equals( dataStoreMetadata ) ) {
+            dataStores.add( dataStoreFeature );
+        } else {
+            dataStores.add( dataStoreFeature );
+            dataStores.add( dataStoreMetadata );
+        }
         //dataStores.add( "cottontail" );
 
         if ( getBooleanProperty( properties, "useRandomSeeds" ) ) {
@@ -92,7 +99,7 @@ public class KnnBenchConfig extends AbstractConfig {
     }
 
 
-    public KnnBenchConfig( Map<String, String> cdl ) {
+    public VectorBenchConfig(Map<String, String> cdl ) {
         super( "gavel", cdl.get( "store" ), cdl );
 
         dataStoreFeature = cdl.get( "dataStoreFeature" );
@@ -132,13 +139,13 @@ public class KnnBenchConfig extends AbstractConfig {
 
 
     // For MultiBench
-    protected KnnBenchConfig( String scenario, String system, Map<String, String> cdl ) {
+    protected VectorBenchConfig(String scenario, String system, Map<String, String> cdl ) {
         super( scenario, system, cdl );
     }
 
 
     // For MultiBench
-    protected KnnBenchConfig( String scenario, String system, Properties properties ) {
+    protected VectorBenchConfig(String scenario, String system, Properties properties ) {
         super( scenario, system, properties );
     }
 

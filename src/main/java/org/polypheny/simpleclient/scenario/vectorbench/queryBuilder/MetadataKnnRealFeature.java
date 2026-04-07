@@ -23,7 +23,7 @@
  *
  */
 
-package org.polypheny.simpleclient.scenario.knnbench.queryBuilder;
+package org.polypheny.simpleclient.scenario.vectorbench.queryBuilder;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -31,7 +31,6 @@ import java.util.Map;
 import java.util.Random;
 import kong.unirest.core.HttpRequest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.polypheny.simpleclient.query.CottontailQuery;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
@@ -80,10 +79,14 @@ public class MetadataKnnRealFeature extends QueryBuilder {
 
     private static class MetadataKnnRealFeatureQuery extends Query {
 
-        private static final String SQL_1 = "SELECT knn_metadata.id, knn_metadata.textdata, closest.dist FROM knn_metadata, ( SELECT id, distance(feature, ";
-        private static final String SQL_2 = ", ";
-        private static final String SQL_3 = ") AS dist FROM knn_realfeature ORDER BY dist ASC LIMIT ";
+        private static final String SQL_1 = "SELECT knn_metadata.id, knn_metadata.textdata, closest.dist FROM knn_metadata, ( SELECT id, ";
+        private static final String SQL_2 = "feature, ";
+        private static final String SQL_3 =  ") AS dist FROM knn_realfeature ORDER BY dist ASC LIMIT ";
         private static final String SQL_4 = ") AS closest WHERE knn_metadata.id = closest.id ORDER BY closest.dist ASC";
+
+        private static final String SQL_L1 = "l1_distance(";
+        private static final String SQL_L2 = "l2_distance(";
+        private static final String SQL_COS = "cos_distance(";
 
         private final Float[] target;
         private final int limit;
@@ -100,7 +103,19 @@ public class MetadataKnnRealFeature extends QueryBuilder {
 
         @Override
         public String getSql() {
-            return SQL_1 + "ARRAY" + Arrays.toString( target ) + SQL_2 + " '" + norm + "' " + SQL_3 + limit + SQL_4;
+            String distance_sql = "";
+            switch ( norm ) {
+                case "L1" -> distance_sql = SQL_L1;
+                case "L2" -> distance_sql = SQL_L2;
+                case "COS" -> distance_sql = SQL_COS;
+            }
+            if ( distance_sql.isEmpty() ){
+                return SQL_1 + "ARRAY" + Arrays.toString( target ) + SQL_2 + " '" + norm + "' " + SQL_3 + limit + SQL_4;
+
+            } else {
+                return SQL_1 + distance_sql + SQL_2 + "ARRAY" + Arrays.toString( target )  + SQL_3 + limit + SQL_4;
+
+            }
         }
 
 
@@ -128,12 +143,6 @@ public class MetadataKnnRealFeature extends QueryBuilder {
         @Override
         public String getMongoQl() {
             return null;
-        }
-
-
-        @Override
-        public CottontailQuery getCottontail() {
-            throw new RuntimeException( "This query is unsupported by cottontail." );
         }
 
     }
