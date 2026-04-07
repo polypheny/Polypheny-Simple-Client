@@ -55,7 +55,7 @@ public class CsvWriter {
     }
 
 
-    private void writeLine( String[] entries ) {
+    private synchronized void writeLine( String[] entries ) {
         try {
             String line = String.join( ",", entries );
             writer.write( line );
