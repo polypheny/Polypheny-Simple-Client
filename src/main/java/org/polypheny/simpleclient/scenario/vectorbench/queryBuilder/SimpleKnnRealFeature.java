@@ -79,13 +79,9 @@ public class SimpleKnnRealFeature extends QueryBuilder {
 
     private static class SimpleKnnRealFeatureQuery extends Query {
 
-        private static final String SQL_1 = "SELECT id, ";
-        private static final String SQL_2 = "feature, ";
-        private static final String SQL_3 =  ") as dist FROM knn_realfeature ORDER BY dist ASC LIMIT ";
-
-        private static final String SQL_L1 = "l1_distance(";
-        private static final String SQL_L2 = "l2_distance(";
-        private static final String SQL_COS = "cos_distance(";
+        private static final String SQL_1 = "SELECT id, distance(feature, ";
+        private static final String SQL_2 = ", ";
+        private static final String SQL_3 = ") as dist FROM knn_realfeature ORDER BY dist ASC LIMIT ";
 
         private final Float[] target;
         private final int limit;
@@ -102,19 +98,7 @@ public class SimpleKnnRealFeature extends QueryBuilder {
 
         @Override
         public String getSql() {
-            String distance_sql = "";
-            switch ( norm ) {
-                case "L1" -> distance_sql = SQL_L1;
-                case "L2" -> distance_sql = SQL_L2;
-                case "COS" -> distance_sql = SQL_COS;
-            }
-            if ( distance_sql.isEmpty() ){
-                return SQL_1 + "ARRAY" + Arrays.toString( target ) + SQL_2 + " '" + norm + "' " + SQL_3 + limit;
-
-            } else {
-                return SQL_1 + distance_sql + SQL_2 + "ARRAY" + Arrays.toString( target )  + SQL_3 + limit;
-
-            }
+            return SQL_1 + "ARRAY" + Arrays.toString( target ) + SQL_2 + " '" + norm + "' " + SQL_3 + limit;
         }
 
 
