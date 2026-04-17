@@ -45,9 +45,11 @@ import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.CreateIntFea
 import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.CreateMetadata;
 import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.CreateRealFeature;
 import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.MetadataKnnIntFeature;
+import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.MetadataKnnRealCrossJoin;
 import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.MetadataKnnRealFeature;
 import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.SimpleKnnIdRealFeature;
 import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.SimpleKnnIntFeature;
+import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.SimpleKnnRealCrossJoin;
 import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.SimpleKnnRealFeature;
 import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.SimpleMetadata;
 
@@ -122,6 +124,8 @@ public class VectorBench extends PolyphenyScenario {
         addNumberOfTimes( queryList, new SimpleKnnIdRealFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm ), config.numberOfSimpleKnnIdRealFeatureQueries );
         addNumberOfTimes( queryList, new MetadataKnnIntFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm ), config.numberOfMetadataKnnIntFeatureQueries );
         addNumberOfTimes( queryList, new MetadataKnnRealFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm ), config.numberOfMetadataKnnRealFeatureQueries );
+        addNumberOfTimes( queryList, new SimpleKnnRealCrossJoin( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm ), config.numberOfSimpleKnnRealCrossJoinQueries );
+        addNumberOfTimes( queryList, new MetadataKnnRealCrossJoin( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm ), config.numberOfMetadataKnnRealCrossJoinQueries );
 
         return commonExecute( queryList, progressReporter, outputDirectory, numberOfThreads, Query::getSql, () -> executorFactory.createExecutorInstance( csvWriter ), new Random() );
     }
@@ -139,6 +143,9 @@ public class VectorBench extends PolyphenyScenario {
         SimpleKnnIdRealFeature simpleKnnIdRealFeatureBuilder = new SimpleKnnIdRealFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
         MetadataKnnIntFeature metadataKnnIntFeature = new MetadataKnnIntFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
         MetadataKnnRealFeature metadataKnnRealFeature = new MetadataKnnRealFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
+        MetadataKnnRealCrossJoin metadataKnnCrossJoin = new MetadataKnnRealCrossJoin( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
+        SimpleKnnRealCrossJoin simpleKnnCrossJoin = new SimpleKnnRealCrossJoin( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
+
 
         for ( int i = 0; i < config.numberOfWarmUpIterations; i++ ) {
             try {
@@ -165,6 +172,12 @@ public class VectorBench extends PolyphenyScenario {
                 }
                 if ( config.numberOfMetadataKnnRealFeatureQueries > 0 ) {
                     executor.executeQuery( metadataKnnRealFeature.getNewQuery() );
+                }
+                if ( config.numberOfMetadataKnnRealCrossJoinQueries > 0 ) {
+                    executor.executeQuery( metadataKnnCrossJoin.getNewQuery() );
+                }
+                if ( config.numberOfSimpleKnnRealCrossJoinQueries > 0 ) {
+                    executor.executeQuery( simpleKnnCrossJoin.getNewQuery() );
                 }
             } catch ( ExecutorException e ) {
                 throw new RuntimeException( "Error while executing warm-up queries", e );

@@ -53,6 +53,8 @@ public class VectorBenchConfig extends AbstractConfig {
     public int numberOfSimpleKnnIdRealFeatureQueries;
     public int numberOfMetadataKnnIntFeatureQueries;
     public int numberOfMetadataKnnRealFeatureQueries;
+    public int numberOfSimpleKnnRealCrossJoinQueries;
+    public int numberOfMetadataKnnRealCrossJoinQueries;
 //    public final int numberOfCombinedQueries;
 
     public int limitKnnQueries;
@@ -94,6 +96,8 @@ public class VectorBenchConfig extends AbstractConfig {
         numberOfSimpleKnnIdRealFeatureQueries = getIntProperty( properties, "numberOfSimpleKnnIdRealFeatureQueries" ) * multiplier;
         numberOfMetadataKnnIntFeatureQueries = getIntProperty( properties, "numberOfMetadataKnnIntFeatureQueries" ) * multiplier;
         numberOfMetadataKnnRealFeatureQueries = getIntProperty( properties, "numberOfMetadataKnnRealFeatureQueries" ) * multiplier;
+        numberOfSimpleKnnRealCrossJoinQueries = getIntProperty( properties, "numberOfSimpleKnnRealCrossJoinQueries" ) * multiplier;
+        numberOfMetadataKnnRealCrossJoinQueries = getIntProperty( properties, "numberOfMetadataKnnRealCrossJoinQueries" ) * multiplier;
         limitKnnQueries = getIntProperty( properties, "limitKnnQueries" );
         distanceNorm = getStringProperty( properties, "distanceNorm" );
     }
@@ -132,6 +136,8 @@ public class VectorBenchConfig extends AbstractConfig {
         numberOfSimpleKnnIdRealFeatureQueries = Integer.parseInt( cdl.get( "numberOfSimpleKnnIdRealFeatureQueries" ) );
         numberOfMetadataKnnIntFeatureQueries = Integer.parseInt( cdl.get( "numberOfMetadataKnnIntFeatureQueries" ) );
         numberOfMetadataKnnRealFeatureQueries = Integer.parseInt( cdl.get( "numberOfMetadataKnnRealFeatureQueries" ) );
+        numberOfSimpleKnnRealCrossJoinQueries = Integer.parseInt( cdl.get( "numberOfSimpleKnnRealCrossJoinQueries" ) );
+        numberOfMetadataKnnRealCrossJoinQueries = Integer.parseInt( cdl.get( "numberOfMetadataKnnRealCrossJoinQueries" ) );
 //        numberOfCombinedQueries = getIntProperty( properties, "numberOfCombinedQueries" ) * multiplier;
         limitKnnQueries = Integer.parseInt( cdl.get( "limitKnnQueries" ) );
         distanceNorm = cdl.get( "distanceNorm" ).trim();

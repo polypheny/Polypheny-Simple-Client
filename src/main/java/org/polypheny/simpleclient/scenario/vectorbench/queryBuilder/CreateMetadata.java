@@ -63,7 +63,7 @@ public class CreateMetadata extends QueryBuilder {
         public String getSql() {
             String sql = "CREATE TABLE knn_metadata (id integer NOT NULL, textdata VARCHAR(100), PRIMARY KEY (id))";
             if ( this.store != null ) {
-                sql += "ON STORE \"" + this.store + "\"";
+                sql += " ON STORE \"" + this.store + "\"";
             }
             return sql;
         }

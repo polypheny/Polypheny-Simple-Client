@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019-2026 The Polypheny Project
+ * Copyright (c) 2019-4/17/26, 2:44 PM The Polypheny Project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"), to deal
@@ -24,63 +24,85 @@
 
 package org.polypheny.simpleclient.scenario.vectorbench.queryBuilder;
 
-import java.util.Map;
 import kong.unirest.core.HttpRequest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
+import java.util.Map;
+import java.util.Random;
 
+public class SimpleKnnRealCrossJoin extends QueryBuilder {
 
-public class CreateRealFeature extends QueryBuilder {
+    private static final boolean EXPECT_RESULT = true;
 
-    private final String store;
     private final int dimension;
+    private final int limit;
+    private final String norm;
+
+    private final Random random;
 
 
-    public CreateRealFeature( String store, int dimension ) {
-        this.store = store;
+    public SimpleKnnRealCrossJoin( long randomSeed, int dimension, int limit, String norm ) {
         this.dimension = dimension;
+        this.limit = limit;
+        this.norm = norm;
+
+        this.random = new Random( randomSeed );
+    }
+
+
+    private Float[] getRandomVector() {
+        Float[] floats = new Float[this.dimension];
+        for ( int i = 0; i < this.dimension; i++ ) {
+            floats[i] = random.nextInt( 100 ) / 100.0f;
+        }
+
+        return floats;
     }
 
 
     @Override
-    public Query getNewQuery() {
-        return new CreateRealFeatureQuery( store, dimension );
+    public synchronized Query getNewQuery() {
+        return new SimpleKnnRealCrossJoin.SimpleKnnRealCrossJoinQuery(
+                getRandomVector(),
+                limit,
+                norm );
     }
 
 
-    private static class CreateRealFeatureQuery extends Query {
+    private static class SimpleKnnRealCrossJoinQuery extends Query {
 
-        private final String store;
-        private final int dimension;
+        private static final String SQL_1 = "SELECT t1.id, distance(t1.feature, t2.feature,";
+        private static final String SQL_2 = ") as dist FROM knn_realfeature t1, knn_realfeature t2 WHERE t2.id = 1 ORDER BY dist ASC LIMIT ";
+
+        private final Float[] target;
+        private final int limit;
+        private final String norm;
 
 
-        CreateRealFeatureQuery( String store, int dimension ) {
-            super( false );
-            this.store = store;
-            this.dimension = dimension;
+        public SimpleKnnRealCrossJoinQuery( Float[] target, int limit, String norm ) {
+            super( EXPECT_RESULT );
+            this.target = target;
+            this.limit = limit;
+            this.norm = norm;
         }
 
 
         @Override
         public String getSql() {
-            String sql = "CREATE TABLE knn_realfeature (id INTEGER NOT NULL, feature REAL ARRAY(1, " + this.dimension + "), PRIMARY KEY(id))";
-            if ( this.store != null ) {
-                sql += " ON STORE \"" + this.store + "\"";
-            }
-            return sql;
+            return SQL_1 + " '" + norm + "' " + SQL_2 + limit;
         }
 
 
         @Override
         public String getParameterizedSqlQuery() {
-            return null;
+            return "";
         }
 
 
         @Override
         public Map<Integer, ImmutablePair<DataTypes, Object>> getParameterValues() {
-            return null;
+            return Map.of();
         }
 
 
@@ -96,5 +118,4 @@ public class CreateRealFeature extends QueryBuilder {
         }
 
     }
-
 }
