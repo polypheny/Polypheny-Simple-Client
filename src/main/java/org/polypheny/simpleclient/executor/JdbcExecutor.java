@@ -254,6 +254,9 @@ public abstract class JdbcExecutor implements Executor {
                         case ARRAY_REAL:
                             preparedStatement.setArray( entry.getKey(), connection.createArrayOf( "REAL", (Object[]) entry.getValue().right ) );
                             break;
+                        case ARRAY_BOOLEAN:
+                            preparedStatement.setArray( entry.getKey(), connection.createArrayOf( "BOOLEAN", (Object[]) entry.getValue().right) );
+                            break;
                         case BYTE_ARRAY:
                             preparedStatement.setBytes( entry.getKey(), (byte[]) entry.getValue().right );
                             break;

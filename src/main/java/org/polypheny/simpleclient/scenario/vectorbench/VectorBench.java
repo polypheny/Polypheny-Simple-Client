@@ -41,9 +41,13 @@ import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 import org.polypheny.simpleclient.query.QueryListEntry;
 import org.polypheny.simpleclient.scenario.PolyphenyScenario;
-import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.CreateIntFeature;
-import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.CreateMetadata;
-import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.CreateRealFeature;
+import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.SimpleKnnBooleanFeature;
+import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.SimpleKnnBooleanFeatureFiltered;
+import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.SimpleKnnRealFeatureFiltered;
+import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.creation.CreateBooleanFeature;
+import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.creation.CreateIntFeature;
+import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.creation.CreateMetadata;
+import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.creation.CreateRealFeature;
 import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.MetadataKnnIntFeature;
 import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.MetadataKnnRealCrossJoin;
 import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.MetadataKnnRealFeature;
@@ -87,7 +91,9 @@ public class VectorBench extends PolyphenyScenario {
             executor = executorFactory.createExecutorInstance();
             executor.executeQuery( (new CreateMetadata(  config.dataStoreMetadata  )).getNewQuery() );
             executor.executeQuery( (new CreateIntFeature(  config.dataStoreFeature , config.dimensionFeatureVectors )).getNewQuery() );
-            executor.executeQuery( (new CreateRealFeature(  config.dataStoreFeature , config.dimensionFeatureVectors )).getNewQuery() );} catch (ExecutorException e ) {
+            executor.executeQuery( (new CreateRealFeature(  config.dataStoreFeature , config.dimensionFeatureVectors )).getNewQuery() );
+            executor.executeQuery( (new CreateBooleanFeature( config.dataStoreFeature, config.dimensionFeatureVectors )).getNewQuery() );
+        } catch (ExecutorException e ) {
             throw new RuntimeException( "Exception while creating schema", e );
         } finally {
             commitAndCloseExecutor( executor );
@@ -105,6 +111,7 @@ public class VectorBench extends PolyphenyScenario {
             dataGenerator.generateMetadata();
             dataGenerator.generateIntFeatures();
             dataGenerator.generateRealFeatures();
+            dataGenerator.generateBooleanFeatures();
         } catch ( ExecutorException e ) {
             throw new RuntimeException( "Exception while generating data", e );
         } finally {
@@ -125,7 +132,10 @@ public class VectorBench extends PolyphenyScenario {
         addNumberOfTimes( queryList, new MetadataKnnIntFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm ), config.numberOfMetadataKnnIntFeatureQueries );
         addNumberOfTimes( queryList, new MetadataKnnRealFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm ), config.numberOfMetadataKnnRealFeatureQueries );
         addNumberOfTimes( queryList, new SimpleKnnRealCrossJoin( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm ), config.numberOfSimpleKnnRealCrossJoinQueries );
-        addNumberOfTimes( queryList, new MetadataKnnRealCrossJoin( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm ), config.numberOfMetadataKnnRealCrossJoinQueries );
+        addNumberOfTimes( queryList, new SimpleKnnRealFeatureFiltered( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm, "cat_A" ), config.numberOfSimpleKnnRealFeatureFilteredQueries );
+        addNumberOfTimes( queryList, new SimpleKnnBooleanFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.booleanDistanceNorm ), config.numberOfSimpleKnnBooleanFeatureQueries );
+        addNumberOfTimes( queryList, new SimpleKnnBooleanFeatureFiltered( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.booleanDistanceNorm, "cat_A" ), config.numberOfSimpleKnnBooleanFeatureFilteredQueries );
+
 
         return commonExecute( queryList, progressReporter, outputDirectory, numberOfThreads, Query::getSql, () -> executorFactory.createExecutorInstance( csvWriter ), new Random() );
     }
@@ -145,6 +155,9 @@ public class VectorBench extends PolyphenyScenario {
         MetadataKnnRealFeature metadataKnnRealFeature = new MetadataKnnRealFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
         MetadataKnnRealCrossJoin metadataKnnCrossJoin = new MetadataKnnRealCrossJoin( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
         SimpleKnnRealCrossJoin simpleKnnCrossJoin = new SimpleKnnRealCrossJoin( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
+        SimpleKnnRealFeatureFiltered simpleKnnRealFeatureFiltered = new SimpleKnnRealFeatureFiltered( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm, "cat_A" );
+        SimpleKnnBooleanFeature simpleKnnBooleanFeature = new SimpleKnnBooleanFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.booleanDistanceNorm );
+        SimpleKnnBooleanFeatureFiltered simpleKnnBooleanFeatureFiltered = new SimpleKnnBooleanFeatureFiltered( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.booleanDistanceNorm, "cat_A" );
 
 
         for ( int i = 0; i < config.numberOfWarmUpIterations; i++ ) {
@@ -178,6 +191,15 @@ public class VectorBench extends PolyphenyScenario {
                 }
                 if ( config.numberOfSimpleKnnRealCrossJoinQueries > 0 ) {
                     executor.executeQuery( simpleKnnCrossJoin.getNewQuery() );
+                }
+                if ( config.numberOfSimpleKnnRealFeatureFilteredQueries > 0 ) {
+                    executor.executeQuery( simpleKnnRealFeatureFiltered.getNewQuery() );
+                }
+                if ( config.numberOfSimpleKnnBooleanFeatureQueries > 0 ) {
+                    executor.executeQuery( simpleKnnBooleanFeature.getNewQuery() );
+                }
+                if ( config.numberOfSimpleKnnRealFeatureFilteredQueries > 0 ) {
+                    executor.executeQuery( simpleKnnBooleanFeatureFiltered.getNewQuery() );
                 }
             } catch ( ExecutorException e ) {
                 throw new RuntimeException( "Error while executing warm-up queries", e );

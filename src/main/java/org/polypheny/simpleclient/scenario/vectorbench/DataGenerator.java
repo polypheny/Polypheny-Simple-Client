@@ -32,9 +32,10 @@ import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.executor.ExecutorException;
 import org.polypheny.simpleclient.main.ProgressReporter;
 import org.polypheny.simpleclient.query.BatchableInsert;
-import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.InsertIntFeature;
-import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.InsertMetadata;
-import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.InsertRealFeature;
+import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.insertion.InsertBooleanFeature;
+import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.insertion.InsertIntFeature;
+import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.insertion.InsertMetadata;
+import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.insertion.InsertRealFeature;
 
 
 @Slf4j
@@ -94,6 +95,20 @@ public class DataGenerator {
 
             addToInsertList( queryBuilder.getNewQuery() );
         }
+        executeInsertList();
+    }
+
+
+    void generateBooleanFeatures() throws ExecutorException {
+        InsertBooleanFeature queryBuilder = new InsertBooleanFeature( config.randomSeedInsert, config.dimensionFeatureVectors );
+        for ( int i = 0; i < config.numberOfEntries; i++ ) {
+            if ( aborted ) {
+                break;
+            }
+
+            addToInsertList( queryBuilder.getNewQuery() );
+        }
+
         executeInsertList();
     }
 

@@ -55,10 +55,15 @@ public class VectorBenchConfig extends AbstractConfig {
     public int numberOfMetadataKnnRealFeatureQueries;
     public int numberOfSimpleKnnRealCrossJoinQueries;
     public int numberOfMetadataKnnRealCrossJoinQueries;
+    public int numberOfSimpleKnnRealFeatureFilteredQueries;
+    public int numberOfSimpleKnnBooleanFeatureQueries;
+    public int numberOfSimpleKnnBooleanFeatureFilteredQueries;
+
 //    public final int numberOfCombinedQueries;
 
     public int limitKnnQueries;
     public String distanceNorm;
+    public String booleanDistanceNorm;
 
 
     public VectorBenchConfig(Properties properties, int multiplier ) {
@@ -98,8 +103,12 @@ public class VectorBenchConfig extends AbstractConfig {
         numberOfMetadataKnnRealFeatureQueries = getIntProperty( properties, "numberOfMetadataKnnRealFeatureQueries" ) * multiplier;
         numberOfSimpleKnnRealCrossJoinQueries = getIntProperty( properties, "numberOfSimpleKnnRealCrossJoinQueries" ) * multiplier;
         numberOfMetadataKnnRealCrossJoinQueries = getIntProperty( properties, "numberOfMetadataKnnRealCrossJoinQueries" ) * multiplier;
+        numberOfSimpleKnnRealFeatureFilteredQueries = getIntProperty( properties, "numberOfSimpleKnnRealFeatureFilteredQueries" ) * multiplier;
+        numberOfSimpleKnnBooleanFeatureQueries = getIntProperty( properties, "numberOfSimpleKnnBooleanFeatureQueries" ) * multiplier;
+        numberOfSimpleKnnBooleanFeatureFilteredQueries = getIntProperty( properties, "numberOfSimpleKnnBooleanFeatureFilteredQueries" ) * multiplier;
         limitKnnQueries = getIntProperty( properties, "limitKnnQueries" );
         distanceNorm = getStringProperty( properties, "distanceNorm" );
+        booleanDistanceNorm = getStringProperty( properties, "booleanDistanceNorm" );
     }
 
 
