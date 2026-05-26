@@ -22,82 +22,69 @@
  * SOFTWARE.
  */
 
-package org.polypheny.simpleclient.scenario.vectorbench.queryBuilder;
+package org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.creation;
 
-import com.google.gson.JsonObject;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 import kong.unirest.core.HttpRequest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.polypheny.simpleclient.query.BatchableInsert;
+import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
 
-public class InsertMetadata extends QueryBuilder {
+public class CreateRealFeature extends QueryBuilder {
 
-    private static final boolean EXPECT_RESULT = false;
+    private final String store;
+    private final int dimension;
 
-    private static final AtomicInteger nextId = new AtomicInteger( 1 );
 
-
-    @Override
-    public BatchableInsert getNewQuery() {
-        return new InsertMetadataQuery( nextId.getAndIncrement() );
+    public CreateRealFeature( String store, int dimension ) {
+        this.store = store;
+        this.dimension = dimension;
     }
 
 
-    private static class InsertMetadataQuery extends BatchableInsert {
-
-        private static final String SQL = "INSERT INTO knn_metadata (id, textdata) VALUES ";
-
-        private final int id;
-        private final String textdata;
+    @Override
+    public Query getNewQuery() {
+        return new CreateRealFeatureQuery( store, dimension );
+    }
 
 
-        private InsertMetadataQuery( int id ) {
-            super( EXPECT_RESULT );
-            this.id = id;
-            this.textdata = "textdata_" + id + "_blubber";
-        }
+    private static class CreateRealFeatureQuery extends Query {
+
+        private final String store;
+        private final int dimension;
 
 
-        @Override
-        public String getSqlRowExpression() {
-            return "(" + id + ", '" + textdata + "')";
-        }
-
-
-        @Override
-        public String getParameterizedSqlQuery() {
-            return SQL + "(?, ?)";
-        }
-
-
-        @Override
-        public Map<Integer, ImmutablePair<DataTypes, Object>> getParameterValues() {
-            Map<Integer, ImmutablePair<DataTypes, Object>> map = new HashMap<>();
-            map.put( 1, new ImmutablePair<>( DataTypes.INTEGER, id ) );
-            map.put( 2, new ImmutablePair<>( DataTypes.VARCHAR, textdata ) );
-            return map;
-        }
-
-
-        @Override
-        public JsonObject getRestRowExpression() {
-            return null;
-        }
-
-
-        @Override
-        public String getEntity() {
-            return "public.knn_metadata";
+        CreateRealFeatureQuery( String store, int dimension ) {
+            super( false );
+            this.store = store;
+            this.dimension = dimension;
         }
 
 
         @Override
         public String getSql() {
-            return SQL + getSqlRowExpression();
+            String sql = "CREATE TABLE knn_realfeature ("
+                    + "id INTEGER NOT NULL, "
+                    + "category VARCHAR(50), "
+                    + "feature REAL NOT NULL ARRAY(1, " + this.dimension + "), "
+                    + "PRIMARY KEY(id))";
+            if ( this.store != null ) {
+                sql += " ON STORE \"" + this.store + "\"";
+            }
+            return sql;
+        }
+
+
+        @Override
+        public String getParameterizedSqlQuery() {
+            return null;
+        }
+
+
+        @Override
+        public Map<Integer, ImmutablePair<DataTypes, Object>> getParameterValues() {
+            return null;
         }
 
 

@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.polypheny.simpleclient.scenario.vectorbench.queryBuilder;
+package org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.insertion;
 
 import com.google.gson.JsonObject;
 import java.util.Arrays;
@@ -43,6 +43,7 @@ public class InsertRealFeature extends QueryBuilder {
     private static final AtomicInteger nextId = new AtomicInteger( 1 );
     private final long randomSeed;
     private final int dimension;
+    private static final String[] CATEGORIES = {"cat_A", "cat_B", "cat_C", "cat_D"};
 
     private final Random random;
 
@@ -69,34 +70,36 @@ public class InsertRealFeature extends QueryBuilder {
     public synchronized BatchableInsert getNewQuery() {
         return new InsertRealFeatureQuery(
                 nextId.getAndIncrement(),
-                getRandomVector()
+                getRandomVector(),
+                CATEGORIES[random.nextInt(CATEGORIES.length)]
         );
     }
 
 
     private static class InsertRealFeatureQuery extends BatchableInsert {
 
-        private static final String SQL = "INSERT INTO knn_realfeature (id, feature) VALUES ";
+        private static final String SQL = "INSERT INTO knn_realfeature (id, category, feature) VALUES ";
         private final int id;
         private final Float[] feature;
+        private String randomCategory;
 
-
-        private InsertRealFeatureQuery( int id, Float[] feature ) {
+        private InsertRealFeatureQuery( int id, Float[] feature, String randomCategory ) {
             super( EXPECT_RESULT );
             this.id = id;
             this.feature = feature;
+            this.randomCategory = randomCategory;
         }
 
 
         @Override
         public String getSqlRowExpression() {
-            return "(" + id + ", ARRAY" + Arrays.toString( feature ) + ")";
+            return "(" + id + ", '" + randomCategory + "', ARRAY" + Arrays.toString( feature ) + ")";
         }
 
 
         @Override
         public String getParameterizedSqlQuery() {
-            return SQL + "(?, ?)";
+            return SQL + "(?, ?, ?)";
         }
 
 
@@ -104,7 +107,8 @@ public class InsertRealFeature extends QueryBuilder {
         public Map<Integer, ImmutablePair<DataTypes, Object>> getParameterValues() {
             Map<Integer, ImmutablePair<DataTypes, Object>> map = new HashMap<>();
             map.put( 1, new ImmutablePair<>( DataTypes.INTEGER, id ) );
-            map.put( 2, new ImmutablePair<>( DataTypes.ARRAY_REAL, feature ) );
+            map.put( 2, new ImmutablePair<>( DataTypes.VARCHAR, randomCategory ) );
+            map.put( 3, new ImmutablePair<>( DataTypes.ARRAY_REAL, feature ) );
             return map;
         }
 

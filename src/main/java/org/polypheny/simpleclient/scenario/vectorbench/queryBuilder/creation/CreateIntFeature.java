@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.polypheny.simpleclient.scenario.vectorbench.queryBuilder;
+package org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.creation;
 
 import java.util.Map;
 import kong.unirest.core.HttpRequest;
@@ -64,7 +64,7 @@ public class CreateIntFeature extends QueryBuilder {
 
         @Override
         public String getSql() {
-            String sql = "CREATE TABLE knn_intfeature (id INTEGER NOT NULL, feature INTEGER ARRAY(1, " + this.dimension + "), PRIMARY KEY(id))";
+            String sql = "CREATE TABLE knn_intfeature (id INTEGER NOT NULL, feature INTEGER NOT NULL ARRAY(1, " + this.dimension + "), PRIMARY KEY(id))";
             if ( this.store != null ) {
                 sql += " ON STORE \"" + this.store + "\"";
             }
