@@ -32,10 +32,10 @@ import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.executor.ExecutorException;
 import org.polypheny.simpleclient.main.ProgressReporter;
 import org.polypheny.simpleclient.query.BatchableInsert;
-import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.insertion.InsertBooleanFeature;
-import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.insertion.InsertIntFeature;
-import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.insertion.InsertMetadata;
-import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.insertion.InsertRealFeature;
+import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.dml.InsertBooleanFeature;
+import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.dml.InsertIntFeature;
+import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.dml.InsertMetadata;
+import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.dml.InsertRealFeature;
 
 
 @Slf4j

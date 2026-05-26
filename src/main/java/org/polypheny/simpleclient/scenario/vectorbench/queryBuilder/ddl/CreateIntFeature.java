@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.creation;
+package org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.ddl;
 
 import java.util.Map;
 import kong.unirest.core.HttpRequest;
@@ -31,37 +31,40 @@ import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
 
-
-public class CreateMetadata extends QueryBuilder {
+public class CreateIntFeature extends QueryBuilder {
 
     private final String store;
+    private final int dimension;
 
 
-    public CreateMetadata( String store ) {
+    public CreateIntFeature( String store, int dimension ) {
         this.store = store;
+        this.dimension = dimension;
     }
 
 
     @Override
     public Query getNewQuery() {
-        return new CreateMetadataQuery( this.store );
+        return new CreateIntFeatureQuery( store, dimension );
     }
 
 
-    private static class CreateMetadataQuery extends Query {
+    private static class CreateIntFeatureQuery extends Query {
 
         private final String store;
+        private final int dimension;
 
 
-        CreateMetadataQuery( String store ) {
+        CreateIntFeatureQuery( String store, int dimension ) {
             super( false );
             this.store = store;
+            this.dimension = dimension;
         }
 
 
         @Override
         public String getSql() {
-            String sql = "CREATE TABLE knn_metadata (id integer NOT NULL, textdata VARCHAR(100), PRIMARY KEY (id))";
+            String sql = "CREATE TABLE knn_intfeature (id INTEGER NOT NULL, feature INTEGER NOT NULL ARRAY(1, " + this.dimension + "), PRIMARY KEY(id))";
             if ( this.store != null ) {
                 sql += " ON STORE \"" + this.store + "\"";
             }
@@ -91,6 +94,7 @@ public class CreateMetadata extends QueryBuilder {
         public String getMongoQl() {
             return null;
         }
+
 
     }
 

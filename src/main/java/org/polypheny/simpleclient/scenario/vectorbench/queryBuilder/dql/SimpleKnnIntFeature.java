@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019-2026 The Polypheny Project
+ * Copyright (c) 2019-5/26/26, 5:15 PM The Polypheny Project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"), to deal
@@ -22,112 +22,97 @@
  * SOFTWARE.
  */
 
-package org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.insertion;
+package org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.dql;
 
-import com.google.gson.JsonObject;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
-import java.util.concurrent.atomic.AtomicInteger;
 import kong.unirest.core.HttpRequest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.polypheny.simpleclient.query.BatchableInsert;
+import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
 
-public class InsertRealFeature extends QueryBuilder {
+public class SimpleKnnIntFeature extends QueryBuilder {
 
-    private static final boolean EXPECT_RESULT = false;
+    private static final boolean EXPECT_RESULT = true;
 
-    private static final AtomicInteger nextId = new AtomicInteger( 1 );
     private final long randomSeed;
     private final int dimension;
-    private static final String[] CATEGORIES = {"cat_A", "cat_B", "cat_C", "cat_D"};
+    private final int limit;
+    private final String norm;
 
     private final Random random;
 
 
-    public InsertRealFeature( long randomSeed, int dimension ) {
+    public SimpleKnnIntFeature( long randomSeed, int dimension, int limit, String norm ) {
         this.randomSeed = randomSeed;
         this.dimension = dimension;
 
         this.random = new Random( randomSeed );
+        this.limit = limit;
+        this.norm = norm;
     }
 
 
-    private Float[] getRandomVector() {
-        Float[] floats = new Float[this.dimension];
+    private Integer[] getRandomVector() {
+        Integer[] integers = new Integer[this.dimension];
         for ( int i = 0; i < this.dimension; i++ ) {
-            floats[i] = random.nextInt( 100 ) / 100.0f;
+            integers[i] = random.nextInt( 500 );
         }
 
-        return floats;
+        return integers;
     }
 
 
     @Override
-    public synchronized BatchableInsert getNewQuery() {
-        return new InsertRealFeatureQuery(
-                nextId.getAndIncrement(),
+    public synchronized Query getNewQuery() {
+        return new SimpleKnnIntFeatureQuery(
                 getRandomVector(),
-                CATEGORIES[random.nextInt(CATEGORIES.length)]
+                limit,
+                norm
         );
     }
 
 
-    private static class InsertRealFeatureQuery extends BatchableInsert {
+    private static class SimpleKnnIntFeatureQuery extends Query {
 
-        private static final String SQL = "INSERT INTO knn_realfeature (id, category, feature) VALUES ";
-        private final int id;
-        private final Float[] feature;
-        private String randomCategory;
+        private static final String SQL_1 = "SELECT id, distance(feature, ";
+        private static final String SQL_2 = ", ";
+        private static final String SQL_3 = ") as dist FROM knn_intfeature ORDER BY dist ASC LIMIT ";
 
-        private InsertRealFeatureQuery( int id, Float[] feature, String randomCategory ) {
+        private final Integer[] target;
+        private final int limit;
+        private final String norm;
+
+
+        public SimpleKnnIntFeatureQuery( Integer[] target, int limit, String norm ) {
             super( EXPECT_RESULT );
-            this.id = id;
-            this.feature = feature;
-            this.randomCategory = randomCategory;
+            this.target = target;
+            this.limit = limit;
+            this.norm = norm;
         }
 
 
         @Override
-        public String getSqlRowExpression() {
-            return "(" + id + ", '" + randomCategory + "', ARRAY" + Arrays.toString( feature ) + ")";
+        public String getSql() {
+            return SQL_1 + "ARRAY" + Arrays.toString( target ) + SQL_2 + " '" + norm + "' " + SQL_3 + limit;
         }
 
 
         @Override
         public String getParameterizedSqlQuery() {
-            return SQL + "(?, ?, ?)";
+            return null;
+            //return SQL_1 + "?" + SQL_2 + "'" + norm + "'" + SQL_3 + limit;
         }
 
 
         @Override
         public Map<Integer, ImmutablePair<DataTypes, Object>> getParameterValues() {
             Map<Integer, ImmutablePair<DataTypes, Object>> map = new HashMap<>();
-            map.put( 1, new ImmutablePair<>( DataTypes.INTEGER, id ) );
-            map.put( 2, new ImmutablePair<>( DataTypes.VARCHAR, randomCategory ) );
-            map.put( 3, new ImmutablePair<>( DataTypes.ARRAY_REAL, feature ) );
+            map.put( 1, new ImmutablePair<>( DataTypes.ARRAY_INT, target ) );
             return map;
-        }
-
-
-        @Override
-        public JsonObject getRestRowExpression() {
-            return null;
-        }
-
-
-        @Override
-        public String getEntity() {
-            return "public.knn_realfeature";
-        }
-
-
-        @Override
-        public String getSql() {
-            return SQL + getSqlRowExpression();
         }
 
 

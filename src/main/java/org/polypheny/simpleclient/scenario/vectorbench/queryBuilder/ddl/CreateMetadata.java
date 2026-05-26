@@ -22,52 +22,46 @@
  * SOFTWARE.
  */
 
-package org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.creation;
+package org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.ddl;
 
+import java.util.Map;
 import kong.unirest.core.HttpRequest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
-import java.util.Map;
 
-public class CreateBooleanFeature extends QueryBuilder {
+
+
+public class CreateMetadata extends QueryBuilder {
 
     private final String store;
-    private final int dimension;
 
 
-    public CreateBooleanFeature( String store, int dimension ) {
+    public CreateMetadata( String store ) {
         this.store = store;
-        this.dimension = dimension;
     }
 
 
     @Override
     public Query getNewQuery() {
-        return new CreateBooleanFeatureQuery( store, dimension );
+        return new CreateMetadataQuery( this.store );
     }
 
 
-    private static class CreateBooleanFeatureQuery extends Query {
+    private static class CreateMetadataQuery extends Query {
 
         private final String store;
-        private final int dimension;
 
 
-        CreateBooleanFeatureQuery( String store, int dimension ) {
+        CreateMetadataQuery( String store ) {
             super( false );
             this.store = store;
-            this.dimension = dimension;
         }
 
 
         @Override
         public String getSql() {
-            String sql = "CREATE TABLE knn_booleanfeature ("
-                    + "id INTEGER NOT NULL, "
-                    + "feature BOOLEAN NOT NULL ARRAY(1, " + this.dimension + "), "
-                    + "category VARCHAR(50), "
-                    + "PRIMARY KEY(id))";
+            String sql = "CREATE TABLE knn_metadata (id integer NOT NULL, textdata VARCHAR(100), PRIMARY KEY (id))";
             if ( this.store != null ) {
                 sql += " ON STORE \"" + this.store + "\"";
             }

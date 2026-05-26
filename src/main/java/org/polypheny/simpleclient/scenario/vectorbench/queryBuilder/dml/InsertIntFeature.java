@@ -22,44 +22,43 @@
  * SOFTWARE.
  */
 
-package org.polypheny.simpleclient.scenario.vectorbench.queryBuilder;
+package org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.dml;
 
+import com.google.gson.JsonObject;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
 import kong.unirest.core.HttpRequest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.polypheny.simpleclient.query.Query;
+import org.polypheny.simpleclient.query.BatchableInsert;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
 
-public class SimpleKnnIdRealFeature extends QueryBuilder {
+public class InsertIntFeature extends QueryBuilder {
 
-    private static final boolean EXPECT_RESULT = true;
+    private static final boolean EXPECT_RESULT = false;
 
+    private static final AtomicInteger nextId = new AtomicInteger( 1 );
     private final long randomSeed;
     private final int dimension;
-    private final int limit;
-    private final String norm;
 
     private final Random random;
 
 
-    public SimpleKnnIdRealFeature( long randomSeed, int dimension, int limit, String norm ) {
+    public InsertIntFeature( long randomSeed, int dimension ) {
         this.randomSeed = randomSeed;
         this.dimension = dimension;
 
         this.random = new Random( randomSeed );
-        this.limit = limit;
-        this.norm = norm;
     }
 
 
-    private Float[] getRandomVector() {
-        Float[] integers = new Float[this.dimension];
+    private Integer[] getRandomVector() {
+        Integer[] integers = new Integer[this.dimension];
         for ( int i = 0; i < this.dimension; i++ ) {
-            integers[i] = random.nextInt( 100 ) / 100.0f;
+            integers[i] = random.nextInt( 500 );
         }
 
         return integers;
@@ -67,53 +66,64 @@ public class SimpleKnnIdRealFeature extends QueryBuilder {
 
 
     @Override
-    public synchronized Query getNewQuery() {
-        return new SimpleKnnIdRealFeatureQuery(
-                getRandomVector(),
-                limit,
-                norm
+    public synchronized BatchableInsert getNewQuery() {
+        return new InsertIntFeatureQuery(
+                nextId.getAndIncrement(),
+                getRandomVector()
         );
     }
 
 
-    private static class SimpleKnnIdRealFeatureQuery extends Query {
+    private static class InsertIntFeatureQuery extends BatchableInsert {
 
-        private static final String SQL_1 = "SELECT closest.dist FROM ( SELECT id, distance(feature, ";
-        private static final String SQL_2 = ", ";
-        private static final String SQL_3 = ") AS dist FROM knn_realfeature ORDER BY dist ASC LIMIT ";
-        private static final String SQL_4 = ") AS closest";
-
-        private final Float[] target;
-        private final int limit;
-        private final String norm;
+        private static final String SQL = "INSERT INTO knn_intfeature (id, feature) VALUES ";
+        private final int id;
+        private final Integer[] feature;
 
 
-        public SimpleKnnIdRealFeatureQuery( Float[] target, int limit, String norm ) {
+        private InsertIntFeatureQuery( int id, Integer[] feature ) {
             super( EXPECT_RESULT );
-            this.target = target;
-            this.limit = limit;
-            this.norm = norm;
+            this.id = id;
+            this.feature = feature;
         }
 
 
         @Override
-        public String getSql() {
-            return SQL_1 + "ARRAY" + Arrays.toString( target ) + SQL_2 + "'" + norm + "'" + SQL_3 + limit + SQL_4;
+        public String getSqlRowExpression() {
+            return "(" + id + ", ARRAY" + Arrays.toString( feature ) + ")";
         }
 
 
         @Override
         public String getParameterizedSqlQuery() {
-            return null;
-            //return SQL_1 + "?" + SQL_2 + "'" + norm + "'" + SQL_3 + limit + SQL_4;
+            return SQL + "(?, ?)";
         }
 
 
         @Override
         public Map<Integer, ImmutablePair<DataTypes, Object>> getParameterValues() {
             Map<Integer, ImmutablePair<DataTypes, Object>> map = new HashMap<>();
-            map.put( 1, new ImmutablePair<>( DataTypes.ARRAY_REAL, target ) );
+            map.put( 1, new ImmutablePair<>( DataTypes.INTEGER, id ) );
+            map.put( 2, new ImmutablePair<>( DataTypes.ARRAY_INT, feature ) );
             return map;
+        }
+
+
+        @Override
+        public JsonObject getRestRowExpression() {
+            return null;
+        }
+
+
+        @Override
+        public String getEntity() {
+            return "public.knn_intfeature";
+        }
+
+
+        @Override
+        public String getSql() {
+            return SQL + getSqlRowExpression();
         }
 
 

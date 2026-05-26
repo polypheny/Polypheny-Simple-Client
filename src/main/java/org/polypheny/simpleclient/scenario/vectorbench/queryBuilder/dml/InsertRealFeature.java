@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.insertion;
+package org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.dml;
 
 import com.google.gson.JsonObject;
 import java.util.Arrays;
@@ -36,18 +36,19 @@ import org.polypheny.simpleclient.query.BatchableInsert;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
 
-public class InsertIntFeature extends QueryBuilder {
+public class InsertRealFeature extends QueryBuilder {
 
     private static final boolean EXPECT_RESULT = false;
 
     private static final AtomicInteger nextId = new AtomicInteger( 1 );
     private final long randomSeed;
     private final int dimension;
+    private static final String[] CATEGORIES = {"cat_A", "cat_B", "cat_C", "cat_D"};
 
     private final Random random;
 
 
-    public InsertIntFeature( long randomSeed, int dimension ) {
+    public InsertRealFeature( long randomSeed, int dimension ) {
         this.randomSeed = randomSeed;
         this.dimension = dimension;
 
@@ -55,48 +56,50 @@ public class InsertIntFeature extends QueryBuilder {
     }
 
 
-    private Integer[] getRandomVector() {
-        Integer[] integers = new Integer[this.dimension];
+    private Float[] getRandomVector() {
+        Float[] floats = new Float[this.dimension];
         for ( int i = 0; i < this.dimension; i++ ) {
-            integers[i] = random.nextInt( 500 );
+            floats[i] = random.nextInt( 100 ) / 100.0f;
         }
 
-        return integers;
+        return floats;
     }
 
 
     @Override
     public synchronized BatchableInsert getNewQuery() {
-        return new InsertIntFeatureQuery(
+        return new InsertRealFeatureQuery(
                 nextId.getAndIncrement(),
-                getRandomVector()
+                getRandomVector(),
+                CATEGORIES[random.nextInt(CATEGORIES.length)]
         );
     }
 
 
-    private static class InsertIntFeatureQuery extends BatchableInsert {
+    private static class InsertRealFeatureQuery extends BatchableInsert {
 
-        private static final String SQL = "INSERT INTO knn_intfeature (id, feature) VALUES ";
+        private static final String SQL = "INSERT INTO knn_realfeature (id, category, feature) VALUES ";
         private final int id;
-        private final Integer[] feature;
+        private final Float[] feature;
+        private String randomCategory;
 
-
-        private InsertIntFeatureQuery( int id, Integer[] feature ) {
+        private InsertRealFeatureQuery( int id, Float[] feature, String randomCategory ) {
             super( EXPECT_RESULT );
             this.id = id;
             this.feature = feature;
+            this.randomCategory = randomCategory;
         }
 
 
         @Override
         public String getSqlRowExpression() {
-            return "(" + id + ", ARRAY" + Arrays.toString( feature ) + ")";
+            return "(" + id + ", '" + randomCategory + "', ARRAY" + Arrays.toString( feature ) + ")";
         }
 
 
         @Override
         public String getParameterizedSqlQuery() {
-            return SQL + "(?, ?)";
+            return SQL + "(?, ?, ?)";
         }
 
 
@@ -104,7 +107,8 @@ public class InsertIntFeature extends QueryBuilder {
         public Map<Integer, ImmutablePair<DataTypes, Object>> getParameterValues() {
             Map<Integer, ImmutablePair<DataTypes, Object>> map = new HashMap<>();
             map.put( 1, new ImmutablePair<>( DataTypes.INTEGER, id ) );
-            map.put( 2, new ImmutablePair<>( DataTypes.ARRAY_INT, feature ) );
+            map.put( 2, new ImmutablePair<>( DataTypes.VARCHAR, randomCategory ) );
+            map.put( 3, new ImmutablePair<>( DataTypes.ARRAY_REAL, feature ) );
             return map;
         }
 
@@ -117,7 +121,7 @@ public class InsertIntFeature extends QueryBuilder {
 
         @Override
         public String getEntity() {
-            return "public.knn_intfeature";
+            return "public.knn_realfeature";
         }
 
 

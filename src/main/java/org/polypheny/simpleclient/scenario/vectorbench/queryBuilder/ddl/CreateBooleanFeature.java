@@ -22,22 +22,21 @@
  * SOFTWARE.
  */
 
-package org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.creation;
+package org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.ddl;
 
-import java.util.Map;
 import kong.unirest.core.HttpRequest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
+import java.util.Map;
 
-
-public class CreateIntFeature extends QueryBuilder {
+public class CreateBooleanFeature extends QueryBuilder {
 
     private final String store;
     private final int dimension;
 
 
-    public CreateIntFeature( String store, int dimension ) {
+    public CreateBooleanFeature( String store, int dimension ) {
         this.store = store;
         this.dimension = dimension;
     }
@@ -45,17 +44,17 @@ public class CreateIntFeature extends QueryBuilder {
 
     @Override
     public Query getNewQuery() {
-        return new CreateIntFeatureQuery( store, dimension );
+        return new CreateBooleanFeatureQuery( store, dimension );
     }
 
 
-    private static class CreateIntFeatureQuery extends Query {
+    private static class CreateBooleanFeatureQuery extends Query {
 
         private final String store;
         private final int dimension;
 
 
-        CreateIntFeatureQuery( String store, int dimension ) {
+        CreateBooleanFeatureQuery( String store, int dimension ) {
             super( false );
             this.store = store;
             this.dimension = dimension;
@@ -64,7 +63,11 @@ public class CreateIntFeature extends QueryBuilder {
 
         @Override
         public String getSql() {
-            String sql = "CREATE TABLE knn_intfeature (id INTEGER NOT NULL, feature INTEGER NOT NULL ARRAY(1, " + this.dimension + "), PRIMARY KEY(id))";
+            String sql = "CREATE TABLE knn_booleanfeature ("
+                    + "id INTEGER NOT NULL, "
+                    + "feature BOOLEAN NOT NULL ARRAY(1, " + this.dimension + "), "
+                    + "category VARCHAR(50), "
+                    + "PRIMARY KEY(id))";
             if ( this.store != null ) {
                 sql += " ON STORE \"" + this.store + "\"";
             }
@@ -94,7 +97,6 @@ public class CreateIntFeature extends QueryBuilder {
         public String getMongoQl() {
             return null;
         }
-
 
     }
 

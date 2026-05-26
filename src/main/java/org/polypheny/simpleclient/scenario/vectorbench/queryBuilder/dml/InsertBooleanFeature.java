@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.insertion;
+package org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.dml;
 
 import com.google.gson.JsonObject;
 import kong.unirest.core.HttpRequest;

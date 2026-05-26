@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019-2026 The Polypheny Project
+ * Copyright (c) 2019-5/26/26, 5:15 PM The Polypheny Project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"), to deal
@@ -22,23 +22,20 @@
  * SOFTWARE.
  */
 
-package org.polypheny.simpleclient.scenario.vectorbench.queryBuilder;
+package org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.dql;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
 import kong.unirest.core.HttpRequest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
 
-
-public class SimpleKnnIdIntFeature extends QueryBuilder {
+public class MetadataKnnRealCrossJoin extends QueryBuilder {
 
     private static final boolean EXPECT_RESULT = true;
 
-    private final long randomSeed;
     private final int dimension;
     private final int limit;
     private final String norm;
@@ -46,29 +43,28 @@ public class SimpleKnnIdIntFeature extends QueryBuilder {
     private final Random random;
 
 
-    public SimpleKnnIdIntFeature( long randomSeed, int dimension, int limit, String norm ) {
-        this.randomSeed = randomSeed;
+    public MetadataKnnRealCrossJoin( long randomSeed, int dimension, int limit, String norm ) {
         this.dimension = dimension;
-
-        this.random = new Random( randomSeed );
         this.limit = limit;
         this.norm = norm;
+
+        this.random = new Random( randomSeed );
     }
 
 
-    private Integer[] getRandomVector() {
-        Integer[] integers = new Integer[this.dimension];
+    private Float[] getRandomVector() {
+        Float[] floats = new Float[this.dimension];
         for ( int i = 0; i < this.dimension; i++ ) {
-            integers[i] = random.nextInt( 500 );
+            floats[i] = random.nextInt( 100 ) / 100.0f;
         }
 
-        return integers;
+        return floats;
     }
 
 
     @Override
     public synchronized Query getNewQuery() {
-        return new SimpleKnnIdIntFeatureQuery(
+        return new MetadataKnnRealCrossJoin.MetadataKnnRealCrossJoinQuery(
                 getRandomVector(),
                 limit,
                 norm
@@ -76,19 +72,17 @@ public class SimpleKnnIdIntFeature extends QueryBuilder {
     }
 
 
-    private static class SimpleKnnIdIntFeatureQuery extends Query {
+    private static class MetadataKnnRealCrossJoinQuery extends Query {
 
-        private static final String SQL_1 = "SELECT closest.dist FROM ( SELECT id, distance(feature, ";
-        private static final String SQL_2 = ", ";
-        private static final String SQL_3 = ") AS dist FROM knn_intfeature ORDER BY dist ASC LIMIT ";
-        private static final String SQL_4 = ") AS closest";
-
-        private final Integer[] target;
+        private static final String SQL_1 = "SELECT knn_metadata.id, knn_metadata.textdata, closest.dist FROM knn_metadata, ( SELECT t1.id, distance(t1.feature, t2.feature, '";
+        private static final String SQL_2 = "') AS dist FROM knn_realfeature t1, knn_realfeature t2 WHERE t2.id = 1 ORDER BY dist ASC LIMIT ";
+        private static final String SQL_3 = ") AS closest WHERE knn_metadata.id = closest.id ORDER BY closest.dist ASC";
+        private final Float[] target;
         private final int limit;
         private final String norm;
 
 
-        public SimpleKnnIdIntFeatureQuery( Integer[] target, int limit, String norm ) {
+        private MetadataKnnRealCrossJoinQuery( Float[] target, int limit, String norm ) {
             super( EXPECT_RESULT );
             this.target = target;
             this.limit = limit;
@@ -98,7 +92,7 @@ public class SimpleKnnIdIntFeature extends QueryBuilder {
 
         @Override
         public String getSql() {
-            return SQL_1 + "ARRAY" + Arrays.toString( target ) + SQL_2 + "'" + norm + "'" + SQL_3 + limit + SQL_4;
+            return SQL_1 + norm + SQL_2 + limit + SQL_3;
         }
 
 
@@ -112,7 +106,7 @@ public class SimpleKnnIdIntFeature extends QueryBuilder {
         @Override
         public Map<Integer, ImmutablePair<DataTypes, Object>> getParameterValues() {
             Map<Integer, ImmutablePair<DataTypes, Object>> map = new HashMap<>();
-            map.put( 1, new ImmutablePair<>( DataTypes.ARRAY_INT, target ) );
+            map.put( 1, new ImmutablePair<>( DataTypes.ARRAY_REAL, target ) );
             return map;
         }
 
@@ -131,3 +125,4 @@ public class SimpleKnnIdIntFeature extends QueryBuilder {
     }
 
 }
+

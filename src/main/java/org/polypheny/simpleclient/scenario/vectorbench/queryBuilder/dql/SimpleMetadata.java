@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019-2026 The Polypheny Project
+ * Copyright (c) 2019-5/26/26, 5:15 PM The Polypheny Project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"), to deal
@@ -22,81 +22,94 @@
  * SOFTWARE.
  */
 
-package org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.creation;
+package org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.dql;
 
-import java.util.Map;
 import kong.unirest.core.HttpRequest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
 
 
-public class CreateRealFeature extends QueryBuilder {
+public class SimpleMetadata extends QueryBuilder {
 
-    private final String store;
-    private final int dimension;
+    private static final boolean EXPECT_RESULT = true;
+
+    private final long randomSeed;
+    private final int numOfEntries;
+
+    private final Random random;
 
 
-    public CreateRealFeature( String store, int dimension ) {
-        this.store = store;
-        this.dimension = dimension;
+    public SimpleMetadata( long randomSeed, int numOfEntries ) {
+        this.randomSeed = randomSeed;
+        this.numOfEntries = numOfEntries;
+
+        this.random = new Random( randomSeed );
+    }
+
+
+    private int getRandomId() {
+        return this.random.nextInt( this.numOfEntries );
     }
 
 
     @Override
     public Query getNewQuery() {
-        return new CreateRealFeatureQuery( store, dimension );
+        return new SimpleMetadataQuery( this.getRandomId() );
     }
 
 
-    private static class CreateRealFeatureQuery extends Query {
+    private static class SimpleMetadataQuery extends Query {
 
-        private final String store;
-        private final int dimension;
+        private static final String SQL = "SELECT id, textdata FROM knn_metadata WHERE id = ";
+
+        private final int id;
 
 
-        CreateRealFeatureQuery( String store, int dimension ) {
-            super( false );
-            this.store = store;
-            this.dimension = dimension;
+        private SimpleMetadataQuery( int id ) {
+            super( EXPECT_RESULT );
+            this.id = id;
         }
 
 
         @Override
         public String getSql() {
-            String sql = "CREATE TABLE knn_realfeature ("
-                    + "id INTEGER NOT NULL, "
-                    + "category VARCHAR(50), "
-                    + "feature REAL NOT NULL ARRAY(1, " + this.dimension + "), "
-                    + "PRIMARY KEY(id))";
-            if ( this.store != null ) {
-                sql += " ON STORE \"" + this.store + "\"";
-            }
-            return sql;
+            return SQL + id;
         }
 
 
         @Override
         public String getParameterizedSqlQuery() {
-            return null;
+            return SQL + "?";
         }
 
 
         @Override
         public Map<Integer, ImmutablePair<DataTypes, Object>> getParameterValues() {
-            return null;
+            Map<Integer, ImmutablePair<DataTypes, Object>> map = new HashMap<>();
+            map.put( 1, new ImmutablePair<>( DataTypes.INTEGER, id ) );
+            return map;
         }
 
 
         @Override
         public HttpRequest<?> getRest() {
-            return null;
+            throw new UnsupportedOperationException( "kNN benchmarking is not supported for the REST interface." );
         }
 
 
         @Override
         public String getMongoQl() {
-            return null;
+            throw new UnsupportedOperationException( "kNN benchmarking is not supported for the MongoQl interface." );
+        }
+
+
+        @Override
+        public String getCypher() {
+            throw new UnsupportedOperationException( "kNN benchmarking is not supported for the Cypher interface." );
         }
 
     }

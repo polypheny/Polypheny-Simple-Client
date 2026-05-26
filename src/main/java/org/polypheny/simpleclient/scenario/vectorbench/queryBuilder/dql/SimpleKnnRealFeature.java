@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019-2026 The Polypheny Project
+ * Copyright (c) 2019-5/26/26, 5:15 PM The Polypheny Project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"), to deal
@@ -22,90 +22,111 @@
  * SOFTWARE.
  */
 
-package org.polypheny.simpleclient.scenario.vectorbench.queryBuilder;
+package org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.dql;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
 import kong.unirest.core.HttpRequest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Random;
 
-public class SimpleKnnBooleanFeature extends QueryBuilder {
+
+
+public class SimpleKnnRealFeature extends QueryBuilder {
 
     private static final boolean EXPECT_RESULT = true;
+
+    private final long randomSeed;
     private final int dimension;
     private final int limit;
-    private final String norm; // Should be 'JACCARD' or 'HAMMING'
+    private final String norm;
+
     private final Random random;
 
-    public SimpleKnnBooleanFeature( long randomSeed, int dimension, int limit, String norm ) {
+
+    public SimpleKnnRealFeature( long randomSeed, int dimension, int limit, String norm ) {
+        this.randomSeed = randomSeed;
         this.dimension = dimension;
+
+        this.random = new Random( randomSeed );
         this.limit = limit;
         this.norm = norm;
-        this.random = new Random( randomSeed );
     }
 
-    private Boolean[] getRandomVector() {
-        Boolean[] booleans = new Boolean[this.dimension];
+
+    private Float[] getRandomVector() {
+        Float[] integers = new Float[this.dimension];
         for ( int i = 0; i < this.dimension; i++ ) {
-            booleans[i] = random.nextBoolean();
+            integers[i] = random.nextInt( 100 ) / 100.0f;
         }
-        return booleans;
+
+        return integers;
     }
+
 
     @Override
     public synchronized Query getNewQuery() {
-        return new SimpleKnnBooleanFeatureQuery( getRandomVector(), limit, norm );
+        return new SimpleKnnRealFeatureQuery(
+                getRandomVector(),
+                limit,
+                norm
+        );
     }
 
-    private static class SimpleKnnBooleanFeatureQuery extends Query {
 
-        private final Boolean[] target;
+    private static class SimpleKnnRealFeatureQuery extends Query {
+
+        private static final String SQL_1 = "SELECT id, distance(feature, ";
+        private static final String SQL_2 = ", ";
+        private static final String SQL_3 = ") as dist FROM knn_realfeature ORDER BY dist ASC LIMIT ";
+
+        private final Float[] target;
         private final int limit;
         private final String norm;
 
-        public SimpleKnnBooleanFeatureQuery( Boolean[] target, int limit, String norm ) {
+
+        public SimpleKnnRealFeatureQuery( Float[] target, int limit, String norm ) {
             super( EXPECT_RESULT );
             this.target = target;
             this.limit = limit;
             this.norm = norm;
         }
 
+
         @Override
         public String getSql() {
-            return "SELECT id, " + norm.toLowerCase() + "_distance(feature, ARRAY" + Arrays.toString( target ) + ") "
-                    + "as dist " +
-                    "FROM knn_booleanfeature " + // Ensure this tableexists in DataGenerator
-                    "ORDER BY dist ASC LIMIT " + limit;
+            return SQL_1 + "ARRAY" + Arrays.toString( target ) + SQL_2 + " '" + norm + "' " + SQL_3 + limit;
         }
 
 
         @Override
-        public String getParameterizedSqlQuery() { return null; }
+        public String getParameterizedSqlQuery() {
+            return null;
+            //return SQL_1 + "?" + SQL_2 + "'" + norm + "'" + SQL_3 + limit;
+        }
 
 
         @Override
-        public Map<Integer, ImmutablePair<DataTypes, Object>>
-        getParameterValues() { return null; }
+        public Map<Integer, ImmutablePair<DataTypes, Object>> getParameterValues() {
+            Map<Integer, ImmutablePair<DataTypes, Object>> map = new HashMap<>();
+            map.put( 1, new ImmutablePair<>( DataTypes.ARRAY_REAL, target ) );
+            return map;
+        }
 
 
         @Override
-        public HttpRequest<?> getRest() { return null; }
+        public HttpRequest<?> getRest() {
+            return null;
+        }
 
 
         @Override
         public String getMongoQl() {
-            return "db.knn_booleanfeature.aggregate([{" +
-                    "    \"$vectorSearch\": {" +
-                    "        \"path\": \"feature\"," +
-                    "        \"queryVector\": " + Arrays.toString( target )
-                    + "," +
-                    "        \"metric\": \"" + norm + "\"," +
-                    "        \"limit\": " + limit +
-                    "    }" +
-                    "}])";
+            return null;
         }
+
     }
 }

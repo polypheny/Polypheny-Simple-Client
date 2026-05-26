@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019-2026 The Polypheny Project
+ * Copyright (c) 2019-5/26/26, 5:15 PM The Polypheny Project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"), to deal
@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package org.polypheny.simpleclient.scenario.vectorbench.queryBuilder;
+package org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.dql;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -34,7 +34,7 @@ import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
 
-public class SimpleKnnIntFeature extends QueryBuilder {
+public class SimpleKnnIdRealFeature extends QueryBuilder {
 
     private static final boolean EXPECT_RESULT = true;
 
@@ -46,7 +46,7 @@ public class SimpleKnnIntFeature extends QueryBuilder {
     private final Random random;
 
 
-    public SimpleKnnIntFeature( long randomSeed, int dimension, int limit, String norm ) {
+    public SimpleKnnIdRealFeature( long randomSeed, int dimension, int limit, String norm ) {
         this.randomSeed = randomSeed;
         this.dimension = dimension;
 
@@ -56,10 +56,10 @@ public class SimpleKnnIntFeature extends QueryBuilder {
     }
 
 
-    private Integer[] getRandomVector() {
-        Integer[] integers = new Integer[this.dimension];
+    private Float[] getRandomVector() {
+        Float[] integers = new Float[this.dimension];
         for ( int i = 0; i < this.dimension; i++ ) {
-            integers[i] = random.nextInt( 500 );
+            integers[i] = random.nextInt( 100 ) / 100.0f;
         }
 
         return integers;
@@ -68,7 +68,7 @@ public class SimpleKnnIntFeature extends QueryBuilder {
 
     @Override
     public synchronized Query getNewQuery() {
-        return new SimpleKnnIntFeatureQuery(
+        return new SimpleKnnIdRealFeatureQuery(
                 getRandomVector(),
                 limit,
                 norm
@@ -76,18 +76,19 @@ public class SimpleKnnIntFeature extends QueryBuilder {
     }
 
 
-    private static class SimpleKnnIntFeatureQuery extends Query {
+    private static class SimpleKnnIdRealFeatureQuery extends Query {
 
-        private static final String SQL_1 = "SELECT id, distance(feature, ";
+        private static final String SQL_1 = "SELECT closest.dist FROM ( SELECT id, distance(feature, ";
         private static final String SQL_2 = ", ";
-        private static final String SQL_3 = ") as dist FROM knn_intfeature ORDER BY dist ASC LIMIT ";
+        private static final String SQL_3 = ") AS dist FROM knn_realfeature ORDER BY dist ASC LIMIT ";
+        private static final String SQL_4 = ") AS closest";
 
-        private final Integer[] target;
+        private final Float[] target;
         private final int limit;
         private final String norm;
 
 
-        public SimpleKnnIntFeatureQuery( Integer[] target, int limit, String norm ) {
+        public SimpleKnnIdRealFeatureQuery( Float[] target, int limit, String norm ) {
             super( EXPECT_RESULT );
             this.target = target;
             this.limit = limit;
@@ -97,21 +98,21 @@ public class SimpleKnnIntFeature extends QueryBuilder {
 
         @Override
         public String getSql() {
-            return SQL_1 + "ARRAY" + Arrays.toString( target ) + SQL_2 + " '" + norm + "' " + SQL_3 + limit;
+            return SQL_1 + "ARRAY" + Arrays.toString( target ) + SQL_2 + "'" + norm + "'" + SQL_3 + limit + SQL_4;
         }
 
 
         @Override
         public String getParameterizedSqlQuery() {
             return null;
-            //return SQL_1 + "?" + SQL_2 + "'" + norm + "'" + SQL_3 + limit;
+            //return SQL_1 + "?" + SQL_2 + "'" + norm + "'" + SQL_3 + limit + SQL_4;
         }
 
 
         @Override
         public Map<Integer, ImmutablePair<DataTypes, Object>> getParameterValues() {
             Map<Integer, ImmutablePair<DataTypes, Object>> map = new HashMap<>();
-            map.put( 1, new ImmutablePair<>( DataTypes.ARRAY_INT, target ) );
+            map.put( 1, new ImmutablePair<>( DataTypes.ARRAY_REAL, target ) );
             return map;
         }
 

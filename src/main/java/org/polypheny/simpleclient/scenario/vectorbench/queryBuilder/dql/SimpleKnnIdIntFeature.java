@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019-2026 The Polypheny Project
+ * Copyright (c) 2019-5/26/26, 5:15 PM The Polypheny Project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"), to deal
@@ -22,94 +22,110 @@
  * SOFTWARE.
  */
 
-package org.polypheny.simpleclient.scenario.vectorbench.queryBuilder;
+package org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.dql;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
 import kong.unirest.core.HttpRequest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
 
 
-public class SimpleMetadata extends QueryBuilder {
+public class SimpleKnnIdIntFeature extends QueryBuilder {
 
     private static final boolean EXPECT_RESULT = true;
 
     private final long randomSeed;
-    private final int numOfEntries;
+    private final int dimension;
+    private final int limit;
+    private final String norm;
 
     private final Random random;
 
 
-    public SimpleMetadata( long randomSeed, int numOfEntries ) {
+    public SimpleKnnIdIntFeature( long randomSeed, int dimension, int limit, String norm ) {
         this.randomSeed = randomSeed;
-        this.numOfEntries = numOfEntries;
+        this.dimension = dimension;
 
         this.random = new Random( randomSeed );
+        this.limit = limit;
+        this.norm = norm;
     }
 
 
-    private int getRandomId() {
-        return this.random.nextInt( this.numOfEntries );
+    private Integer[] getRandomVector() {
+        Integer[] integers = new Integer[this.dimension];
+        for ( int i = 0; i < this.dimension; i++ ) {
+            integers[i] = random.nextInt( 500 );
+        }
+
+        return integers;
     }
 
 
     @Override
-    public Query getNewQuery() {
-        return new SimpleMetadataQuery( this.getRandomId() );
+    public synchronized Query getNewQuery() {
+        return new SimpleKnnIdIntFeatureQuery(
+                getRandomVector(),
+                limit,
+                norm
+        );
     }
 
 
-    private static class SimpleMetadataQuery extends Query {
+    private static class SimpleKnnIdIntFeatureQuery extends Query {
 
-        private static final String SQL = "SELECT id, textdata FROM knn_metadata WHERE id = ";
+        private static final String SQL_1 = "SELECT closest.dist FROM ( SELECT id, distance(feature, ";
+        private static final String SQL_2 = ", ";
+        private static final String SQL_3 = ") AS dist FROM knn_intfeature ORDER BY dist ASC LIMIT ";
+        private static final String SQL_4 = ") AS closest";
 
-        private final int id;
+        private final Integer[] target;
+        private final int limit;
+        private final String norm;
 
 
-        private SimpleMetadataQuery( int id ) {
+        public SimpleKnnIdIntFeatureQuery( Integer[] target, int limit, String norm ) {
             super( EXPECT_RESULT );
-            this.id = id;
+            this.target = target;
+            this.limit = limit;
+            this.norm = norm;
         }
 
 
         @Override
         public String getSql() {
-            return SQL + id;
+            return SQL_1 + "ARRAY" + Arrays.toString( target ) + SQL_2 + "'" + norm + "'" + SQL_3 + limit + SQL_4;
         }
 
 
         @Override
         public String getParameterizedSqlQuery() {
-            return SQL + "?";
+            return null;
+            //return SQL_1 + "?" + SQL_2 + "'" + norm + "'" + SQL_3 + limit + SQL_4;
         }
 
 
         @Override
         public Map<Integer, ImmutablePair<DataTypes, Object>> getParameterValues() {
             Map<Integer, ImmutablePair<DataTypes, Object>> map = new HashMap<>();
-            map.put( 1, new ImmutablePair<>( DataTypes.INTEGER, id ) );
+            map.put( 1, new ImmutablePair<>( DataTypes.ARRAY_INT, target ) );
             return map;
         }
 
 
         @Override
         public HttpRequest<?> getRest() {
-            throw new UnsupportedOperationException( "kNN benchmarking is not supported for the REST interface." );
+            return null;
         }
 
 
         @Override
         public String getMongoQl() {
-            throw new UnsupportedOperationException( "kNN benchmarking is not supported for the MongoQl interface." );
-        }
-
-
-        @Override
-        public String getCypher() {
-            throw new UnsupportedOperationException( "kNN benchmarking is not supported for the Cypher interface." );
+            return null;
         }
 
     }

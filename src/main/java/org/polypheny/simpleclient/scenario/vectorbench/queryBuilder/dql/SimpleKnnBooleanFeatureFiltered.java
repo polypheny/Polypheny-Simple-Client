@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019-2026 The Polypheny Project
+ * Copyright (c) 2019-5/26/26, 5:15 PM The Polypheny Project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"), to deal
@@ -22,112 +22,98 @@
  * SOFTWARE.
  */
 
-package org.polypheny.simpleclient.scenario.vectorbench.queryBuilder;
+package org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.dql;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
 import kong.unirest.core.HttpRequest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.Random;
 
-
-public class MetadataKnnIntFeature extends QueryBuilder {
+public class SimpleKnnBooleanFeatureFiltered extends QueryBuilder {
 
     private static final boolean EXPECT_RESULT = true;
-
-    private final long randomSeed;
     private final int dimension;
     private final int limit;
     private final String norm;
-
+    private final String filterCategory;
     private final Random random;
 
-
-    public MetadataKnnIntFeature( long randomSeed, int dimension, int limit, String norm ) {
-        this.randomSeed = randomSeed;
+    public SimpleKnnBooleanFeatureFiltered( long randomSeed, int dimension, int limit, String norm, String filterCategory ) {
         this.dimension = dimension;
         this.limit = limit;
         this.norm = norm;
-
+        this.filterCategory = filterCategory;
         this.random = new Random( randomSeed );
     }
 
 
-    private Integer[] getRandomVector() {
-        Integer[] integers = new Integer[this.dimension];
+    private Boolean[] getRandomVector() {
+        Boolean[] booleans = new Boolean[this.dimension];
         for ( int i = 0; i < this.dimension; i++ ) {
-            integers[i] = random.nextInt( 500 );
+            booleans[i] = random.nextBoolean();
         }
-
-        return integers;
+        return booleans;
     }
 
 
     @Override
     public synchronized Query getNewQuery() {
-        return new MetadataKnnIntFeatureQuery(
-                getRandomVector(),
-                limit,
-                norm
-        );
+        return new SimpleKnnBooleanFeatureFilteredQuery( getRandomVector(), limit, norm, filterCategory );
     }
 
 
-    private static class MetadataKnnIntFeatureQuery extends Query {
+    private static class SimpleKnnBooleanFeatureFilteredQuery extends Query {
 
-        private static final String SQL_1 = "SELECT knn_metadata.id, knn_metadata.textdata, closest.dist FROM knn_metadata, ( SELECT id, distance(feature, ";
-        private static final String SQL_2 = ", ";
-        private static final String SQL_3 = ") AS dist FROM knn_intfeature ORDER BY dist ASC LIMIT ";
-        private static final String SQL_4 = ") AS closest WHERE knn_metadata.id = closest.id ORDER BY closest.dist ASC";
-
-        private final Integer[] target;
+        private final Boolean[] target;
         private final int limit;
         private final String norm;
+        private final String category;
 
-
-        private MetadataKnnIntFeatureQuery( Integer[] target, int limit, String norm ) {
+        public SimpleKnnBooleanFeatureFilteredQuery( Boolean[] target, int limit, String norm, String category ) {
             super( EXPECT_RESULT );
             this.target = target;
             this.limit = limit;
             this.norm = norm;
+            this.category = category;
         }
 
 
         @Override
         public String getSql() {
-            return SQL_1 + "ARRAY" + Arrays.toString( target ) + SQL_2 + " '" + norm + "' " + SQL_3 + limit + SQL_4;
+            return "SELECT id, " + norm.toLowerCase() + "_distance(feature, ARRAY" + Arrays.toString( target ) + ") "
+                    + "as dist " +
+                    "FROM knn_booleanfeature " +
+                    "WHERE category = '" + category + "' " +
+                    "ORDER BY dist ASC LIMIT " + limit;
         }
 
 
         @Override
-        public String getParameterizedSqlQuery() {
-            return null;
-            //return SQL_1 + "?" + SQL_2 + "'" + norm + "'" + SQL_3 + limit + SQL_4;
-        }
+        public String getParameterizedSqlQuery() { return null; }
 
 
         @Override
-        public Map<Integer, ImmutablePair<DataTypes, Object>> getParameterValues() {
-            Map<Integer, ImmutablePair<DataTypes, Object>> map = new HashMap<>();
-            map.put( 1, new ImmutablePair<>( DataTypes.ARRAY_INT, target ) );
-            return map;
-        }
+        public Map<Integer, ImmutablePair<DataTypes, Object>> getParameterValues() { return null; }
 
 
         @Override
-        public HttpRequest<?> getRest() {
-            return null;
-        }
+        public HttpRequest<?> getRest() { return null; }
 
 
         @Override
         public String getMongoQl() {
-            return null;
+            return "db.knn_booleanfeature.aggregate([{" +
+                    "    \"$vectorSearch\": {" +
+                    "        \"path\": \"feature\"," +
+                    "        \"queryVector\": " + Arrays.toString( target ) + "," +
+                    "        \"metric\": \"" + norm + "\"," +
+                    "        \"limit\": " + limit + "," +
+                    "        \"filter\": { \"category\": \"" + category + "\" }" +
+                    "    }" +
+                    "}])";
         }
-
     }
-
 }

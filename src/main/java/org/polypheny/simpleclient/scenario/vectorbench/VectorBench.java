@@ -41,21 +41,21 @@ import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 import org.polypheny.simpleclient.query.QueryListEntry;
 import org.polypheny.simpleclient.scenario.PolyphenyScenario;
-import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.SimpleKnnBooleanFeature;
-import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.SimpleKnnBooleanFeatureFiltered;
-import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.SimpleKnnRealFeatureFiltered;
-import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.creation.CreateBooleanFeature;
-import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.creation.CreateIntFeature;
-import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.creation.CreateMetadata;
-import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.creation.CreateRealFeature;
-import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.MetadataKnnIntFeature;
-import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.MetadataKnnRealCrossJoin;
-import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.MetadataKnnRealFeature;
-import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.SimpleKnnIdRealFeature;
-import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.SimpleKnnIntFeature;
-import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.SimpleKnnRealCrossJoin;
-import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.SimpleKnnRealFeature;
-import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.SimpleMetadata;
+import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.dql.SimpleKnnBooleanFeature;
+import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.dql.SimpleKnnBooleanFeatureFiltered;
+import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.dql.SimpleKnnRealFeatureFiltered;
+import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.ddl.CreateBooleanFeature;
+import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.ddl.CreateIntFeature;
+import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.ddl.CreateMetadata;
+import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.ddl.CreateRealFeature;
+import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.dql.MetadataKnnIntFeature;
+import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.dql.MetadataKnnRealCrossJoin;
+import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.dql.MetadataKnnRealFeature;
+import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.dql.SimpleKnnIdRealFeature;
+import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.dql.SimpleKnnIntFeature;
+import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.dql.SimpleKnnRealCrossJoin;
+import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.dql.SimpleKnnRealFeature;
+import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.dql.SimpleMetadata;
 
 
 @Slf4j
