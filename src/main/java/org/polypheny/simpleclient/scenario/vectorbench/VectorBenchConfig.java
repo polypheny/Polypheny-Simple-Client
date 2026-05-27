@@ -151,6 +151,10 @@ public class VectorBenchConfig extends AbstractConfig {
         numberOfMetadataKnnRealFeatureQueries = Integer.parseInt( cdl.get( "numberOfMetadataKnnRealFeatureQueries" ) );
         numberOfSimpleKnnRealCrossJoinQueries = Integer.parseInt( cdl.get( "numberOfSimpleKnnRealCrossJoinQueries" ) );
         numberOfMetadataKnnRealCrossJoinQueries = Integer.parseInt( cdl.get( "numberOfMetadataKnnRealCrossJoinQueries" ) );
+        numberOfSimpleKnnRealFeatureFilteredQueries = Integer.parseInt( cdl.get( "numberOfSimpleKnnRealFeatureFilteredQueries") );
+        numberOfSimpleKnnBooleanFeatureQueries = Integer.parseInt( cdl.get( "numberOfSimpleKnnBooleanFeatureQueries" ) );a
+        numberOfSimpleKnnBooleanFeatureFilteredQueries = Integer.parseInt( cdl.get( "numberOfSimpleKnnBooleanFeatureFilteredQueries" ) );
+        //TODO: insert missing
 //        numberOfCombinedQueries = getIntProperty( properties, "numberOfCombinedQueries" ) * multiplier;
         limitKnnQueries = Integer.parseInt( cdl.get( "limitKnnQueries" ) );
         distanceNorm = cdl.get( "distanceNorm" ).trim();
