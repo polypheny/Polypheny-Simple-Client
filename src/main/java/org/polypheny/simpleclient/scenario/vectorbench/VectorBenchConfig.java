@@ -38,6 +38,8 @@ public class VectorBenchConfig extends AbstractConfig {
     public String dataStoreFeature;
     public String dataStoreMetadata;
 
+    public String postgresHost;
+
     public long randomSeedInsert;
     public long randomSeedQuery;
 
@@ -79,6 +81,8 @@ public class VectorBenchConfig extends AbstractConfig {
             dataStores.add( dataStoreMetadata );
         }
         //dataStores.add( "cottontail" );
+
+        postgresHost = getStringProperty( properties, "postgresHost" );
 
         if ( getBooleanProperty( properties, "useRandomSeeds" ) ) {
             Random tempRand = new Random();

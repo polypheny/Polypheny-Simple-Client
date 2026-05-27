@@ -26,6 +26,8 @@ package org.polypheny.simpleclient.main;
 
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
+import org.polypheny.simpleclient.executor.PostgresExecutor.PostgresExecutorFactory;
+import org.polypheny.simpleclient.scenario.vectorbench.PgVectorBench;
 import org.polypheny.simpleclient.scenario.vectorbench.VectorBench;
 import org.polypheny.simpleclient.scenario.vectorbench.VectorBenchConfig;
 import java.io.File;
@@ -43,12 +45,29 @@ public class VectorBenchScenario {
     }
 
 
+    public static void pgSchema( boolean commitAfterEveryQuery ) {
+        VectorBenchConfig config = new VectorBenchConfig( getProperties(), 1 );
+        ExecutorFactory factory = new PostgresExecutorFactory( config.postgresHost, false );
+        PgVectorBench vectorBench = new PgVectorBench( factory, config, commitAfterEveryQuery, false );
+        vectorBench.createSchema( null, true );
+    }
+
+
     public static void data( ExecutorFactory executorFactory, int multiplier, boolean commitAfterEveryQuery ) {
         VectorBenchConfig config = new VectorBenchConfig( getProperties(), multiplier );
         VectorBench vectorBench = new VectorBench( executorFactory, config, commitAfterEveryQuery, false );
 
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
         vectorBench.generateData( null, progressReporter );
+    }
+
+
+    public static void pgData( int multiplier, boolean commitAfterEveryQuery ) {
+        VectorBenchConfig config = new VectorBenchConfig( getProperties(), multiplier );
+        ExecutorFactory factory = new PostgresExecutorFactory( config.postgresHost, false );
+        PgVectorBench bench = new PgVectorBench( factory, config, commitAfterEveryQuery, false );
+        ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
+        bench.generateData( null, progressReporter );
     }
 
 
@@ -68,6 +87,17 @@ public class VectorBenchScenario {
     }
 
 
+    public static void pgWorkload( int multiplier, boolean commitAfterEveryQuery, boolean writeCsv, boolean dumpQueryList ) {
+        VectorBenchConfig config = new VectorBenchConfig( getProperties(), multiplier );
+        ExecutorFactory factory = new PostgresExecutorFactory( config.postgresHost, false );
+        PgVectorBench bench = new PgVectorBench( factory, config, commitAfterEveryQuery, dumpQueryList );
+        CsvWriter csvWriter = writeCsv ? new CsvWriter( "results-pg.csv" ) : null;
+        ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
+        bench.execute( progressReporter, csvWriter, new File( "." ), config.numberOfThreads );
+    }
+
+
+
     public static void warmup( ExecutorFactory executorFactory, int multiplier, boolean commitAfterEveryQuery, boolean dumpQueryList ) {
         VectorBenchConfig config = new VectorBenchConfig( getProperties(), multiplier );
         VectorBench vectorBench = new VectorBench( executorFactory, config, commitAfterEveryQuery, dumpQueryList );
@@ -75,6 +105,16 @@ public class VectorBenchScenario {
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
         vectorBench.warmUp( progressReporter );
     }
+
+
+    public static void pgWarmup( int multiplier, boolean commitAfterEveryQuery, boolean dumpQueryList ) {
+        VectorBenchConfig config = new VectorBenchConfig( getProperties(), multiplier );
+        ExecutorFactory factory = new PostgresExecutorFactory( config.postgresHost, false );
+        PgVectorBench bench = new PgVectorBench( factory, config, commitAfterEveryQuery, dumpQueryList );
+        ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
+        bench.warmUp( progressReporter );
+    }
+
 
 
     private static Properties getProperties() {

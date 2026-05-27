@@ -47,6 +47,10 @@ public class VectorCommand implements CliRunnable {
     private List<String> args;
 
 
+    @Option(name = { "-m", "--mode" }, title = "Mode", arity = 1, description = "Execution mode: polypheny (default) or postgres.")
+    public String mode = "polypheny";
+
+
     @Option(name = { "-pdb", "--polyphenydb" }, title = "IP or Hostname", arity = 1, description = "IP or Hostname of the Polypheny-DB server (default: 127.0.0.1).")
     public static String polyphenyDbHost = "127.0.0.1";
 
@@ -78,16 +82,22 @@ public class VectorCommand implements CliRunnable {
 
         ExecutorFactory executorFactory;
         executorFactory = new PolyphenyDbJdbcExecutorFactory( polyphenyDbHost, false );
+        boolean usePostgres = mode.equalsIgnoreCase( "postgres" );
+        String task = args.getFirst();
 
         try {
-            if ( args.getFirst().equalsIgnoreCase( "data" ) ) {
-                VectorBenchScenario.data( executorFactory, multiplier, true );
-            } else if ( args.getFirst().equalsIgnoreCase( "workload" ) ) {
-                VectorBenchScenario.workload( executorFactory, multiplier, true, writeCsv, dumpQueryList );
+            if ( task.equalsIgnoreCase( "data" ) ) {
+                if ( usePostgres ) VectorBenchScenario.pgData( multiplier, true );
+                else VectorBenchScenario.data( executorFactory, multiplier, true );
+            } else if ( task.equalsIgnoreCase( "workload" ) ) {
+                if ( usePostgres ) VectorBenchScenario.pgWorkload( multiplier, true, writeCsv, dumpQueryList );
+                else VectorBenchScenario.workload( executorFactory, multiplier, true, writeCsv, dumpQueryList );
             } else if ( args.getFirst().equalsIgnoreCase( "schema" ) ) {
-                VectorBenchScenario.schema( executorFactory, true );
+                if ( usePostgres ) VectorBenchScenario.pgSchema( true );
+                else VectorBenchScenario.schema( executorFactory, true );
             } else if ( args.getFirst().equalsIgnoreCase( "warmup" ) ) {
-                VectorBenchScenario.warmup( executorFactory, multiplier, true, dumpQueryList );
+                if ( usePostgres ) VectorBenchScenario.pgWarmup( multiplier, true, dumpQueryList );
+                else VectorBenchScenario.warmup( executorFactory, multiplier, true, dumpQueryList );
             } else {
                 System.err.println( "Unknown task: " + args.getFirst() );
             }
