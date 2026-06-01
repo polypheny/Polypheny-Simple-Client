@@ -35,6 +35,8 @@ import org.polypheny.simpleclient.scenario.AbstractConfig;
 @Slf4j
 public class VectorBenchConfig extends AbstractConfig {
 
+    public String mode;
+
     public String dataStoreFeature;
     public String dataStoreMetadata;
 
@@ -67,10 +69,23 @@ public class VectorBenchConfig extends AbstractConfig {
     public String distanceNorm;
     public String booleanDistanceNorm;
 
+    public boolean useIndex;
+    public String indexMethod;
+    public int indexM;
+    public int indexEfConstruction;
+    public int indexLists;
+
+    // Query-time index parameters (pgvector, applied on the direct-postgres path only)
+    public int queryEfSearch;
+    public int queryProbes;
+
+    public int numberOfRecallQueries;
+
 
     public VectorBenchConfig(Properties properties, int multiplier ) {
         super( "knnBench", "polypheny-jdbc", properties );
 
+        mode = getStringProperty( properties, "mode" );
         dataStoreFeature = getStringProperty( properties,"dataStoreFeature" );
         dataStoreMetadata = getStringProperty( properties, "dataStoreMeta" );
 
@@ -110,15 +125,26 @@ public class VectorBenchConfig extends AbstractConfig {
         numberOfSimpleKnnRealFeatureFilteredQueries = getIntProperty( properties, "numberOfSimpleKnnRealFeatureFilteredQueries" ) * multiplier;
         numberOfSimpleKnnBooleanFeatureQueries = getIntProperty( properties, "numberOfSimpleKnnBooleanFeatureQueries" ) * multiplier;
         numberOfSimpleKnnBooleanFeatureFilteredQueries = getIntProperty( properties, "numberOfSimpleKnnBooleanFeatureFilteredQueries" ) * multiplier;
+
         limitKnnQueries = getIntProperty( properties, "limitKnnQueries" );
         distanceNorm = getStringProperty( properties, "distanceNorm" );
         booleanDistanceNorm = getStringProperty( properties, "booleanDistanceNorm" );
+
+        useIndex = getBooleanProperty( properties, "useIndex" );
+        indexMethod = getStringProperty( properties, "indexMethod" );
+        indexM = getIntProperty( properties, "indexM" );
+        indexEfConstruction = getIntProperty( properties, "indexEfConstruction" );
+        indexLists = getIntProperty( properties, "indexLists" );
+        queryEfSearch = getIntProperty( properties, "queryEfSearch" );
+        queryProbes = getIntProperty( properties, "queryProbes" );
+        numberOfRecallQueries = getIntProperty( properties, "numberOfRecallQueries" );
     }
 
 
     public VectorBenchConfig(Map<String, String> cdl ) {
         super( "gavel", cdl.get( "store" ), cdl );
 
+        mode = cdlGetOrDefault( cdl, "mode", "polypheny" );
         dataStoreFeature = cdl.get( "dataStoreFeature" );
         dataStoreMetadata = cdl.get( "dataStoreMetadata" );
         if ( dataStoreFeature.equals( dataStoreMetadata ) ) {
@@ -158,6 +184,18 @@ public class VectorBenchConfig extends AbstractConfig {
 //        numberOfCombinedQueries = getIntProperty( properties, "numberOfCombinedQueries" ) * multiplier;
         limitKnnQueries = Integer.parseInt( cdl.get( "limitKnnQueries" ) );
         distanceNorm = cdl.get( "distanceNorm" ).trim();
+        booleanDistanceNorm = cdl.get( "booleanDistanceNorm" ).trim();
+        postgresHost = cdlGetOrDefault( cdl, "postgresHost", "127.0.0.1" );
+
+        useIndex = Boolean.parseBoolean( cdlGetOrDefault( cdl, "useIndex", "false" ) );
+        indexMethod = cdlGetOrDefault( cdl, "indexMethod", "hnsw" );
+        indexM = Integer.parseInt( cdlGetOrDefault( cdl, "indexM", "16" ) );
+        indexEfConstruction = Integer.parseInt( cdlGetOrDefault( cdl, "indexEfConstruction", "64" ) );
+        indexLists = Integer.parseInt( cdlGetOrDefault( cdl, "indexLists", "100" ) );
+        queryEfSearch = Integer.parseInt( cdlGetOrDefault( cdl, "queryEfSearch", "40" ) );
+        queryProbes = Integer.parseInt( cdlGetOrDefault( cdl, "queryProbes", "1" ) );
+
+        numberOfRecallQueries = Integer.parseInt( cdlGetOrDefault( cdl, "numberOfRecallQueries", "100" ) );
     }
 
 
