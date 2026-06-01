@@ -27,9 +27,15 @@ package org.polypheny.simpleclient.main;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
 import org.polypheny.simpleclient.executor.PostgresExecutor.PostgresExecutorFactory;
+import org.polypheny.simpleclient.executor.ExecutorException;
+import org.polypheny.simpleclient.executor.JdbcExecutor;
+import org.polypheny.simpleclient.query.QueryBuilder;
 import org.polypheny.simpleclient.scenario.vectorbench.PgVectorBench;
+import org.polypheny.simpleclient.scenario.vectorbench.RecallEvaluator;
 import org.polypheny.simpleclient.scenario.vectorbench.VectorBench;
 import org.polypheny.simpleclient.scenario.vectorbench.VectorBenchConfig;
+import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.dql.SimpleKnnRealFeature;
+import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.postgres.dql.PgSimpleKnnRealFeature;
 import java.io.File;
 import java.io.IOException;
 import java.util.Objects;
@@ -50,6 +56,76 @@ public class VectorBenchScenario {
         ExecutorFactory factory = new PostgresExecutorFactory( config.postgresHost, false );
         PgVectorBench vectorBench = new PgVectorBench( factory, config, commitAfterEveryQuery, false );
         vectorBench.createSchema( null, true );
+    }
+
+
+    public static void index( ExecutorFactory executorFactory, boolean commitAfterEveryQuery ) {
+        VectorBenchConfig config = new VectorBenchConfig( getProperties(), 1 );
+        VectorBench vectorBench = new VectorBench( executorFactory, config, commitAfterEveryQuery, false );
+        vectorBench.createIndex();
+    }
+
+
+    public static void pgIndex( boolean commitAfterEveryQuery ) {
+        VectorBenchConfig config = new VectorBenchConfig( getProperties(), 1 );
+        ExecutorFactory factory = new PostgresExecutorFactory( config.postgresHost, false );
+        PgVectorBench vectorBench = new PgVectorBench( factory, config, commitAfterEveryQuery, false );
+        vectorBench.createIndex();
+    }
+
+
+    public static void groundTruth( ExecutorFactory executorFactory ) {
+        VectorBenchConfig config = new VectorBenchConfig( getProperties(), 1 );
+        runRecall( executorFactory, config, polyphenyKnnBuilder( config ), true );
+    }
+
+
+    public static void recall( ExecutorFactory executorFactory ) {
+        VectorBenchConfig config = new VectorBenchConfig( getProperties(), 1 );
+        runRecall( executorFactory, config, polyphenyKnnBuilder( config ), false );
+    }
+
+
+    public static void pgGroundTruth() {
+        VectorBenchConfig config = new VectorBenchConfig( getProperties(), 1 );
+        ExecutorFactory factory = new PostgresExecutorFactory( config.postgresHost, false );
+        runRecall( factory, config, pgKnnBuilder( config ), true );
+    }
+
+
+    public static void pgRecall() {
+        VectorBenchConfig config = new VectorBenchConfig( getProperties(), 1 );
+        ExecutorFactory factory = new PostgresExecutorFactory( config.postgresHost, false );
+        runRecall( factory, config, pgKnnBuilder( config ), false );
+    }
+
+
+    private static QueryBuilder polyphenyKnnBuilder( VectorBenchConfig config ) {
+        return new SimpleKnnRealFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
+    }
+
+
+    private static QueryBuilder pgKnnBuilder( VectorBenchConfig config ) {
+        return new PgSimpleKnnRealFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
+    }
+
+
+    private static void runRecall( ExecutorFactory executorFactory, VectorBenchConfig config, QueryBuilder knnBuilder, boolean capture ) {
+        JdbcExecutor executor = (JdbcExecutor) executorFactory.createExecutorInstance();
+        RecallEvaluator evaluator = new RecallEvaluator( config, executor, knnBuilder, RecallEvaluator.DEFAULT_GROUND_TRUTH_FILE );
+        try {
+            if ( capture ) {
+                evaluator.captureGroundTruth();
+            } else {
+                evaluator.evaluate();
+            }
+        } finally {
+            try {
+                executor.closeConnection();
+            } catch ( ExecutorException e ) {
+                log.error( "Error while closing connection", e );
+            }
+        }
     }
 
 
@@ -115,6 +191,10 @@ public class VectorBenchScenario {
         bench.warmUp( progressReporter );
     }
 
+
+    public static boolean isPostgresMode() {
+        return new VectorBenchConfig( getProperties(), 1 ).mode.equalsIgnoreCase( "postgres" );
+    }
 
 
     private static Properties getProperties() {

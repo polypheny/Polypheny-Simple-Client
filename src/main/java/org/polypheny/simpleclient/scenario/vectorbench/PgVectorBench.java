@@ -29,6 +29,7 @@ import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.executor.Executor.DatabaseInstance;
 import org.polypheny.simpleclient.executor.ExecutorException;
+import org.polypheny.simpleclient.executor.JdbcExecutor;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.main.ProgressReporter;
 import org.polypheny.simpleclient.query.Query;
@@ -37,13 +38,16 @@ import org.polypheny.simpleclient.query.QueryListEntry;
 import org.polypheny.simpleclient.query.RawQuery;
 import org.polypheny.simpleclient.scenario.PolyphenyScenario;
 import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.postgres.ddl.PgCreateRealFeature;
+import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.postgres.ddl.PgCreateRealFeatureIndex;
 import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.postgres.dql.PgSimpleKnnRealFeature;
 import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.postgres.dql.PgSimpleKnnRealFeatureFiltered;
 import java.io.File;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Properties;
 import java.util.Random;
+import java.util.Set;
 import java.util.Vector;
 
 
@@ -51,6 +55,9 @@ import java.util.Vector;
 public class PgVectorBench extends PolyphenyScenario {
 
     private final VectorBenchConfig config;
+
+    // Exact top-k ids captured during data generation; consumed by analyze() to compute recall@k.
+    private List<Set<Long>> recallGroundTruth;
 
 
     public PgVectorBench( Executor.ExecutorFactory executorFactory, VectorBenchConfig config,
@@ -76,6 +83,33 @@ public class PgVectorBench extends PolyphenyScenario {
     }
 
 
+    public void createIndex() {
+        if ( !config.useIndex ) {
+            return;
+        }
+       Executor executor = null;
+        try {
+            executor = executorFactory.createExecutorInstance();
+            long start = System.nanoTime();
+            executor.executeQuery( new PgCreateRealFeatureIndex( config.indexMethod, config.distanceNorm, config.indexM, config.indexEfConstruction, config.indexLists ).getNewQuery() );
+            executor.executeCommit();
+            long durationMillis = ( System.nanoTime() - start ) / 1_000_000L;
+            log.info( "Vector index built in {} ms", durationMillis );
+
+              String conf = config.indexMethod.equals( "hnsw" )
+                    ? "hnsw.ef_search = " + config.queryEfSearch
+                    : "ivfflat.probes = " + config.queryProbes;
+            executor.executeQuery( new RawQuery( "ALTER DATABASE postgres SET " + conf, null, false ) );
+            executor.executeCommit();
+            log.info( "Query-time index parameter set: {}", conf );
+        } catch ( ExecutorException e ) {
+            throw new RuntimeException( "Exception while creating vector index", e );
+        } finally {
+            commitAndCloseExecutor( executor );
+        }
+    }
+
+
     @Override
     public void generateData( DatabaseInstance databaseInstance, ProgressReporter progressReporter ) {
         log.info( "Generating data..." );
@@ -87,6 +121,52 @@ public class PgVectorBench extends PolyphenyScenario {
             throw new RuntimeException( "Exception while generating data", e );
         } finally {
             commitAndCloseExecutor( executor );
+        }
+
+        // 1. extract ground truth
+        // 2. create index
+        // 3. warmup/execute/analyze
+        if ( databaseInstance != null && config.useIndex ) {
+            recallGroundTruth = captureRecallGroundTruth();
+            createIndex();
+        }
+    }
+
+
+    private QueryBuilder recallKnnBuilder() {
+        return new PgSimpleKnnRealFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
+    }
+
+
+    private List<Set<Long>> captureRecallGroundTruth() {
+        JdbcExecutor executor = (JdbcExecutor) executorFactory.createExecutorInstance();
+        try {
+            return new RecallEvaluator( config, executor, recallKnnBuilder(), RecallEvaluator.DEFAULT_GROUND_TRUTH_FILE ).captureGroundTruthInMemory();
+        } finally {
+            try {
+                executor.closeConnection();
+            } catch ( ExecutorException e ) {
+                log.error( "Error while closing connection", e );
+            }
+        }
+    }
+
+
+    @Override
+    public void analyze( Properties properties, File outputDirectory ) {
+        super.analyze( properties, outputDirectory );
+        if ( config.useIndex && recallGroundTruth != null ) {
+            JdbcExecutor executor = (JdbcExecutor) executorFactory.createExecutorInstance();
+            try {
+                double recall = new RecallEvaluator( config, executor, recallKnnBuilder(), RecallEvaluator.DEFAULT_GROUND_TRUTH_FILE ).evaluate( recallGroundTruth );
+                properties.put( "recall@" + config.limitKnnQueries, recall );
+            } finally {
+                try {
+                    executor.closeConnection();
+                } catch ( ExecutorException e ) {
+                    log.error( "Error while closing connection", e );
+                }
+            }
         }
     }
 

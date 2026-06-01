@@ -43,12 +43,8 @@ public class VectorCommand implements CliRunnable {
     @AirlineModule
     private HelpOption<VectorCommand> help;
 
-    @Arguments(description = "Task { schema | data | workload } and multiplier.")
+    @Arguments(description = "Task { schema | data | groundtruth | index | workload | warmup | recall } and multiplier.")
     private List<String> args;
-
-
-    @Option(name = { "-m", "--mode" }, title = "Mode", arity = 1, description = "Execution mode: polypheny (default) or postgres.")
-    public String mode = "polypheny";
 
 
     @Option(name = { "-pdb", "--polyphenydb" }, title = "IP or Hostname", arity = 1, description = "IP or Hostname of the Polypheny-DB server (default: 127.0.0.1).")
@@ -82,7 +78,7 @@ public class VectorCommand implements CliRunnable {
 
         ExecutorFactory executorFactory;
         executorFactory = new PolyphenyDbJdbcExecutorFactory( polyphenyDbHost, false );
-        boolean usePostgres = mode.equalsIgnoreCase( "postgres" );
+        boolean usePostgres = VectorBenchScenario.isPostgresMode();
         String task = args.getFirst();
 
         try {
@@ -95,6 +91,15 @@ public class VectorCommand implements CliRunnable {
             } else if ( args.getFirst().equalsIgnoreCase( "schema" ) ) {
                 if ( usePostgres ) VectorBenchScenario.pgSchema( true );
                 else VectorBenchScenario.schema( executorFactory, true );
+            } else if ( task.equalsIgnoreCase( "index" ) ) {
+                if ( usePostgres ) VectorBenchScenario.pgIndex( true );
+                else VectorBenchScenario.index( executorFactory, true );
+            } else if ( task.equalsIgnoreCase( "groundtruth" ) ) {
+                if ( usePostgres ) VectorBenchScenario.pgGroundTruth();
+                else VectorBenchScenario.groundTruth( executorFactory );
+            } else if ( task.equalsIgnoreCase( "recall" ) ) {
+                if ( usePostgres ) VectorBenchScenario.pgRecall();
+                else VectorBenchScenario.recall( executorFactory );
             } else if ( args.getFirst().equalsIgnoreCase( "warmup" ) ) {
                 if ( usePostgres ) VectorBenchScenario.pgWarmup( multiplier, true, dumpQueryList );
                 else VectorBenchScenario.warmup( executorFactory, multiplier, true, dumpQueryList );

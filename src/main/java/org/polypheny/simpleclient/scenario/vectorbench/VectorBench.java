@@ -28,13 +28,16 @@ import java.io.File;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Properties;
 import java.util.Random;
+import java.util.Set;
 import java.util.Vector;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.executor.Executor.DatabaseInstance;
 import org.polypheny.simpleclient.executor.ExecutorException;
+import org.polypheny.simpleclient.executor.JdbcExecutor;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.main.ProgressReporter;
 import org.polypheny.simpleclient.query.Query;
@@ -48,6 +51,7 @@ import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.ddl.CreateBo
 import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.ddl.CreateIntFeature;
 import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.ddl.CreateMetadata;
 import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.ddl.CreateRealFeature;
+import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.ddl.CreateRealFeatureIndex;
 import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.dql.MetadataKnnIntFeature;
 import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.dql.MetadataKnnRealCrossJoin;
 import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.dql.MetadataKnnRealFeature;
@@ -62,6 +66,9 @@ import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.dql.SimpleMe
 public class VectorBench extends PolyphenyScenario {
 
     private final VectorBenchConfig config;
+
+    // Exact top-k ids captured during data generation; consumed by analyze() to compute recall@k.
+    private List<Set<Long>> recallGroundTruth;
 
     public VectorBench(Executor.ExecutorFactory executorFactory, VectorBenchConfig config, boolean commitAfterEveryQuery, boolean dumpQueryList ) {
         super( executorFactory, commitAfterEveryQuery, dumpQueryList, QueryMode.TABLE );
@@ -101,6 +108,26 @@ public class VectorBench extends PolyphenyScenario {
     }
 
 
+    public void createIndex() {
+        if ( !config.useIndex ) {
+            return;
+        }
+       Executor executor = null;
+        try {
+            executor = executorFactory.createExecutorInstance();
+            long start = System.nanoTime();
+            executor.executeQuery( new CreateRealFeatureIndex( config.dataStoreFeature, config.indexMethod, config.distanceNorm, config.indexM, config.indexEfConstruction, config.indexLists ).getNewQuery() );
+            executor.executeCommit();
+            long durationMillis = ( System.nanoTime() - start ) / 1_000_000L;
+            log.info( "Vector index built in {} ms", durationMillis );
+        } catch ( ExecutorException e ) {
+            throw new RuntimeException( "Exception while creating vector index", e );
+        } finally {
+            commitAndCloseExecutor( executor );
+        }
+    }
+
+
     @Override
     public void generateData( DatabaseInstance databaseInstance, ProgressReporter progressReporter ) {
         log.info( "Generating data..." );
@@ -116,6 +143,33 @@ public class VectorBench extends PolyphenyScenario {
             throw new RuntimeException( "Exception while generating data", e );
         } finally {
             commitAndCloseExecutor( executor1 );
+        }
+
+        // 1. extract ground truth
+        // 2. create index
+        // 3. warmup/execute/analyze
+        if ( databaseInstance != null && config.useIndex ) {
+            recallGroundTruth = captureRecallGroundTruth();
+            createIndex();
+        }
+    }
+
+
+    private QueryBuilder recallKnnBuilder() {
+        return new SimpleKnnRealFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
+    }
+
+
+    private List<Set<Long>> captureRecallGroundTruth() {
+        JdbcExecutor executor = (JdbcExecutor) executorFactory.createExecutorInstance();
+        try {
+            return new RecallEvaluator( config, executor, recallKnnBuilder(), RecallEvaluator.DEFAULT_GROUND_TRUTH_FILE ).captureGroundTruthInMemory();
+        } finally {
+            try {
+                executor.closeConnection();
+            } catch ( ExecutorException e ) {
+                log.error( "Error while closing connection", e );
+            }
         }
     }
 
@@ -198,7 +252,7 @@ public class VectorBench extends PolyphenyScenario {
                 if ( config.numberOfSimpleKnnBooleanFeatureQueries > 0 ) {
                     executor.executeQuery( simpleKnnBooleanFeature.getNewQuery() );
                 }
-                if ( config.numberOfSimpleKnnRealFeatureFilteredQueries > 0 ) {
+                if ( config.numberOfSimpleKnnBooleanFeatureFilteredQueries > 0 ) {
                     executor.executeQuery( simpleKnnBooleanFeatureFiltered.getNewQuery() );
                 }
             } catch ( ExecutorException e ) {
@@ -210,6 +264,25 @@ public class VectorBench extends PolyphenyScenario {
                 Thread.sleep( 10000 );
             } catch ( InterruptedException e ) {
                 throw new RuntimeException( "Unexpected interrupt", e );
+            }
+        }
+    }
+
+
+    @Override
+    public void analyze( Properties properties, File outputDirectory ) {
+        super.analyze( properties, outputDirectory );
+        if ( config.useIndex && recallGroundTruth != null ) {
+            JdbcExecutor executor = (JdbcExecutor) executorFactory.createExecutorInstance();
+            try {
+                double recall = new RecallEvaluator( config, executor, recallKnnBuilder(), RecallEvaluator.DEFAULT_GROUND_TRUTH_FILE ).evaluate( recallGroundTruth );
+                properties.put( "recall@" + config.limitKnnQueries, recall );
+            } finally {
+                try {
+                    executor.closeConnection();
+                } catch ( ExecutorException e ) {
+                    log.error( "Error while closing connection", e );
+                }
             }
         }
     }
