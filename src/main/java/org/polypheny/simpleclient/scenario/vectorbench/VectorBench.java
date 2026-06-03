@@ -63,6 +63,8 @@ import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.dql.SimpleMe
 public class VectorBench extends PolyphenyScenario {
 
     private final VectorBenchConfig config;
+    private String featureStore;
+    private String metadataStore;
 
     public VectorBench(Executor.ExecutorFactory executorFactory, VectorBenchConfig config, boolean commitAfterEveryQuery, boolean dumpQueryList ) {
         super( executorFactory, commitAfterEveryQuery, dumpQueryList, QueryMode.TABLE );
@@ -86,14 +88,16 @@ public class VectorBench extends PolyphenyScenario {
             }
         }
 
+        resolveStores( databaseInstance );
+
         log.info( "Creating schema..." );
         Executor executor = null;
         try {
             executor = executorFactory.createExecutorInstance();
-            executor.executeQuery( (new CreateMetadata(  config.dataStoreMetadata  )).getNewQuery() );
-            executor.executeQuery( (new CreateIntFeature(  config.dataStoreFeature , config.dimensionFeatureVectors )).getNewQuery() );
-            executor.executeQuery( (new CreateRealFeature(  config.dataStoreFeature , config.dimensionFeatureVectors )).getNewQuery() );
-            executor.executeQuery( (new CreateBooleanFeature( config.dataStoreFeature, config.dimensionFeatureVectors )).getNewQuery() );
+            executor.executeQuery( (new CreateMetadata(  metadataStore  )).getNewQuery() );
+            executor.executeQuery( (new CreateIntFeature(  featureStore , config.dimensionFeatureVectors )).getNewQuery() );
+            executor.executeQuery( (new CreateRealFeature(  featureStore , config.dimensionFeatureVectors )).getNewQuery() );
+            executor.executeQuery( (new CreateBooleanFeature( featureStore, config.dimensionFeatureVectors )).getNewQuery() );
         } catch (ExecutorException e ) {
             throw new RuntimeException( "Exception while creating schema", e );
         } finally {
@@ -110,7 +114,7 @@ public class VectorBench extends PolyphenyScenario {
         try {
             executor = executorFactory.createExecutorInstance();
             long start = System.nanoTime();
-            executor.executeQuery( new CreateRealFeatureIndex( config.dataStoreFeature, config.indexMethod, config.distanceNorm, config.indexM, config.indexEfConstruction, config.indexLists ).getNewQuery() );
+            executor.executeQuery( new CreateRealFeatureIndex( featureStore, config.indexMethod, config.distanceNorm, config.indexM, config.indexEfConstruction, config.indexLists ).getNewQuery() );
             executor.executeCommit();
             long durationMillis = ( System.nanoTime() - start ) / 1_000_000L;
             log.info( "Vector index built in {} ms", durationMillis );
@@ -125,6 +129,7 @@ public class VectorBench extends PolyphenyScenario {
     @Override
     public void generateData( DatabaseInstance databaseInstance, ProgressReporter progressReporter ) {
         log.info( "Generating data..." );
+        resolveStores( databaseInstance );
         Executor executor1 = executorFactory.createExecutorInstance();
         DataGenerator dataGenerator = new DataGenerator( executor1, config, progressReporter );
 
@@ -153,7 +158,6 @@ public class VectorBench extends PolyphenyScenario {
         addNumberOfTimes( queryList, new SimpleKnnIntFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm ), config.numberOfSimpleKnnIntFeatureQueries );
         addNumberOfTimes( queryList, new SimpleKnnRealFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm ), config.numberOfSimpleKnnRealFeatureQueries );
         addNumberOfTimes( queryList, new SimpleMetadata( config.randomSeedQuery, config.numberOfEntries ), config.numberOfSimpleMetadataQueries );
-//        addNumberOfTimes( queryList, new SimpleKnnIdIntFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm ), config.numberOfSimpleKnnIdIntFeatureQueries );
         addNumberOfTimes( queryList, new SimpleKnnIdRealFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm ), config.numberOfSimpleKnnIdRealFeatureQueries );
         addNumberOfTimes( queryList, new MetadataKnnIntFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm ), config.numberOfMetadataKnnIntFeatureQueries );
         addNumberOfTimes( queryList, new MetadataKnnRealFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm ), config.numberOfMetadataKnnRealFeatureQueries );
@@ -175,7 +179,6 @@ public class VectorBench extends PolyphenyScenario {
         SimpleKnnIntFeature simpleKnnIntFeatureBuilder = new SimpleKnnIntFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
         SimpleKnnRealFeature simpleKnnRealFeatureBuilder = new SimpleKnnRealFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
         SimpleMetadata simpleMetadataBuilder = new SimpleMetadata( config.randomSeedQuery, config.numberOfEntries );
-//        SimpleKnnIdIntFeature simpleKnnIdIntFeatureBuilder = new SimpleKnnIdIntFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
         SimpleKnnIdRealFeature simpleKnnIdRealFeatureBuilder = new SimpleKnnIdRealFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
         MetadataKnnIntFeature metadataKnnIntFeature = new MetadataKnnIntFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
         MetadataKnnRealFeature metadataKnnRealFeature = new MetadataKnnRealFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
@@ -195,14 +198,9 @@ public class VectorBench extends PolyphenyScenario {
                 if ( config.numberOfSimpleKnnRealFeatureQueries > 0 ) {
                     executor.executeQuery( simpleKnnRealFeatureBuilder.getNewQuery() );
                 }
-
                 if ( config.numberOfSimpleMetadataQueries > 0 ) {
                     executor.executeQuery( simpleMetadataBuilder.getNewQuery() );
                 }
-
-//                if ( config.numberOfSimpleKnnIdIntFeatureQueries > 0 ) {
-//                    executor.executeQuery( simpleKnnIdIntFeatureBuilder.getNewQuery() );
-//                }
                 if ( config.numberOfSimpleKnnIdRealFeatureQueries > 0 ) {
                     executor.executeQuery( simpleKnnIdRealFeatureBuilder.getNewQuery() );
                 }
@@ -255,5 +253,14 @@ public class VectorBench extends PolyphenyScenario {
             list.add( new QueryListEntry( queryBuilder.getNewQuery(), id ) );
         }
     }
+
+
+    private void resolveStores( DatabaseInstance databaseInstance ) {
+        if ( databaseInstance != null ) {
+            featureStore = findMatchingDataStoreName( config.dataStoreFeature );
+            metadataStore = findMatchingDataStoreName( config.dataStoreMetadata );
+        }
+    }
+
 
 }
