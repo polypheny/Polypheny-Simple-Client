@@ -175,8 +175,6 @@ public class PolyphenyDbMultiExecutorFactory extends ExecutorFactory {
                     return jdbc.deployNeo4j();
                 case "postgres":
                     return jdbc.deployPostgres( true );
-                case "cottontail":
-                    return jdbc.deployCottontail();
                 case "hsqldb":
                     return jdbc.deployHsqldb();
                 case "monetdb":

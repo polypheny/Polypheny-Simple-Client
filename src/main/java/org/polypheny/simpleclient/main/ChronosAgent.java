@@ -47,8 +47,6 @@ import org.polypheny.control.client.LogHandler;
 import org.polypheny.control.client.PolyphenyControlConnector;
 import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.cli.ChronosCommand;
-import org.polypheny.simpleclient.executor.CottontaildbExecutor.CottontailExecutorFactory;
-import org.polypheny.simpleclient.executor.CottontaildbExecutor.CottontailInstance;
 import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.executor.Executor.DatabaseInstance;
 import org.polypheny.simpleclient.executor.MonetdbExecutor.MonetdbExecutorFactory;
@@ -224,9 +222,6 @@ public class ChronosAgent extends AbstractChronosAgent {
             case "monetdb":
                 executorFactory = new MonetdbExecutorFactory( ChronosCommand.hostname, Boolean.parseBoolean( parsedConfig.get( "prepareStatements" ) ) );
                 break;
-            case "cottontail":
-                executorFactory = new CottontailExecutorFactory( ChronosCommand.hostname );
-                break;
             case "oltpbench-polypheny":
                 executorFactory = new OltpBenchPolyphenyDbExecutorFactory( ChronosCommand.hostname );
                 break;
@@ -344,10 +339,6 @@ public class ChronosAgent extends AbstractChronosAgent {
                 break;
             case "monetdb":
                 databaseInstance = new MonetdbInstance();
-                scenario.createSchema( databaseInstance, false );
-                break;
-            case "cottontail":
-                databaseInstance = new CottontailInstance();
                 scenario.createSchema( databaseInstance, false );
                 break;
             case "surrealdb":

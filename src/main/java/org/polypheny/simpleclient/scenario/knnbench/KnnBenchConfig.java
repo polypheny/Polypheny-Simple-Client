@@ -64,7 +64,6 @@ public class KnnBenchConfig extends AbstractConfig {
 
         dataStoreFeature = null;
         dataStoreMetadata = null;
-        //dataStores.add( "cottontail" );
 
         if ( getBooleanProperty( properties, "useRandomSeeds" ) ) {
             Random tempRand = new Random();

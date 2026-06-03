@@ -31,7 +31,6 @@ import java.util.Map;
 import java.util.Random;
 import kong.unirest.core.HttpRequest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.polypheny.simpleclient.query.CottontailQuery;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
 
@@ -128,12 +127,6 @@ public class MetadataKnnIntFeature extends QueryBuilder {
         @Override
         public String getMongoQl() {
             return null;
-        }
-
-
-        @Override
-        public CottontailQuery getCottontail() {
-            throw new RuntimeException( "This query is unsupported by cottontail." );
         }
 
     }

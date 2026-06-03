@@ -31,18 +31,8 @@ import java.util.Map;
 import java.util.Random;
 import kong.unirest.core.HttpRequest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.polypheny.simpleclient.query.CottontailQuery;
-import org.polypheny.simpleclient.query.CottontailQuery.QueryType;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
-import org.vitrivr.cottontail.grpc.CottontailGrpc;
-import org.vitrivr.cottontail.grpc.CottontailGrpc.Entity;
-import org.vitrivr.cottontail.grpc.CottontailGrpc.From;
-import org.vitrivr.cottontail.grpc.CottontailGrpc.IntVector;
-import org.vitrivr.cottontail.grpc.CottontailGrpc.Knn;
-import org.vitrivr.cottontail.grpc.CottontailGrpc.Knn.Distance;
-import org.vitrivr.cottontail.grpc.CottontailGrpc.Schema;
-import org.vitrivr.cottontail.grpc.CottontailGrpc.Vector;
 
 
 public class SimpleKnnIntFeature extends QueryBuilder {
@@ -136,46 +126,6 @@ public class SimpleKnnIntFeature extends QueryBuilder {
         @Override
         public String getMongoQl() {
             return null;
-        }
-
-
-        @Override
-        public CottontailQuery getCottontail() {
-            CottontailGrpc.Query query = CottontailGrpc.Query.newBuilder()
-                    .setFrom( From.newBuilder().setEntity( Entity.newBuilder().setSchema( Schema.newBuilder().setName( "public" ).build() ).setName( "knn_intfeature" ).build() ) )
-                    .setLimit( limit )
-                    .setKnn( Knn.newBuilder()
-                            .setAttribute( "feature" )
-                            .setK( limit )
-                            .addQuery( Vector.newBuilder().setIntVector( IntVector.newBuilder().addAllVector( Arrays.asList( target ) ).build() ).build() )
-                            .setDistance( getDistance( norm ) )
-                            .build() )
-                    .build();
-            return new CottontailQuery(
-                    QueryType.QUERY,
-                    query
-            );
-        }
-
-
-        private static CottontailGrpc.Knn.Distance getDistance( String norm ) {
-            if ( "L2".equalsIgnoreCase( norm ) ) {
-                return Distance.L2;
-            }
-            if ( "L1".equalsIgnoreCase( norm ) ) {
-                return Distance.L1;
-            }
-            if ( "L2SQUARED".equalsIgnoreCase( norm ) ) {
-                return Distance.L2SQUARED;
-            }
-            if ( "CHISQUARED".equalsIgnoreCase( norm ) ) {
-                return Distance.CHISQUARED;
-            }
-            if ( "COSINE".equalsIgnoreCase( norm ) ) {
-                return Distance.COSINE;
-            }
-
-            throw new RuntimeException( "Unsupported norm: " + norm );
         }
 
     }

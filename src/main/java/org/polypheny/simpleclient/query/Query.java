@@ -81,11 +81,6 @@ public abstract class Query {
     }
 
 
-    public CottontailQuery getCottontail() {
-        return null;
-    }
-
-
     public static HttpRequest<?> buildRestInsert( String table, List<JsonObject> rows ) {
         JsonArray array = new JsonArray();
         rows.forEach( array::add );

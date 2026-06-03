@@ -153,33 +153,6 @@ public interface PolyphenyDbExecutor extends Executor {
     }
 
 
-    default String deployCassandra( boolean deployStoresUsingDocker ) throws ExecutorException {
-        String config;
-        String name;
-        if ( deployStoresUsingDocker ) {
-            name = "cassandra" + storeCounter.getAndIncrement();
-            config = "{\"port\":\"" + nextPort.getAndIncrement() + "\",\"mode\":\"docker\",\"instanceId\":\"0\"}";
-        } else {
-            name = "cassandra";
-            config = "{\"mode\":\"embedded\",\"host\":\"localhost\",\"port\":\"9042\",\"keyspace\":\"cassandra\",\"username\":\"cassandra\",\"password\":\"cass\"}";
-        }
-        if ( PolyphenyVersionSwitch.getInstance().useNewDeploySyntax ) {
-            deployAdapter(
-                    name,
-                    "CASSANDRA",
-                    "STORE",
-                    config );
-        } else {
-            deployStore(
-                    name,
-                    "org.polypheny.db.adapter.cassandra.CassandraStore",
-                    config );
-        }
-        storeNames.add( name );
-        return name;
-    }
-
-
     default String deployFileStore() throws ExecutorException {
         String storeName = "file" + storeCounter.getAndIncrement();
         String config = "{\"mode\":\"embedded\"}";
@@ -193,26 +166,6 @@ public interface PolyphenyDbExecutor extends Executor {
             deployStore(
                     storeName,
                     "org.polypheny.db.adapter.file.FileStore",
-                    config );
-        }
-        storeNames.add( storeName );
-        return storeName;
-    }
-
-
-    default String deployCottontail() throws ExecutorException {
-        String storeName = "cottontail" + storeCounter.getAndIncrement();
-        String config = "{\"type\":\"Embedded\",\"host\":\"localhost\",\"port\":\"" + nextPort.getAndIncrement() + "\",\"database\":\"cottontail\",\"engine\":\"MAPDB\",\"mode\":\"embedded\"}";
-        if ( PolyphenyVersionSwitch.getInstance().useNewDeploySyntax ) {
-            deployAdapter(
-                    storeName,
-                    "COTTONTAIL",
-                    "STORE",
-                    config );
-        } else {
-            deployStore(
-                    storeName,
-                    "org.polypheny.db.adapter.cottontail.CottontailStore",
                     config );
         }
         storeNames.add( storeName );
@@ -353,14 +306,8 @@ public interface PolyphenyDbExecutor extends Executor {
                             }
                             executor.deployMonetDb( config.deployStoresUsingDocker );
                             break;
-                        case "cassandra":
-                            executor.deployCassandra( config.deployStoresUsingDocker );
-                            break;
                         case "file":
                             executor.deployFileStore();
-                            break;
-                        case "cottontail":
-                            executor.deployCottontail();
                             break;
                         case "mongodb":
                             executor.deployMongoDb();
@@ -609,11 +556,7 @@ public interface PolyphenyDbExecutor extends Executor {
                         MonetdbInstance.reset();
                     }
                     break;
-                case "cassandra":
-                    break;
                 case "file":
-                    break;
-                case "cottontail":
                     break;
                 case "mongodb":
                     break;
