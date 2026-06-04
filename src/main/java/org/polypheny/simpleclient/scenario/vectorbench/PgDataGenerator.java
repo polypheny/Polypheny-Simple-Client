@@ -30,6 +30,7 @@ import org.polypheny.simpleclient.executor.ExecutorException;
 import org.polypheny.simpleclient.main.ProgressReporter;
 import org.polypheny.simpleclient.query.BatchableInsert;
 import org.polypheny.simpleclient.query.RawQuery;
+import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.postgres.dml.PgInsertBooleanFeature;
 import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.postgres.dml.PgInsertRealFeature;
 import java.util.LinkedList;
 import java.util.List;
@@ -56,6 +57,17 @@ public class PgDataGenerator {
 
     void generateRealFeatures() throws ExecutorException {
         PgInsertRealFeature builder = new PgInsertRealFeature( config.randomSeedInsert, config.dimensionFeatureVectors );
+        for ( int i = 0; i < config.numberOfEntries; i++ ) {
+            if ( aborted ) break;
+            addToBatch( builder.getNewQuery() );
+            progressReporter.update( 1 );
+        }
+        flushBatch();
+    }
+
+
+    void generateBooleanFeatures() throws ExecutorException {
+        PgInsertBooleanFeature builder = new PgInsertBooleanFeature( config.randomSeedInsert, config.dimensionFeatureVectors );
         for ( int i = 0; i < config.numberOfEntries; i++ ) {
             if ( aborted ) break;
             addToBatch( builder.getNewQuery() );

@@ -36,8 +36,14 @@ import org.polypheny.simpleclient.query.QueryBuilder;
 import org.polypheny.simpleclient.query.QueryListEntry;
 import org.polypheny.simpleclient.query.RawQuery;
 import org.polypheny.simpleclient.scenario.PolyphenyScenario;
+import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.postgres.ddl.PgCreateBooleanFeature;
+import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.postgres.ddl.PgCreateBooleanFeatureIndex;
 import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.postgres.ddl.PgCreateRealFeature;
 import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.postgres.ddl.PgCreateRealFeatureIndex;
+import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.postgres.dql.PgSimpleKnnBooleanFeature;
+import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.postgres.dql.PgSimpleKnnBooleanFeatureFiltered;
+import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.postgres.dql.PgSimpleKnnIdRealFeature;
+import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.postgres.dql.PgSimpleKnnRealCrossJoin;
 import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.postgres.dql.PgSimpleKnnRealFeature;
 import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.postgres.dql.PgSimpleKnnRealFeatureFiltered;
 import java.io.File;
@@ -69,6 +75,7 @@ public class PgVectorBench extends PolyphenyScenario {
             executor = executorFactory.createExecutorInstance();
             executor.executeQuery( new RawQuery( "CREATE EXTENSION IF NOT EXISTS vector", null, false ) );
             executor.executeQuery( new PgCreateRealFeature( config.dimensionFeatureVectors ).getNewQuery() );
+            executor.executeQuery( new PgCreateBooleanFeature( config.dimensionFeatureVectors ).getNewQuery() );
         } catch ( ExecutorException e ) {
             throw new RuntimeException( "Exception while creating schema", e );
         } finally {
@@ -85,10 +92,19 @@ public class PgVectorBench extends PolyphenyScenario {
         try {
             executor = executorFactory.createExecutorInstance();
             long start = System.nanoTime();
-            executor.executeQuery( new PgCreateRealFeatureIndex( config.indexMethod, config.distanceNorm, config.indexM, config.indexEfConstruction, config.indexLists ).getNewQuery() );
+            if ( indexSupportsMetric( config.indexMethod, config.distanceNorm ) ) {
+                executor.executeQuery( new PgCreateRealFeatureIndex( config.indexMethod, config.distanceNorm, config.indexM, config.indexEfConstruction, config.indexLists ).getNewQuery() );
+            } else {
+                log.info( "Skipping real index: {} does not support metric '{}'.", config.indexMethod, config.distanceNorm );
+            }
+            if ( indexSupportsMetric( config.indexMethod, config.booleanDistanceNorm ) ) {
+                executor.executeQuery( new PgCreateBooleanFeatureIndex( config.indexMethod, config.booleanDistanceNorm, config.indexM, config.indexEfConstruction, config.indexLists ).getNewQuery() );
+            } else {
+                log.info( "Skipping boolean index: {} does not support metric '{}'.", config.indexMethod, config.booleanDistanceNorm );
+            }
             executor.executeCommit();
             long durationMillis = ( System.nanoTime() - start ) / 1_000_000L;
-            log.info( "Vector index built in {} ms", durationMillis );
+            log.info( "Vector indexes built in {} ms", durationMillis );
 
               String conf = config.indexMethod.equals( "hnsw" )
                     ? "hnsw.ef_search = " + config.queryEfSearch
@@ -111,6 +127,7 @@ public class PgVectorBench extends PolyphenyScenario {
         PgDataGenerator dataGenerator = new PgDataGenerator( executor, config, progressReporter );
         try {
             dataGenerator.generateRealFeatures();
+            dataGenerator.generateBooleanFeatures();
         } catch ( ExecutorException e ) {
             throw new RuntimeException( "Exception while generating data", e );
         } finally {
@@ -130,6 +147,11 @@ public class PgVectorBench extends PolyphenyScenario {
         List<QueryListEntry> queryList = new Vector<>();
         addNumberOfTimes( queryList, new PgSimpleKnnRealFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm ), config.numberOfSimpleKnnRealFeatureQueries );
         addNumberOfTimes( queryList, new PgSimpleKnnRealFeatureFiltered( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm, "cat_A" ), config.numberOfSimpleKnnRealFeatureFilteredQueries );
+        addNumberOfTimes( queryList, new PgSimpleKnnIdRealFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm ), config.numberOfSimpleKnnIdRealFeatureQueries );
+        addNumberOfTimes( queryList, new PgSimpleKnnRealCrossJoin( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm ), config.numberOfSimpleKnnRealCrossJoinQueries );
+        addNumberOfTimes( queryList, new PgSimpleKnnBooleanFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.booleanDistanceNorm ), config.numberOfSimpleKnnBooleanFeatureQueries );
+        addNumberOfTimes( queryList, new PgSimpleKnnBooleanFeatureFiltered( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.booleanDistanceNorm, "cat_A" ), config.numberOfSimpleKnnBooleanFeatureFilteredQueries );
+
         return commonExecute( queryList, progressReporter, outputDirectory, numberOfThreads,
                 Query::getSql, () -> executorFactory.createExecutorInstance( csvWriter ), new Random() );
     }
@@ -138,14 +160,36 @@ public class PgVectorBench extends PolyphenyScenario {
     @Override
     public void warmUp( ProgressReporter progressReporter ) {
         log.info( "Warm-up..." );
-        PgSimpleKnnRealFeature knnBuilder = new PgSimpleKnnRealFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
         Executor executor = null;
+        PgSimpleKnnRealFeature pgSimpleKnnRealFeature = new PgSimpleKnnRealFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
+        PgSimpleKnnRealFeatureFiltered pgSimpleKnnRealFeatureFiltered = new PgSimpleKnnRealFeatureFiltered( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm, "cat_A" );
+        PgSimpleKnnRealCrossJoin pgSimpleKnnRealCrossJoin = new PgSimpleKnnRealCrossJoin( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
+        PgSimpleKnnIdRealFeature pgSimpleKnnIdRealFeature = new PgSimpleKnnIdRealFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm );
+        PgSimpleKnnBooleanFeature pgSimpleKnnBooleanFeature = new PgSimpleKnnBooleanFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.booleanDistanceNorm );
+        PgSimpleKnnBooleanFeatureFiltered pgSimpleKnnBooleanFeatureFiltered = new PgSimpleKnnBooleanFeatureFiltered( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.booleanDistanceNorm, "cat_A" );
+
         for ( int i = 0; i < config.numberOfWarmUpIterations; i++ ) {
             try {
                 executor = executorFactory.createExecutorInstance();
                 if ( config.numberOfSimpleKnnRealFeatureQueries > 0 ) {
-                    executor.executeQuery( knnBuilder.getNewQuery() );
+                    executor.executeQuery( pgSimpleKnnRealFeature.getNewQuery() );
                 }
+                if ( config.numberOfSimpleKnnRealFeatureFilteredQueries > 0 ) {
+                    executor.executeQuery( pgSimpleKnnRealFeatureFiltered.getNewQuery() );
+                }
+                if ( config.numberOfSimpleKnnRealCrossJoinQueries > 0 ) {
+                    executor.executeQuery( pgSimpleKnnRealCrossJoin.getNewQuery() );
+                }
+                if ( config.numberOfSimpleKnnIdRealFeatureQueries > 0 ) {
+                    executor.executeQuery( pgSimpleKnnIdRealFeature.getNewQuery() );
+                }
+                if ( config.numberOfSimpleKnnBooleanFeatureQueries > 0 ) {
+                    executor.executeQuery( pgSimpleKnnBooleanFeature.getNewQuery() );
+                }
+                if ( config.numberOfSimpleKnnBooleanFeatureFilteredQueries > 0 ) {
+                    executor.executeQuery( pgSimpleKnnBooleanFeatureFiltered.getNewQuery() );
+                }
+
             } catch ( ExecutorException e ) {
                 throw new RuntimeException( "Error during warm-up", e );
             } finally {
@@ -163,6 +207,15 @@ public class PgVectorBench extends PolyphenyScenario {
     @Override
     public int getNumberOfInsertThreads() {
         return 1;
+    }
+
+
+    private static boolean indexSupportsMetric( String method, String metric ) {
+        // HNSW supports all metrics; IVFFlat does not support L1 or JACCARD.
+        if ( method.equalsIgnoreCase( "ivfflat" ) ) {
+            return !( metric.equalsIgnoreCase( "L1" ) || metric.equalsIgnoreCase( "JACCARD" ) );
+        }
+        return true;
     }
 
 

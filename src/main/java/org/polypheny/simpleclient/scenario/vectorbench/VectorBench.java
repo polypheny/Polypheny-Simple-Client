@@ -46,6 +46,7 @@ import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.dql.SimpleKn
 import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.dql.SimpleKnnRealFeatureFiltered;
 import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.ddl.CreateBooleanFeature;
 import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.ddl.CreateIntFeature;
+import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.ddl.CreateBooleanFeatureIndex;
 import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.ddl.CreateMetadata;
 import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.ddl.CreateRealFeature;
 import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.ddl.CreateRealFeatureIndex;
@@ -110,19 +111,43 @@ public class VectorBench extends PolyphenyScenario {
         if ( !config.useIndex ) {
             return;
         }
+        // Polypheny vector-maps array columns only when declared with element NOT NULL (REAL NOT NULL ARRAY).
+        // A plain ARRAY column is not vector-mapped, so no vector index can be built.
+        if ( !config.supportsNotNullArray ) {
+            log.info( "Skipping index creation: plain ARRAY columns are not vector-mapped in Polypheny (requires NOT NULL ARRAY)." );
+            return;
+        }
        Executor executor = null;
         try {
             executor = executorFactory.createExecutorInstance();
             long start = System.nanoTime();
-            executor.executeQuery( new CreateRealFeatureIndex( featureStore, config.indexMethod, config.distanceNorm, config.indexM, config.indexEfConstruction, config.indexLists ).getNewQuery() );
+            if ( indexSupportsMetric( config.indexMethod, config.distanceNorm ) ) {
+                executor.executeQuery( new CreateRealFeatureIndex( featureStore, config.indexMethod, config.distanceNorm, config.indexM, config.indexEfConstruction, config.indexLists ).getNewQuery() );
+            } else {
+                log.info( "Skipping real index: {} does not support metric '{}'.", config.indexMethod, config.distanceNorm );
+            }
+            if ( indexSupportsMetric( config.indexMethod, config.booleanDistanceNorm ) ) {
+                executor.executeQuery( new CreateBooleanFeatureIndex( featureStore, config.indexMethod, config.booleanDistanceNorm, config.indexM, config.indexEfConstruction, config.indexLists ).getNewQuery() );
+            } else {
+                log.info( "Skipping boolean index: {} does not support metric '{}'.", config.indexMethod, config.booleanDistanceNorm );
+            }
             executor.executeCommit();
             long durationMillis = ( System.nanoTime() - start ) / 1_000_000L;
-            log.info( "Vector index built in {} ms", durationMillis );
+            log.info( "Vector indexes built in {} ms", durationMillis );
         } catch ( ExecutorException e ) {
             throw new RuntimeException( "Exception while creating vector index", e );
         } finally {
             commitAndCloseExecutor( executor );
         }
+    }
+
+
+    private static boolean indexSupportsMetric( String method, String metric ) {
+        // HNSW supports all metrics, IVFFlat does not support L1 or JACCARD.
+        if ( method.equalsIgnoreCase( "ivfflat" ) ) {
+            return !( metric.equalsIgnoreCase( "L1" ) || metric.equalsIgnoreCase( "JACCARD" ) );
+        }
+        return true;
     }
 
 

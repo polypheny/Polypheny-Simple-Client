@@ -150,7 +150,7 @@ public class VectorBenchConfig extends AbstractConfig {
         dataStoreFeature = cdl.get( "dataStoreFeature" );
         dataStoreMetadata = cdl.get( "dataStoreMetadata" );
 
-        supportsNotNullArray = Boolean.parseBoolean( cdl.get( "supportsNotNullArray" ) );
+        supportsNotNullArray = cdl.get( "supportsNotNullArray" ) == null || Boolean.parseBoolean( cdl.get( "supportsNotNullArray" ) );
 
         if ( dataStoreFeature.equals( dataStoreMetadata ) ) {
             dataStores.add( dataStoreFeature );
