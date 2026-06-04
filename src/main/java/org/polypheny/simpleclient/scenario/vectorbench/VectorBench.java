@@ -70,6 +70,8 @@ public class VectorBench extends PolyphenyScenario {
     public VectorBench(Executor.ExecutorFactory executorFactory, VectorBenchConfig config, boolean commitAfterEveryQuery, boolean dumpQueryList ) {
         super( executorFactory, commitAfterEveryQuery, dumpQueryList, QueryMode.TABLE );
         this.config = config;
+        this.featureStore = config.dataStoreFeature;
+        this.metadataStore = config.dataStoreMetadata;
 
     }
 
