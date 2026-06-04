@@ -55,7 +55,7 @@ public class PgSimpleKnnRealFeature extends QueryBuilder {
             case "cosine" -> "<=>";
             case "l2" -> "<->";
             case "l1" -> "<+>";
-            case "ip" -> "<#>";
+            case "inner_product" -> "<#>";
             default -> throw new IllegalArgumentException( "Provided metric is invalid: " + metric );
         };
     }

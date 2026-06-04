@@ -54,7 +54,7 @@ public class PgCreateRealFeatureIndex extends QueryBuilder {
             case "cosine" -> "vector_cosine_ops";
             case "l2" -> "vector_l2_ops";
             case "l1" -> "vector_l1_ops";
-            case "ip" -> "vector_ip_ops";
+            case "inner_product" -> "vector_ip_ops";
             default -> throw new IllegalArgumentException( "Provided metric is invalid: " + metric );
         };
     }
