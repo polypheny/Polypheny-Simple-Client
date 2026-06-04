@@ -80,6 +80,7 @@ public class VectorBenchConfig extends AbstractConfig {
     public int queryProbes;
 
     public int numberOfRecallQueries;
+    public boolean supportsNotNullArray;
 
 
     public VectorBenchConfig(Properties properties, int multiplier ) {
@@ -88,6 +89,7 @@ public class VectorBenchConfig extends AbstractConfig {
         mode = getStringProperty( properties, "mode" );
         dataStoreFeature = getStringProperty( properties,"dataStoreFeature" );
         dataStoreMetadata = getStringProperty( properties, "dataStoreMeta" );
+        supportsNotNullArray = getBooleanProperty( properties, "supportsNotNullArray" );
 
         if ( dataStoreFeature.equals( dataStoreMetadata ) ) {
             dataStores.add( dataStoreFeature );
@@ -147,6 +149,9 @@ public class VectorBenchConfig extends AbstractConfig {
         mode = cdlGetOrDefault( cdl, "mode", "polypheny" );
         dataStoreFeature = cdl.get( "dataStoreFeature" );
         dataStoreMetadata = cdl.get( "dataStoreMetadata" );
+
+        supportsNotNullArray = Boolean.parseBoolean( cdl.get( "supportsNotNullArray" ) );
+
         if ( dataStoreFeature.equals( dataStoreMetadata ) ) {
             dataStores.add( dataStoreFeature );
         } else {

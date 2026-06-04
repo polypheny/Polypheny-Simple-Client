@@ -95,9 +95,9 @@ public class VectorBench extends PolyphenyScenario {
         try {
             executor = executorFactory.createExecutorInstance();
             executor.executeQuery( (new CreateMetadata(  metadataStore  )).getNewQuery() );
-            executor.executeQuery( (new CreateIntFeature(  featureStore , config.dimensionFeatureVectors )).getNewQuery() );
-            executor.executeQuery( (new CreateRealFeature(  featureStore , config.dimensionFeatureVectors )).getNewQuery() );
-            executor.executeQuery( (new CreateBooleanFeature( featureStore, config.dimensionFeatureVectors )).getNewQuery() );
+            executor.executeQuery( (new CreateIntFeature(  featureStore , config.dimensionFeatureVectors, config.supportsNotNullArray )).getNewQuery() );
+            executor.executeQuery( (new CreateRealFeature(  featureStore , config.dimensionFeatureVectors, config.supportsNotNullArray )).getNewQuery() );
+            executor.executeQuery( (new CreateBooleanFeature( featureStore, config.dimensionFeatureVectors, config.supportsNotNullArray )).getNewQuery() );
         } catch (ExecutorException e ) {
             throw new RuntimeException( "Exception while creating schema", e );
         } finally {

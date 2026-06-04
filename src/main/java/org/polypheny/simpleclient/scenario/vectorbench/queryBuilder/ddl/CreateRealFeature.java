@@ -35,17 +35,19 @@ public class CreateRealFeature extends QueryBuilder {
 
     private final String store;
     private final int dimension;
+    private final boolean supportsNotNullArray;
 
 
-    public CreateRealFeature( String store, int dimension ) {
+    public CreateRealFeature( String store, int dimension, boolean supportsNotNullArray ) {
         this.store = store;
         this.dimension = dimension;
+        this.supportsNotNullArray = supportsNotNullArray;
     }
 
 
     @Override
     public Query getNewQuery() {
-        return new CreateRealFeatureQuery( store, dimension );
+        return new CreateRealFeatureQuery( store, dimension, supportsNotNullArray );
     }
 
 
@@ -53,21 +55,24 @@ public class CreateRealFeature extends QueryBuilder {
 
         private final String store;
         private final int dimension;
+        private final boolean supportsNotNullArray;
 
 
-        CreateRealFeatureQuery( String store, int dimension ) {
+        CreateRealFeatureQuery( String store, int dimension, boolean supportsNotNullArray ) {
             super( false );
             this.store = store;
             this.dimension = dimension;
+            this.supportsNotNullArray = supportsNotNullArray;
         }
 
 
         @Override
         public String getSql() {
+            String elementsNullable = supportsNotNullArray ? " NOT NULL " : " ";
             String sql = "CREATE TABLE knn_realfeature ("
                     + "id INTEGER NOT NULL, "
                     + "category VARCHAR(50), "
-                    + "feature REAL NOT NULL ARRAY(1, " + this.dimension + "), "
+                    + "feature REAL" + elementsNullable + "ARRAY(1, " + this.dimension + "), "
                     + "PRIMARY KEY(id))";
             if ( this.store != null ) {
                 sql += " ON STORE \"" + this.store + "\"";

@@ -34,17 +34,19 @@ public class CreateBooleanFeature extends QueryBuilder {
 
     private final String store;
     private final int dimension;
+    private final boolean supportsNotNullArray;
 
 
-    public CreateBooleanFeature( String store, int dimension ) {
+    public CreateBooleanFeature( String store, int dimension, boolean supportsNotNullArray ) {
         this.store = store;
         this.dimension = dimension;
+        this.supportsNotNullArray = supportsNotNullArray;
     }
 
 
     @Override
     public Query getNewQuery() {
-        return new CreateBooleanFeatureQuery( store, dimension );
+        return new CreateBooleanFeatureQuery( store, dimension, supportsNotNullArray );
     }
 
 
@@ -52,20 +54,23 @@ public class CreateBooleanFeature extends QueryBuilder {
 
         private final String store;
         private final int dimension;
+        private final boolean supportsNotNullArray;
 
 
-        CreateBooleanFeatureQuery( String store, int dimension ) {
+        CreateBooleanFeatureQuery( String store, int dimension, boolean supportsNotNullArray ) {
             super( false );
             this.store = store;
             this.dimension = dimension;
+            this.supportsNotNullArray = supportsNotNullArray;
         }
 
 
         @Override
         public String getSql() {
+            String elementsNullable = supportsNotNullArray ? " NOT NULL " : " ";
             String sql = "CREATE TABLE knn_booleanfeature ("
                     + "id INTEGER NOT NULL, "
-                    + "feature BOOLEAN NOT NULL ARRAY(1, " + this.dimension + "), "
+                    + "feature BOOLEAN" + elementsNullable + "ARRAY(1, " + this.dimension + "), "
                     + "category VARCHAR(50), "
                     + "PRIMARY KEY(id))";
             if ( this.store != null ) {

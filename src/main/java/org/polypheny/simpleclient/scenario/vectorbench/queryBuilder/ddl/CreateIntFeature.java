@@ -35,17 +35,19 @@ public class CreateIntFeature extends QueryBuilder {
 
     private final String store;
     private final int dimension;
+    private final boolean supportsNotNullArray;
 
 
-    public CreateIntFeature( String store, int dimension ) {
+    public CreateIntFeature( String store, int dimension, boolean supportsNotNullArray ) {
         this.store = store;
         this.dimension = dimension;
+        this.supportsNotNullArray = supportsNotNullArray;
     }
 
 
     @Override
     public Query getNewQuery() {
-        return new CreateIntFeatureQuery( store, dimension );
+        return new CreateIntFeatureQuery( store, dimension, supportsNotNullArray );
     }
 
 
@@ -53,18 +55,21 @@ public class CreateIntFeature extends QueryBuilder {
 
         private final String store;
         private final int dimension;
+        private final boolean supportsNotNullArray;
 
 
-        CreateIntFeatureQuery( String store, int dimension ) {
+        CreateIntFeatureQuery( String store, int dimension, boolean supportsNotNullArray ) {
             super( false );
             this.store = store;
             this.dimension = dimension;
+            this.supportsNotNullArray = supportsNotNullArray;
         }
 
 
         @Override
         public String getSql() {
-            String sql = "CREATE TABLE knn_intfeature (id INTEGER NOT NULL, feature INTEGER NOT NULL ARRAY(1, " + this.dimension + "), PRIMARY KEY(id))";
+            String elementsNullable = supportsNotNullArray ? " NOT NULL " : " ";
+            String sql = "CREATE TABLE knn_intfeature (id INTEGER NOT NULL, feature INTEGER" + elementsNullable + "ARRAY(1, " + this.dimension + "), PRIMARY KEY(id))";
             if ( this.store != null ) {
                 sql += " ON STORE \"" + this.store + "\"";
             }
