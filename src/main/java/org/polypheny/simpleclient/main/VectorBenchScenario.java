@@ -37,6 +37,7 @@ import org.polypheny.simpleclient.scenario.vectorbench.VectorBenchConfig;
 import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.dql.SimpleKnnRealFeature;
 import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.postgres.dql.PgSimpleKnnRealFeature;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.Properties;
@@ -117,7 +118,8 @@ public class VectorBenchScenario {
             if ( capture ) {
                 evaluator.captureGroundTruth();
             } else {
-                evaluator.evaluate();
+                double recall = evaluator.evaluate();
+                writeRecall( config, recall );
             }
         } finally {
             try {
@@ -125,6 +127,17 @@ public class VectorBenchScenario {
             } catch ( ExecutorException e ) {
                 log.error( "Error while closing connection", e );
             }
+        }
+    }
+
+
+    /** Writes the recall@k of the last `recall` run to recall.csv in the working directory. */
+    private static void writeRecall( VectorBenchConfig config, double recall ) {
+        try ( FileWriter fw = new FileWriter( "recall.csv" ) ) {
+            fw.write( "k,recall\n" );
+            fw.write( config.limitKnnQueries + "," + recall + "\n" );
+        } catch ( IOException e ) {
+            log.error( "Could not write recall.csv", e );
         }
     }
 

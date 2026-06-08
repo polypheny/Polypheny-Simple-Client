@@ -43,6 +43,7 @@ import org.polypheny.simpleclient.query.QueryListEntry;
 import org.polypheny.simpleclient.scenario.PolyphenyScenario;
 import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.dql.SimpleKnnBooleanFeature;
 import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.dql.SimpleKnnBooleanFeatureFiltered;
+import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.dql.SimpleKnnIdIntFeature;
 import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.dql.SimpleKnnRealFeatureFiltered;
 import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.ddl.CreateBooleanFeature;
 import org.polypheny.simpleclient.scenario.vectorbench.queryBuilder.ddl.CreateIntFeature;
@@ -192,6 +193,9 @@ public class VectorBench extends PolyphenyScenario {
         addNumberOfTimes( queryList, new SimpleKnnRealFeatureFiltered( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm, "cat_A" ), config.numberOfSimpleKnnRealFeatureFilteredQueries );
         addNumberOfTimes( queryList, new SimpleKnnBooleanFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.booleanDistanceNorm ), config.numberOfSimpleKnnBooleanFeatureQueries );
         addNumberOfTimes( queryList, new SimpleKnnBooleanFeatureFiltered( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.booleanDistanceNorm, "cat_A" ), config.numberOfSimpleKnnBooleanFeatureFilteredQueries );
+        addNumberOfTimes( queryList, new MetadataKnnRealCrossJoin( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm ), config.numberOfMetadataKnnRealCrossJoinQueries );
+        addNumberOfTimes( queryList, new SimpleKnnIdIntFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm ), config.numberOfSimpleKnnIdIntFeatureQueries );
+
 
 
         return commonExecute( queryList, progressReporter, outputDirectory, numberOfThreads, Query::getSql, () -> executorFactory.createExecutorInstance( csvWriter ), new Random() );
@@ -214,7 +218,7 @@ public class VectorBench extends PolyphenyScenario {
         SimpleKnnRealFeatureFiltered simpleKnnRealFeatureFiltered = new SimpleKnnRealFeatureFiltered( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.distanceNorm, "cat_A" );
         SimpleKnnBooleanFeature simpleKnnBooleanFeature = new SimpleKnnBooleanFeature( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.booleanDistanceNorm );
         SimpleKnnBooleanFeatureFiltered simpleKnnBooleanFeatureFiltered = new SimpleKnnBooleanFeatureFiltered( config.randomSeedQuery, config.dimensionFeatureVectors, config.limitKnnQueries, config.booleanDistanceNorm, "cat_A" );
-
+        SimpleKnnIdIntFeature simpleKnnIdIntFeature = new SimpleKnnIdIntFeature( config.randomSeedQuery, config.dimensionFeatureVectors,config.limitKnnQueries, config.distanceNorm );
 
         for ( int i = 0; i < config.numberOfWarmUpIterations; i++ ) {
             try {
@@ -233,6 +237,9 @@ public class VectorBench extends PolyphenyScenario {
                 }
                 if ( config.numberOfMetadataKnnIntFeatureQueries > 0 ) {
                     executor.executeQuery( metadataKnnIntFeature.getNewQuery() );
+                }
+                if ( config.numberOfSimpleKnnIdIntFeatureQueries > 0 ) {
+                    executor.executeQuery( simpleKnnIdIntFeature.getNewQuery() );
                 }
                 if ( config.numberOfMetadataKnnRealFeatureQueries > 0 ) {
                     executor.executeQuery( metadataKnnRealFeature.getNewQuery() );
