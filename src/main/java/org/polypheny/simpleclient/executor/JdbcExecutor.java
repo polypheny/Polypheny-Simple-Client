@@ -108,6 +108,9 @@ public abstract class JdbcExecutor implements Executor {
                         case ARRAY_REAL:
                             preparedStatement.setArray( entry.getKey(), connection.createArrayOf( "REAL", (Object[]) entry.getValue().right ) );
                             break;
+                        case ARRAY_BOOLEAN:
+                            preparedStatement.setArray( entry.getKey(), connection.createArrayOf( "BOOLEAN", (Object[]) entry.getValue().right ) );
+                            break;
                         case BYTE_ARRAY:
                             preparedStatement.setBytes( entry.getKey(), (byte[]) entry.getValue().right );
                             break;
@@ -153,6 +156,23 @@ public abstract class JdbcExecutor implements Executor {
             log.error( "Error while executing: " + query.getSql() );
             throw new ExecutorException( e );
         }
+    }
+
+
+    /**
+     * Executes the given query and returns the values of the first column of the result set (e.g. the ids of a
+     * top-k nearest-neighbor query). Used for recall measurement where the actual returned rows are needed.
+     */
+    public List<Long> executeQueryAndGetIds( Query query ) throws ExecutorException {
+        List<Long> ids = new ArrayList<>();
+        try ( ResultSet resultSet = executeStatement.executeQuery( query.getSql() ) ) {
+            while ( resultSet.next() ) {
+                ids.add( resultSet.getLong( 1 ) );
+            }
+        } catch ( SQLException e ) {
+            throw new ExecutorException( e );
+        }
+        return ids;
     }
 
 
@@ -253,6 +273,9 @@ public abstract class JdbcExecutor implements Executor {
                             break;
                         case ARRAY_REAL:
                             preparedStatement.setArray( entry.getKey(), connection.createArrayOf( "REAL", (Object[]) entry.getValue().right ) );
+                            break;
+                        case ARRAY_BOOLEAN:
+                            preparedStatement.setArray( entry.getKey(), connection.createArrayOf( "BOOLEAN", (Object[]) entry.getValue().right) );
                             break;
                         case BYTE_ARRAY:
                             preparedStatement.setBytes( entry.getKey(), (byte[]) entry.getValue().right );

@@ -83,6 +83,9 @@ import org.polypheny.simpleclient.scenario.graph.GraphBench;
 import org.polypheny.simpleclient.scenario.graph.GraphBenchConfig;
 import org.polypheny.simpleclient.scenario.knnbench.KnnBench;
 import org.polypheny.simpleclient.scenario.knnbench.KnnBenchConfig;
+import org.polypheny.simpleclient.scenario.vectorbench.PgVectorBench;
+import org.polypheny.simpleclient.scenario.vectorbench.VectorBench;
+import org.polypheny.simpleclient.scenario.vectorbench.VectorBenchConfig;
 import org.polypheny.simpleclient.scenario.multibench.MultiBench;
 import org.polypheny.simpleclient.scenario.multibench.MultiBenchConfig;
 import org.polypheny.simpleclient.scenario.multimedia.MultimediaBench;
@@ -218,7 +221,7 @@ public class ChronosAgent extends AbstractChronosAgent {
                 executorFactory = new SurrealDBExecutorFactory( ChronosCommand.hostname, "8989", true );
                 break;
             case "postgres":
-                dockerContainerName = DockerLauncher.launch( "postgres", "polypheny/postgres:latest", Map.of( "POSTGRES_PASSWORD", "postgres" ), List.of( 5432 ), () -> PostgresInstance.tryConnect( ChronosCommand.hostname ) );
+                dockerContainerName = DockerLauncher.launch( "postgres", "polypheny/postgres-pgvector-postgis:17-debian", Map.of( "POSTGRES_PASSWORD", "postgres" ), List.of( 5432 ), () -> PostgresInstance.tryConnect( ChronosCommand.hostname ) );
                 executorFactory = new PostgresExecutorFactory( ChronosCommand.hostname, Boolean.parseBoolean( parsedConfig.get( "prepareStatements" ) ) );
                 break;
             case "monetdb":
@@ -252,6 +255,14 @@ public class ChronosAgent extends AbstractChronosAgent {
             case "knnBench":
                 config = new KnnBenchConfig( parsedConfig );
                 scenario = new KnnBench( executorFactory, (KnnBenchConfig) config, true, dumpQueryList );
+                break;
+            case "vectorBench":
+                config = new VectorBenchConfig( parsedConfig );
+                if ( config.system.equals( "postgres" ) ) {
+                    scenario = new PgVectorBench( executorFactory, (VectorBenchConfig) config, true, dumpQueryList );
+                } else {
+                    scenario = new VectorBench( executorFactory, (VectorBenchConfig) config, true, dumpQueryList );
+                }
                 break;
             case "multimedia":
                 config = new MultimediaConfig( parsedConfig );

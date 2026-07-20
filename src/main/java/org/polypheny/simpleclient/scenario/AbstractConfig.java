@@ -70,6 +70,7 @@ public abstract class AbstractConfig {
     public final boolean workloadMonitoringWarmup;
 
     public final int progressReportBase = 100;
+    public final String postgresImageVariant;
 
 
     protected AbstractConfig( String scenario, String system, Properties properties ) {
@@ -103,6 +104,7 @@ public abstract class AbstractConfig {
         workloadMonitoringExecutingWorkload = false;
         workloadMonitoringLoadingData = true;
         workloadMonitoringWarmup = true;
+        postgresImageVariant = getStringPropertyOrDefault( properties, "postgresImageVariant", "pgvector & PostGIS" );
 
         // This is hacky but ensures that VersionSwitch is initialized when running tasks from CLI.
         PolyphenyVersionSwitch.initialize( this );
@@ -150,6 +152,7 @@ public abstract class AbstractConfig {
         workloadMonitoringExecutingWorkload = Boolean.parseBoolean( cdlGetOrDefault( cdl, "workloadMonitoring", "false" ) );
         workloadMonitoringLoadingData = Boolean.parseBoolean( cdlGetOrDefault( cdl, "workloadMonitoringLoadingData", "false" ) );
         workloadMonitoringWarmup = Boolean.parseBoolean( cdlGetOrDefault( cdl, "workloadMonitoringWarmup", "true" ) );
+        postgresImageVariant = cdlGetOrDefault( cdl, "postgresImageVariant", "pgvector & PostGIS" );
     }
 
 
@@ -168,6 +171,12 @@ public abstract class AbstractConfig {
             throw new RuntimeException( "Property '" + name + "' not found in config" );
         }
         return str;
+    }
+
+
+    protected String getStringPropertyOrDefault( Properties properties, String name, String defaultName ) {
+        String str = getProperty( properties, name );
+        return str == null ? defaultName : str;
     }
 
 

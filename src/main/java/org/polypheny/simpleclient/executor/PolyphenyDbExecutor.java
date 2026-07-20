@@ -122,13 +122,18 @@ public interface PolyphenyDbExecutor extends Executor {
 
 
     default String deployPostgres( boolean deployStoresUsingDocker ) throws ExecutorException {
+        return deployPostgres( deployStoresUsingDocker, "pgvector & PostGIS" );
+    }
+
+
+    default String deployPostgres( boolean deployStoresUsingDocker, String imageVariant ) throws ExecutorException {
         String config;
         String name;
         if ( deployStoresUsingDocker ) {
             name = "postgres" + storeCounter.getAndIncrement();
             if ( PolyphenyVersionSwitch.getInstance().useNewAdapterDeployParameters ) {
                 int dockerInstanceId = getDockerInstanceId();
-                config = "{\"mode\":\"docker\",\"instanceId\":\"" + dockerInstanceId + "\",\"maxConnections\":\"25\"}";
+                config = "{\"mode\":\"docker\",\"instanceId\":\"" + dockerInstanceId + "\",\"maxConnections\":\"25\",\"imageVariant\":\"" + imageVariant + "\"}";
             } else {
                 config = "{\"port\":\"" + nextPort.getAndIncrement() + "\",\"maxConnections\":\"25\",\"password\":\"postgres\",\"mode\":\"docker\",\"instanceId\":\"0\"}";
             }
@@ -345,7 +350,7 @@ public interface PolyphenyDbExecutor extends Executor {
                             if ( !config.deployStoresUsingDocker ) {
                                 PostgresInstance.reset();
                             }
-                            executor.deployPostgres( config.deployStoresUsingDocker );
+                            executor.deployPostgres( config.deployStoresUsingDocker, config.postgresImageVariant );
                             break;
                         case "monetdb":
                             if ( !config.deployStoresUsingDocker ) {
