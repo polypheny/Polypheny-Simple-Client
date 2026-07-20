@@ -205,7 +205,6 @@ shadowJar {
     }
 }
 assemble.dependsOn shadowJar
-
 artifacts {
     //archives jar // regular jar containing only the compiled source
     archives shadowJar // fat jar which additionally contains all dependencies
@@ -239,7 +238,6 @@ task copyPolyphenyNewJdbcDriver(type: Copy) {
 }
 compileJava.dependsOn(copyPolyphenyOldJdbcDriver)
 compileJava.dependsOn(copyPolyphenyNewJdbcDriver)
-
 
 /**
  * IntelliJ

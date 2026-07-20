@@ -83,7 +83,7 @@ import org.polypheny.simpleclient.scenario.graph.GraphBench;
 import org.polypheny.simpleclient.scenario.graph.GraphBenchConfig;
 import org.polypheny.simpleclient.scenario.knnbench.KnnBench;
 import org.polypheny.simpleclient.scenario.knnbench.KnnBenchConfig;
- import org.polypheny.simpleclient.scenario.vectorbench.PgVectorBench;
+import org.polypheny.simpleclient.scenario.vectorbench.PgVectorBench;
 import org.polypheny.simpleclient.scenario.vectorbench.VectorBench;
 import org.polypheny.simpleclient.scenario.vectorbench.VectorBenchConfig;
 import org.polypheny.simpleclient.scenario.multibench.MultiBench;
