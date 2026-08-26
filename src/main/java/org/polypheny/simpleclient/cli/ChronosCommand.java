@@ -31,6 +31,7 @@ import com.github.rvesse.airline.annotations.AirlineModule;
 import com.github.rvesse.airline.annotations.Command;
 import com.github.rvesse.airline.annotations.Option;
 import java.net.InetAddress;
+import java.net.URI;
 import java.net.UnknownHostException;
 import org.polypheny.simpleclient.main.ChronosAgent;
 
@@ -77,6 +78,26 @@ public class ChronosCommand implements CliRunnable {
 
     @Override
     public int run() {
+        boolean secure = true;
+        URI uri = URI.create( chronos );
+        switch ( uri.getScheme() ) {
+            case "http":
+                chronos = uri.getHost();
+                port = uri.getPort() != -1 ? uri.getPort() : 80;
+                secure = false;
+                break;
+            case "https":
+                chronos = uri.getHost();
+                port = uri.getPort() != -1 ? uri.getPort() : 443;
+                break;
+            case null: // No scheme means old-style passing of just the hostname
+                break;
+            default:
+                System.err.println( "The given host '" + chronos + "' has an unsupported scheme." );
+                System.exit( 1 );
+                break;
+        }
+
         InetAddress address = null;
         try {
             address = InetAddress.getByName( chronos );
@@ -95,7 +116,7 @@ public class ChronosCommand implements CliRunnable {
             System.exit( 1 );
         }
 
-        AbstractChronosAgent aca = new ChronosAgent( address, port, true, true, environment, supports != null ? supports.split( "," ) : new String[]{}, writeCsv, dumpQueryList, buildServer );
+        AbstractChronosAgent aca = new ChronosAgent( address, port, secure, true, environment, supports != null ? supports.split( "," ) : new String[]{}, writeCsv, dumpQueryList, buildServer );
         aca.setDaemon( false );
         if ( jobId != null ) {
             aca.setSingleJobId( jobId );
