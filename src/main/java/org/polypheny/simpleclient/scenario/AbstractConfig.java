@@ -85,7 +85,7 @@ public abstract class AbstractConfig {
         buildUi = false;
         resetCatalog = false;
         memoryCatalog = false;
-        deployStoresUsingDocker = false;
+        deployStoresUsingDocker = true;
         restartAfterLoadingData = false;
 
         dataStores.add( "hsqldb" );
@@ -130,7 +130,7 @@ public abstract class AbstractConfig {
             throw new RuntimeException( "Not allowed to restart Polypheny after loading data if using a non-persistent data store!" );
         }
 
-        deployStoresUsingDocker = Boolean.parseBoolean( cdlGetOrDefault( cdl, "deployStoresUsingDocker", "false" ) );
+        deployStoresUsingDocker = Boolean.parseBoolean( cdlGetOrDefault( cdl, "deployStoresUsingDocker", "true" ) );
 
         memoryCatalog = Boolean.parseBoolean( cdl.get( "memoryCatalog" ) );
 
