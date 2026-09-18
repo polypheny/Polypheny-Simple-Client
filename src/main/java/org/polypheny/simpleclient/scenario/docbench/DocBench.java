@@ -57,8 +57,6 @@ import org.polypheny.simpleclient.scenario.docbench.queryBuilder.UpdateProductQu
 public class DocBench extends PolyphenyScenario {
 
     private final DocBenchConfig config;
-    private final List<Long> measuredTimes;
-    private long executeRuntime;
     private final Map<Integer, String> queryTypes;
     private final Map<Integer, List<Long>> measuredTimePerQueryType;
     private final Random random;
@@ -70,7 +68,6 @@ public class DocBench extends PolyphenyScenario {
     public DocBench( Executor.ExecutorFactory executorFactory, DocBenchConfig config, boolean commitAfterEveryQuery, boolean dumpQueryList ) {
         super( executorFactory, commitAfterEveryQuery, dumpQueryList, QueryMode.TABLE );
         this.config = config;
-        measuredTimes = Collections.synchronizedList( new LinkedList<>() );
         queryTypes = new HashMap<>();
         measuredTimePerQueryType = new ConcurrentHashMap<>();
         random = new Random( config.seed );
