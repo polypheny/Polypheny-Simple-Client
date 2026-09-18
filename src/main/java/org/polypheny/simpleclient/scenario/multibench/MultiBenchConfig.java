@@ -25,7 +25,6 @@
 package org.polypheny.simpleclient.scenario.multibench;
 
 import java.util.Map;
-import java.util.Properties;
 import lombok.Getter;
 import org.polypheny.simpleclient.scenario.AbstractConfig;
 import org.polypheny.simpleclient.scenario.docbench.DocBenchConfig;
@@ -58,46 +57,10 @@ public class MultiBenchConfig extends AbstractConfig {
     public final int numberOfGavelQueries;
 
 
-    public MultiBenchConfig( Properties properties, int multiplier ) {
-        super( "multibench", "polypheny", properties );
+    public MultiBenchConfig( Map<String, String> cdl, String system, int multiplier ) {
+        super( "multibench", system, cdl );
 
-        seed = getLongProperty( properties, "seed" );
-        batchSize = getIntProperty( properties, "batchSize" );
-
-        writeRatio = Double.parseDouble( properties.getProperty( "writeRatio" ) ) / 100.0;
-
-        numberOfDocBenchQueries = getIntProperty( properties, "numberOfDocBenchQueries" );
-        numberOfGraphBenchQueries = getIntProperty( properties, "numberOfGraphBenchQueries" );
-        numberOfKnnBenchQueries = getIntProperty( properties, "numberOfKnnBenchQueries" );
-        numberOfGavelQueries = getIntProperty( properties, "numberOfGavelQueries" );
-
-        if ( numberOfDocBenchQueries > 0 ) {
-            docBenchConfig = new MultiBenchDocBenchConfig( properties, multiplier );
-        } else {
-            docBenchConfig = null;
-        }
-        if ( numberOfGraphBenchQueries > 0 ) {
-            graphBenchConfig = new MultiBenchGraphBenchConfig( properties, multiplier );
-        } else {
-            graphBenchConfig = null;
-        }
-        if ( numberOfKnnBenchQueries > 0 ) {
-            knnBenchConfig = new MultiBenchKnnBenchConfig( properties, multiplier );
-        } else {
-            knnBenchConfig = null;
-        }
-        if ( numberOfGavelQueries > 0 ) {
-            gavelConfig = new MultiBenchGavelConfig( properties, multiplier );
-        } else {
-            gavelConfig = null;
-        }
-    }
-
-
-    public MultiBenchConfig( Map<String, String> cdl ) {
-        super( "multibench", cdl.get( "store" ), cdl );
-
-        seed = Integer.parseInt( cdl.get( "seed" ) );
+        seed = Long.parseLong( cdl.get( "seed" ) );
         batchSize = Integer.parseInt( cdl.get( "batchSize" ) );
 
         writeRatio = Double.parseDouble( cdl.get( "writeRatio" ) ) / 100.0;
@@ -108,25 +71,30 @@ public class MultiBenchConfig extends AbstractConfig {
         numberOfGavelQueries = Integer.parseInt( cdl.get( "numberOfGavelQueries" ) );
 
         if ( numberOfDocBenchQueries > 0 ) {
-            docBenchConfig = new MultiBenchDocBenchConfig( cdl );
+            docBenchConfig = new MultiBenchDocBenchConfig( cdl, multiplier );
         } else {
             docBenchConfig = null;
         }
         if ( numberOfGraphBenchQueries > 0 ) {
-            graphBenchConfig = new MultiBenchGraphBenchConfig( cdl );
+            graphBenchConfig = new MultiBenchGraphBenchConfig( cdl, multiplier );
         } else {
             graphBenchConfig = null;
         }
         if ( numberOfKnnBenchQueries > 0 ) {
-            knnBenchConfig = new MultiBenchKnnBenchConfig( cdl );
+            knnBenchConfig = new MultiBenchKnnBenchConfig( cdl, multiplier );
         } else {
             knnBenchConfig = null;
         }
         if ( numberOfGavelQueries > 0 ) {
-            gavelConfig = new MultiBenchGavelConfig( cdl );
+            gavelConfig = new MultiBenchGavelConfig( cdl, multiplier );
         } else {
             gavelConfig = null;
         }
+    }
+
+
+    public MultiBenchConfig( Map<String, String> cdl ) {
+        this( cdl, cdl.get( "store" ), 1 );
     }
 
 
@@ -138,13 +106,7 @@ public class MultiBenchConfig extends AbstractConfig {
 
     public class MultiBenchDocBenchConfig extends DocBenchConfig {
 
-        protected MultiBenchDocBenchConfig( Properties properties, int multiplier ) {
-            super( "docbench", "polypheny-mongoql", properties );
-            settings();
-        }
-
-
-        protected MultiBenchDocBenchConfig( Map<String, String> cdl ) {
+        protected MultiBenchDocBenchConfig( Map<String, String> cdl, int multiplier ) {
             super( "docbench", "polypheny-mongoql", cdl );
             settings();
         }
@@ -175,14 +137,8 @@ public class MultiBenchConfig extends AbstractConfig {
 
     public class MultiBenchKnnBenchConfig extends KnnBenchConfig {
 
-        protected MultiBenchKnnBenchConfig( Properties properties, int multiplier ) {
+        protected MultiBenchKnnBenchConfig( Map<String, String> properties, int multiplier ) {
             super( "knnBench", "polypheny-jdbc", properties );
-            settings();
-        }
-
-
-        protected MultiBenchKnnBenchConfig( Map<String, String> cdl ) {
-            super( "knnBench", "polypheny-jdbc", cdl );
             settings();
         }
 
@@ -219,14 +175,8 @@ public class MultiBenchConfig extends AbstractConfig {
 
     public class MultiBenchGraphBenchConfig extends GraphBenchConfig {
 
-        protected MultiBenchGraphBenchConfig( Properties properties, int multiplier ) {
+        protected MultiBenchGraphBenchConfig( Map<String, String> properties, int multiplier ) {
             super( "graph", "polypheny-cypher", properties );
-            settings();
-        }
-
-
-        protected MultiBenchGraphBenchConfig( Map<String, String> cdl ) {
-            super( "graph", "polypheny-cypher", cdl );
             settings();
         }
 
@@ -292,14 +242,8 @@ public class MultiBenchConfig extends AbstractConfig {
 
     public class MultiBenchGavelConfig extends GavelConfig {
 
-        protected MultiBenchGavelConfig( Properties properties, int multiplier ) {
+        protected MultiBenchGavelConfig( Map<String, String> properties, int multiplier ) {
             super( "gavel", "polypheny-jdbc", properties );
-            settings();
-        }
-
-
-        protected MultiBenchGavelConfig( Map<String, String> cdl ) {
-            super( "gavel", "polypheny-jdbc", cdl );
             settings();
         }
 

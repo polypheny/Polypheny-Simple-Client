@@ -55,42 +55,15 @@ public class MultimediaConfig extends AbstractConfig {
     public final int maxBatchSize;
 
 
-    public MultimediaConfig( Properties properties, int multiplier ) {
-        super( "multimedia", "polypheny-rest", properties );
-
-        dataStore = getStringProperty( properties, "dataStore" );
-        multimediaStore = getStringProperty( properties, "multimediaStore" );
-        if ( !multimediaStore.equals( "same" ) ) {
-            dataStores.add( multimediaStore );
-        }
-        numberOfUsers = getIntProperty( properties, "numberOfUsers" ) * multiplier;
-        albumSize = getIntProperty( properties, "albumSize" );
-        postsPerUser = getIntProperty( properties, "postsPerUser" );
-        numberOfFriends = getIntProperty( properties, "numberOfFriends" );
-        numberOfSelectUserQueries = getIntProperty( properties, "numberOfSelectUserQueries" );
-        numberOfSelectProfilePicQueries = getIntProperty( properties, "numberOfSelectProfilePicQueries" );
-        numberOfSelectProfilePicsQueries = getIntProperty( properties, "numberOfSelectProfilePicsQueries" );
-        numberOfSelectMediaQueries = getIntProperty( properties, "numberOfSelectMediaQueries" );
-        numberOfSelectTimelineQueries = getIntProperty( properties, "numberOfSelectTimelineQueries" );
-        numberOfDeleteTimelineQueries = getIntProperty( properties, "numberOfDeleteTimelineQueries" );
-        numberOfInsertTimelineQueries = getIntProperty( properties, "numberOfInsertTimelineQueries" );
-
-        imgSize = getIntProperty( properties, "imgSize" );
-        numberOfFrames = getIntProperty( properties, "numberOfFrames" );
-        fileSizeKB = getIntProperty( properties, "fileSizeKB" );
-        maxBatchSize = getIntProperty( properties, "maxBatchSize" );
-    }
-
-
-    public MultimediaConfig( Map<String, String> cdl ) {
-        super( "multimedia", cdl.get( "store" ), cdl );
+    public MultimediaConfig( Map<String, String> cdl, String system, int multiplier ) {
+        super( "multimedia", system, cdl );
 
         dataStore = cdl.get( "dataStore" );
         multimediaStore = cdl.get( "multimediaStore" );
         if ( !multimediaStore.equals( "same" ) ) {
             dataStores.add( multimediaStore );
         }
-        numberOfUsers = Integer.parseInt( cdl.get( "numberOfUsers" ) );
+        numberOfUsers = Integer.parseInt( cdl.get( "numberOfUsers" ) ) * multiplier;
         albumSize = Integer.parseInt( cdl.get( "albumSize" ) );
         postsPerUser = Integer.parseInt( cdl.get( "postsPerUser" ) );
         numberOfFriends = Integer.parseInt( cdl.get( "numberOfFriends" ) );
@@ -106,6 +79,11 @@ public class MultimediaConfig extends AbstractConfig {
         numberOfFrames = Integer.parseInt( cdl.get( "numberOfFrames" ) );
         fileSizeKB = Integer.parseInt( cdl.get( "fileSizeKB" ) );
         maxBatchSize = Integer.parseInt( cdl.get( "maxBatchSize" ) );
+    }
+
+
+    public MultimediaConfig( Map<String, String> cdl ) {
+        this( cdl, cdl.get( "store" ), 1 );
     }
 
 

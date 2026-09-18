@@ -28,6 +28,7 @@ import com.github.rvesse.airline.annotations.Command;
 import java.io.File;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.QueryMode;
+import org.polypheny.simpleclient.Util;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
 import org.polypheny.simpleclient.main.ProgressBar;
 import org.polypheny.simpleclient.main.ProgressReporter;
@@ -41,7 +42,7 @@ public class AuctionMarkCommand extends AbstractOltpBenchCommand {
 
     @Override
     protected void schema( ExecutorFactory executorFactory ) {
-        AuctionMarkConfig config = new AuctionMarkConfig( getProperties( "auctionmark.properties" ), 1 );
+        AuctionMarkConfig config = new AuctionMarkConfig( Util.getProperties( "oltpbench/auctionmark.properties" ), 1 );
         AuctionMark auctionMark = new AuctionMark( executorFactory, config, false, QueryMode.TABLE );
         auctionMark.createSchema( null, true );
     }
@@ -49,7 +50,7 @@ public class AuctionMarkCommand extends AbstractOltpBenchCommand {
 
     @Override
     protected void data( ExecutorFactory executorFactory, int multiplier ) {
-        AuctionMarkConfig config = new AuctionMarkConfig( getProperties( "auctionmark.properties" ), multiplier );
+        AuctionMarkConfig config = new AuctionMarkConfig( Util.getProperties( "oltpbench/auctionmark.properties" ), multiplier );
         AuctionMark auctionMark = new AuctionMark( executorFactory, config, false, QueryMode.TABLE );
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
         auctionMark.generateData( null, progressReporter );
@@ -58,7 +59,7 @@ public class AuctionMarkCommand extends AbstractOltpBenchCommand {
 
     @Override
     protected void workload( ExecutorFactory executorFactory, int multiplier ) {
-        AuctionMarkConfig config = new AuctionMarkConfig( getProperties( "auctionmark.properties" ), multiplier );
+        AuctionMarkConfig config = new AuctionMarkConfig( Util.getProperties( "oltpbench/auctionmark.properties" ), multiplier );
         AuctionMark auctionMark = new AuctionMark( executorFactory, config, false, QueryMode.TABLE );
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
         auctionMark.execute( progressReporter, null, new File( "." ), config.numberOfThreads );

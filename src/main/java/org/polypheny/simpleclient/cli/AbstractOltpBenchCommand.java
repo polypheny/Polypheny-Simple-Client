@@ -28,11 +28,8 @@ import com.github.rvesse.airline.HelpOption;
 import com.github.rvesse.airline.annotations.AirlineModule;
 import com.github.rvesse.airline.annotations.Arguments;
 import com.github.rvesse.airline.annotations.Option;
-import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.Objects;
-import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
 import org.polypheny.simpleclient.executor.OltpBenchPolyphenyDbExecutor.OltpBenchPolyphenyDbExecutorFactory;
@@ -104,16 +101,5 @@ public abstract class AbstractOltpBenchCommand implements CliRunnable {
 
 
     protected abstract void workload( ExecutorFactory executorFactory, int multiplier );
-
-
-    protected Properties getProperties( String fileName ) {
-        Properties props = new Properties();
-        try {
-            props.load( Objects.requireNonNull( ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/oltpbench/" + fileName ) ) );
-        } catch ( IOException e ) {
-            log.error( "Exception while reading properties file", e );
-        }
-        return props;
-    }
 
 }

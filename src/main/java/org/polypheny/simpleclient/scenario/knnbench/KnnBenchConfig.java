@@ -26,6 +26,7 @@
 package org.polypheny.simpleclient.scenario.knnbench;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.Random;
 import lombok.extern.slf4j.Slf4j;
@@ -53,50 +54,17 @@ public class KnnBenchConfig extends AbstractConfig {
     public int numberOfSimpleKnnIdRealFeatureQueries;
     public int numberOfMetadataKnnIntFeatureQueries;
     public int numberOfMetadataKnnRealFeatureQueries;
-//    public final int numberOfCombinedQueries;
 
     public int limitKnnQueries;
     public String distanceNorm;
 
 
-    public KnnBenchConfig( Properties properties, int multiplier ) {
-        super( "knnBench", "polypheny-jdbc", properties );
-
-        dataStoreFeature = null;
-        dataStoreMetadata = null;
-
-        if ( getBooleanProperty( properties, "useRandomSeeds" ) ) {
-            Random tempRand = new Random();
-            randomSeedInsert = tempRand.nextLong();
-            randomSeedQuery = tempRand.nextLong();
-        } else {
-            randomSeedInsert = getLongProperty( properties, "randomSeedInsert" );
-            randomSeedQuery = getLongProperty( properties, "randomSeedQuery" );
-        }
-
-        dimensionFeatureVectors = getIntProperty( properties, "dimensionFeatureVectors" );
-        batchSizeInserts = getIntProperty( properties, "batchSizeInserts" );
-        numberOfEntries = getIntProperty( properties, "numberOfEntries" ) * multiplier;
-
-        batchSizeQueries = getIntProperty( properties, "batchSizeQueries" );
-        numberOfSimpleKnnIntFeatureQueries = getIntProperty( properties, "numberOfSimpleKnnIntFeatureQueries" ) * multiplier;
-        numberOfSimpleKnnRealFeatureQueries = getIntProperty( properties, "numberOfSimpleKnnRealFeatureQueries" ) * multiplier;
-        numberOfSimpleMetadataQueries = getIntProperty( properties, "numberOfSimpleMetadataQueries" ) * multiplier;
-        numberOfSimpleKnnIdIntFeatureQueries = getIntProperty( properties, "numberOfSimpleKnnIdIntFeatureQueries" ) * multiplier;
-        numberOfSimpleKnnIdRealFeatureQueries = getIntProperty( properties, "numberOfSimpleKnnIdRealFeatureQueries" ) * multiplier;
-        numberOfMetadataKnnIntFeatureQueries = getIntProperty( properties, "numberOfMetadataKnnIntFeatureQueries" ) * multiplier;
-        numberOfMetadataKnnRealFeatureQueries = getIntProperty( properties, "numberOfMetadataKnnRealFeatureQueries" ) * multiplier;
-        limitKnnQueries = getIntProperty( properties, "limitKnnQueries" );
-        distanceNorm = getStringProperty( properties, "distanceNorm" );
-    }
-
-
-    public KnnBenchConfig( Map<String, String> cdl ) {
-        super( "gavel", cdl.get( "store" ), cdl );
+    public KnnBenchConfig( Map<String, String> cdl, String system, int multiplier ) {
+        super( "knnBench", system, cdl );
 
         dataStoreFeature = cdl.get( "dataStoreFeature" );
         dataStoreMetadata = cdl.get( "dataStoreMetadata" );
-        if ( dataStoreFeature.equals( dataStoreMetadata ) ) {
+        if ( Objects.equals( dataStoreFeature, dataStoreMetadata ) ) {
             dataStores.add( dataStoreFeature );
         } else {
             dataStores.add( dataStoreFeature );
@@ -114,31 +82,29 @@ public class KnnBenchConfig extends AbstractConfig {
 
         dimensionFeatureVectors = Integer.parseInt( cdl.get( "dimensionFeatureVectors" ) );
         batchSizeInserts = Integer.parseInt( cdl.get( "batchSizeInserts" ) );
-        numberOfEntries = Integer.parseInt( cdl.get( "numberOfEntries" ) );
+        numberOfEntries = Integer.parseInt( cdl.get( "numberOfEntries" ) ) * multiplier;
 
         batchSizeQueries = Integer.parseInt( cdl.get( "batchSizeQueries" ) );
-        numberOfSimpleKnnIntFeatureQueries = Integer.parseInt( cdl.get( "numberOfSimpleKnnIntFeatureQueries" ) );
-        numberOfSimpleKnnRealFeatureQueries = Integer.parseInt( cdl.get( "numberOfSimpleKnnRealFeatureQueries" ) );
-        numberOfSimpleMetadataQueries = Integer.parseInt( cdl.get( "numberOfSimpleMetadataQueries" ) );
-        numberOfSimpleKnnIdIntFeatureQueries = Integer.parseInt( cdl.get( "numberOfSimpleKnnIdIntFeatureQueries" ) );
-        numberOfSimpleKnnIdRealFeatureQueries = Integer.parseInt( cdl.get( "numberOfSimpleKnnIdRealFeatureQueries" ) );
-        numberOfMetadataKnnIntFeatureQueries = Integer.parseInt( cdl.get( "numberOfMetadataKnnIntFeatureQueries" ) );
-        numberOfMetadataKnnRealFeatureQueries = Integer.parseInt( cdl.get( "numberOfMetadataKnnRealFeatureQueries" ) );
-//        numberOfCombinedQueries = getIntProperty( properties, "numberOfCombinedQueries" ) * multiplier;
+        numberOfSimpleKnnIntFeatureQueries = Integer.parseInt( cdl.get( "numberOfSimpleKnnIntFeatureQueries" ) ) * multiplier;
+        numberOfSimpleKnnRealFeatureQueries = Integer.parseInt( cdl.get( "numberOfSimpleKnnRealFeatureQueries" ) ) * multiplier;
+        numberOfSimpleMetadataQueries = Integer.parseInt( cdl.get( "numberOfSimpleMetadataQueries" ) ) * multiplier;
+        numberOfSimpleKnnIdIntFeatureQueries = Integer.parseInt( cdl.get( "numberOfSimpleKnnIdIntFeatureQueries" ) ) * multiplier;
+        numberOfSimpleKnnIdRealFeatureQueries = Integer.parseInt( cdl.get( "numberOfSimpleKnnIdRealFeatureQueries" ) ) * multiplier;
+        numberOfMetadataKnnIntFeatureQueries = Integer.parseInt( cdl.get( "numberOfMetadataKnnIntFeatureQueries" ) ) * multiplier;
+        numberOfMetadataKnnRealFeatureQueries = Integer.parseInt( cdl.get( "numberOfMetadataKnnRealFeatureQueries" ) ) * multiplier;
         limitKnnQueries = Integer.parseInt( cdl.get( "limitKnnQueries" ) );
         distanceNorm = cdl.get( "distanceNorm" ).trim();
+    }
+
+
+    public KnnBenchConfig( Map<String, String> cdl ) {
+        this( cdl, cdl.get( "store" ), 1 );
     }
 
 
     // For MultiBench
     protected KnnBenchConfig( String scenario, String system, Map<String, String> cdl ) {
         super( scenario, system, cdl );
-    }
-
-
-    // For MultiBench
-    protected KnnBenchConfig( String scenario, String system, Properties properties ) {
-        super( scenario, system, properties );
     }
 
 

@@ -57,27 +57,19 @@ public class AuctionMarkConfig extends AbstractOltpBenchConfig {
     public int updateItemWeight;
 
 
-    public AuctionMarkConfig( Properties properties, int multiplier ) {
+    public AuctionMarkConfig( Map<String, String> properties, int multiplier ) {
         super( properties, multiplier, "auctionmark", "oltpbench-polypheny" );
-
-        time = getLongProperty( properties, "time" );
-        rate = getStringProperty( properties, "rate" );
-
-        getItemWeight = getIntProperty( properties, "getItemWeight" );
-        getUserInfoWeight = getIntProperty( properties, "getUserInfoWeight" );
-        newBidWeight = getIntProperty( properties, "newBidWeight" );
-        newCommentWeight = getIntProperty( properties, "newCommentWeight" );
-        newCommentResponseWeight = getIntProperty( properties, "newCommentResponseWeight" );
-        newFeedbackWeight = getIntProperty( properties, "newFeedbackWeight" );
-        newItemWeight = getIntProperty( properties, "newItemWeight" );
-        newPurchaseWeight = getIntProperty( properties, "newPurchaseWeight" );
-        updateItemWeight = getIntProperty( properties, "updateItemWeight" );
+        settings( properties );
     }
 
 
     public AuctionMarkConfig( Map<String, String> cdl ) {
         super( cdl, "auctionmark", cdl.get( "store" ) );
+        settings( cdl );
+    }
 
+
+    private void settings( Map<String, String> cdl ) {
         time = Long.parseLong( cdl.get( "time" ) );
         rate = cdl.get( "rate" );
 

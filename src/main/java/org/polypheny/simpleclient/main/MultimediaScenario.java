@@ -25,10 +25,8 @@
 package org.polypheny.simpleclient.main;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.Objects;
-import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
+import org.polypheny.simpleclient.Util;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
 import org.polypheny.simpleclient.scenario.multimedia.MultimediaBench;
 import org.polypheny.simpleclient.scenario.multimedia.MultimediaConfig;
@@ -38,14 +36,14 @@ import org.polypheny.simpleclient.scenario.multimedia.MultimediaConfig;
 public class MultimediaScenario {
 
     public static void schema( ExecutorFactory executorFactory, boolean commitAfterEveryQuery ) {
-        MultimediaConfig config = new MultimediaConfig( getProperties(), 1 );
+        MultimediaConfig config = new MultimediaConfig( Util.getProperties( "multimedia/multimedia.properties" ), "polypheny-rest", 1 );
         MultimediaBench multimediaBench = new MultimediaBench( executorFactory, config, commitAfterEveryQuery, false );
         multimediaBench.createSchema( null, true );
     }
 
 
     public static void data( ExecutorFactory executorFactory, int multiplier, boolean commitAfterEveryQuery ) {
-        MultimediaConfig config = new MultimediaConfig( getProperties(), multiplier );
+        MultimediaConfig config = new MultimediaConfig( Util.getProperties( "multimedia/multimedia.properties" ), "polypheny-rest", multiplier );
         MultimediaBench multimediaBench = new MultimediaBench( executorFactory, config, commitAfterEveryQuery, false );
 
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
@@ -54,7 +52,7 @@ public class MultimediaScenario {
 
 
     public static void workload( ExecutorFactory executorFactory, int multiplier, boolean commitAfterEveryQuery, boolean writeCsv, boolean dumpQueryList ) {
-        MultimediaConfig config = new MultimediaConfig( getProperties(), multiplier );
+        MultimediaConfig config = new MultimediaConfig( Util.getProperties( "multimedia/multimedia.properties" ), "polypheny-rest", multiplier );
         MultimediaBench multimediaBench = new MultimediaBench( executorFactory, config, commitAfterEveryQuery, dumpQueryList );
 
         final CsvWriter csvWriter;
@@ -70,22 +68,12 @@ public class MultimediaScenario {
 
 
     public static void warmup( ExecutorFactory executorFactory, int multiplier, boolean commitAfterEveryQuery, boolean dumpQueryList ) {
-        MultimediaConfig config = new MultimediaConfig( getProperties(), multiplier );
+        MultimediaConfig config = new MultimediaConfig( Util.getProperties( "multimedia/multimedia.properties" ), "polypheny-rest", multiplier );
         MultimediaBench multimediaBench = new MultimediaBench( executorFactory, config, commitAfterEveryQuery, dumpQueryList );
 
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
         multimediaBench.warmUp( progressReporter );
     }
 
-
-    private static Properties getProperties() {
-        Properties props = new Properties();
-        try {
-            props.load( Objects.requireNonNull( ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/multimedia/multimedia.properties" ) ) );
-        } catch ( IOException e ) {
-            log.error( "Exception while reading properties file", e );
-        }
-        return props;
-    }
 
 }

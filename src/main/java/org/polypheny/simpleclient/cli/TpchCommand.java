@@ -28,6 +28,7 @@ import com.github.rvesse.airline.annotations.Command;
 import java.io.File;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.QueryMode;
+import org.polypheny.simpleclient.Util;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
 import org.polypheny.simpleclient.main.ProgressBar;
 import org.polypheny.simpleclient.main.ProgressReporter;
@@ -41,7 +42,7 @@ public class TpchCommand extends AbstractOltpBenchCommand {
 
     @Override
     protected void schema( ExecutorFactory executorFactory ) {
-        TpchConfig config = new TpchConfig( getProperties( "tpch.properties" ), 1 );
+        TpchConfig config = new TpchConfig( Util.getProperties( "oltpbench/tpch.properties" ), 1 );
         Tpch tpch = new Tpch( executorFactory, config, false, QueryMode.TABLE );
         tpch.createSchema( null, true );
     }
@@ -49,7 +50,7 @@ public class TpchCommand extends AbstractOltpBenchCommand {
 
     @Override
     protected void data( ExecutorFactory executorFactory, int multiplier ) {
-        TpchConfig config = new TpchConfig( getProperties( "tpch.properties" ), multiplier );
+        TpchConfig config = new TpchConfig( Util.getProperties( "oltpbench/tpch.properties" ), multiplier );
         Tpch tpch = new Tpch( executorFactory, config, false, QueryMode.TABLE );
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
         tpch.generateData( null, progressReporter );
@@ -58,7 +59,7 @@ public class TpchCommand extends AbstractOltpBenchCommand {
 
     @Override
     protected void workload( ExecutorFactory executorFactory, int multiplier ) {
-        TpchConfig config = new TpchConfig( getProperties( "tpch.properties" ), multiplier );
+        TpchConfig config = new TpchConfig( Util.getProperties( "oltpbench/tpch.properties" ), multiplier );
         Tpch tpch = new Tpch( executorFactory, config, false, QueryMode.TABLE );
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
         tpch.execute( progressReporter, null, new File( "." ), config.numberOfThreads );

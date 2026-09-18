@@ -75,52 +75,12 @@ public abstract class AbstractConfig {
     public final int progressReportBase = 100;
 
 
-    protected AbstractConfig( String scenario, String system, Properties properties ) {
-        this.scenario = scenario;
-        this.system = system;
-
-        pdbBranch = "proto-without-grpc";
-        pdbCommit = "";
-        puiBranch = "master";
-        buildUi = false;
-        resetCatalog = false;
-        memoryCatalog = false;
-        deployStoresUsingDocker = true;
-        restartAfterLoadingData = false;
-
-        dataStores.add( "hsqldb" );
-        planAndImplementationCaching = "Both";
-
-        router = "icarus"; // For old routing, to be removed
-
-        routers = new String[]{ "Simple", "Icarus", "FullPlacement" };
-        newTablePlacementStrategy = "All";
-        planSelectionStrategy = "Best";
-        preCostRatio = 50;
-        postCostRatio = 50;
-        routingCache = true;
-        postCostAggregation = "onWarmup";
-
-        numberOfThreads = getIntProperty( properties, "numberOfThreads" );
-        numberOfWarmUpIterations = getIntProperty( properties, "numberOfWarmUpIterations" );
-
-        workloadMonitoringExecutingWorkload = false;
-        workloadMonitoringLoadingData = true;
-        workloadMonitoringWarmup = true;
-
-        lockingLevel = null;
-
-        // This is hacky but ensures that VersionSwitch is initialized when running tasks from CLI.
-        PolyphenyVersionSwitch.initialize( this );
-    }
-
-
     protected AbstractConfig( String scenario, String system, Map<String, String> cdl ) {
         this.system = system;
         this.scenario = scenario;
 
-        pdbBranch = cdl.get( "pdbBranch" );
-        pdbCommit = cdl.get( "pdbCommit" );
+        pdbBranch = cdlGetOrDefault( cdl, "pdbBranch", "master" );
+        pdbCommit = cdl.getOrDefault( "pdbCommit", "" );
         puiBranch = "master";
         buildUi = false;
         resetCatalog = true;
@@ -132,18 +92,18 @@ public abstract class AbstractConfig {
 
         deployStoresUsingDocker = Boolean.parseBoolean( cdlGetOrDefault( cdl, "deployStoresUsingDocker", "true" ) );
 
-        memoryCatalog = Boolean.parseBoolean( cdl.get( "memoryCatalog" ) );
+        memoryCatalog = Boolean.parseBoolean( cdl.getOrDefault( "memoryCatalog", "false" ) );
 
         numberOfThreads = Integer.parseInt( cdl.get( "numberOfThreads" ) );
         numberOfWarmUpIterations = Integer.parseInt( cdlGetOrDefault( cdl, "numberOfWarmUpIterations", "4" ) );
 
-        String dataStoresStr = cdlGetOrDefault( cdl, "dataStore", null );
-        if ( dataStoresStr != null ) {
+        String dataStoresStr = cdlGetOrDefault( cdl, "dataStore", "hsqldb" );
+        if ( dataStoresStr != null && !dataStoresStr.isBlank() ) {
             dataStores.addAll( Arrays.asList( dataStoresStr.split( "_" ) ) );
         }
         planAndImplementationCaching = cdlGetOrDefault( cdl, "planAndImplementationCaching", "Both" );
 
-        router = cdl.get( "router" ); // For old routing, to be removed
+        router = cdl.getOrDefault( "router", "icarus" ); // For old routing, to be removed
 
         routers = cdlGetOrDefault( cdl, "routers", "Simple_Icarus_FullPlacement" ).split( "_" );
         newTablePlacementStrategy = cdlGetOrDefault( cdl, "newTablePlacementStrategy", "Single" );
@@ -159,6 +119,9 @@ public abstract class AbstractConfig {
         workloadMonitoringWarmup = Boolean.parseBoolean( cdlGetOrDefault( cdl, "workloadMonitoringWarmup", "true" ) );
 
         lockingLevel = cdlGetOrDefault( cdl, "lockingLevel", null );
+
+        // This is hacky but ensures that VersionSwitch is initialized when running tasks from CLI.
+        PolyphenyVersionSwitch.initialize( this );
     }
 
 

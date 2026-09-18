@@ -25,11 +25,9 @@
 package org.polypheny.simpleclient.main;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.Objects;
-import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.QueryMode;
+import org.polypheny.simpleclient.Util;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
 import org.polypheny.simpleclient.scenario.gavel.Gavel;
 import org.polypheny.simpleclient.scenario.gavel.GavelConfig;
@@ -39,14 +37,14 @@ import org.polypheny.simpleclient.scenario.gavel.GavelConfig;
 public class GavelScenario {
 
     public static void schema( ExecutorFactory executorFactory, boolean commitAfterEveryQuery, QueryMode queryMode ) {
-        GavelConfig config = new GavelConfig( getProperties(), 1 );
+        GavelConfig config = new GavelConfig( Util.getProperties( "gavel/gavel.properties" ), "polypheny-jdbc", 1 );
         Gavel gavel = new Gavel( executorFactory, config, commitAfterEveryQuery, false, queryMode );
         gavel.createSchema( null, true );
     }
 
 
     public static void data( ExecutorFactory executorFactory, int multiplier, boolean commitAfterEveryQuery, QueryMode queryMode ) {
-        GavelConfig config = new GavelConfig( getProperties(), multiplier );
+        GavelConfig config = new GavelConfig( Util.getProperties( "gavel/gavel.properties" ), "polypheny-jdbc", multiplier );
         Gavel gavel = new Gavel( executorFactory, config, commitAfterEveryQuery, false, queryMode );
 
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
@@ -55,7 +53,7 @@ public class GavelScenario {
 
 
     public static void workload( ExecutorFactory executorFactory, int multiplier, boolean commitAfterEveryQuery, boolean writeCsv, boolean dumpQueryList, QueryMode queryMode ) {
-        GavelConfig config = new GavelConfig( getProperties(), multiplier );
+        GavelConfig config = new GavelConfig( Util.getProperties( "gavel/gavel.properties" ), "polypheny-jdbc", multiplier );
         Gavel gavel = new Gavel( executorFactory, config, commitAfterEveryQuery, dumpQueryList, queryMode );
 
         final CsvWriter csvWriter;
@@ -70,22 +68,11 @@ public class GavelScenario {
 
 
     public static void warmup( ExecutorFactory executorFactory, int multiplier, boolean commitAfterEveryQuery, boolean dumpQueryList, QueryMode queryMode ) {
-        GavelConfig config = new GavelConfig( getProperties(), 1 );
+        GavelConfig config = new GavelConfig( Util.getProperties( "gavel/gavel.properties" ), "polypheny-jdbc", 1 );
         Gavel gavel = new Gavel( executorFactory, config, commitAfterEveryQuery, dumpQueryList, queryMode );
 
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
         gavel.warmUp( progressReporter );
-    }
-
-
-    private static Properties getProperties() {
-        Properties props = new Properties();
-        try {
-            props.load( Objects.requireNonNull( ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/gavel/gavel.properties" ) ) );
-        } catch ( IOException e ) {
-            log.error( "Exception while reading properties file", e );
-        }
-        return props;
     }
 
 }

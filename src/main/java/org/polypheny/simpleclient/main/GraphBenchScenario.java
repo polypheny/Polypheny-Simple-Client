@@ -25,10 +25,8 @@
 package org.polypheny.simpleclient.main;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.Objects;
-import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
+import org.polypheny.simpleclient.Util;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
 import org.polypheny.simpleclient.scenario.graph.GraphBench;
 import org.polypheny.simpleclient.scenario.graph.GraphBenchConfig;
@@ -38,14 +36,14 @@ import org.polypheny.simpleclient.scenario.graph.GraphBenchConfig;
 public class GraphBenchScenario {
 
     public static void schema( ExecutorFactory executorFactory, boolean commitAfterEveryQuery ) {
-        GraphBenchConfig config = new GraphBenchConfig( getProperties(), 1 );
+        GraphBenchConfig config = new GraphBenchConfig( Util.getProperties( "graph/graph.properties" ), "polypheny-cypher", 1 );
         GraphBench graphBench = new GraphBench( executorFactory, config, commitAfterEveryQuery, false );
         graphBench.createSchema( null, true );
     }
 
 
     public static void data( ExecutorFactory executorFactory, int multiplier, boolean commitAfterEveryQuery ) {
-        GraphBenchConfig config = new GraphBenchConfig( getProperties(), multiplier );
+        GraphBenchConfig config = new GraphBenchConfig( Util.getProperties( "graph/graph.properties" ), "polypheny-cypher", multiplier );
         GraphBench graphBench = new GraphBench( executorFactory, config, commitAfterEveryQuery, false );
 
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
@@ -54,7 +52,7 @@ public class GraphBenchScenario {
 
 
     public static void workload( ExecutorFactory executorFactory, int multiplier, boolean commitAfterEveryQuery, boolean writeCsv, boolean dumpQueryList ) {
-        GraphBenchConfig config = new GraphBenchConfig( getProperties(), multiplier );
+        GraphBenchConfig config = new GraphBenchConfig( Util.getProperties( "graph/graph.properties" ), "polypheny-cypher", multiplier );
         GraphBench graphBench = new GraphBench( executorFactory, config, commitAfterEveryQuery, dumpQueryList );
 
         final CsvWriter csvWriter;
@@ -70,22 +68,12 @@ public class GraphBenchScenario {
 
 
     public static void warmup( ExecutorFactory executorFactory, int multiplier, boolean commitAfterEveryQuery, boolean dumpQueryList ) {
-        GraphBenchConfig config = new GraphBenchConfig( getProperties(), multiplier );
+        GraphBenchConfig config = new GraphBenchConfig( Util.getProperties( "graph/graph.properties" ), "polypheny-cypher", multiplier );
         GraphBench graphBench = new GraphBench( executorFactory, config, commitAfterEveryQuery, dumpQueryList );
 
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
         graphBench.warmUp( progressReporter );
     }
 
-
-    private static Properties getProperties() {
-        Properties props = new Properties();
-        try {
-            props.load( Objects.requireNonNull( ClassLoader.getSystemResourceAsStream( "org/polypheny/simpleclient/scenario/graph/graph.properties" ) ) );
-        } catch ( IOException e ) {
-            log.error( "Exception while reading properties file", e );
-        }
-        return props;
-    }
 
 }

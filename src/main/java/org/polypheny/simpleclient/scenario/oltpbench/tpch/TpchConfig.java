@@ -28,7 +28,6 @@ import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.OutputKeys;
@@ -51,25 +50,25 @@ public class TpchConfig extends AbstractOltpBenchConfig {
     public int iterations;
 
 
-    public TpchConfig( Properties properties, int multiplier ) {
+    public TpchConfig( Map<String, String> properties, int multiplier ) {
         super( properties, multiplier, "tpch", "oltpbench-polypheny" );
-
-        rate = getStringProperty( properties, "rate" );
-        batchSize = 128;
-
-        transactionTypes = Arrays.asList( getStringProperty( properties, "transactionTypes" ).split( "," ) );
+        settings( properties );
         iterations = multiplier;
     }
 
 
     public TpchConfig( Map<String, String> cdl ) {
         super( cdl, "tpch", cdl.get( "store" ) );
+        settings( cdl );
+        iterations = Integer.parseInt( cdl.get( "iterations" ) );
+    }
 
+
+    private void settings( Map<String, String> cdl ) {
         rate = cdl.get( "rate" );
         batchSize = 128;
 
         transactionTypes = Arrays.asList( cdl.get( "transactionTypes" ).split( "," ) );
-        iterations = Integer.parseInt( cdl.get( "iterations" ) );
     }
 
 

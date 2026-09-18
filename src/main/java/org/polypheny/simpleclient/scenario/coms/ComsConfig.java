@@ -27,8 +27,6 @@ package org.polypheny.simpleclient.scenario.coms;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
-import java.util.stream.Collectors;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import org.polypheny.simpleclient.cli.Mode;
@@ -79,74 +77,14 @@ public class ComsConfig extends AbstractConfig {
     public double inverseOlapRate;
 
 
-    public ComsConfig( String system, Properties properties, int multiplier ) {
-        super( "coms", system, properties );
-
-        cycles = multiplier;
-        mode = Mode.valueOf( system.toUpperCase() );
-        threadDistribution = Arrays.stream( getStringProperty( properties, "threadDistribution" ).split( "_" ) ).map( Integer::parseInt ).collect( Collectors.toList() );
-
-        seed = getLongProperty( properties, "seed" );
-
-        createIndexes = getBooleanProperty( properties, "createIndexes" );
-
-        networkScale = getIntProperty( properties, "networkScale" );
-        pcDynConfigsMax = getIntProperty( properties, "pcDynConfigsMax" );
-        switchConfigs = getIntProperty( properties, "switchConfigs" );
-        mobileDynConfigsMax = getIntProperty( properties, "mobileDynConfigsMax" );
-
-        connectionConfigs = getIntProperty( properties, "connectionConfigs" );
-
-        apDynConfigs = getIntProperty( properties, "connectionConfigs" );
-
-        nestingDepth = getIntProperty( properties, "nestingDepth" );
-
-        graphCreateBatch = getIntProperty( properties, "graphCreateBatch" );
-
-        docCreateBatch = getIntProperty( properties, "docCreateBatch" );
-        relCreateBatch = getIntProperty( properties, "relCreateBatch" );
-
-        allowNegative = getBooleanProperty( properties, "allowNegative" );
-
-        graphStore = getStringProperty( properties, "graphStore" );
-        docStore = getStringProperty( properties, "docStore" );
-        relStore = getStringProperty( properties, "relStore" );
-
-        removeLogs = getDoubleProperty( properties, "removeLogs" );
-        addLogs = getDoubleProperty( properties, "addLogs" );
-
-        changeDevice = getDoubleProperty( properties, "changeDevice" );
-        newDevice = getDoubleProperty( properties, "newDevice" );
-        removeDevice = getDoubleProperty( properties, "removeDevice" );
-
-        removeUsers = getDoubleProperty( properties, "removeUsers" );
-        addUsers = getDoubleProperty( properties, "addUsers" );
-
-        readQueries = getIntProperty( properties, "readQueries" );
-
-        newLogins = getDoubleProperty( properties, "newLogins" );
-
-        loginsPerUser = getIntProperty( properties, "loginsPerUser" );
-        users = getIntProperty( properties, "users" );
-        servers = getIntProperty( properties, "servers" );
-        clients = getIntProperty( properties, "clients" );
-
-        duration = getIntProperty( properties, "duration" );
-
-        olapRate = getDoubleProperty( properties, "olapRate" );
-
-        inverseOlapRate = 1 - olapRate;
-    }
-
-
-    public ComsConfig( Map<String, String> parsedConfig ) {
+    public ComsConfig( Map<String, String> parsedConfig, int multiplier ) {
         super( "coms", parsedConfig.get( "store" ), parsedConfig );
 
-        cycles = Integer.parseInt( parsedConfig.get( "cycles" ) );
+        cycles = multiplier;
         mode = Mode.valueOf( this.system.toUpperCase() );
         seed = Long.parseLong( parsedConfig.get( "seed" ) );
 
-        threadDistribution = Arrays.stream( parsedConfig.get( "threadDistribution" ).split( "_" ) ).map( Integer::parseInt ).collect( Collectors.toList() );
+        threadDistribution = Arrays.stream( parsedConfig.get( "threadDistribution" ).split( "_" ) ).map( Integer::parseInt ).toList();
 
         createIndexes = Boolean.getBoolean( parsedConfig.get( "createIndexes" ) );
 
@@ -196,6 +134,11 @@ public class ComsConfig extends AbstractConfig {
         olapRate = parsePercent( parsedConfig.get( "olapRate" ) );
 
         inverseOlapRate = 1 - olapRate;
+    }
+
+
+    public ComsConfig( Map<String, String> parsedConfig ) {
+        this( parsedConfig, Integer.parseInt( parsedConfig.get( "cycles" ) ) );
     }
 
 

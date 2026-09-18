@@ -28,6 +28,7 @@ import com.github.rvesse.airline.annotations.Command;
 import java.io.File;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.QueryMode;
+import org.polypheny.simpleclient.Util;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
 import org.polypheny.simpleclient.main.ProgressBar;
 import org.polypheny.simpleclient.main.ProgressReporter;
@@ -41,7 +42,7 @@ public class TpccCommand extends AbstractOltpBenchCommand {
 
     @Override
     protected void schema( ExecutorFactory executorFactory ) {
-        TpccConfig config = new TpccConfig( getProperties( "tpcc.properties" ), 1 );
+        TpccConfig config = new TpccConfig( Util.getProperties( "tpcc/tpcc.properties" ), 1 );
         Tpcc tpcc = new Tpcc( executorFactory, config, false, QueryMode.TABLE );
         tpcc.createSchema( null, true );
     }
@@ -49,7 +50,7 @@ public class TpccCommand extends AbstractOltpBenchCommand {
 
     @Override
     protected void data( ExecutorFactory executorFactory, int multiplier ) {
-        TpccConfig config = new TpccConfig( getProperties( "tpcc.properties" ), multiplier );
+        TpccConfig config = new TpccConfig( Util.getProperties( "tpcc/tpcc.properties" ), multiplier );
         Tpcc tpcc = new Tpcc( executorFactory, config, false, QueryMode.TABLE );
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
         tpcc.generateData( null, progressReporter );
@@ -58,7 +59,7 @@ public class TpccCommand extends AbstractOltpBenchCommand {
 
     @Override
     protected void workload( ExecutorFactory executorFactory, int multiplier ) {
-        TpccConfig config = new TpccConfig( getProperties( "tpcc.properties" ), multiplier );
+        TpccConfig config = new TpccConfig( Util.getProperties( "tpcc/tpcc.properties" ), multiplier );
         Tpcc tpcc = new Tpcc( executorFactory, config, false, QueryMode.TABLE );
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
         tpcc.execute( progressReporter, null, new File( "." ), config.numberOfThreads );

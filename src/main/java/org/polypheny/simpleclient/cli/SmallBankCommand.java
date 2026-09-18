@@ -28,6 +28,7 @@ import com.github.rvesse.airline.annotations.Command;
 import java.io.File;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.QueryMode;
+import org.polypheny.simpleclient.Util;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
 import org.polypheny.simpleclient.main.ProgressBar;
 import org.polypheny.simpleclient.main.ProgressReporter;
@@ -41,7 +42,7 @@ public class SmallBankCommand extends AbstractOltpBenchCommand {
 
     @Override
     protected void schema( ExecutorFactory executorFactory ) {
-        SmallBankConfig config = new SmallBankConfig( getProperties( "smallbank.properties" ), 1 );
+        SmallBankConfig config = new SmallBankConfig( Util.getProperties( "smallbank/smallbank.properties" ), 1 );
         SmallBank smallBank = new SmallBank( executorFactory, config, false, QueryMode.TABLE );
         smallBank.createSchema( null, true );
     }
@@ -49,7 +50,7 @@ public class SmallBankCommand extends AbstractOltpBenchCommand {
 
     @Override
     protected void data( ExecutorFactory executorFactory, int multiplier ) {
-        SmallBankConfig config = new SmallBankConfig( getProperties( "smallbank.properties" ), multiplier );
+        SmallBankConfig config = new SmallBankConfig( Util.getProperties( "smallbank/smallbank.properties" ), multiplier );
         SmallBank smallBank = new SmallBank( executorFactory, config, false, QueryMode.TABLE );
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
         smallBank.generateData( null, progressReporter );
@@ -58,7 +59,7 @@ public class SmallBankCommand extends AbstractOltpBenchCommand {
 
     @Override
     protected void workload( ExecutorFactory executorFactory, int multiplier ) {
-        SmallBankConfig config = new SmallBankConfig( getProperties( "smallbank.properties" ), multiplier );
+        SmallBankConfig config = new SmallBankConfig( Util.getProperties( "smallbank/smallbank.properties" ), multiplier );
         SmallBank smallBank = new SmallBank( executorFactory, config, false, QueryMode.TABLE );
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
         smallBank.execute( progressReporter, null, new File( "." ), config.numberOfThreads );

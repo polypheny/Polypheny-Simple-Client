@@ -26,7 +26,6 @@ package org.polypheny.simpleclient.scenario.oltpbench.ycsb;
 
 import java.io.StringWriter;
 import java.util.Map;
-import java.util.Properties;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.OutputKeys;
@@ -56,30 +55,22 @@ public class YcsbConfig extends AbstractOltpBenchConfig {
     public boolean partitionTable;
 
 
-    public YcsbConfig( Properties properties, int multiplier ) {
+    public YcsbConfig( Map<String, String> properties, int multiplier ) {
         super( properties, multiplier, "ycsb", "oltpbench-polypheny" );
-
-        time = getLongProperty( properties, "time" );
-        rate = getStringProperty( properties, "rate" );
-        batchSize = 128;
-
-        readRecordWeight = getIntProperty( properties, "readRecordWeight" );
-        insertRecordWeight = getIntProperty( properties, "insertRecordWeight" );
-        scanRecordWeight = getIntProperty( properties, "scanRecordWeight" );
-        updateRecordWeight = getIntProperty( properties, "updateRecordWeight" );
-        deleteRecordWeight = getIntProperty( properties, "deleteRecordWeight" );
-        readModifyWriteRecordWeight = getIntProperty( properties, "readModifyWriteRecordWeight" );
-
-        partitionTable = getBooleanProperty( properties, "partitionTable" );
+        settings( properties );
     }
 
 
     public YcsbConfig( Map<String, String> cdl ) {
         super( cdl, "ycsb", cdl.get( "store" ) );
+        settings( cdl );
+    }
 
+
+    private void settings( Map<String, String> cdl ) {
         time = Long.parseLong( cdl.get( "time" ) );
         rate = cdl.get( "rate" );
-        if ( dataStores.size() > 1 && dataStores.contains( "neo4j" ) ) {
+        if ( dataStores.size() > 1 && dataStores.contains( "neo4j" ) ) { // TODO: Is this still relevant?
             batchSize = 1;
         } else {
             batchSize = 128;

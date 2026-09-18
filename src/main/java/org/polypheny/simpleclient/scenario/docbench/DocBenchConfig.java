@@ -50,28 +50,8 @@ public class DocBenchConfig extends AbstractConfig {
     public int numberOfPutQueries;
 
 
-    public DocBenchConfig( Properties properties, int multiplier ) {
-        super( "docbench", "polypheny-mongoql", properties );
-
-        seed = getLongProperty( properties, "seed" );
-        batchSize = getIntProperty( properties, "batchSize" );
-
-        numberOfFindQueries = getIntProperty( properties, "numberOfFindQueries" );
-        numberOfUpdateQueries = getIntProperty( properties, "numberOfUpdateQueries" );
-        numberOfPutQueries = getIntProperty( properties, "numberOfPutQueries" );
-
-        numberOfDocuments = getIntProperty( properties, "numberOfDocuments" );
-        minNumberOfAttributes = getIntProperty( properties, "minNumberOfAttributes" );
-        maxNumberOfAttributes = getIntProperty( properties, "maxNumberOfAttributes" );
-        sizeOfAttributesPool = getIntProperty( properties, "sizeOfAttributesPool" );
-        sizeOfValuesPool = getIntProperty( properties, "sizeOfValuesPool" );
-        valuesStringMinLength = getIntProperty( properties, "valuesStringMinLength" );
-        valuesStringMaxLength = getIntProperty( properties, "valuesStringMaxLength" );
-    }
-
-
-    public DocBenchConfig( Map<String, String> cdl ) {
-        super( "docbench", cdl.get( "store" ), cdl );
+    public DocBenchConfig( Map<String, String> cdl, String system, int multiplier ) {
+        super( "docbench", system, cdl );
 
         seed = Long.parseLong( cdl.get( "seed" ) );
         batchSize = Integer.parseInt( cdl.get( "batchSize" ) );
@@ -90,15 +70,14 @@ public class DocBenchConfig extends AbstractConfig {
     }
 
 
-    // For MultiBench
-    protected DocBenchConfig( String scenario, String system, Map<String, String> cdl ) {
-        super( scenario, system, cdl );
+    public DocBenchConfig( Map<String, String> cdl ) {
+        this( cdl, cdl.get( "store" ), 1 );
     }
 
 
     // For MultiBench
-    protected DocBenchConfig( String scenario, String system, Properties properties ) {
-        super( scenario, system, properties );
+    protected DocBenchConfig( String scenario, String system, Map<String, String> cdl ) {
+        super( scenario, system, cdl );
     }
 
 

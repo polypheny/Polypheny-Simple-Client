@@ -25,7 +25,7 @@
 package org.polypheny.simpleclient.scenario.oltpbench;
 
 import java.util.Map;
-import java.util.Properties;
+import java.util.Objects;
 import org.polypheny.simpleclient.scenario.AbstractConfig;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -38,21 +38,17 @@ public abstract class AbstractOltpBenchConfig extends AbstractConfig {
     public int warmupTime;
 
 
-    public AbstractOltpBenchConfig( Properties properties, int multiplier, String scenario, String system ) {
+    public AbstractOltpBenchConfig( Map<String, String> properties, int multiplier, String scenario, String system ) {
         super( scenario, system, properties );
 
-        //batchSize = getIntProperty( properties, "batchSize"); // 128
+        warmupTime = Integer.parseInt( cdlGetOrDefault( properties, "warmupTime", "0" ) );
         scaleFactor = multiplier;
-        warmupTime = 0;
-        //loaderThreads
+
     }
 
 
     public AbstractOltpBenchConfig( Map<String, String> cdl, String scenario, String system ) {
-        super( scenario, system, updateCdl( cdl ) );
-
-        warmupTime = Integer.parseInt( cdl.get( "warmupTime" ) );
-        scaleFactor = Integer.parseInt( cdl.get( "scaleFactor" ) );
+        this(updateCdl( cdl ), Integer.parseInt( cdl.get( "scaleFactor" ) ), scenario, system);
     }
 
 

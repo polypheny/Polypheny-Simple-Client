@@ -26,7 +26,6 @@ package org.polypheny.simpleclient.scenario.oltpbench.tpcc;
 
 import java.io.StringWriter;
 import java.util.Map;
-import java.util.Properties;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.OutputKeys;
@@ -56,26 +55,19 @@ public class TpccConfig extends AbstractOltpBenchConfig {
     public boolean partitionItemTable;
 
 
-    public TpccConfig( Properties properties, int multiplier ) {
+    public TpccConfig( Map<String, String> properties, int multiplier ) {
         super( properties, multiplier, "tpcc", "oltpbench-polypheny" );
-
-        time = getLongProperty( properties, "time" );
-        rate = getStringProperty( properties, "rate" );
-        batchSize = 128;
-
-        newOrderWeight = getIntProperty( properties, "newOrderWeight" );
-        paymentWeight = getIntProperty( properties, "paymentWeight" );
-        orderStatusWeight = getIntProperty( properties, "orderStatusWeight" );
-        deliveryWeight = getIntProperty( properties, "deliveryWeight" );
-        stockLevelWeight = getIntProperty( properties, "stockLevelWeight" );
-
-        partitionItemTable = getBooleanProperty( properties, "partitionItemTable" );
+        settings( properties );
     }
 
 
     public TpccConfig( Map<String, String> cdl ) {
         super( cdl, "tpcc", cdl.get( "store" ) );
+        settings( cdl );
+    }
 
+
+    private void settings( Map<String, String> cdl ) {
         time = Long.parseLong( cdl.get( "time" ) );
         rate = cdl.get( "rate" );
         batchSize = 128;

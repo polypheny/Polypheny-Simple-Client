@@ -55,25 +55,19 @@ public class SmallBankConfig extends AbstractOltpBenchConfig {
     public int writeCheckWeight;
 
 
-    public SmallBankConfig( Properties properties, int multiplier ) {
+    public SmallBankConfig( Map<String, String> properties, int multiplier ) {
         super( properties, multiplier, "smallbank", "oltpbench-polypheny" );
-
-        time = getLongProperty( properties, "time" );
-        rate = getStringProperty( properties, "rate" );
-        batchSize = 128;
-
-        amalgamateWeight = getIntProperty( properties, "amalgamateWeight" );
-        balanceWeight = getIntProperty( properties, "balanceWeight" );
-        depositCheckingWeight = getIntProperty( properties, "depositCheckingWeight" );
-        sendPaymentWeight = getIntProperty( properties, "sendPaymentWeight" );
-        transactSavingsWeight = getIntProperty( properties, "transactSavingsWeight" );
-        writeCheckWeight = getIntProperty( properties, "writeCheckWeight" );
+        settings( properties );
     }
 
 
     public SmallBankConfig( Map<String, String> cdl ) {
         super( cdl, "smallbank", cdl.get( "store" ) );
+        settings( cdl );
+    }
 
+
+    private void settings( Map<String, String> cdl ) {
         time = Long.parseLong( cdl.get( "time" ) );
         rate = cdl.get( "rate" );
         batchSize = 128;

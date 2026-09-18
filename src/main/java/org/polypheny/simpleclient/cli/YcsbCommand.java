@@ -28,6 +28,7 @@ import com.github.rvesse.airline.annotations.Command;
 import java.io.File;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.QueryMode;
+import org.polypheny.simpleclient.Util;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
 import org.polypheny.simpleclient.main.ProgressBar;
 import org.polypheny.simpleclient.main.ProgressReporter;
@@ -41,7 +42,7 @@ public class YcsbCommand extends AbstractOltpBenchCommand {
 
     @Override
     protected void schema( ExecutorFactory executorFactory ) {
-        YcsbConfig config = new YcsbConfig( getProperties( "ycsb.properties" ), 1 );
+        YcsbConfig config = new YcsbConfig( Util.getProperties( "oltpbench/ycsb.properties" ), 1 );
         Ycsb ycsb = new Ycsb( executorFactory, config, false, QueryMode.TABLE );
         ycsb.createSchema( null, true );
     }
@@ -49,7 +50,7 @@ public class YcsbCommand extends AbstractOltpBenchCommand {
 
     @Override
     protected void data( ExecutorFactory executorFactory, int multiplier ) {
-        YcsbConfig config = new YcsbConfig( getProperties( "ycsb.properties" ), multiplier );
+        YcsbConfig config = new YcsbConfig( Util.getProperties( "oltpbench/ycsb.properties" ), multiplier );
         Ycsb ycsb = new Ycsb( executorFactory, config, false, QueryMode.TABLE );
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
         ycsb.generateData( null, progressReporter );
@@ -58,7 +59,7 @@ public class YcsbCommand extends AbstractOltpBenchCommand {
 
     @Override
     protected void workload( ExecutorFactory executorFactory, int multiplier ) {
-        YcsbConfig config = new YcsbConfig( getProperties( "ycsb.properties" ), multiplier );
+        YcsbConfig config = new YcsbConfig( Util.getProperties( "oltpbench/ycsb.properties" ), multiplier );
         Ycsb ycsb = new Ycsb( executorFactory, config, false, QueryMode.TABLE );
         ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
         ycsb.execute( progressReporter, null, new File( "." ), config.numberOfThreads );

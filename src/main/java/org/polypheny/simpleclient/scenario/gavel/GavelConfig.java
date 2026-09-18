@@ -25,7 +25,6 @@
 package org.polypheny.simpleclient.scenario.gavel;
 
 import java.util.Map;
-import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.scenario.AbstractConfig;
 
@@ -74,81 +73,36 @@ public class GavelConfig extends AbstractConfig {
     public boolean parallelizeUserGenerationAndAuctionGeneration;
 
 
-    public GavelConfig( Properties properties, int multiplier ) {
-        super( "gavel", "polypheny-jdbc", properties );
+    public GavelConfig( Map<String, String> cdl, String system, int multiplier ) {
+        super( "gavel", system, cdl );
 
-        numberOfAddUserQueries = getIntProperty( properties, "numberOfAddUserQueries" ) * multiplier;
-        numberOfChangePasswordQueries = getIntProperty( properties, "numberOfChangePasswordQueries" ) * multiplier;
-        numberOfAddAuctionQueries = getIntProperty( properties, "numberOfAddAuctionQueries" ) * multiplier;
-        numberOfAddBidQueries = getIntProperty( properties, "numberOfAddBidQueries" ) * multiplier;
-        numberOfChangeAuctionQueries = getIntProperty( properties, "numberOfChangeAuctionQueries" ) * multiplier;
-        numberOfGetAuctionQueries = getIntProperty( properties, "numberOfGetAuctionQueries" ) * multiplier;
-        numberOfGetTheNextHundredEndingAuctionsOfACategoryQueries = getIntProperty( properties, "numberOfGetTheNextHundredEndingAuctionsOfACategoryQueries" ) * multiplier;
-        numberOfSearchAuctionQueries = getIntProperty( properties, "numberOfSearchAuctionQueries" ) * multiplier;
-        numberOfCountAuctionsQueries = getIntProperty( properties, "numberOfCountAuctionsQueries" ) * multiplier;
-        numberOfTopTenCitiesByNumberOfCustomersQueries = getIntProperty( properties, "numberOfTopTenCitiesByNumberOfCustomersQueries" ) * multiplier;
-        numberOfCountBidsQueries = getIntProperty( properties, "numberOfCountBidsQueries" ) * multiplier;
-        numberOfGetBidQueries = getIntProperty( properties, "numberOfGetBidQueries" ) * multiplier;
-        numberOfGetUserQueries = getIntProperty( properties, "numberOfGetUserQueries" ) * multiplier;
-        numberOfGetAllBidsOnAuctionQueries = getIntProperty( properties, "numberOfGetAllBidsOnAuctionQueries" ) * multiplier;
-        numberOfGetCurrentlyHighestBidOnAuctionQueries = getIntProperty( properties, "numberOfGetCurrentlyHighestBidOnAuctionQueries" ) * multiplier;
-        totalNumOfPriceBetweenAndNotInCategoryQueries = getIntProperty( properties, "totalNumOfPriceBetweenAndNotInCategoryQueries" ) * multiplier;
-        totalNumOfHighestOverallBidQueries = getIntProperty( properties, "totalNumOfHighestOverallBidQueries" ) * multiplier;
-        totalNumOfTopHundredSellerByNumberOfAuctionsQueries = getIntProperty( properties, "totalNumOfTopHundredSellerByNumberOfAuctionsQueries" ) * multiplier;
+        numberOfGetAuctionQueries = Integer.parseInt( cdl.get( "numberOfGetAuctionQueries" ) ) * multiplier;
+        numberOfGetBidQueries = Integer.parseInt( cdl.get( "numberOfGetBidQueries" ) ) * multiplier;
+        numberOfGetUserQueries = Integer.parseInt( cdl.get( "numberOfGetUserQueries" ) ) * multiplier;
+        numberOfGetAllBidsOnAuctionQueries = Integer.parseInt( cdl.get( "numberOfGetAllBidsOnAuctionQueries" ) ) * multiplier;
+        numberOfGetCurrentlyHighestBidOnAuctionQueries = Integer.parseInt( cdl.get( "numberOfGetCurrentlyHighestBidOnAuctionQueries" ) ) * multiplier;
+        numberOfSearchAuctionQueries = Integer.parseInt( cdl.get( "numberOfSearchAuctionQueries" ) ) * multiplier;
 
-        numberOfUsers = getIntProperty( properties, "numberOfUsers" ) * multiplier;
-        numberOfAuctions = getIntProperty( properties, "numberOfAuctions" ) * multiplier;
-        numberOfCategories = getIntProperty( properties, "numberOfCategories" );
-        auctionTitleMinLength = getIntProperty( properties, "auctionTitleMinLength" );
-        auctionTitleMaxLength = getIntProperty( properties, "auctionTitleMaxLength" );
-        auctionDescriptionMinLength = getIntProperty( properties, "auctionDescriptionMinLength" );
-        auctionDescriptionMaxLength = getIntProperty( properties, "auctionDescriptionMaxLength" );
-        auctionDateMaxYearsInPast = getIntProperty( properties, "auctionDateMaxYearsInPast" );
-        auctionNumberOfDays = getIntProperty( properties, "auctionNumberOfDays" );
-        minNumberOfBidsPerAuction = getIntProperty( properties, "minNumberOfBidsPerAuction" );
-        maxNumberOfBidsPerAuction = getIntProperty( properties, "maxNumberOfBidsPerAuction" ) * multiplier;
-        minNumberOfPicturesPerAuction = getIntProperty( properties, "minNumberOfPicturesPerAuction" );
-        maxNumberOfPicturesPerAuction = getIntProperty( properties, "maxNumberOfPicturesPerAuction" ) * multiplier;
+        numberOfChangePasswordQueries = Integer.parseInt( cdl.get( "numberOfChangePasswordQueries" ) ) * multiplier;
+        numberOfChangeAuctionQueries = Integer.parseInt( cdl.get( "numberOfChangeAuctionQueries" ) ) * multiplier;
 
-        maxBatchSize = getIntProperty( properties, "maxBatchSize" );
-        usePreparedBatchForDataInsertion = true;
+        numberOfAddAuctionQueries = Integer.parseInt( cdl.get( "numberOfAddAuctionQueries" ) ) * multiplier;
+        numberOfAddUserQueries = Integer.parseInt( cdl.get( "numberOfAddUserQueries" ) ) * multiplier;
+        numberOfAddBidQueries = Integer.parseInt( cdl.get( "numberOfAddBidQueries" ) ) * multiplier;
 
-        numberOfUserGenerationThreads = getIntProperty( properties, "numberOfUserGenerationThreads" );
-        numberOfAuctionGenerationThreads = getIntProperty( properties, "numberOfAuctionGenerationThreads" );
-        parallelizeUserGenerationAndAuctionGeneration = getBooleanProperty( properties, "parallelizeUserGenerationAndAuctionGeneration" );
-    }
+        numberOfGetTheNextHundredEndingAuctionsOfACategoryQueries = Integer.parseInt( cdl.get( "numberOfGetTheNextHundredEndingAuctionsOfACategoryQueries" ) ) * multiplier;
+        numberOfCountAuctionsQueries = Integer.parseInt( cdl.get( "numberOfCountAuctionsQueries" ) ) * multiplier;
+        numberOfCountBidsQueries = Integer.parseInt( cdl.get( "numberOfCountBidsQueries" ) ) * multiplier;
 
+        numberOfTopTenCitiesByNumberOfCustomersQueries = Integer.parseInt( cdl.get( "numberOfTopTenCitiesByNumberOfCustomersQueries" ) ) * multiplier;
 
-    public GavelConfig( Map<String, String> cdl ) {
-        super( "gavel", cdl.get( "store" ), cdl );
-
-        numberOfGetAuctionQueries = Integer.parseInt( cdl.get( "numberOfGetAuctionQueries" ) );
-        numberOfGetBidQueries = Integer.parseInt( cdl.get( "numberOfGetBidQueries" ) );
-        numberOfGetUserQueries = Integer.parseInt( cdl.get( "numberOfGetUserQueries" ) );
-        numberOfGetAllBidsOnAuctionQueries = Integer.parseInt( cdl.get( "numberOfGetAllBidsOnAuctionQueries" ) );
-        numberOfGetCurrentlyHighestBidOnAuctionQueries = Integer.parseInt( cdl.get( "numberOfGetCurrentlyHighestBidOnAuctionQueries" ) );
-        numberOfSearchAuctionQueries = Integer.parseInt( cdl.get( "numberOfSearchAuctionQueries" ) );
-
-        numberOfChangePasswordQueries = Integer.parseInt( cdl.get( "numberOfChangePasswordQueries" ) );
-        numberOfChangeAuctionQueries = Integer.parseInt( cdl.get( "numberOfChangeAuctionQueries" ) );
-
-        numberOfAddAuctionQueries = Integer.parseInt( cdl.get( "numberOfAddAuctionQueries" ) );
-        numberOfAddUserQueries = Integer.parseInt( cdl.get( "numberOfAddUserQueries" ) );
-        numberOfAddBidQueries = Integer.parseInt( cdl.get( "numberOfAddBidQueries" ) );
-
-        numberOfGetTheNextHundredEndingAuctionsOfACategoryQueries = Integer.parseInt( cdl.get( "numberOfGetTheNextHundredEndingAuctionsOfACategoryQueries" ) );
-        numberOfCountAuctionsQueries = Integer.parseInt( cdl.get( "numberOfCountAuctionsQueries" ) );
-        numberOfCountBidsQueries = Integer.parseInt( cdl.get( "numberOfCountBidsQueries" ) );
-
-        numberOfTopTenCitiesByNumberOfCustomersQueries = Integer.parseInt( cdl.get( "numberOfTopTenCitiesByNumberOfCustomersQueries" ) );
-
-        totalNumOfPriceBetweenAndNotInCategoryQueries = Integer.parseInt( cdl.get( "totalNumOfPriceBetweenAndNotInCategoryQueries" ) );
-        totalNumOfHighestOverallBidQueries = Integer.parseInt( cdl.get( "totalNumOfHighestOverallBidQueries" ) );
-        totalNumOfTopHundredSellerByNumberOfAuctionsQueries = Integer.parseInt( cdl.get( "totalNumOfTopHundredSellerByNumberOfAuctionsQueries" ) );
+        totalNumOfPriceBetweenAndNotInCategoryQueries = Integer.parseInt( cdl.get( "totalNumOfPriceBetweenAndNotInCategoryQueries" ) ) * multiplier;
+        totalNumOfHighestOverallBidQueries = Integer.parseInt( cdl.get( "totalNumOfHighestOverallBidQueries" ) ) * multiplier;
+        totalNumOfTopHundredSellerByNumberOfAuctionsQueries = Integer.parseInt( cdl.get( "totalNumOfTopHundredSellerByNumberOfAuctionsQueries" ) ) * multiplier;
 
         // Data Generation
-        numberOfUsers = Integer.parseInt( cdl.get( "numberOfUsers" ) );
-        numberOfAuctions = Integer.parseInt( cdl.get( "numberOfAuctions" ) );
+        numberOfUsers = Integer.parseInt( cdl.get( "numberOfUsers" ) ) * multiplier;
+        numberOfAuctions = Integer.parseInt( cdl.get( "numberOfAuctions" ) ) * multiplier;
         numberOfCategories = Integer.parseInt( cdl.get( "numberOfCategories" ) );
         auctionTitleMinLength = Integer.parseInt( cdl.get( "auctionTitleMinLength" ) );
         auctionTitleMaxLength = Integer.parseInt( cdl.get( "auctionTitleMaxLength" ) );
@@ -157,9 +111,9 @@ public class GavelConfig extends AbstractConfig {
         auctionDateMaxYearsInPast = Integer.parseInt( cdl.get( "auctionDateMaxYearsInPast" ) );
         auctionNumberOfDays = Integer.parseInt( cdl.get( "auctionNumberOfDays" ) );
         minNumberOfBidsPerAuction = Integer.parseInt( cdl.get( "minNumberOfBidsPerAuction" ) );
-        maxNumberOfBidsPerAuction = Integer.parseInt( cdl.get( "maxNumberOfBidsPerAuction" ) );
+        maxNumberOfBidsPerAuction = Integer.parseInt( cdl.get( "maxNumberOfBidsPerAuction" ) ) * multiplier;
         minNumberOfPicturesPerAuction = Integer.parseInt( cdl.get( "minNumberOfPicturesPerAuction" ) );
-        maxNumberOfPicturesPerAuction = Integer.parseInt( cdl.get( "maxNumberOfPicturesPerAuction" ) );
+        maxNumberOfPicturesPerAuction = Integer.parseInt( cdl.get( "maxNumberOfPicturesPerAuction" ) ) * multiplier;
 
         maxBatchSize = Integer.parseInt( cdl.get( "maxBatchSize" ) );
         usePreparedBatchForDataInsertion = true;
@@ -171,15 +125,14 @@ public class GavelConfig extends AbstractConfig {
     }
 
 
-    // For MultiBench
-    protected GavelConfig( String scenario, String system, Map<String, String> cdl ) {
-        super( scenario, system, cdl );
+    public GavelConfig( Map<String, String> cdl ) {
+        this( cdl, cdl.get( "store" ), 1 );
     }
 
 
     // For MultiBench
-    protected GavelConfig( String scenario, String system, Properties properties ) {
-        super( scenario, system, properties );
+    protected GavelConfig( String scenario, String system, Map<String, String> cdl ) {
+        super( scenario, system, cdl );
     }
 
 
