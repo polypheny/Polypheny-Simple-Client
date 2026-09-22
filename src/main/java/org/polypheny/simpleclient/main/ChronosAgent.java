@@ -202,6 +202,10 @@ public class ChronosAgent extends AbstractChronosAgent {
 
         // Create Executor Factory
         Executor.ExecutorFactory executorFactory;
+        if ( !parsedConfig.containsKey( "store" ) ) {
+            throw new RuntimeException( "Store not specified" );
+        }
+
         switch ( parsedConfig.get( "store" ) ) {
             case "polypheny":
                 executorFactory = new PolyphenyDbMultiExecutorFactory( ChronosCommand.hostname );
