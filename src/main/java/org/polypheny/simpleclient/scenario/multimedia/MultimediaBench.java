@@ -36,6 +36,7 @@ import java.util.Random;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import kong.unirest.core.Unirest;
+import kong.unirest.core.UnirestInstance;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.executor.Executor;
@@ -65,11 +66,12 @@ public class MultimediaBench extends PolyphenyScenario {
     private final List<Long> measuredTimes;
     private final Map<Integer, String> queryTypes;
     private final Map<Integer, List<Long>> measuredTimePerQueryType;
+    private static final UnirestInstance unirest = Unirest.spawnInstance();
 
 
     static {
-        Unirest.config().reset();
-        Unirest.config().connectTimeout( 0 );
+        unirest.config().reset();
+        unirest.config().connectTimeout( 0 );
     }
 
 
@@ -90,6 +92,11 @@ public class MultimediaBench extends PolyphenyScenario {
     }
 
 
+    public static UnirestInstance unirest() {
+        return unirest;
+    }
+
+
     @Override
     public void createSchema( DatabaseInstance databaseInstance, boolean includingKeys ) {
         if ( queryMode != QueryMode.TABLE ) {
@@ -101,7 +108,6 @@ public class MultimediaBench extends PolyphenyScenario {
         try {
             executor = executorFactory.createExecutorInstance();
             String onStore = String.format( " ON STORE \"%s\"", findMatchingDataStoreName( config.dataStore ) );
-            executor.executeQuery( (new CreateTable( "ALTER CONFIG 'validation/validateMultimediaContentType' SET FALSE" )).getNewQuery() );
             executor.executeQuery( (new CreateTable( "CREATE TABLE IF NOT EXISTS \"users\" (\"id\" INTEGER NOT NULL, \"firstName\" VARCHAR(1000) NOT NULL, \"lastName\" VARCHAR(1000) NOT NULL, \"email\" VARCHAR(1000) NOT NULL, \"password\" VARCHAR(1000) NOT NULL, \"profile_pic\" IMAGE NOT NULL, PRIMARY KEY(\"id\"))" + onStore )).getNewQuery() );
             executor.executeQuery( (new CreateTable( "CREATE TABLE IF NOT EXISTS \"album\" (\"id\" INTEGER NOT NULL, \"user_id\" INTEGER NOT NULL, \"name\" VARCHAR(200) NOT NULL, PRIMARY KEY(\"id\"))" + onStore )).getNewQuery() );
             executor.executeQuery( (new CreateTable( "CREATE TABLE IF NOT EXISTS \"media\" (\"id\" INTEGER NOT NULL, \"timestamp\" TIMESTAMP NOT NULL, \"album_id\" INTEGER NOT NULL, \"img\" IMAGE, \"video\" VIDEO, \"audio\" AUDIO, PRIMARY KEY(\"id\"))" + onStore )).getNewQuery() );

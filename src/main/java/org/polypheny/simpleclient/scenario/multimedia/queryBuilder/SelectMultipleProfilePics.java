@@ -30,10 +30,10 @@ import java.util.Map;
 import java.util.StringJoiner;
 import java.util.concurrent.ThreadLocalRandom;
 import kong.unirest.core.HttpRequest;
-import kong.unirest.core.Unirest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
+import org.polypheny.simpleclient.scenario.multimedia.MultimediaBench;
 
 
 public class SelectMultipleProfilePics extends QueryBuilder {
@@ -98,7 +98,7 @@ public class SelectMultipleProfilePics extends QueryBuilder {
             StringJoiner joiner = new StringJoiner( "," );
             joiner.add( table + "firstname" );
             joiner.add( table + "profile_pic" );
-            return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.users" )
+            return MultimediaBench.unirest().get( "{protocol}://{host}:{port}/restapi/v1/res/public.users" )
                     .queryString( "_project", joiner.toString() )
                     .queryString( "_limit", LIMIT )
                     .queryString( "_offset", offset );

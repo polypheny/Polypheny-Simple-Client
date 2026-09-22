@@ -31,10 +31,10 @@ import java.util.Map;
 import java.util.StringJoiner;
 import java.util.concurrent.ThreadLocalRandom;
 import kong.unirest.core.HttpRequest;
-import kong.unirest.core.Unirest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
+import org.polypheny.simpleclient.scenario.multimedia.MultimediaBench;
 
 
 public class SelectMediaWhereAlbum extends QueryBuilder {
@@ -96,7 +96,7 @@ public class SelectMediaWhereAlbum extends QueryBuilder {
             joiner.add( table + "img" );
             joiner.add( table + "video" );
             joiner.add( table + "audio" );
-            return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.media" )
+            return MultimediaBench.unirest().get( "{protocol}://{host}:{port}/restapi/v1/res/public.media" )
                     .queryString( "public.media.album_id", "=" + albumId )
                     .queryString( "_project", joiner.toString() )
                     .queryString( "_limit", LIMIT );

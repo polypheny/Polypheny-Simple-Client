@@ -30,10 +30,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import kong.unirest.core.HttpRequest;
-import kong.unirest.core.Unirest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
+import org.polypheny.simpleclient.scenario.multimedia.MultimediaBench;
 
 
 public class SelectRandomProfilePic extends QueryBuilder {
@@ -88,7 +88,7 @@ public class SelectRandomProfilePic extends QueryBuilder {
 
         @Override
         public HttpRequest<?> getRest() {
-            return Unirest.get( "{protocol}://{host}:{port}/restapi/v1/res/public.users" )
+            return MultimediaBench.unirest().get( "{protocol}://{host}:{port}/restapi/v1/res/public.users" )
                     .queryString( "public.users.id", "=" + userId )
                     .queryString( "_project", "public.users.profile_pic" );
         }

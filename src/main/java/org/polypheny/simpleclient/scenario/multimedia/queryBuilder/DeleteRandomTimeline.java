@@ -31,10 +31,10 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import kong.unirest.core.HttpRequest;
-import kong.unirest.core.Unirest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.query.QueryBuilder;
+import org.polypheny.simpleclient.scenario.multimedia.MultimediaBench;
 
 
 public class DeleteRandomTimeline extends QueryBuilder {
@@ -95,7 +95,7 @@ public class DeleteRandomTimeline extends QueryBuilder {
 
         @Override
         public HttpRequest<?> getRest() {
-            return Unirest.delete( "{protocol}://{host}:{port}/restapi/v1/res/public.timeline" )
+            return MultimediaBench.unirest().delete( "{protocol}://{host}:{port}/restapi/v1/res/public.timeline" )
                     .queryString( "public.timeline.id", "=" + userId );
         }
 
