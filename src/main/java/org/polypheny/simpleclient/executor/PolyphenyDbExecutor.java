@@ -29,9 +29,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -43,9 +41,9 @@ import kong.unirest.core.json.JSONArray;
 import kong.unirest.core.json.JSONObject;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.polypheny.control.client.PolyphenyControlConnector;
 import org.polypheny.simpleclient.cli.ChronosCommand;
 import org.polypheny.simpleclient.executor.MonetdbExecutor.MonetdbInstance;
+import org.polypheny.simpleclient.executor.PolyphenyConnector.PolyphenyConnectorConfig;
 import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory;
 import org.polypheny.simpleclient.executor.PostgresExecutor.PostgresInstance;
 import org.polypheny.simpleclient.scenario.AbstractConfig;
@@ -153,33 +151,6 @@ public interface PolyphenyDbExecutor extends Executor {
     }
 
 
-    default String deployCassandra( boolean deployStoresUsingDocker ) throws ExecutorException {
-        String config;
-        String name;
-        if ( deployStoresUsingDocker ) {
-            name = "cassandra" + storeCounter.getAndIncrement();
-            config = "{\"port\":\"" + nextPort.getAndIncrement() + "\",\"mode\":\"docker\",\"instanceId\":\"0\"}";
-        } else {
-            name = "cassandra";
-            config = "{\"mode\":\"embedded\",\"host\":\"localhost\",\"port\":\"9042\",\"keyspace\":\"cassandra\",\"username\":\"cassandra\",\"password\":\"cass\"}";
-        }
-        if ( PolyphenyVersionSwitch.getInstance().useNewDeploySyntax ) {
-            deployAdapter(
-                    name,
-                    "CASSANDRA",
-                    "STORE",
-                    config );
-        } else {
-            deployStore(
-                    name,
-                    "org.polypheny.db.adapter.cassandra.CassandraStore",
-                    config );
-        }
-        storeNames.add( name );
-        return name;
-    }
-
-
     default String deployFileStore() throws ExecutorException {
         String storeName = "file" + storeCounter.getAndIncrement();
         String config = "{\"mode\":\"embedded\"}";
@@ -193,26 +164,6 @@ public interface PolyphenyDbExecutor extends Executor {
             deployStore(
                     storeName,
                     "org.polypheny.db.adapter.file.FileStore",
-                    config );
-        }
-        storeNames.add( storeName );
-        return storeName;
-    }
-
-
-    default String deployCottontail() throws ExecutorException {
-        String storeName = "cottontail" + storeCounter.getAndIncrement();
-        String config = "{\"type\":\"Embedded\",\"host\":\"localhost\",\"port\":\"" + nextPort.getAndIncrement() + "\",\"database\":\"cottontail\",\"engine\":\"MAPDB\",\"mode\":\"embedded\"}";
-        if ( PolyphenyVersionSwitch.getInstance().useNewDeploySyntax ) {
-            deployAdapter(
-                    storeName,
-                    "COTTONTAIL",
-                    "STORE",
-                    config );
-        } else {
-            deployStore(
-                    storeName,
-                    "org.polypheny.db.adapter.cottontail.CottontailStore",
                     config );
         }
         storeNames.add( storeName );
@@ -292,14 +243,14 @@ public interface PolyphenyDbExecutor extends Executor {
     @Slf4j
     class PolyphenyDbInstance extends DatabaseInstance {
 
-        private final PolyphenyControlConnector polyphenyControlConnector;
+        private final PolyphenyConnector polyphenyControlConnector;
         private final AbstractConfig config;
 
         @Getter
         private final StatusGatherer statusGatherer;
 
 
-        public PolyphenyDbInstance( PolyphenyControlConnector polyphenyControlConnector, ExecutorFactory executorFactory, File outputDirectory, AbstractConfig config ) {
+        public PolyphenyDbInstance( PolyphenyConnector polyphenyControlConnector, ExecutorFactory executorFactory, File outputDirectory, AbstractConfig config ) {
             this.polyphenyControlConnector = polyphenyControlConnector;
             this.config = config;
 
@@ -353,14 +304,8 @@ public interface PolyphenyDbExecutor extends Executor {
                             }
                             executor.deployMonetDb( config.deployStoresUsingDocker );
                             break;
-                        case "cassandra":
-                            executor.deployCassandra( config.deployStoresUsingDocker );
-                            break;
                         case "file":
                             executor.deployFileStore();
-                            break;
-                        case "cottontail":
-                            executor.deployCottontail();
                             break;
                         case "mongodb":
                             executor.deployMongoDb();
@@ -383,6 +328,7 @@ public interface PolyphenyDbExecutor extends Executor {
                 }
             }
 
+            log.warn( "Used stores: {}", String.join( ", ", config.dataStores ) );
             pushConfiguration( executorFactory, config );
 
             // Wait 5 seconds to let the config changes take effect
@@ -397,7 +343,7 @@ public interface PolyphenyDbExecutor extends Executor {
         }
 
 
-        private void stopPolypheny( PolyphenyControlConnector polyphenyControlConnector ) {
+        private void stopPolypheny( PolyphenyConnector polyphenyControlConnector ) {
             polyphenyControlConnector.stopPolypheny();
             try {
                 TimeUnit.SECONDS.sleep( 3 );
@@ -420,7 +366,7 @@ public interface PolyphenyDbExecutor extends Executor {
         }
 
 
-        private void startPolypheny( PolyphenyControlConnector polyphenyControlConnector ) {
+        private void startPolypheny( PolyphenyConnector polyphenyControlConnector ) {
             polyphenyControlConnector.startPolypheny();
             // Try for 300 seconds (30 times)
             for ( int i = 0; i <= 30; i++ ) {
@@ -471,6 +417,10 @@ public interface PolyphenyDbExecutor extends Executor {
             try {
                 // Disable statistics (active tracking)
                 executor.setConfig( "statistics/activeTracking", "false" );
+                if ( config.lockingLevel != null ) {
+                    log.warn( "Using locking level: {}", config.lockingLevel );
+                    executor.setConfig( "runtime/s2plLockingLevel", config.lockingLevel );
+                }
                 // Set router
                 if ( PolyphenyVersionSwitch.getInstance().hasIcarusRoutingSettings ) { // Old routing, to be removed
                     switch ( config.router ) {
@@ -560,28 +510,8 @@ public interface PolyphenyDbExecutor extends Executor {
         }
 
 
-        protected void configurePolyphenyControl( PolyphenyControlConnector polyphenyControlConnector, AbstractConfig config, boolean resetCatalog ) {
-            Map<String, String> conf = new HashMap<>();
-            conf.put( "pcrtl.pdbms.branch", config.pdbBranch.trim() );
-            conf.put( "pcrtl.ui.branch", config.puiBranch.trim() );
-            conf.put( "pcrtl.java.heap", "10" );
-            if ( config.buildUi ) {
-                conf.put( "pcrtl.buildmode", "both" );
-            } else {
-                conf.put( "pcrtl.buildmode", "pdb" );
-            }
-            conf.put( "pcrtl.clean.mode", "branchChange" );
-            //conf.put( "pcrtl.plugins.purge", "onStartup" );
-            conf.put( "pcrtl.plugins.purge", "never" );
-            String args = "";
-            if ( resetCatalog ) {
-                args += "-resetCatalog ";
-            }
-            if ( config.memoryCatalog ) {
-                args += "-memoryCatalog ";
-            }
-            conf.put( "pcrtl.pdbms.args", args.trim() );
-            polyphenyControlConnector.setConfig( conf );
+        protected void configurePolyphenyControl( PolyphenyConnector polyphenyControlConnector, AbstractConfig config, boolean resetCatalog ) {
+            polyphenyControlConnector.setConfig( new PolyphenyConnectorConfig( config.pdbBranch.trim(), config.pdbCommit.trim(), config.puiBranch.trim(), 50, config.buildUi, resetCatalog, config.memoryCatalog ) );
         }
 
 
@@ -609,11 +539,7 @@ public interface PolyphenyDbExecutor extends Executor {
                         MonetdbInstance.reset();
                     }
                     break;
-                case "cassandra":
-                    break;
                 case "file":
-                    break;
-                case "cottontail":
                     break;
                 case "mongodb":
                     break;
@@ -645,7 +571,7 @@ public interface PolyphenyDbExecutor extends Executor {
             if ( response.getStatus() == 200 ) {
                 JSONArray jsonArray = new JSONArray( response.getBody() );
                 if ( !jsonArray.isEmpty() ) {
-                    JSONObject jsonObject = jsonArray.getJSONObject( 0 );
+                    jsonArray.getJSONObject( 0 );
                     return true;
                 }
             }

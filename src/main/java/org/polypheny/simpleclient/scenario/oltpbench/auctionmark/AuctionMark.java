@@ -31,7 +31,7 @@ import org.polypheny.simpleclient.scenario.oltpbench.AbstractOltpBenchScenario;
 
 
 @Slf4j
-public class AuctionMark extends AbstractOltpBenchScenario {
+public class AuctionMark extends AbstractOltpBenchScenario<AuctionMarkConfig> {
 
     public AuctionMark( ExecutorFactory executorFactory, AuctionMarkConfig config, boolean dumpQueryList, QueryMode queryMode ) {
         super( executorFactory, config, dumpQueryList, queryMode );

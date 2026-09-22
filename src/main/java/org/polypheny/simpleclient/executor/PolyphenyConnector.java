@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019-2021 The Polypheny Project
+ * Copyright (c) 2019-2026 The Polypheny Project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"), to deal
@@ -22,31 +22,28 @@
  * SOFTWARE.
  */
 
-package org.polypheny.simpleclient.query;
+package org.polypheny.simpleclient.executor;
 
+public interface PolyphenyConnector {
 
-public record CottontailQuery( QueryType type, Object query ) {
+    void stopPolypheny();
 
+    void startPolypheny();
 
-    public enum QueryType {
-        // DQL
-        QUERY, // Query
-        QUERY_BATCH, // List<Query>
+    void purgePolyphenyFolder();
 
-        // DML
-        INSERT, // InsertMessage
-        INSERT_BATCH, // List<InsertMessage>
-        UPDATE, // UpdateMessage
-        DELETE, // DeleteMessage
+    void updatePolypheny();
 
-        // DDL
-        SCHEMA_CREATE, // Schema
-        SCHEMA_DROP, // Schema
+    void setConfig( PolyphenyConnectorConfig config );
 
-        ENTITY_CREATE, // EntityDefintion
-        ENTITY_DROP, // Entity
+    String getConfig();
 
-        TRUNCATE // Entity
+    String getVersion();
+
+    int checkForAnyRunningPolyphenyInstances();
+
+    record PolyphenyConnectorConfig( String branchDB, String commit, String branchUI, int heapSizeGb, boolean buildUI, boolean resetCatalog, boolean memoryCatalog ) {
+
     }
 
 }

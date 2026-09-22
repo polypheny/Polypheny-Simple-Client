@@ -26,7 +26,6 @@ package org.polypheny.simpleclient.executor;
 
 import java.io.File;
 import lombok.extern.slf4j.Slf4j;
-import org.polypheny.control.client.PolyphenyControlConnector;
 import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory;
 import org.polypheny.simpleclient.query.Query;
 import org.polypheny.simpleclient.scenario.AbstractConfig;
@@ -144,7 +143,7 @@ public class OltpBenchPolyphenyDbExecutor extends OltpBenchExecutor implements P
 
     public static class OltpBenchPolyphenyInstance extends PolyphenyDbInstance {
 
-        public OltpBenchPolyphenyInstance( PolyphenyControlConnector polyphenyControlConnector, ExecutorFactory executorFactory, File outputDirectory, AbstractConfig config ) {
+        public OltpBenchPolyphenyInstance( PolyphenyConnector polyphenyControlConnector, ExecutorFactory executorFactory, File outputDirectory, AbstractConfig config ) {
             super( polyphenyControlConnector, executorFactory, outputDirectory, config );
         }
 

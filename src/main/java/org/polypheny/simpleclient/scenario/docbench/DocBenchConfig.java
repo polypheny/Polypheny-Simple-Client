@@ -73,7 +73,7 @@ public class DocBenchConfig extends AbstractConfig {
     public DocBenchConfig( Map<String, String> cdl ) {
         super( "docbench", cdl.get( "store" ), cdl );
 
-        seed = Integer.parseInt( cdl.get( "seed" ) );
+        seed = Long.parseLong( cdl.get( "seed" ) );
         batchSize = Integer.parseInt( cdl.get( "batchSize" ) );
 
         numberOfFindQueries = Integer.parseInt( cdl.get( "numberOfFindQueries" ) );

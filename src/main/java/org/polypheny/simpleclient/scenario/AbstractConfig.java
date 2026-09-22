@@ -42,6 +42,7 @@ public abstract class AbstractConfig {
 
     public final String pdbBranch;
     public final String puiBranch;
+    public final String pdbCommit;
     public final boolean buildUi;
     public final boolean memoryCatalog;
     public final boolean resetCatalog;
@@ -69,6 +70,8 @@ public abstract class AbstractConfig {
     public final boolean workloadMonitoringLoadingData;
     public final boolean workloadMonitoringWarmup;
 
+    public final String lockingLevel;
+
     public final int progressReportBase = 100;
 
 
@@ -77,11 +80,12 @@ public abstract class AbstractConfig {
         this.system = system;
 
         pdbBranch = "proto-without-grpc";
+        pdbCommit = "";
         puiBranch = "master";
         buildUi = false;
         resetCatalog = false;
         memoryCatalog = false;
-        deployStoresUsingDocker = false;
+        deployStoresUsingDocker = true;
         restartAfterLoadingData = false;
 
         dataStores.add( "hsqldb" );
@@ -104,6 +108,8 @@ public abstract class AbstractConfig {
         workloadMonitoringLoadingData = true;
         workloadMonitoringWarmup = true;
 
+        lockingLevel = null;
+
         // This is hacky but ensures that VersionSwitch is initialized when running tasks from CLI.
         PolyphenyVersionSwitch.initialize( this );
     }
@@ -114,6 +120,7 @@ public abstract class AbstractConfig {
         this.scenario = scenario;
 
         pdbBranch = cdl.get( "pdbBranch" );
+        pdbCommit = cdl.get( "pdbCommit" );
         puiBranch = "master";
         buildUi = false;
         resetCatalog = true;
@@ -123,7 +130,7 @@ public abstract class AbstractConfig {
             throw new RuntimeException( "Not allowed to restart Polypheny after loading data if using a non-persistent data store!" );
         }
 
-        deployStoresUsingDocker = Boolean.parseBoolean( cdlGetOrDefault( cdl, "deployStoresUsingDocker", "false" ) );
+        deployStoresUsingDocker = Boolean.parseBoolean( cdlGetOrDefault( cdl, "deployStoresUsingDocker", "true" ) );
 
         memoryCatalog = Boolean.parseBoolean( cdl.get( "memoryCatalog" ) );
 
@@ -150,6 +157,8 @@ public abstract class AbstractConfig {
         workloadMonitoringExecutingWorkload = Boolean.parseBoolean( cdlGetOrDefault( cdl, "workloadMonitoring", "false" ) );
         workloadMonitoringLoadingData = Boolean.parseBoolean( cdlGetOrDefault( cdl, "workloadMonitoringLoadingData", "false" ) );
         workloadMonitoringWarmup = Boolean.parseBoolean( cdlGetOrDefault( cdl, "workloadMonitoringWarmup", "true" ) );
+
+        lockingLevel = cdlGetOrDefault( cdl, "lockingLevel", null );
     }
 
 

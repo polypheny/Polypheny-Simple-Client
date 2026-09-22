@@ -39,7 +39,7 @@ import org.polypheny.simpleclient.scenario.oltpbench.AbstractOltpBenchScenario;
 
 
 @Slf4j
-public class Tpcc extends AbstractOltpBenchScenario {
+public class Tpcc extends AbstractOltpBenchScenario<TpccConfig> {
 
     public Tpcc( ExecutorFactory executorFactory, TpccConfig config, boolean dumpQueryList, QueryMode queryMode ) {
         super( executorFactory, config, dumpQueryList, queryMode );
@@ -51,7 +51,7 @@ public class Tpcc extends AbstractOltpBenchScenario {
         Executor executor = executorFactory.createExecutorInstance();
         try {
             // Set table placement strategy
-            if ( databaseInstance instanceof PolyphenyDbInstance && ((TpccConfig) config).partitionItemTable ) {
+            if ( databaseInstance instanceof PolyphenyDbInstance && config.partitionItemTable ) {
                 if ( config.dataStores.size() > 1 ) {
                     ((PolyphenyDbExecutor) executor).setConfig( "routing/createPlacementStrategy", "org.polypheny.db.routing.strategies.CreateAllPlacementStrategy" );
                 }
@@ -67,7 +67,7 @@ public class Tpcc extends AbstractOltpBenchScenario {
         Executor executor = executorFactory.createExecutorInstance();
         try {
             // Partition item table
-            if ( databaseInstance instanceof PolyphenyDbInstance && ((TpccConfig) config).partitionItemTable ) {
+            if ( databaseInstance instanceof PolyphenyDbInstance && config.partitionItemTable ) {
                 if ( config.dataStores.size() > 1 ) {
                     List<String> storeNames = ((PolyphenyDbExecutor) executor).storeNames;
                     String partitionNames = storeNames.stream()
@@ -90,7 +90,7 @@ public class Tpcc extends AbstractOltpBenchScenario {
         Executor executor = executorFactory.createExecutorInstance();
         try {
             // Partition item table
-            if ( databaseInstance instanceof PolyphenyDbInstance && ((TpccConfig) config).partitionItemTable ) {
+            if ( databaseInstance instanceof PolyphenyDbInstance && config.partitionItemTable ) {
                 if ( config.dataStores.size() > 1 ) {
                     List<String> storeNames = ((PolyphenyDbExecutor) executor).storeNames;
                     for ( String storeName : storeNames ) {

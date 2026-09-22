@@ -46,13 +46,13 @@ import org.polypheny.simpleclient.scenario.Scenario;
 
 
 @Slf4j
-public abstract class AbstractOltpBenchScenario extends Scenario {
+public abstract class AbstractOltpBenchScenario<T extends AbstractOltpBenchConfig> extends Scenario {
 
-    protected final AbstractOltpBenchConfig config;
+    protected final T config;
     protected final OltpBenchExecutorFactory executorFactory;
 
 
-    public AbstractOltpBenchScenario( ExecutorFactory executorFactory, AbstractOltpBenchConfig config, boolean dumpQueryList, QueryMode queryMode ) {
+    public AbstractOltpBenchScenario( ExecutorFactory executorFactory, T config, boolean dumpQueryList, QueryMode queryMode ) {
         super( executorFactory, true, dumpQueryList, queryMode );
         this.config = config;
         if ( executorFactory instanceof OltpBenchExecutorFactory oltpBenchExecutorFactory ) {

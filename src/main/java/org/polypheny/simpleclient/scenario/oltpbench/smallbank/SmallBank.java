@@ -31,7 +31,7 @@ import org.polypheny.simpleclient.scenario.oltpbench.AbstractOltpBenchScenario;
 
 
 @Slf4j
-public class SmallBank extends AbstractOltpBenchScenario {
+public class SmallBank extends AbstractOltpBenchScenario<SmallBankConfig> {
 
     public SmallBank( ExecutorFactory executorFactory, SmallBankConfig config, boolean dumpQueryList, QueryMode queryMode ) {
         super( executorFactory, config, dumpQueryList, queryMode );

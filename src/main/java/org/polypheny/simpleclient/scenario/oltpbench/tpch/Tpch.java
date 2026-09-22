@@ -31,7 +31,7 @@ import org.polypheny.simpleclient.scenario.oltpbench.AbstractOltpBenchScenario;
 
 
 @Slf4j
-public class Tpch extends AbstractOltpBenchScenario {
+public class Tpch extends AbstractOltpBenchScenario<TpchConfig> {
 
     public Tpch( ExecutorFactory executorFactory, TpchConfig config, boolean dumpQueryList, QueryMode queryMode ) {
         super( executorFactory, config, dumpQueryList, queryMode );

@@ -121,7 +121,8 @@ public abstract class OltpBenchExecutor implements Executor {
             try {
                 ReadableByteChannel readableByteChannel = Channels.newChannel( new URL( OLTPBENCH_RELEASE_URL ).openStream() );
                 try ( FileOutputStream fileOutputStream = new FileOutputStream( CLIENT_DIR + FILE_NAME ) ) {
-                    fileOutputStream.getChannel().transferFrom( readableByteChannel, 0, Long.MAX_VALUE );
+                    long length = fileOutputStream.getChannel().transferFrom( readableByteChannel, 0, Long.MAX_VALUE );
+                    log.warn( "Transferred {} in OLTPBench zip", length );
                 }
                 try ( ZipFile zipFile = new ZipFile( CLIENT_DIR + FILE_NAME ) ) {
                     zipFile.extractAll( CLIENT_DIR );

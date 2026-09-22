@@ -32,15 +32,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import kong.unirest.core.HttpRequest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.polypheny.simpleclient.query.BatchableInsert;
-import org.polypheny.simpleclient.query.CottontailQuery;
-import org.polypheny.simpleclient.query.CottontailQuery.QueryType;
 import org.polypheny.simpleclient.query.QueryBuilder;
-import org.vitrivr.cottontail.grpc.CottontailGrpc.Data;
-import org.vitrivr.cottontail.grpc.CottontailGrpc.Entity;
-import org.vitrivr.cottontail.grpc.CottontailGrpc.From;
-import org.vitrivr.cottontail.grpc.CottontailGrpc.InsertMessage;
-import org.vitrivr.cottontail.grpc.CottontailGrpc.Schema;
-import org.vitrivr.cottontail.grpc.CottontailGrpc.Tuple;
 
 
 public class InsertMetadata extends QueryBuilder {
@@ -121,18 +113,6 @@ public class InsertMetadata extends QueryBuilder {
             return null;
         }
 
-
-        @Override
-        public CottontailQuery getCottontail() {
-            Map<String, Data> dataMap = new HashMap<>();
-            dataMap.put( "id", Data.newBuilder().setIntData( id ).build() );
-            dataMap.put( "textdata", Data.newBuilder().setStringData( textdata ).build() );
-            InsertMessage insertMessage = InsertMessage.newBuilder()
-                    .setFrom( From.newBuilder().setEntity( Entity.newBuilder().setSchema( Schema.newBuilder().setName( "public" ).build() ).setName( "knn_metadata" ).build() ).build() )
-                    .setTuple( Tuple.newBuilder().putAllData( dataMap ).build() )
-                    .build();
-            return new CottontailQuery( QueryType.INSERT, insertMessage );
-        }
 
     }
 
