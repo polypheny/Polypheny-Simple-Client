@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019-8/8/24, 2:55 PM The Polypheny Project
+ * Copyright (c) 2019-2026 The Polypheny Project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"), to deal
@@ -60,6 +60,8 @@ public class PolyphenyLocalConnector implements PolyphenyConnector {
 
 
     public void stopPolypheny() {
+        // This connector is only used for Chronos, which automatically cleans up all child processes.
+        // So we don't need to do this.
 //        if ( process != null ) {
 //            process.destroyForcibly();
 //            while ( true ) {
@@ -113,14 +115,12 @@ public class PolyphenyLocalConnector implements PolyphenyConnector {
     private static void downloadJar( String buildServer, String branch, String commit, File jar ) {
         String newCommitId;
         if ( commit == null || commit.isEmpty() ) {
-            log.warn( "Getting commit id for branch {} from GitHub", branch );
-
-            newCommitId = GithubApi.getCommit( branch ).sha();
-            log.warn( "Fetching commit {} on branch {} from {}", newCommitId, branch, buildServer );
+            throw new RuntimeException( "Missing commit id" );
         } else {
             log.warn( "Using commit id from CDL {}: {}", branch, commit );
             newCommitId = commit;
         }
+        log.warn( "Fetching commit {} on branch {} from {}", newCommitId, branch, buildServer );
 
         HttpResponse<byte[]> req = Unirest.get( String.format( "%s/jar?commit=%s&branch=%s", buildServer, newCommitId, branch ) )
                 .requestTimeout( 30 * 60 * 1000 )
