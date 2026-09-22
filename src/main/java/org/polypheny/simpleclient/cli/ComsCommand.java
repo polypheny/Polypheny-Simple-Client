@@ -95,19 +95,19 @@ public class ComsCommand implements CliRunnable {
         try {
             switch ( args.getFirst().toLowerCase() ) {
                 case "schema":
-                    executorFactory = getExecutorFactory( true );
+                    executorFactory = getExecutorFactory();
                     ComsScenario.schema( executorFactory, config );
                     break;
                 case "data":
-                    executorFactory = getExecutorFactory( false );
+                    executorFactory = getExecutorFactory();
                     ComsScenario.data( executorFactory, config, multiplier );
                     break;
                 case "warmup":
-                    executorFactory = getExecutorFactory( true );
+                    executorFactory = getExecutorFactory();
                     ComsScenario.warmup( executorFactory, config );
                     break;
                 case "workload":
-                    executorFactory = getExecutorFactory( false );
+                    executorFactory = getExecutorFactory();
                     ComsScenario.workload( executorFactory, config, multiplier, writeCsv );
                     break;
                 default:
@@ -129,14 +129,14 @@ public class ComsCommand implements CliRunnable {
     }
 
 
-    private ExecutorFactory getExecutorFactory( boolean createDocker ) {
+    private ExecutorFactory getExecutorFactory( ) {
         return switch ( config.mode ) {
             case POLYPHENY -> new PolyphenyDbMultiExecutorFactory( polyphenyDbHost );
             case NATIVE -> new MultiExecutorFactory(
                     new PostgresExecutor.PostgresExecutorFactory( postgres, false ),
                     new NeoExecutorFactory( neo4j ),
                     new MongoQlExecutorFactory( mongoDB ) );
-            case SURREALDB -> new SurrealDBExecutorFactory( surrealHost, "8989", createDocker );
+            case SURREALDB -> new SurrealDBExecutorFactory( surrealHost, "8989" );
         };
     }
 

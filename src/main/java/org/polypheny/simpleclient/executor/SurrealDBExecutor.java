@@ -45,7 +45,7 @@ public class SurrealDBExecutor implements Executor {
     private final CsvWriter csvWriter;
 
 
-    public SurrealDBExecutor( String host, CsvWriter csvWriter, boolean createDocker ) throws Exception {
+    public SurrealDBExecutor( String host, CsvWriter csvWriter ) {
         this.host = host;
         this.csvWriter = csvWriter;
 
@@ -164,19 +164,17 @@ public class SurrealDBExecutor implements Executor {
     public static class SurrealDBExecutorFactory extends ExecutorFactory {
 
         private final String host;
-        private final boolean createDocker;
 
 
-        public SurrealDBExecutorFactory( String host, String port, boolean createDocker ) {
+        public SurrealDBExecutorFactory( String host, String port ) {
             this.host = host + ":" + port;
-            this.createDocker = createDocker;
         }
 
 
         @Override
         public Executor createExecutorInstance( CsvWriter csvWriter ) {
             try {
-                return new SurrealDBExecutor( host, csvWriter, createDocker );
+                return new SurrealDBExecutor( host, csvWriter );
             } catch ( Exception e ) {
                 throw new RuntimeException( e );
             }
@@ -193,28 +191,14 @@ public class SurrealDBExecutor implements Executor {
 
     public static class SurrealDbInstance extends DatabaseInstance {
 
-        private final File folder;
-
-
         public SurrealDbInstance( String hostname, String port ) {
-            File clientFolder = new File( new File( System.getProperty( "user.home" ), ".polypheny" ), "client" );
-            folder = new File( clientFolder, "surrealdb" );
-
-            recursiveDeleteFolder( folder );
-
-            if ( !folder.exists() ) {
-                if ( !folder.mkdirs() ) {
-                    throw new RuntimeException( "Could not create data directory" );
-                }
-            }
-
             try {
                 // deploy with Docker
                 ProcessBuilder builder = new ProcessBuilder();
                 builder.command( "docker", "container", "stop", "surrealdb" );
                 builder.start().waitFor();
                 builder = new ProcessBuilder();
-                builder.command( "docker", "run", "-d", "--rm", "--name", "surrealdb", "-p", hostname + ":" + port + ":8000", "surrealdb/surrealdb:latest", "start", "--log", "trace", "--user", "root", "--pass", "root", "file://" + folder.getAbsolutePath() );
+                builder.command( "docker", "run", "-d", "--rm", "--name", "surrealdb", "-p", hostname + ":" + port + ":8000", "surrealdb/surrealdb:latest", "start", "--log", "trace", "--user", "root", "--pass", "root", "rocksdb:///tmp" );
                 builder.start().waitFor();
                 Thread.sleep( 3000 ); // while we could use a more sophisticated approach, this will do the job for now
             } catch ( InterruptedException | IOException e ) {
