@@ -187,7 +187,7 @@ public abstract class AbstractConfig {
     }
 
 
-    protected String cdlGetOrDefault( Map<String, String> cdl, String key, String defaultValue ) {
+    protected static String cdlGetOrDefault( Map<String, String> cdl, String key, String defaultValue ) {
         if ( cdl.containsKey( key ) ) {
             return cdl.get( key );
         } else {
