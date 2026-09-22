@@ -113,25 +113,25 @@ public class ComsConfig extends AbstractConfig {
 
         duration = Integer.parseInt( parsedConfig.get( "duration" ) );
 
-        removeLogs = parsePercent( parsedConfig.get( "removeLogs" ) );
-        addLogs = parsePercent( parsedConfig.get( "addLogs" ) );
-        changeDevice = parsePercent( parsedConfig.get( "changeDevice" ) );
-        newDevice = parsePercent( parsedConfig.get( "newDevice" ) );
-        removeDevice = parsePercent( parsedConfig.get( "removeDevice" ) );
+        removeLogs = Double.parseDouble( parsedConfig.get( "removeLogs" ) );
+        addLogs = Double.parseDouble( parsedConfig.get( "addLogs" ) );
+        changeDevice = Double.parseDouble( parsedConfig.get( "changeDevice" ) );
+        newDevice = Double.parseDouble( parsedConfig.get( "newDevice" ) );
+        removeDevice = Double.parseDouble( parsedConfig.get( "removeDevice" ) );
 
-        removeUsers = parsePercent( parsedConfig.get( "removeUsers" ) );
-        addUsers = parsePercent( parsedConfig.get( "addUsers" ) );
+        removeUsers = Double.parseDouble( parsedConfig.get( "removeUsers" ) );
+        addUsers = Double.parseDouble( parsedConfig.get( "addUsers" ) );
 
         readQueries = Integer.parseInt( parsedConfig.get( "readQueries" ) );
 
-        newLogins = parsePercent( parsedConfig.get( "newLogins" ) );
+        newLogins = Double.parseDouble( parsedConfig.get( "newLogins" ) );
 
         loginsPerUser = Integer.parseInt( parsedConfig.get( "loginsPerUser" ) );
         users = Integer.parseInt( parsedConfig.get( "users" ) );
         servers = Integer.parseInt( parsedConfig.get( "servers" ) );
         clients = Integer.parseInt( parsedConfig.get( "clients" ) );
 
-        olapRate = parsePercent( parsedConfig.get( "olapRate" ) );
+        olapRate = Double.parseDouble( parsedConfig.get( "olapRate" ) );
 
         inverseOlapRate = 1 - olapRate;
     }
@@ -139,11 +139,6 @@ public class ComsConfig extends AbstractConfig {
 
     public ComsConfig( Map<String, String> parsedConfig ) {
         this( parsedConfig, Integer.parseInt( parsedConfig.get( "cycles" ) ) );
-    }
-
-
-    public double parsePercent( String percent ) {
-        return Integer.parseInt( percent.replace( "%", "" ).trim() ) / 100d;
     }
 
 
