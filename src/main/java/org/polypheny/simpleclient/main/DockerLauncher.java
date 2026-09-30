@@ -24,7 +24,9 @@
 
 package org.polypheny.simpleclient.main;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -71,4 +73,32 @@ public class DockerLauncher {
         }
     }
 
+    public static void runJob( String containerName, String imageName, Map<String, String> environment, String network,List<String> command, File logFile ) {
+
+        remove( containerName );
+
+        try {
+            Files.createDirectories( logFile.toPath().toAbsolutePath().getParent());
+
+            List<String> args = new ArrayList<>( List.of( "docker", "run", "--rm", "--name", containerName ) );
+
+            environment.forEach( ( k, v ) -> args.addAll( List.of( "-e", String.format( "%s=%s", k, v ) ) ) );
+
+            args.addAll( List.of( "--network", network ) );
+            args.add( imageName );
+            args.addAll( command );
+
+            log.info( "Running Docker job {}", containerName );
+
+            Process process = new ProcessBuilder( args ).redirectErrorStream( true ).redirectOutput( logFile ).start();
+
+            int exitCode = process.waitFor();
+
+            if ( exitCode != 0 ) {
+                throw new RuntimeException( "Docker job failed with exit code " + exitCode + ". See log: " + logFile.getAbsolutePath() );
+            }
+        } catch ( IOException | InterruptedException e ) {
+            throw new RuntimeException(e);
+        }
+    }
 }

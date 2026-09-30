@@ -230,7 +230,7 @@ public abstract class JdbcExecutor implements Executor {
 
     protected void executeInsertListAsPreparedBatch( List<BatchableInsert> queryList ) throws ExecutorException {
         try {
-            PreparedStatement preparedStatement = connection.prepareStatement( queryList.getFirst().getParameterizedSqlQuery() );
+            PreparedStatement preparedStatement = connection.prepareStatement( queryList.get(0).getParameterizedSqlQuery() );
             ArrayList<File> files = new ArrayList<>();
             for ( BatchableInsert insert : queryList ) {
                 Map<Integer, ImmutablePair<DataTypes, Object>> data = insert.getParameterValues();

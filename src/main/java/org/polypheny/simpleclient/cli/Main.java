@@ -51,6 +51,7 @@ public class Main {
         builder.withCommands( TpccCommand.class );
         builder.withCommands( TpchCommand.class );
         builder.withCommands( YcsbCommand.class );
+        builder.withCommands( YcsbExternalCommand.class );
         builder.withCommands( DumpCommand.class );
         builder.withCommands( HelpCommand.class );
         builder.withDefaultCommand( HelpCommand.class );
