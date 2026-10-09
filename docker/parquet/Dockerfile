@@ -12,11 +12,13 @@ RUN mkdir -p lib classes \
         -o lib/polypheny-jdbc-driver.jar
 
 COPY src/PolyphenyMqlBenchmark.java src/PolyphenyMqlBenchmark.java
+COPY src/PolyphenyJdbcBenchmark.java src/PolyphenyJdbcBenchmark.java
 
 RUN javac --release 21 \
     -cp "lib/*" \
     -d classes \
-    src/PolyphenyMqlBenchmark.java
+    src/PolyphenyMqlBenchmark.java \
+    src/PolyphenyJdbcBenchmark.java
 
 
 FROM eclipse-temurin:21-jre-jammy
@@ -27,4 +29,5 @@ COPY --from=builder /app/lib/ /app/lib/
 COPY --from=builder /app/classes/ /app/classes/
 COPY queries/ /app/queries/
 
-ENTRYPOINT ["java", "-cp", "/app/classes:/app/lib/*", "PolyphenyMqlBenchmark"]
+ENTRYPOINT ["java", "-cp", "/app/classes:/app/lib/*"]
+CMD ["PolyphenyMqlBenchmark"]

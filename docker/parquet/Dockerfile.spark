@@ -1,0 +1,14 @@
+FROM apache/spark:3.5.3-java17-python3
+
+USER root
+
+ENV HOME=/tmp
+ENV SPARK_SUBMIT_OPTS="-Duser.home=/tmp"
+ENV SPARK_LOCAL_IP=127.0.0.1
+
+WORKDIR /app
+
+COPY src/SparkSqlBenchmark.py /app/SparkSqlBenchmark.py
+COPY queries/ /app/queries/
+
+ENTRYPOINT ["/opt/spark/bin/spark-submit", "--master", "local[2]", "--driver-memory", "4g", "/app/SparkSqlBenchmark.py"]

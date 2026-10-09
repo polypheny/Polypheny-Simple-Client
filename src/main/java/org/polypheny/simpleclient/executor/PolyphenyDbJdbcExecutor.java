@@ -26,8 +26,11 @@ package org.polypheny.simpleclient.executor;
 
 import java.lang.reflect.InvocationTargetException;
 import java.sql.Driver;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Properties;
+import java.util.HashSet;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.main.CustomClassLoader;
@@ -74,6 +77,35 @@ public class PolyphenyDbJdbcExecutor extends JdbcExecutor implements PolyphenyDb
             executeStatement.setFetchSize( 100 );
         } catch ( SQLException e ) {
             throw new RuntimeException( "Connection failed.", e );
+        }
+    }
+
+
+    public Set<String> getTableNames( String namespace ) throws ExecutorException {
+        Set<String> names = new HashSet<>();
+        try ( ResultSet tables = connection.getMetaData().getTables( null, null, null, null ) ) {
+            while ( tables.next() ) {
+                if ( namespace.equals( tables.getString( "TABLE_SCHEM" ) ) ) {
+                    names.add( tables.getString( "TABLE_NAME" ) );
+                }
+            }
+            return names;
+        } catch ( SQLException e ) {
+            throw new ExecutorException( e );
+        }
+    }
+
+
+    public boolean namespaceExists( String name ) throws ExecutorException {
+        try ( ResultSet namespaces = connection.getMetaData().getSchemas() ) {
+            while ( namespaces.next() ) {
+                if ( name.equals( namespaces.getString( "TABLE_SCHEM" ) ) ) {
+                    return true;
+                }
+            }
+            return false;
+        } catch ( SQLException e ) {
+            throw new ExecutorException( e );
         }
     }
 

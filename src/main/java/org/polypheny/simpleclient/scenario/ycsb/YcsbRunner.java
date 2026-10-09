@@ -33,23 +33,23 @@ public class YcsbRunner {
 
         List<String> command = new ArrayList<>();
 
-        if ( "polypheny-jdbc".equals( config.system ) ) {
+        if ( "sql".equals( config.accessMode ) ) {
             command.add( "./bin/ycsb.sh" );
             command.add( operation );
             command.add( "jdbc" );
 
-        } else if ( "polypheny-mongoql".equals( config.system ) ) {
+        } else if ( "mongoql".equals( config.accessMode ) ) {
             command.add( "java" );
             command.add( "-cp" );
             command.add( "/ycsbExternal/conf:/ycsbExternal/lib/*" );
             command.add( "site.ycsb.Client" );
             command.add( "load".equals( operation ) ? "-load" : "-t" );
             command.add( "-db" );
-            command.add( "org.polypheny.simpleclient.scenario.ycsb.binding." + "PolyphenyMongoBinding" );
+            command.add( "org.polypheny.simpleclient.scenario.ycsb.binding.PolyphenyMongoBinding" );
 
             addProperty( command, "db.namespace", YcsbExternal.DOCUMENT_NAMESPACE );
         } else {
-            throw new IllegalArgumentException( "Unsupported YCSB system: " + config.system );
+            throw new IllegalArgumentException( "Unsupported YCSB access mode: " + config.accessMode );
         }
 
         command.add( "-P" );

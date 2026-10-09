@@ -73,18 +73,31 @@ public class DockerLauncher {
         }
     }
 
-    public static void runJob( String containerName, String imageName, Map<String, String> environment, String network,List<String> command, File logFile ) {
+    public static void runJob( String containerName, String imageName, Map<String, String> environment, String network, List<String> command, File logFile ) {
+        runJob( containerName, imageName, environment, network, command, logFile, Map.of() );
+    }
 
-        remove( containerName );
+
+    public static void runJob( String containerName, String imageName, Map<String, String> environment, String network, List<String> command, File logFile, Map<File, String> volumes ) {
 
         try {
-            Files.createDirectories( logFile.toPath().toAbsolutePath().getParent());
+            Files.createDirectories( logFile.toPath().toAbsolutePath().getParent() );
 
             List<String> args = new ArrayList<>( List.of( "docker", "run", "--rm", "--name", containerName ) );
 
             environment.forEach( ( k, v ) -> args.addAll( List.of( "-e", String.format( "%s=%s", k, v ) ) ) );
 
             args.addAll( List.of( "--network", network ) );
+
+            for ( Map.Entry<File, String> volume : volumes.entrySet() ) {
+                if ( !volume.getKey().isDirectory() ) {
+                    throw new IllegalArgumentException( "Mount directory does not exist: " + volume.getKey().getAbsolutePath() );
+                }
+
+                args.add( "--mount" );
+                args.add( "type=bind,source=" + volume.getKey().getAbsolutePath() + ",target=" + volume.getValue() );
+            }
+
             args.add( imageName );
             args.addAll( command );
 
@@ -97,8 +110,11 @@ public class DockerLauncher {
             if ( exitCode != 0 ) {
                 throw new RuntimeException( "Docker job failed with exit code " + exitCode + ". See log: " + logFile.getAbsolutePath() );
             }
-        } catch ( IOException | InterruptedException e ) {
-            throw new RuntimeException(e);
+        } catch ( InterruptedException e ) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException( "Docker job interrupted: " + containerName, e );
+        } catch ( IOException e ) {
+            throw new IllegalStateException( "Could not run Docker job: " + containerName, e );
         }
     }
 }

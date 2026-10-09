@@ -52,6 +52,7 @@ public class Main {
         builder.withCommands( TpchCommand.class );
         builder.withCommands( YcsbCommand.class );
         builder.withCommands( YcsbExternalCommand.class );
+        builder.withCommands( ParquetExternalCommand.class );
         builder.withCommands( DumpCommand.class );
         builder.withCommands( HelpCommand.class );
         builder.withDefaultCommand( HelpCommand.class );

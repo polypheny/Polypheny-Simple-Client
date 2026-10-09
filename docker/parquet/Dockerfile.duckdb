@@ -1,0 +1,29 @@
+FROM eclipse-temurin:21-jdk-jammy AS builder
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+RUN mkdir -p lib classes \
+    && curl -fL \
+       https://repo.maven.apache.org/maven2/org/duckdb/duckdb_jdbc/1.5.2.1/duckdb_jdbc-1.5.2.1.jar \
+       -o lib/duckdb-jdbc.jar
+
+COPY src/DuckDbJdbcBenchmark.java src/
+
+RUN javac --release 21 \
+    -cp "lib/*" \
+    -d classes \
+    src/DuckDbJdbcBenchmark.java
+
+FROM eclipse-temurin:21-jre-jammy
+
+WORKDIR /app
+
+COPY --from=builder /app/lib/ /app/lib/
+COPY --from=builder /app/classes/ /app/classes/
+COPY queries/ /app/queries/
+
+ENTRYPOINT ["java", "-cp", "/app/classes:/app/lib/*", "DuckDbJdbcBenchmark"]

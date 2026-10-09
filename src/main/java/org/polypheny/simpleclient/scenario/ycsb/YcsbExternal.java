@@ -25,17 +25,13 @@
 package org.polypheny.simpleclient.scenario.ycsb;
 
 import java.io.File;
-import java.util.List;
 import java.util.Properties;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.polypheny.simpleclient.QueryMode;
 import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.executor.Executor.DatabaseInstance;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
 import org.polypheny.simpleclient.executor.ExecutorException;
-import org.polypheny.simpleclient.executor.PolyphenyDbExecutor;
-import org.polypheny.simpleclient.executor.PolyphenyDbExecutor.PolyphenyDbInstance;
 import org.polypheny.simpleclient.main.CsvWriter;
 import org.polypheny.simpleclient.main.ProgressReporter;
 import org.polypheny.simpleclient.query.RawQuery;
@@ -45,125 +41,99 @@ import org.polypheny.simpleclient.scenario.Scenario;
 @Slf4j
 public class YcsbExternal extends Scenario {
 
-    private final YcsbConfig config;
-    private final YcsbRunner runner;
     public static final String DOCUMENT_NAMESPACE = "ycsb";
 
-    public YcsbExternal(ExecutorFactory executorFactory, YcsbConfig config, YcsbRunner runner, boolean dumpQueryList, QueryMode queryMode ) {
-        super( executorFactory, true, dumpQueryList, queryMode );
+    private final YcsbConfig config;
+    private final YcsbRunner runner;
+    // Only schema creation needs the name returned by adapter deployment.
+    private final String adapterName;
+
+
+    public YcsbExternal( ExecutorFactory executorFactory, YcsbConfig config, YcsbRunner runner, String adapterName ) {
+        super( executorFactory, true, false, QueryMode.TABLE );
         this.config = config;
         this.runner = runner;
+        this.adapterName = adapterName;
     }
+
 
     @Override
     public void createSchema( DatabaseInstance databaseInstance, boolean includingKeys ) {
-        if ( queryMode != QueryMode.TABLE ) {
-            throw new UnsupportedOperationException( "Unsupported query mode: " + queryMode.name() );
-        }
-        if ( "polypheny-mongoql".equals( config.system ) ) {
-            createDocumentSchema();
-            return;
+        if ( adapterName == null || !adapterName.matches( "[a-z][a-z0-9_]*" ) ) {
+            throw new IllegalArgumentException( "Schema creation requires a deployed adapter name" );
         }
 
+        Executor executor = "mongoql".equals( config.accessMode )
+                ? executorFactory.createExecutorInstance( null, DOCUMENT_NAMESPACE )
+                : executorFactory.createExecutorInstance();
         try {
-            preSchemaCreationTasks( databaseInstance, executorFactory );
-
-            Executor executor = executorFactory.createExecutorInstance();
-            try {
-                StringBuilder sql = new StringBuilder( "CREATE TABLE USERTABLE (YCSB_KEY VARCHAR(255) NOT NULL" );
-
-                for ( int i = 0; i < config.fieldCount; i++ ) {
-                    sql.append( ", FIELD" )
-                            .append( i )
-                            .append( " VARCHAR(" )
-                            .append( config.fieldLength )
-                            .append( ")" );
-                }
-
-                sql.append( ", PRIMARY KEY (YCSB_KEY))" );
-
+            if ( "mongoql".equals( config.accessMode ) ) {
+                executor.executeQuery( RawQuery.builder().mongoQl( "use " + DOCUMENT_NAMESPACE ).expectResultSet( false ).build() );
                 executor.executeQuery( RawQuery.builder()
-                        .sql( sql.toString() )
-                        .expectResultSet( false )
-                        .build() );            } finally {
-                commitAndCloseExecutor( executor );
+                        .mongoQl( "db.createCollection(usertable).store(" + adapterName + ")" )
+                        .expectResultSet( false ).build() );
+            } else {
+                executor.executeQuery( RawQuery.builder().sql( createTableSql() ).expectResultSet( false ).build() );
             }
-
-            postSchemaCreationTasks( databaseInstance, executorFactory );
+            executor.executeCommit();
         } catch ( ExecutorException e ) {
-            throw new RuntimeException( "Exception while creating YCSB schema", e );
+            if ( "sql".equals( config.accessMode ) ) {
+                try {
+                    executor.executeRollback();
+                } catch ( ExecutorException rollbackError ) {
+                    e.addSuppressed( rollbackError );
+                }
+            }
+            throw new IllegalStateException( "Could not create YCSB schema on " + adapterName, e );
+        } finally {
+            try {
+                executor.closeConnection();
+            } catch ( ExecutorException e ) {
+                log.warn( "Could not close schema connection", e );
+            }
         }
     }
 
-    private void createDocumentSchema() {
-        Executor executor = executorFactory.createExecutorInstance(
-                null, DOCUMENT_NAMESPACE
-        );
 
-        try {
-            executor.executeQuery( RawQuery.builder()
-                    .mongoQl( "use " + DOCUMENT_NAMESPACE )
-                    .expectResultSet( false )
-                    .build() );
-
-            executor.executeQuery( RawQuery.builder()
-                    .mongoQl( "db.createCollection(usertable)" )
-                    .expectResultSet( false )
-                    .build() );
-        } catch ( ExecutorException e ) {
-            throw new RuntimeException( "Exception while creating YCSB document schema", e );
-        } finally {
-            commitAndCloseExecutor( executor );
+    private String createTableSql() {
+        StringBuilder sql = new StringBuilder( "CREATE TABLE USERTABLE (YCSB_KEY VARCHAR(255) NOT NULL" );
+        for ( int i = 0; i < config.fieldCount; i++ ) {
+            sql.append( ", FIELD" ).append( i ).append( " VARCHAR(" ).append( config.fieldLength ).append( ")" );
         }
+        sql.append( ", PRIMARY KEY (YCSB_KEY)) ON STORE \"" ).append( adapterName ).append( "\"" );
+        return sql.toString();
     }
 
 
     @Override
     public void generateData( DatabaseInstance databaseInstance, ProgressReporter progressReporter ) {
-        if ( queryMode != QueryMode.TABLE ) {
-            throw new UnsupportedOperationException( "Unsupported query mode: " + queryMode.name() );
-        }
-
         File logFile = new File( "results/ycsb-load.log" );
-
         log.info( "Loading {} records using YCSB", config.recordCount );
-
         runner.load( logFile );
-
-        try {
-            postDataGenerationTasks( databaseInstance, executorFactory );
-        } catch ( ExecutorException e ) {
-            throw new RuntimeException( "Exception after loading YCSB data", e );
-        }
-
-        log.info( "YCSB load process finished. See {}", logFile.getAbsolutePath() );
+        log.info( "YCSB load completed. See {}", logFile.getAbsolutePath() );
     }
+
 
     @Override
     public long execute( ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory, int numberOfThreads ) {
         File logFile = new File( outputDirectory, "ycsb-run.log" );
-
         log.info( "Executing {} YCSB operations", config.operationCount );
-
         long startTime = System.nanoTime();
         runner.run( logFile );
-        long runtime = System.nanoTime() - startTime;
-
-        log.info( "YCSB run process finished. See {}", logFile.getAbsolutePath() );
-
-        return runtime;
+        log.info( "YCSB workload completed. See {}", logFile.getAbsolutePath() );
+        return System.nanoTime() - startTime;
     }
 
 
     @Override
     public void warmUp( ProgressReporter progressReporter ) {
-        // TODO: warmUp
+        throw new UnsupportedOperationException( "External YCSB warmup is not implemented yet" );
     }
 
 
     @Override
     public void analyze( Properties properties, File outputDirectory ) {
-        // TODO: Extract benchmark metrics from the YCSB output.
+        // The runner checks operation status. Metric export can be added later.
     }
 
 
@@ -171,64 +141,4 @@ public class YcsbExternal extends Scenario {
     public int getNumberOfInsertThreads() {
         return config.numberOfThreads;
     }
-
-
-    protected void preSchemaCreationTasks( DatabaseInstance databaseInstance, ExecutorFactory executorFactory ) {
-
-        Executor executor = executorFactory.createExecutorInstance();
-        try {
-            // Set table placement strategy
-            if ( databaseInstance instanceof PolyphenyDbInstance && config.partitionTable ) {
-                if ( config.dataStores.size() > 1 ) {
-                    ((PolyphenyDbExecutor) executor).setConfig( "routing/createPlacementStrategy", "org.polypheny.db.routing.strategies.CreateAllPlacementStrategy" );
-                }
-            }
-        } finally {
-            commitAndCloseExecutor( executor );
-        }
-    }
-
-
-    protected void postSchemaCreationTasks( DatabaseInstance databaseInstance, ExecutorFactory executorFactory ) throws ExecutorException {
-        Executor executor = executorFactory.createExecutorInstance();
-        try {
-            // Partition usertable table
-            if ( databaseInstance instanceof PolyphenyDbInstance && config.partitionTable ) {
-                if ( config.dataStores.size() > 1 ) {
-                    List<String> storeNames = ((PolyphenyDbExecutor) executor).storeNames;
-                    String partitionNames = storeNames.stream()
-                            .map( obj -> "p_" + obj )
-                            .collect( Collectors.joining( "," ) );
-                    executor.executeQuery( RawQuery.builder()
-                            .sql( "ALTER TABLE usertable PARTITION BY HASH (YCSB_KEY) WITH (" + partitionNames + ")" )
-                            .expectResultSet( false )
-                            .build() );
-                }
-            }
-        } finally {
-            commitAndCloseExecutor( executor );
-        }
-    }
-
-
-    protected void postDataGenerationTasks( DatabaseInstance databaseInstance, ExecutorFactory executorFactory ) throws ExecutorException {
-        Executor executor = executorFactory.createExecutorInstance();
-        try {
-            // Partition usertable
-            if ( databaseInstance instanceof PolyphenyDbInstance && config.partitionTable ) {
-                if ( config.dataStores.size() > 1 ) {
-                    List<String> storeNames = ((PolyphenyDbExecutor) executor).storeNames;
-                    for ( String storeName : storeNames ) {
-                        executor.executeQuery( RawQuery.builder()
-                                .sql( "ALTER TABLE usertable MODIFY PARTITIONS (p_" + storeName + ") ON STORE " + storeName )
-                                .expectResultSet( false )
-                                .build() );
-                    }
-                }
-            }
-        } finally {
-            commitAndCloseExecutor( executor );
-        }
-    }
-
 }

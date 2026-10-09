@@ -16,7 +16,7 @@ public class YcsbExternalCommand implements CliRunnable {
     @AirlineModule
     private HelpOption<YcsbExternalCommand> help;
 
-    @Arguments( description = "Task { schema | data | workload } and multiplier." )
+    @Arguments( description = "Task { schema | data | workload | cleanup }. Cleanup needs an adapter name; data/workload accept a multiplier." )
     private List<String> args;
 
     @Option( name = { "-pdb", "--polyphenydb" }, title = "Host and port", arity = 1, description = "Polypheny JDBC address as reachable from the Simple Client." )
@@ -29,25 +29,41 @@ public class YcsbExternalCommand implements CliRunnable {
     @Override
     public int run() {
         if ( args == null || args.isEmpty() || args.size() > 2 ) {
-            throw new IllegalArgumentException( "Expected: ycsb-external { schema | data | workload } [multiplier]" );
+            throw new IllegalArgumentException( "Expected: ycsb-external { schema | data | workload | cleanup } [argument]" );
         }
 
         String task = args.getFirst();
 
-        int multiplier = args.size() == 2 ? Integer.parseInt( args.get( 1 ) ) : 1;
+        // Cleanup takes an adapter name, not a numeric multiplier.
+        if ( task.equalsIgnoreCase( "cleanup" ) ) {
+            if ( args.size() != 2 ) {
+                throw new IllegalArgumentException( "Expected: ycsb-external cleanup <adapterName>" );
+            }
+            YcsbExternalScenario.cleanup( polyphenyDbHost, args.get( 1 ) );
+            return 0;
+        }
 
+        if ( task.equalsIgnoreCase( "schema" ) ) {
+            if ( args.size() != 1 ) {
+                throw new IllegalArgumentException( "Expected: ycsb-external schema" );
+            }
+            YcsbExternalScenario.schema( polyphenyDbHost, ycsbHost );
+            return 0;
+        }
+
+        if ( !task.equalsIgnoreCase( "data" ) && !task.equalsIgnoreCase( "workload" ) ) {
+            throw new IllegalArgumentException( "Unknown task: " + task );
+        }
+
+        int multiplier = args.size() == 2 ? Integer.parseInt( args.get( 1 ) ) : 1;
         if ( multiplier < 1 ) {
             throw new IllegalArgumentException( "Multiplier must be greater than 0" );
         }
 
         if ( task.equalsIgnoreCase( "data" ) ) {
             YcsbExternalScenario.data( polyphenyDbHost, ycsbHost, multiplier );
-        } else if ( task.equalsIgnoreCase( "workload" ) ) {
-            YcsbExternalScenario.workload( polyphenyDbHost, ycsbHost, multiplier );
-        } else if ( task.equalsIgnoreCase( "schema" ) ) {
-            YcsbExternalScenario.schema( polyphenyDbHost, ycsbHost );
         } else {
-            throw new IllegalArgumentException( "Unknown task: " + task );
+            YcsbExternalScenario.workload( polyphenyDbHost, ycsbHost, multiplier );
         }
 
         return 0;

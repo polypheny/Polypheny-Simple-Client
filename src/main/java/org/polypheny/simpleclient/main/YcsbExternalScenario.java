@@ -4,60 +4,128 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
-import org.polypheny.simpleclient.QueryMode;
+import lombok.extern.slf4j.Slf4j;
+import org.polypheny.simpleclient.executor.Executor;
 import org.polypheny.simpleclient.executor.Executor.ExecutorFactory;
+import org.polypheny.simpleclient.executor.ExecutorException;
+import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor;
+import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory;
+import org.polypheny.simpleclient.executor.PolyphenyDbMongoQlExecutor.PolyphenyDbMongoQlExecutorFactory;
+import org.polypheny.simpleclient.query.RawQuery;
 import org.polypheny.simpleclient.scenario.ycsb.YcsbConfig;
 import org.polypheny.simpleclient.scenario.ycsb.YcsbExternal;
 import org.polypheny.simpleclient.scenario.ycsb.YcsbRunner;
-import org.polypheny.simpleclient.executor.PolyphenyDbJdbcExecutor.PolyphenyDbJdbcExecutorFactory;
-import org.polypheny.simpleclient.executor.PolyphenyDbMongoQlExecutor.PolyphenyDbMongoQlExecutorFactory;
 
 
+@Slf4j
 public class YcsbExternalScenario {
 
     public static void schema( String polyphenyDbHost, String ycsbHost ) {
         YcsbConfig config = new YcsbConfig( getProperties(), 1 );
+        String adapterName = deployStore( polyphenyDbHost, config );
+        System.out.println( "Deployed benchmark adapter: " + adapterName );
+        createScenario( polyphenyDbHost, ycsbHost, config, adapterName ).createSchema( null, true );
+    }
 
-        YcsbExternal scenario = createScenario( polyphenyDbHost, config, ycsbHost );
 
-        scenario.createSchema( null, true );
+    private static String deployStore( String host, YcsbConfig config ) {
+        PolyphenyDbJdbcExecutor executor = new PolyphenyDbJdbcExecutorFactory( host, false ).createExecutorInstance( null );
+        try {
+            String name = "postgres".equals( config.storageBackend )
+                    ? executor.deployPostgres( true )
+                    : executor.deployMongoDb();
+            executor.executeCommit();
+            return name;
+        } catch ( ExecutorException e ) {
+            rollback( executor );
+            throw new IllegalStateException( "Could not deploy benchmark store: " + config.storageBackend, e );
+        } finally {
+            close( executor );
+        }
     }
 
 
     public static void data( String polyphenyDbHost, String ycsbHost, int multiplier ) {
         YcsbConfig config = new YcsbConfig( getProperties(), multiplier );
-        YcsbExternal scenario = createScenario( polyphenyDbHost, config, ycsbHost );
-
-        ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
-
-        scenario.generateData( null, progressReporter );
+        createScenario( polyphenyDbHost, ycsbHost, config, null ).generateData( null, null );
     }
 
 
     public static void workload( String polyphenyDbHost, String ycsbHost, int multiplier ) {
         YcsbConfig config = new YcsbConfig( getProperties(), multiplier );
-        YcsbExternal scenario = createScenario( polyphenyDbHost, config, ycsbHost );
-
-        ProgressReporter progressReporter = new ProgressBar( config.numberOfThreads, config.progressReportBase );
-
-        scenario.execute( progressReporter, null, new File( "results" ), config.numberOfThreads );
+        createScenario( polyphenyDbHost, ycsbHost, config, null )
+                .execute( null, null, new File( "results" ), config.numberOfThreads );
     }
 
 
-    private static YcsbExternal createScenario( String polyphenyDbHost, YcsbConfig config, String ycsbHost ) {
-        ExecutorFactory executorFactory;
-
-        if ( "polypheny-jdbc".equals( config.system ) ) {
-            executorFactory = new PolyphenyDbJdbcExecutorFactory( polyphenyDbHost, false );
-        } else if ( "polypheny-mongoql".equals( config.system ) ) {
-            executorFactory = new PolyphenyDbMongoQlExecutorFactory( polyphenyDbHost );
-        } else {
-            throw new IllegalArgumentException( "Unsupported YCSB system: " + config.system );
+    public static void cleanup( String polyphenyDbHost, String adapterName ) {
+        YcsbConfig config = new YcsbConfig( getProperties(), 1 );
+        if ( !adapterName.matches( config.storageBackend + "[0-9]+" ) ) {
+            throw new IllegalArgumentException( "Adapter name does not match the benchmark backend: " + adapterName );
         }
 
-        YcsbRunner runner = new YcsbRunner( "jdbc:polypheny://" + ycsbHost + "/", "pa", "", config );
+        Executor executor = "mongoql".equals( config.accessMode )
+                ? createExecutorFactory( polyphenyDbHost, config ).createExecutorInstance( null, YcsbExternal.DOCUMENT_NAMESPACE )
+                : createExecutorFactory( polyphenyDbHost, config ).createExecutorInstance();
+        try {
+            if ( "mongoql".equals( config.accessMode ) ) {
+                executor.executeQuery( RawQuery.builder().mongoQl( "db.usertable.drop()" ).expectResultSet( false ).build() );
+            } else {
+                executor.executeQuery( RawQuery.builder().sql( "DROP TABLE IF EXISTS USERTABLE" ).expectResultSet( false ).build() );
+            }
+            executor.executeCommit();
+        } catch ( ExecutorException e ) {
+            if ( "sql".equals( config.accessMode ) ) {
+                rollback( executor );
+            }
+            throw new IllegalStateException( "Could not remove YCSB schema", e );
+        } finally {
+            close( executor );
+        }
 
-        return new YcsbExternal( executorFactory, config, runner, false, QueryMode.TABLE );
+        PolyphenyDbJdbcExecutor setupExecutor = new PolyphenyDbJdbcExecutorFactory( polyphenyDbHost, false ).createExecutorInstance( null );
+        try {
+            setupExecutor.dropStore( adapterName );
+            setupExecutor.executeCommit();
+            System.out.println( "Removed benchmark adapter: " + adapterName );
+        } catch ( ExecutorException e ) {
+            rollback( setupExecutor );
+            throw new IllegalStateException( "Could not remove benchmark adapter: " + adapterName, e );
+        } finally {
+            close( setupExecutor );
+        }
+    }
+
+
+    private static ExecutorFactory createExecutorFactory( String host, YcsbConfig config ) {
+        if ( "mongoql".equals( config.accessMode ) ) {
+            return new PolyphenyDbMongoQlExecutorFactory( host );
+        }
+        return new PolyphenyDbJdbcExecutorFactory( host, false );
+    }
+
+
+    private static YcsbExternal createScenario( String host, String ycsbHost, YcsbConfig config, String adapterName ) {
+        YcsbRunner runner = new YcsbRunner( "jdbc:polypheny://" + ycsbHost + "/", "pa", "", config );
+        return new YcsbExternal( createExecutorFactory( host, config ), config, runner, adapterName );
+    }
+
+
+    private static void rollback( Executor executor ) {
+        try {
+            executor.executeRollback();
+        } catch ( ExecutorException e ) {
+            log.warn( "Could not roll back benchmark setup", e );
+        }
+    }
+
+
+    private static void close( Executor executor ) {
+        try {
+            executor.closeConnection();
+        } catch ( ExecutorException e ) {
+            log.warn( "Could not close benchmark connection", e );
+        }
     }
 
 
