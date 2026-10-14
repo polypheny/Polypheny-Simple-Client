@@ -21,6 +21,7 @@ public class ParquetConfig extends AbstractConfig {
     public final int duckdbThreads;
     public final String duckdbMemoryLimit;
     public final int sparkShufflePartitions;
+    public final String nestedCustomerFile;
 
 
     public ParquetConfig( Properties properties ) {
@@ -38,6 +39,7 @@ public class ParquetConfig extends AbstractConfig {
         duckdbThreads = Integer.parseInt( properties.getProperty( "duckdbThreads", "2" ).trim() );
         duckdbMemoryLimit = properties.getProperty( "duckdbMemoryLimit", "4GB" ).trim();
         sparkShufflePartitions = Integer.parseInt( properties.getProperty( "sparkShufflePartitions", "2" ).trim() );
+        nestedCustomerFile = properties.getProperty( "nestedCustomerFile", "" ).trim();
 
         if ( !List.of( "polypheny", "duckdb", "spark" ).contains( engine ) ) {
             throw new IllegalArgumentException( "Unsupported Parquet engine: " + engine );

@@ -53,8 +53,15 @@ public class YcsbExternalScenario {
 
     public static void workload( String polyphenyDbHost, String ycsbHost, int multiplier ) {
         YcsbConfig config = new YcsbConfig( getProperties(), multiplier );
-        createScenario( polyphenyDbHost, ycsbHost, config, null )
-                .execute( null, null, new File( "results" ), config.numberOfThreads );
+
+        YcsbExternal scenario = createScenario( polyphenyDbHost, ycsbHost, config, null );
+
+        File outputDirectory = new File( "results/ycsb" );
+
+        scenario.execute( null, null, outputDirectory, config.numberOfThreads );
+
+        Properties results = new Properties();
+        scenario.analyze( results, outputDirectory );
     }
 
 

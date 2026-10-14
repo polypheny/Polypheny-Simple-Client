@@ -56,6 +56,7 @@ public class ParquetExternalScenario {
                 "accessMode",
                 "namespace",
                 "dataDirectory",
+                "nestedCustomerFile",
                 "queryFile" ) ) {
 
             String value = properties.getProperty( benchmark + "." + name );
@@ -67,8 +68,14 @@ public class ParquetExternalScenario {
 
         File outputDirectory = new File( "results/parquet", benchmark );
 
-        ParquetRunner runner = new ParquetRunner( new ParquetConfig( properties ), host, port );
+        ParquetRunner runner = new ParquetRunner(
+                new ParquetConfig( properties ), host, port
+        );
+
         runner.run( outputDirectory );
+
+        Properties results = new Properties();
+        runner.analyze( results, outputDirectory );
     }
 
 

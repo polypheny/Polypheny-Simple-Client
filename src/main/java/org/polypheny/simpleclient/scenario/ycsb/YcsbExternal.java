@@ -95,16 +95,6 @@ public class YcsbExternal extends Scenario {
     }
 
 
-    private String createTableSql() {
-        StringBuilder sql = new StringBuilder( "CREATE TABLE USERTABLE (YCSB_KEY VARCHAR(255) NOT NULL" );
-        for ( int i = 0; i < config.fieldCount; i++ ) {
-            sql.append( ", FIELD" ).append( i ).append( " VARCHAR(" ).append( config.fieldLength ).append( ")" );
-        }
-        sql.append( ", PRIMARY KEY (YCSB_KEY)) ON STORE \"" ).append( adapterName ).append( "\"" );
-        return sql.toString();
-    }
-
-
     @Override
     public void generateData( DatabaseInstance databaseInstance, ProgressReporter progressReporter ) {
         File logFile = new File( "results/ycsb-load.log" );
@@ -115,13 +105,22 @@ public class YcsbExternal extends Scenario {
 
 
     @Override
-    public long execute( ProgressReporter progressReporter, CsvWriter csvWriter, File outputDirectory, int numberOfThreads ) {
-        File logFile = new File( outputDirectory, "ycsb-run.log" );
+    public long execute(
+            ProgressReporter progressReporter,
+            CsvWriter csvWriter,
+            File outputDirectory,
+            int numberOfThreads ) {
+
         log.info( "Executing {} YCSB operations", config.operationCount );
+
         long startTime = System.nanoTime();
-        runner.run( logFile );
+        runner.run( outputDirectory );
+        long executionTime = System.nanoTime() - startTime;
+
+        File logFile = new File( outputDirectory, "run.log" );
         log.info( "YCSB workload completed. See {}", logFile.getAbsolutePath() );
-        return System.nanoTime() - startTime;
+
+        return executionTime;
     }
 
 
@@ -133,12 +132,22 @@ public class YcsbExternal extends Scenario {
 
     @Override
     public void analyze( Properties properties, File outputDirectory ) {
-        // The runner checks operation status. Metric export can be added later.
+        runner.analyze( properties, outputDirectory );
     }
 
 
     @Override
     public int getNumberOfInsertThreads() {
         return config.numberOfThreads;
+
+    }
+
+    private String createTableSql() {
+        StringBuilder sql = new StringBuilder( "CREATE TABLE USERTABLE (YCSB_KEY VARCHAR(255) NOT NULL" );
+        for ( int i = 0; i < config.fieldCount; i++ ) {
+            sql.append( ", FIELD" ).append( i ).append( " VARCHAR(" ).append( config.fieldLength ).append( ")" );
+        }
+        sql.append( ", PRIMARY KEY (YCSB_KEY)) ON STORE \"" ).append( adapterName ).append( "\"" );
+        return sql.toString();
     }
 }

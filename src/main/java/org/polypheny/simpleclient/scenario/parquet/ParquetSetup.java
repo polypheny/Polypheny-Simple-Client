@@ -34,6 +34,12 @@ public class ParquetSetup {
         for ( Source source : sources ) {
             validateDirectory( source.directory() );
             for ( String table : source.tables() ) {
+                Path parquetFile = source.directory().resolve( table + ".parquet" );
+
+                if ( Files.isRegularFile( parquetFile ) && Files.isReadable( parquetFile ) ) {
+                    continue;
+                }
+
                 validateDirectory( source.directory().resolve( table ) );
             }
         }
