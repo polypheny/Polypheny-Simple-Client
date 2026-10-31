@@ -1,6 +1,30 @@
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2019-30.10.26, 00:45 The Polypheny Project
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 package org.polypheny.simpleclient.scenario.ycsb.binding;
 
-import com.google.gson.JsonObject;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -9,31 +33,34 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.Vector;
+import java.util.regex.Pattern;
 import org.polypheny.jdbc.PolyConnection;
 import org.polypheny.jdbc.multimodel.DocumentResult;
 import org.polypheny.jdbc.multimodel.PolyStatement;
 import org.polypheny.jdbc.multimodel.Result;
 import org.polypheny.jdbc.multimodel.ScalarResult;
 import org.polypheny.jdbc.types.PolyDocument;
+import site.ycsb.ByteArrayByteIterator;
 import site.ycsb.ByteIterator;
 import site.ycsb.DB;
 import site.ycsb.DBException;
 import site.ycsb.Status;
-import site.ycsb.StringByteIterator;
-
 
 public class PolyphenyMongoBinding extends DB {
 
+    private static final char[] JSON_HEX = "0123456789abcdef".toCharArray();
+    private static final Pattern IDENTIFIER = Pattern.compile( "[A-Za-z_][A-Za-z0-9_]*" );
+
     private Connection connection;
-    private PolyStatement statement;
     private String namespace;
     private boolean errorReported;
-
+    private boolean serverProjection;
 
     @Override
     public void init() throws DBException {
         Properties properties = getProperties();
         namespace = properties.getProperty( "db.namespace", "ycsb" );
+        serverProjection = Boolean.parseBoolean( properties.getProperty( "db.serverProjection", "false" ) );
 
         try {
             Class.forName( "org.polypheny.jdbc.PolyphenyDriver" );
@@ -45,9 +72,6 @@ public class PolyphenyMongoBinding extends DB {
             );
 
             connection.setAutoCommit( true );
-
-            statement = connection.unwrap( PolyConnection.class )
-                    .createPolyStatement();
 
         } catch ( Exception e ) {
             if ( connection != null ) {
@@ -62,18 +86,13 @@ public class PolyphenyMongoBinding extends DB {
         }
     }
 
-
     @Override
     public Status insert( String table, String key, Map<String, ByteIterator> values ) {
-        try {
-            JsonObject document = new JsonObject();
-            document.addProperty( "_id", key );
-
-            for ( var entry : values.entrySet() ) {
-                document.addProperty( entry.getKey(), entry.getValue().toString() );
-            }
-
-            String query = collection( table ) + ".insert(" + toMongoJson( document ) + ")";
+        try ( var statement = new QueryStatement( connection.unwrap( PolyConnection.class ) ) ) {
+            String valuesJson = valuesJson( values );
+            String document = "{\"_id\":" + quoteMongoString( key )
+                    + (values.isEmpty() ? "}" : "," + valuesJson.substring( 1 ));
+            String query = collection( table ) + ".insertOne(" + document + ")";
 
             Result response = statement.execute( namespace, "mongo", query );
             long inserted = getUpdateCount( response );
@@ -85,19 +104,17 @@ public class PolyphenyMongoBinding extends DB {
         }
     }
 
-
     @Override
     public Status read( String table, String key, Set<String> fields, Map<String, ByteIterator> result ) {
-        try {
-            JsonObject filter = new JsonObject();
-            filter.addProperty( "_id", key );
+        try ( var statement = new QueryStatement( connection.unwrap( PolyConnection.class ) ) ) {
+            String query = collection( table ) + ".find({\"_id\":" + quoteMongoString( key ) + "}"
+                    + (serverProjection && fields != null ? "," + projection( fields ) : "")
+                    + ").limit(2)";
 
-            String query = collection( table ) + ".find(" + filter + ")";
-
-            DocumentResult documents = statement.execute( namespace, "mongo", query ).unwrap( DocumentResult.class );
+            DocumentResult documents = statement.execute( namespace, "mongo", query )
+                    .unwrap( DocumentResult.class );
 
             boolean found = false;
-
             for ( PolyDocument document : documents ) {
                 if ( found ) {
                     throw new IllegalStateException( "Multiple documents found for key: " + key );
@@ -114,26 +131,103 @@ public class PolyphenyMongoBinding extends DB {
         }
     }
 
-    private static void fillMap( Map<String, ByteIterator> result, PolyDocument document, Set<String> fields ) throws SQLException {
-        for ( var entry : document.entrySet() ) {
-            String field = entry.getKey();
+    @Override
+    public Status update( String table, String key, Map<String, ByteIterator> values ) {
+        try ( var statement = new QueryStatement( connection.unwrap( PolyConnection.class ) ) ) {
+            String query = collection( table ) + ".updateOne({\"_id\":"
+                    + quoteMongoString( key ) + "},{\"$set\":"
+                    + valuesJson( values ) + "})";
 
-            if ( "_id".equals( field ) ) {
-                continue;
-            }
+            long updated = getUpdateCount(
+                    statement.execute( namespace, "mongo", query )
+            );
 
-            if ( fields != null && !fields.contains( field ) ) {
-                continue;
-            }
+            return updated == 0 || updated == 1 ? Status.OK : Status.ERROR;
 
-            result.put( field, new StringByteIterator( entry.getValue().asString() ) );
-        }
-
-        if ( fields != null && !result.keySet().containsAll( fields ) ) {
-            throw new IllegalStateException( "Document does not contain all requested fields" );
+        } catch ( Exception e ) {
+            return reportError( e );
         }
     }
 
+    @Override
+    public Status delete( String table, String key ) {
+        try ( var statement = new QueryStatement( connection.unwrap( PolyConnection.class ) ) ) {
+            String query = collection( table ) + ".deleteOne({\"_id\":" + quoteMongoString( key ) + "})";
+            long deleted = getUpdateCount( statement.execute( namespace, "mongo", query ) );
+            if ( deleted == 1 ) {
+                return Status.OK;
+            }
+            if ( deleted == 0 ) {
+                return Status.NOT_FOUND;
+            }
+            return Status.ERROR;
+        } catch ( Exception e ) {
+            return reportError( e );
+        }
+    }
+
+    @Override
+    public Status scan( String table, String startKey, int recordCount, Set<String> fields,
+            Vector<HashMap<String, ByteIterator>> result ) {
+
+        if ( recordCount < 1 ) {
+            return Status.ERROR;
+        }
+
+        try ( var statement = new QueryStatement( connection.unwrap( PolyConnection.class ) ) ) {
+            String query = collection( table ) + ".aggregate(["
+                    + "{\"$match\":{\"_id\":{\"$gte\":" + quoteMongoString( startKey ) + "}}},"
+                    + "{\"$sort\":{\"_id\":1}},"
+                    + "{\"$limit\":" + recordCount + "}"
+                    + (serverProjection && fields != null
+                    ? ",{\"$project\":" + projection( fields ) + "}" : "")
+                    + "])";
+
+            DocumentResult documents = statement.execute( namespace, "mongo", query )
+                    .unwrap( DocumentResult.class );
+
+            for ( PolyDocument document : documents ) {
+                HashMap<String, ByteIterator> row = new HashMap<>();
+                fillMap( row, document, fields );
+                result.add( row );
+            }
+
+            return Status.OK;
+
+        } catch ( Exception e ) {
+            return reportError( e );
+        }
+    }
+
+    @Override
+    public void cleanup() throws DBException {
+        if ( connection != null ) {
+            try {
+                connection.close();
+            } catch ( SQLException e ) {
+                throw new DBException( e );
+            }
+        }
+    }
+
+    private static void fillMap( Map<String, ByteIterator> result, PolyDocument document, Set<String> fields ) throws SQLException {
+        if ( fields == null ) {
+            for ( var entry : document.entrySet() ) {
+                if ( !"_id".equals( entry.getKey() ) ) {
+                    result.put( entry.getKey(), new ByteArrayByteIterator(
+                            entry.getValue().asString().getBytes( StandardCharsets.UTF_8 ) ) );
+                }
+            }
+        } else {
+            for ( String field : fields ) {
+                var value = document.get( field );
+                if ( value == null || "_id".equals( field ) ) {
+                    throw new IllegalStateException( "Document does not contain requested field: " + field );
+                }
+                result.put( field, new ByteArrayByteIterator( value.asString().getBytes( StandardCharsets.UTF_8 ) ) );
+            }
+        }
+    }
 
     private static long getUpdateCount( Result response ) throws SQLException {
         if ( response instanceof ScalarResult scalar ) {
@@ -147,7 +241,7 @@ public class PolyphenyMongoBinding extends DB {
                 var updateCount = document.get( "updateCount" );
 
                 if ( updateCount == null ) {
-                    throw new IllegalStateException( "Insert result has no updateCount: " + document );
+                    throw new IllegalStateException( "Write result has no updateCount: " + document );
                 }
 
                 count += updateCount.asLong();
@@ -156,43 +250,62 @@ public class PolyphenyMongoBinding extends DB {
             return count;
         }
 
-        throw new IllegalStateException( "Unexpected insert result: " + response.getClass().getName() );
+        throw new IllegalStateException( "Unexpected write result: " + response.getClass().getName() );
     }
 
-    private static String toMongoJson( JsonObject document ) {
+    private static String valuesJson( Map<String, ByteIterator> values ) {
         StringBuilder json = new StringBuilder( "{" );
-        String separator = "";
-
-        for ( var entry : document.entrySet() ) {
-            json.append( separator ).append( mongoString( entry.getKey() ) ).append( ":" ).append( mongoString( entry.getValue().getAsString() ) );
-
-            separator = ",";
+        for ( var entry : values.entrySet() ) {
+            if ( json.length() > 1 ) {
+                json.append( ',' );
+            }
+            json.append( quoteMongoString( entry.getKey() ) ).append( ':' )
+                    .append( quoteMongoString( entry.getValue().toString() ) );
         }
-
-        return json.append( "}" ).toString();
+        return json.append( '}' ).toString();
     }
 
-    private static String mongoString( String value ) {
-        StringBuilder json = new StringBuilder( "\"" );
+    private static String projection( Set<String> fields ) {
+        if ( fields.isEmpty() ) {
+            return "{\"_id\":1}";
+        }
+        StringBuilder json = new StringBuilder( "{" );
+        for ( String field : fields ) {
+            if ( json.length() > 1 ) {
+                json.append( ',' );
+            }
+            json.append( quoteMongoString( field ) ).append( ":1" );
+        }
+        return json.append( '}' ).toString();
+    }
 
+    private static String quoteMongoString( String value ) {
+        StringBuilder result = new StringBuilder( value.length() + 2 ).append( '"' );
+        int plainRun = 0;
         for ( int i = 0; i < value.length(); i++ ) {
-            String hex = Integer.toHexString( value.charAt( i ) );
-
-            json.append( "\\u" ).append( "0".repeat( 4 - hex.length() ) ).append( hex );
+            char c = value.charAt( i );
+            boolean plain = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
+                    || (c >= '0' && c <= '9') || c == '_' || c == ' ';
+            if ( plain && plainRun < 64 ) {
+                result.append( c );
+                plainRun++;
+            } else {
+                plainRun = 0;
+                result.append( '\\' ).append( 'u' )
+                        .append( JSON_HEX[(c >>> 12) & 15] ).append( JSON_HEX[(c >>> 8) & 15] )
+                        .append( JSON_HEX[(c >>> 4) & 15] ).append( JSON_HEX[c & 15] );
+            }
         }
-
-        return json.append( "\"" ).toString();
+        return result.append( '"' ).toString();
     }
-
 
     private static String collection( String table ) {
-        if ( table == null || !table.matches( "[A-Za-z_][A-Za-z0-9_]*" ) ) {
+        if ( table == null || !IDENTIFIER.matcher( table ).matches() ) {
             throw new IllegalArgumentException( "Unsupported collection name: " + table );
         }
 
         return "db." + table;
     }
-
 
     private Status reportError( Exception e ) {
         if ( !errorReported ) {
@@ -203,34 +316,17 @@ public class PolyphenyMongoBinding extends DB {
         return Status.ERROR;
     }
 
+    private static class QueryStatement extends PolyStatement implements AutoCloseable {
+        QueryStatement( PolyConnection connection ) {
+            super( connection );
+        }
 
-    @Override
-    public Status update( String table, String key, Map<String, ByteIterator> values ) {
-        return Status.NOT_IMPLEMENTED;
-    }
-
-
-    @Override
-    public Status delete( String table, String key ) {
-        return Status.NOT_IMPLEMENTED;
-    }
-
-
-    @Override
-    public Status scan( String table, String startKey, int recordCount, Set<String> fields, Vector<HashMap<String, ByteIterator>> result ) {
-        return Status.NOT_IMPLEMENTED;
-    }
-
-
-    @Override
-    public void cleanup() throws DBException {
-        if ( connection != null ) {
-            try {
-                connection.close();
-            } catch ( SQLException e ) {
-                throw new DBException( e );
+        @Override
+        public void close() throws SQLException {
+            if ( getStatementId() > 0 ) {
+                PolyConnection connection = getConnection();
+                connection.getPrismInterfaceClient().closeStatement( getStatementId(), connection.getTimeout() );
             }
         }
     }
-
 }

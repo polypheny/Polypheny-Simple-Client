@@ -18,21 +18,24 @@ RUN curl -fL \
         https://repo.maven.apache.org/maven2/com/google/code/gson/gson/2.11.0/gson-2.11.0.jar \
         -o /ycsbExternal/lib/gson-2.11.0.jar
 
+RUN find /ycsbExternal/postgrenosql-binding/lib -name 'postgresql-*.jar' -delete \
+    && curl -fL \
+        https://repo.maven.apache.org/maven2/org/postgresql/postgresql/42.7.4/postgresql-42.7.4.jar \
+        -o /ycsbExternal/postgrenosql-binding/lib/postgresql-42.7.4.jar
+
 COPY libs/polyphenyJdbcDrivers/new-driver.jar \
     /ycsbExternal/lib/polypheny-jdbc-driver.jar
 
-COPY docker/ycsb/binding/PolyphenyMongoBinding.java \
-    /tmp/binding/PolyphenyMongoBinding.java
+COPY docker/ycsb/binding/*.java /tmp/binding/
 
 RUN mkdir -p /tmp/binding/classes \
     && javac --release 21 \
-        -cp "/ycsbExternal/lib/*" \
+        -cp "/ycsbExternal/lib/*:/ycsbExternal/mongodb-binding/lib/*" \
         -d /tmp/binding/classes \
-        /tmp/binding/PolyphenyMongoBinding.java \
+        /tmp/binding/*.java \
     && jar --create \
         --file /ycsbExternal/lib/polypheny-ycsb-binding.jar \
         -C /tmp/binding/classes .
-
 
 FROM eclipse-temurin:21-jre-jammy
 

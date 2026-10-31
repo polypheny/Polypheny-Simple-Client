@@ -1,86 +1,79 @@
 package org.polypheny.simpleclient.scenario.ycsb;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 import org.polypheny.simpleclient.scenario.AbstractConfig;
 
-
 public class YcsbConfig extends AbstractConfig {
-
-    public final String workload;
-    public final int recordCount;
-    public final int operationCount;
-
-    public final int fieldCount;
-    public final int fieldLength;
-
+    public final Properties properties;
+    public final Path file;
+    public final List<String> targets;
     public final String imageName;
     public final String network;
 
-    public final String accessMode;
-    public final String storageBackend;
+    public final String workload;
 
-
-    public YcsbConfig( Properties properties, int multiplier ) {
-        super( "ycsb", toSystem( properties.getProperty( "accessMode", "sql" ).trim() ), properties );
-        accessMode = properties.getProperty( "accessMode", "sql" ).trim();
-        workload = getStringProperty( properties, "workload" );
-        recordCount = getIntProperty( properties, "recordCount" );
-
-        if ( multiplier < 1 ) {
-            throw new IllegalArgumentException( "Multiplier must be greater than 0" );
-        }
-        // The multiplier increases workload operations; the dataset size stays fixed.
-        operationCount = Math.multiplyExact( getIntProperty( properties, "operationCount" ), multiplier );
-
-        fieldCount = getIntProperty( properties, "fieldCount" );
-        fieldLength = getIntProperty( properties, "fieldLength" );
-
-        imageName = getStringProperty( properties, "imageName" );
-        network = getStringProperty( properties, "network" );
-        storageBackend = getStringProperty( properties, "storageBackend" ).trim();
-
-        if ( numberOfWarmUpIterations != 0 ) {
-            throw new IllegalArgumentException( "External YCSB warmup is not implemented; use numberOfWarmUpIterations=0" );
-        }
-        validate();
+    public YcsbConfig( Path path ) throws IOException {
+        this( read( path ), path.toRealPath() );
     }
 
-
-    // just to make it a bit more readable
-    private static String toSystem( String accessMode ) {
-        if ( "sql".equals( accessMode ) ) {
-            return "polypheny-jdbc";
+    public YcsbConfig( Properties properties, Path file ) {
+        super( "ycsb", "polypheny-mongoql", scenarioProperties( properties ) );
+        this.properties = properties;
+        this.file = file;
+        imageName = required( "imageName" );
+        network = required( "network" );
+        targets = List.of( required( "targets" ).split( "\\s*,\\s*", -1 ) );
+        if ( Set.copyOf( targets ).size() != targets.size() ) {
+            throw new IllegalArgumentException( "Duplicate targets" );
         }
-        if ( "mongoql".equals( accessMode ) ) {
-            return "polypheny-mongoql";
-        }
-        throw new IllegalArgumentException( "Unsupported YCSB access mode: " + accessMode );
-    }
-
-
-    private void validate() {
-        if ( recordCount < 1 || operationCount < 1 || fieldCount < 1 || fieldLength < 1 || numberOfThreads < 1 ) {
-            throw new IllegalArgumentException( "Record count, operation count, field count, field length and number of threads must be greater than 0" );
-        }
-        if ( workload == null || workload.isBlank() || imageName == null || imageName.isBlank() || network == null || network.isBlank() ) {
-            throw new IllegalArgumentException( "Workload, image name and network must not be blank" );
+        if ( targets.contains( "postgrenosql" ) && numberOfThreads != 1 ) {
+            throw new IllegalArgumentException( "YCSB 0.17.0 PostgreNoSQL requires ycsb.threadcount=1: "
+                    + "its shared prepared statements are unsafe with multiple threads. "
+                    + "For concurrent runs use targets=polypheny,mongodb." );
         }
 
-        if ( !"postgres".equals( storageBackend ) && !"mongodb".equals( storageBackend ) ) {
-            throw new IllegalArgumentException( "Unsupported storage backend: " + storageBackend );
+        workload = required( "workloadFile" );
+        if ( Long.parseLong( required( "ycsb.recordcount" ) ) < 1
+                || Long.parseLong( required( "ycsb.operationcount" ) ) < 1
+                || Integer.parseInt( required( "ycsb.fieldcount" ) ) < 1
+                || Integer.parseInt( required( "ycsb.fieldlength" ) ) < 1 ) {
+            throw new IllegalArgumentException( "YCSB counts and field sizes must be positive" );
         }
-        if ( "mongodb".equals( storageBackend ) && !"mongoql".equals( accessMode ) ) {
-            throw new IllegalArgumentException( "MongoDB requires accessMode=mongoql" );
-        }
-        if ( "mongoql".equals( accessMode ) && !"workloads/workloadc".equals( workload ) ) {
-            throw new IllegalArgumentException( "The MongoQL binding currently supports only workloads/workloadc (insert and read)" );
+        if ( Integer.parseInt( properties.getProperty( "jobTimeoutSeconds", "3600" ) ) < 1 ) {
+            throw new IllegalArgumentException( "jobTimeoutSeconds must be positive" );
         }
     }
 
+    public String required( String key ) {
+        String value = properties.getProperty( key );
+        if ( value == null || value.isBlank() ) {
+            throw new IllegalArgumentException( "Missing property: " + key );
+        }
+        return value.trim();
+    }
+
+    private static Properties read( Path file ) throws IOException {
+        Properties properties = new Properties();
+        try ( var input = Files.newInputStream( file ) ) {
+            properties.load( input );
+        }
+        return properties;
+    }
+
+    private static Properties scenarioProperties( Properties properties ) {
+        Properties scenario = new Properties();
+        scenario.setProperty( "numberOfThreads", properties.getProperty( "ycsb.threadcount", "1" ) );
+        scenario.setProperty( "numberOfWarmUpIterations", "0" );
+        return scenario;
+    }
 
     @Override
     public boolean usePreparedBatchForDataInsertion() {
         return false;
     }
-
 }
