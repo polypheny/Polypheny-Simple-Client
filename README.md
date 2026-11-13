@@ -105,7 +105,7 @@ _Polypheny Simple Client_ builds upon the great work of several other open-sourc
 * [Chronos](https://chronos-eaas.org/): A system for defining, executing, and monitoring evaluations.
 * [jCodec](https://github.com/Devskiller/jfairy/): Pure java implementation of video/audio codecs.
 * [jFairy](https://github.com/Devskiller/jfairy/): A library for generating fake data.
-* [Log4j](https://logging.apache.org/log4j/2.x/): Fast and flexible logging framework for Java.
+* [Logback](https://logback.qos.ch/): Logging backend for SLF4J.
 * [Opencsv](http://opencsv.sourceforge.net/): Library for parsing CSV (comma-separated values) data.
 * [Project Lombok](https://projectlombok.org/): A library providing compiler annotations for tedious tasks.
 * [Shadow](https://imperceptiblethoughts.com/shadow/): Gradle plugin for creating fat JARs.

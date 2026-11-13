@@ -16,7 +16,7 @@ buildscript {
     }
     dependencies {
         // Shadowing; used to make a fat jar (https://github.com/johnrengelman/shadow)
-        classpath group: "com.github.johnrengelman", name: "shadow", version: "8.1.1"
+        classpath group: "com.gradleup.shadow", name: "shadow-gradle-plugin", version: "8.3.11"
         // Lombok (https://plugins.gradle.org/plugin/io.freefair.lombok)
         classpath group: "io.freefair.gradle", name: "lombok-plugin", version: "8.11"
         // https://plugins.gradle.org/plugin/org.jetbrains.gradle.plugin.idea-ext
@@ -38,7 +38,7 @@ repositories {
 apply plugin: "java-library"
 apply plugin: "org.jetbrains.gradle.plugin.idea-ext"
 apply plugin: "io.freefair.lombok"
-apply plugin: "com.github.johnrengelman.shadow"
+apply plugin: "com.gradleup.shadow"
 apply plugin: "app.cash.licensee"
 apply plugin: "com.jaredsburrows.license"
 
@@ -87,7 +87,6 @@ dependencies {
     implementation group: 'monetdb', name: 'monetdb-jdbc', version: '3.3' // License: Mozilla Public License 2.0
 
     // Cottontail-DB
-    //implementation group: 'org.slf4j', name: 'log4j-over-slf4j', version: '1.7.36' // License: MIT
     implementation(group: 'org.vitrivr', name: 'cottontaildb', version: '0.10.5') { // License: MIT
         exclude group: 'org.apache.logging.log4j'
         exclude group: 'org.slf4j'
@@ -107,10 +106,8 @@ dependencies {
     implementation group: 'com.google.code.gson', name: 'gson', version: '2.11.0' // License: Apache 2.0
 
     // Logging
-    implementation group: 'org.slf4j', name: 'slf4j-api', version: '2.0.16' // License: MIT
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-slf4j2-impl', version: '2.24.3' // License: Apache 2.0
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.24.3' // License: Apache 2.0
-    //annotationProcessor group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.21.1' // License: Apache 2.0
+    implementation group: 'org.slf4j', name: 'slf4j-api', version: '2.0.19' // License: MIT
+    implementation group: 'ch.qos.logback', name: 'logback-classic', version: '1.6.5' // License: EPL-2.0
 
     // Extracting ZIPs
     implementation group: 'net.lingala.zip4j', name: 'zip4j', version: '2.11.5' // License: Apache 2.0
@@ -147,6 +144,7 @@ licensee {
 
     // Category B
     allow('EPL-1.0')
+    allow('EPL-2.0')
     allow('MPL-2.0')
 }
 
@@ -189,9 +187,9 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
 shadowJar {
     zip64 true
     archiveClassifier.set('')
-    mergeServiceFiles {
-        setPath("META-INF/services")
-        include("io.grpc.*")
+    mergeServiceFiles()
+    filesMatching("META-INF/services/**") {
+        duplicatesStrategy = DuplicatesStrategy.INCLUDE
     }
     // Include everything from 'libs' but rename JARs to another extension to trick the plugin
     from('libs') {

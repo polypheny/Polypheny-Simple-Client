@@ -1,0 +1,47 @@
+<configuration>
+    <appender name="ConsoleAppender" class="ch.qos.logback.core.ConsoleAppender">
+        <target>System.out</target>
+        <encoder>
+            <pattern>%highlight(%d{HH:mm:ss.SSS} %level [%thread]: %msg%n)</pattern>
+        </encoder>
+    </appender>
+    <appender name="ConsoleAppenderChronos" class="ch.qos.logback.core.ConsoleAppender">
+        <target>System.out</target>
+        <encoder>
+            <pattern>%highlight(%d{HH:mm:ss.SSS} %level CHRONOS --&gt; %msg%n)</pattern>
+        </encoder>
+    </appender>
+    <appender name="ConsoleAppenderPolyphenyDb" class="ch.qos.logback.core.ConsoleAppender">
+        <target>System.out</target>
+        <encoder>
+            <pattern>%highlight(%d{HH:mm:ss.SSS} %level POLYPHENY-DB: %msg%n)</pattern>
+        </encoder>
+    </appender>
+    <appender name="ChronosAppender" class="org.polypheny.simpleclient.main.ChronosLogbackAppender" />
+
+    <logger name="CONTROL_MESSAGES_LOGGER" level="INFO" additivity="false">
+        <appender-ref ref="ConsoleAppenderPolyphenyDb" />
+        <appender-ref ref="ChronosAppender" />
+    </logger>
+    <logger name="org.polypheny.jdbc.Driver" level="ERROR" additivity="false">
+        <appender-ref ref="ConsoleAppender" />
+        <appender-ref ref="ChronosAppender" />
+    </logger>
+    <logger name="org.polypheny.simpleclient.executor.OltpBenchExecutor" level="INFO" additivity="false">
+        <appender-ref ref="ConsoleAppender" />
+        <appender-ref ref="ChronosAppender" />
+    </logger>
+    <logger name="ch.unibas.dmi.dbis.chronos.agent" level="INFO">
+        <appender-ref ref="ConsoleAppenderChronos" />
+        <appender-ref ref="ChronosAppender" />
+    </logger>
+    <logger name="org.polypheny.simpleclient" level="INFO" additivity="false">
+        <appender-ref ref="ConsoleAppender" />
+        <appender-ref ref="ChronosAppender" />
+    </logger>
+    <logger name="org.polypheny" level="WARN" additivity="false">
+        <appender-ref ref="ConsoleAppender" />
+        <appender-ref ref="ChronosAppender" />
+    </logger>
+    <root level="WARN" />
+</configuration>

@@ -617,13 +617,13 @@ public class ChronosAgent extends AbstractChronosAgent {
 
     @Override
     protected void addChronosLogHandler( ChronosLogHandler chronosLogHandler ) {
-        ChronosLog4JAppender.setChronosLogHandler( chronosLogHandler );
+        ChronosLogbackAppender.setChronosLogHandler( chronosLogHandler );
     }
 
 
     @Override
     protected void removeChronosLogHandler( ChronosLogHandler chronosLogHandler ) {
-        ChronosLog4JAppender.setChronosLogHandler( null );
+        ChronosLogbackAppender.setChronosLogHandler( null );
     }
 
 
