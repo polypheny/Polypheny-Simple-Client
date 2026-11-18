@@ -25,6 +25,7 @@
 package org.polypheny.simpleclient.main;
 
 import ch.unibas.dmi.dbis.chronos.agent.AbstractChronosAgent;
+import ch.unibas.dmi.dbis.chronos.agent.ChronosHttpClient;
 import ch.unibas.dmi.dbis.chronos.agent.ChronosHttpClient.ChronosLogHandler;
 import ch.unibas.dmi.dbis.chronos.agent.ChronosJob;
 import ch.unibas.dmi.dbis.chronos.agent.ExecutionException;
@@ -33,6 +34,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URISyntaxException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -116,13 +118,35 @@ public class ChronosAgent extends AbstractChronosAgent {
     private QueryMode queryMode;
 
     private String dockerContainerName = null;
+    private final String buildServer;
+    private final YcsbBenchmarkJob externalYcsb;
+    private final Ch2BenchmarkJob externalCh2;
+    private volatile ExternalBenchmarkJob externalJob;
+    private volatile boolean jobFailed;
+
 
 
     public ChronosAgent( InetAddress address, int port, boolean secure, boolean useHostname, String environment, String[] supports, boolean writeCsv, boolean dumpQueryList, String buildServer ) {
+        this( address, port, secure, useHostname, environment, supports, writeCsv, dumpQueryList, buildServer,
+                Path.of( "docker/ycsb/experiment.properties" ), Path.of( "docker/ch2/experiment.properties" ) );
+    }
+
+    public ChronosAgent( InetAddress address, int port, boolean secure, boolean useHostname, String environment,
+            String[] supports, boolean writeCsv, boolean dumpQueryList, String buildServer, Path ycsbConfig, Path ch2Config ) {
         super( address, port, secure, useHostname, environment );
         this.writeCsv = writeCsv;
         this.dumpQueryList = dumpQueryList;
         this.supports = supports;
+        this.buildServer = buildServer;
+        var statusClient = new ChronosHttpClient( address, port, secure, useHostname, environment );
+        externalYcsb = new YcsbBenchmarkJob( ycsbConfig, statusClient );
+        externalCh2 = new Ch2BenchmarkJob( ch2Config, statusClient );
+    }
+
+    private void initializeControlConnector() {
+        if ( polyphenyControlConnector != null ) {
+            return;
+        }
         try {
             LogHandler logHandler = new LogHandler() {
                 private final Logger CONTROL_MESSAGES_LOGGER = LoggerFactory.getLogger( "CONTROL_MESSAGES_LOGGER" );
@@ -178,7 +202,42 @@ public class ChronosAgent extends AbstractChronosAgent {
 
 
     @Override
+    protected Properties executePhases( ChronosJob job, File input, File output ) throws ExecutionException {
+        jobFailed = false;
+        externalJob = null;
+        Map<String, String> settings = ExternalBenchmarkJob.readSettings( job );
+        externalJob = switch ( settings.get( "scenario" ) ) {
+            case "ycsb-external" -> externalYcsb;
+            case "ch2-external" -> externalCh2;
+            case null, default -> null;
+        };
+        if ( externalJob == null ) {
+            return super.executePhases( job, input, output );
+        }
+        return externalJob.run( job, output, settings, () -> super.executePhases( job, input, output ) );
+    }
+
+    @Override
+    protected void copyResults( ChronosJob job, File output ) throws IOException {
+        if ( externalJob != null ) {
+            externalJob.copyResults( output );
+        } else {
+            super.copyResults( job, output );
+        }
+    }
+
+    public boolean hasFailed() {
+        return jobFailed || (externalJob != null && externalJob.hasFailed());
+    }
+
+
+    @Override
     protected Object prepare( ChronosJob chronosJob, final File inputDirectory, final File outputDirectory, Properties properties, Object o ) {
+        if ( externalJob != null ) {
+            externalJob.prepare( outputDirectory );
+            return o;
+        }
+        initializeControlConnector();
         // Parse CDL
         Map<String, String> parsedConfig = parseConfig( chronosJob );
 
@@ -389,6 +448,10 @@ public class ChronosAgent extends AbstractChronosAgent {
 
     @Override
     protected Object warmUp( ChronosJob chronosJob, final File inputDirectory, final File outputDirectory, Properties properties, Object o ) {
+        if ( externalJob != null ) {
+            externalJob.warmUp( outputDirectory );
+            return o;
+        }
         @SuppressWarnings("unchecked")
         Scenario scenario = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getLeft();
         @SuppressWarnings("unchecked")
@@ -458,6 +521,10 @@ public class ChronosAgent extends AbstractChronosAgent {
 
     @Override
     protected Object execute( ChronosJob chronosJob, final File inputDirectory, final File outputDirectory, Properties properties, Object o ) {
+        if ( externalJob != null ) {
+            externalJob.execute( outputDirectory );
+            return o;
+        }
         @SuppressWarnings("unchecked")
         Scenario scenario = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getLeft();
         @SuppressWarnings("unchecked")
@@ -502,6 +569,10 @@ public class ChronosAgent extends AbstractChronosAgent {
 
     @Override
     protected Object analyze( ChronosJob chronosJob, final File inputDirectory, final File outputDirectory, Properties properties, Object o ) {
+        if ( externalJob != null ) {
+            externalJob.analyze( properties );
+            return o;
+        }
         @SuppressWarnings("unchecked")
         Scenario scenario = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getLeft();
         @SuppressWarnings("unchecked")
@@ -566,6 +637,10 @@ public class ChronosAgent extends AbstractChronosAgent {
 
     @Override
     protected Object clean( ChronosJob chronosJob, final File inputDirectory, final File outputDirectory, Properties properties, Object o ) {
+        if ( externalJob != null ) {
+            // The job closes its Docker environment after all phases.
+            return o;
+        }
         @SuppressWarnings("unchecked")
         Scenario scenario = ((Triple<Scenario, AbstractConfig, DatabaseInstance>) o).getLeft();
         @SuppressWarnings("unchecked")
@@ -583,6 +658,12 @@ public class ChronosAgent extends AbstractChronosAgent {
 
     @Override
     protected void aborted( ChronosJob chronosJob ) {
+        jobFailed = true;
+        if ( externalJob != null ) {
+            externalJob.aborted();
+            shutdown();
+            return;
+        }
         if ( getSingleJobId() != null ) {
             try {
                 if ( polyphenyControlConnector != null ) {
@@ -597,7 +678,10 @@ public class ChronosAgent extends AbstractChronosAgent {
 
     @Override
     protected void failed( ChronosJob chronosJob ) {
-
+        jobFailed = true;
+        if ( externalJob != null ) {
+            externalJob.failed( chronosJob );
+        }
     }
 
 

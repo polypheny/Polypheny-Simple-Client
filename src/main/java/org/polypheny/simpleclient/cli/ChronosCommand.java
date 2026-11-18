@@ -25,7 +25,6 @@
 
 package org.polypheny.simpleclient.cli;
 
-import ch.unibas.dmi.dbis.chronos.agent.AbstractChronosAgent;
 import com.github.rvesse.airline.HelpOption;
 import com.github.rvesse.airline.annotations.AirlineModule;
 import com.github.rvesse.airline.annotations.Command;
@@ -33,6 +32,8 @@ import com.github.rvesse.airline.annotations.Option;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.UnknownHostException;
+import java.nio.file.Path;
+import java.util.Arrays;
 import org.polypheny.simpleclient.main.ChronosAgent;
 
 
@@ -75,6 +76,12 @@ public class ChronosCommand implements CliRunnable {
     @Option(name = { "--buildserver" }, title = "buildserver URL", description = "Use a buildserver to download JAR files and run them directly")
     public String buildServer = null;
 
+    @Option(name = { "--ycsb-config" }, description = "Run Docker YCSB using this local configuration file.")
+    private String ycsbConfig;
+
+
+    @Option(name = { "--ch2-config" }, description = "Run Docker CH2 using this local configuration file.")
+    private String ch2Config;
 
     @Override
     public int run() {
@@ -107,7 +114,11 @@ public class ChronosCommand implements CliRunnable {
         }
 
         if ( supports == null && jobId == null ) {
-            System.err.println( "--supports or --job is required" );
+            supports = System.getenv( "CHRONOS_SUPPORTS" );
+        }
+
+        if ( (supports == null || supports.isBlank()) && jobId == null ) {
+            System.err.println( "Set --supports or CHRONOS_SUPPORTS for polling, or specify --job" );
             System.exit( 1 );
         }
 
@@ -116,11 +127,36 @@ public class ChronosCommand implements CliRunnable {
             System.exit( 1 );
         }
 
-        AbstractChronosAgent aca = new ChronosAgent( address, port, secure, true, environment, supports != null ? supports.split( "," ) : new String[]{}, writeCsv, dumpQueryList, buildServer );
+        String[] supportedSystems = supports == null ? new String[0] : Arrays.stream( supports.split( "," ) )
+                .map( String::trim )
+                .filter( system -> !system.isEmpty() )
+                .toArray( String[]::new );
+        if ( jobId == null && supportedSystems.length == 0 ) {
+            System.err.println( "At least one Chronos system identifier is required" );
+            System.exit( 1 );
+        }
+        ChronosAgent aca = new ChronosAgent( address, port, secure, true, environment, supportedSystems,
+                writeCsv, dumpQueryList, buildServer,
+                Path.of( ycsbConfig != null ? ycsbConfig : "docker/ycsb/experiment.properties" ),
+                Path.of( ch2Config != null ? ch2Config : "docker/ch2/experiment.properties" ) );
         aca.setDaemon( false );
         if ( jobId != null ) {
             aca.setSingleJobId( jobId );
         }
+        java.util.concurrent.atomic.AtomicBoolean agentFailed = new java.util.concurrent.atomic.AtomicBoolean();
+        aca.setUncaughtExceptionHandler( (thread, error) -> {
+            agentFailed.set( true );
+            error.printStackTrace();
+        } );
+        Thread shutdownHook = new Thread( () -> {
+            aca.shutdown();
+            try {
+                aca.join( 90000 );
+            } catch ( InterruptedException e ) {
+                Thread.currentThread().interrupt();
+            }
+        }, "chronos-shutdown" );
+        Runtime.getRuntime().addShutdownHook( shutdownHook );
         aca.start();
         while ( true ) {
             try {
@@ -131,11 +167,14 @@ public class ChronosCommand implements CliRunnable {
             }
         }
 
+        Runtime.getRuntime().removeShutdownHook( shutdownHook );
         if ( jobId != null ) {
-            // Make sure simple-client exits when the job is done
-            System.exit( 0 );
+            // Chronos dependencies may leave background threads running after the agent joins.
+            System.exit( agentFailed.get() || aca.hasFailed() ? 1 : 0 );
         }
-
+        if ( agentFailed.get() ) {
+            System.exit( 1 );
+        }
         return 0;
     }
 

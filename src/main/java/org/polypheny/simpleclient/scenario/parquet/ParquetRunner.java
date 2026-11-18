@@ -138,11 +138,13 @@ public class ParquetRunner extends ExternalBenchmarkRunner {
             addPolyphenyArguments( command );
 
         } else if ( "duckdb".equals( config.engine ) ) {
+            command.add( "DuckDbJdbcBenchmark" );
             addArgument( command, "data-dir", "/data" );
             addArgument( command, "threads", config.duckdbThreads );
             addArgument( command, "memory-limit", config.duckdbMemoryLimit );
 
         } else if ( "spark".equals( config.engine ) ) {
+            command.add( "spark" );
             addArgument( command, "data-dir", "/data" );
             addArgument( command, "shuffle-partitions", config.sparkShufflePartitions );
 

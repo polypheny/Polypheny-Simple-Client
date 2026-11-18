@@ -76,7 +76,9 @@ dependencies {
     implementation group: 'org.polypheny', name: 'control-connector', version: '2.2.1'  // License: Apache 2.0
 
     // Chronos
-    implementation group: 'org.chronos-eaas', name: 'chronos-agent', version: '2.5.1' // License: MIT
+    implementation('org.chronos-eaas:chronos-agent') { // License: MIT
+        version { strictly '2.5.1' }
+    }
 
     // REST
     implementation group: 'com.konghq', name: 'unirest-java-core', version: '4.4.5' // License: MIT
@@ -195,6 +197,68 @@ shadowJar {
         into 'libs'
     }
 }
+// Package a complete Docker build context for a runner host.
+def polyphenyDbJarName = 'dbms-0.10.1-SNAPSHOT.jar'
+def polyphenyDbJar = providers.gradleProperty('polyphenyDbJar').orElse(
+        "../Polypheny-DB/dbms/build/libs/${polyphenyDbJarName}")
+// Some Chronos servers use a different wire format from the published agent.
+def compatibleChronosJar = providers.gradleProperty('chronosCompatibilityJar')
+def runnerJar = tasks.named('shadowJar')
+if (compatibleChronosJar.isPresent()) {
+    def donor = file(compatibleChronosJar.get())
+    def chronosClasses = ['ChronosHttpClient', 'ChronosJob'].collectMany { name ->
+        def path = "ch/unibas/dmi/dbis/chronos/agent/${name}"
+        ["${path}.class", "${path}\$*.class"]
+    }
+    def clientJar = runnerJar
+    runnerJar = tasks.register('chronosCompatibleRunnerJar', Zip) {
+        dependsOn clientJar
+        archiveFileName.set('simpleclient.jar')
+        destinationDirectory.set(layout.buildDirectory.dir('chronos'))
+        zip64 = true
+        from({ zipTree(donor) }) {
+            include chronosClasses
+        }
+        from(clientJar.flatMap { it.archiveFile }.map { zipTree(it.asFile) }) {
+            exclude chronosClasses
+        }
+        doFirst {
+            chronosClasses.findAll { !it.contains('*') }.each { classFile ->
+                if (zipTree(donor).matching { include classFile }.isEmpty()) {
+                    throw new GradleException("Missing ${classFile} in ${donor}")
+                }
+            }
+        }
+    }
+}
+tasks.register('chronosRunnerBundle', Zip) {
+    archiveBaseName.set('polypheny-chronos-runner')
+    destinationDirectory.set(layout.buildDirectory.dir('distributions'))
+    from(runnerJar) {
+        rename { 'simpleclient.jar' }
+    }
+    from('docker') {
+        include 'ch2/**', 'ycsb/**', 'polypheny/**'
+        exclude '**/__pycache__/**', '**/*.pyc'
+        into 'docker'
+    }
+    dependsOn 'copyPolyphenyNewJdbcDriver'
+    from('libs/polyphenyJdbcDrivers/new-driver.jar') {
+        into 'libs/polyphenyJdbcDrivers'
+    }
+    from(polyphenyDbJar.map { file(it) }) {
+        rename { polyphenyDbJarName }
+        into 'dbms/build/libs'
+    }
+    doFirst {
+        [file(polyphenyDbJar.get()), file('libs/polyphenyJdbcDrivers/new-driver.jar')].each { jar ->
+            if (!jar.isFile()) {
+                throw new GradleException("Missing runner dependency: ${jar}. Build Polypheny-DB with :dbms:shadowJar or set -PpolyphenyDbJar.")
+            }
+        }
+    }
+}
+
 assemble.dependsOn shadowJar
 artifacts {
     //archives jar // regular jar containing only the compiled source

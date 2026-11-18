@@ -28,7 +28,9 @@ import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -45,6 +47,7 @@ import site.ycsb.ByteIterator;
 import site.ycsb.DB;
 import site.ycsb.DBException;
 import site.ycsb.Status;
+import site.ycsb.measurements.Measurements;
 
 public class PolyphenyMongoBinding extends DB {
 
@@ -55,6 +58,13 @@ public class PolyphenyMongoBinding extends DB {
     private String namespace;
     private boolean errorReported;
     private boolean serverProjection;
+    private int batchSize = 1;
+    private final List<String> pendingInserts = new ArrayList<>();
+    private String pendingCollection;
+    private Exception insertFailure;
+    private int readsPerTransaction = 1;
+    private int pendingReads;
+    private Exception readFailure;
 
     @Override
     public void init() throws DBException {
@@ -63,6 +73,21 @@ public class PolyphenyMongoBinding extends DB {
         serverProjection = Boolean.parseBoolean( properties.getProperty( "db.serverProjection", "false" ) );
 
         try {
+            int configuredBatchSize = Integer.parseInt( properties.getProperty( "db.batchsize", "100" ) );
+            if ( configuredBatchSize < 1 ) {
+                throw new IllegalArgumentException( "db.batchsize must be positive" );
+            }
+            batchSize = Boolean.parseBoolean( properties.getProperty( "dotransactions", "true" ) )
+                    ? 1 : configuredBatchSize;
+            if ( Boolean.parseBoolean( properties.getProperty( "dotransactions", "true" ) ) ) {
+                readsPerTransaction = Integer.parseInt( properties.getProperty( "db.readsPerTransaction", "1" ) );
+                if ( readsPerTransaction < 1 ) {
+                    throw new IllegalArgumentException( "db.readsPerTransaction must be positive" );
+                }
+                if ( readsPerTransaction > 1 && !isReadOnlyWorkload( properties ) ) {
+                    throw new IllegalArgumentException( "Grouped reads require a read-only CoreWorkload (workload C)" );
+                }
+            }
             Class.forName( "org.polypheny.jdbc.PolyphenyDriver" );
 
             connection = DriverManager.getConnection(
@@ -71,7 +96,7 @@ public class PolyphenyMongoBinding extends DB {
                     properties.getProperty( "db.passwd", "" )
             );
 
-            connection.setAutoCommit( true );
+            connection.setAutoCommit( readsPerTransaction == 1 );
 
         } catch ( Exception e ) {
             if ( connection != null ) {
@@ -88,24 +113,89 @@ public class PolyphenyMongoBinding extends DB {
 
     @Override
     public Status insert( String table, String key, Map<String, ByteIterator> values ) {
-        try ( var statement = new QueryStatement( connection.unwrap( PolyConnection.class ) ) ) {
+        if ( insertFailure != null ) {
+            return Status.ERROR;
+        }
+        try {
+            String target = collection( table );
             String valuesJson = valuesJson( values );
             String document = "{\"_id\":" + quoteMongoString( key )
                     + (values.isEmpty() ? "}" : "," + valuesJson.substring( 1 ));
-            String query = collection( table ) + ".insertOne(" + document + ")";
-
-            Result response = statement.execute( namespace, "mongo", query );
-            long inserted = getUpdateCount( response );
-
-            return inserted == 1 ? Status.OK : Status.ERROR;
-
+            if ( !pendingInserts.isEmpty() && !target.equals( pendingCollection ) ) {
+                flushInserts();
+            }
+            pendingCollection = target;
+            pendingInserts.add( document );
+            if ( pendingInserts.size() >= batchSize ) {
+                flushInserts();
+            }
+            return Status.OK;
         } catch ( Exception e ) {
+            // Do not retry an ambiguously committed batch during cleanup.
+            insertFailure = e;
             return reportError( e );
         }
     }
 
+    private void flushInserts() throws SQLException {
+        if ( pendingInserts.isEmpty() ) {
+            return;
+        }
+        try ( var statement = new QueryStatement( connection.unwrap( PolyConnection.class ) ) ) {
+            String query = batchSize == 1
+                    ? pendingCollection + ".insertOne(" + pendingInserts.get( 0 ) + ")"
+                    : pendingCollection + ".insertMany([" + String.join( ",", pendingInserts ) + "])";
+            long inserted = getUpdateCount( statement.execute( namespace, "mongo", query ) );
+            if ( inserted != pendingInserts.size() ) {
+                throw new SQLException( "Expected " + pendingInserts.size() + " inserted documents, got " + inserted );
+            }
+        }
+        pendingInserts.clear();
+    }
+
     @Override
     public Status read( String table, String key, Set<String> fields, Map<String, ByteIterator> result ) {
+        if ( readFailure != null ) {
+            return Status.ERROR;
+        }
+        try {
+            Status status = readOne( table, key, fields, result );
+            if ( readsPerTransaction > 1 ) {
+                if ( status != Status.OK ) {
+                    abortReads( new SQLException( "Could not read key: " + key ) );
+                } else if ( ++pendingReads == readsPerTransaction ) {
+                    connection.commit();
+                    pendingReads = 0;
+                }
+            }
+            return status;
+        } catch ( Exception e ) {
+            if ( readsPerTransaction > 1 ) {
+                abortReads( e );
+            }
+            return reportError( e );
+        }
+    }
+
+    private static boolean isReadOnlyWorkload( Properties properties ) {
+        return "site.ycsb.workloads.CoreWorkload".equals( properties.getProperty( "workload" ) )
+                && Double.parseDouble( properties.getProperty( "readproportion", "0.95" ) ) == 1
+                && Double.parseDouble( properties.getProperty( "updateproportion", "0.05" ) ) == 0
+                && List.of( "insertproportion", "scanproportion", "readmodifywriteproportion", "deleteproportion" )
+                .stream().allMatch( key -> Double.parseDouble( properties.getProperty( key, "0" ) ) == 0 );
+    }
+
+    private void abortReads( Exception failure ) {
+        readFailure = failure;
+        pendingReads = 0;
+        try {
+            connection.rollback();
+        } catch ( SQLException rollbackError ) {
+            failure.addSuppressed( rollbackError );
+        }
+    }
+
+    private Status readOne( String table, String key, Set<String> fields, Map<String, ByteIterator> result ) throws SQLException {
         try ( var statement = new QueryStatement( connection.unwrap( PolyConnection.class ) ) ) {
             String query = collection( table ) + ".find({\"_id\":" + quoteMongoString( key ) + "}"
                     + (serverProjection && fields != null ? "," + projection( fields ) : "")
@@ -125,9 +215,6 @@ public class PolyphenyMongoBinding extends DB {
             }
 
             return found ? Status.OK : Status.NOT_FOUND;
-
-        } catch ( Exception e ) {
-            return reportError( e );
         }
     }
 
@@ -201,12 +288,34 @@ public class PolyphenyMongoBinding extends DB {
 
     @Override
     public void cleanup() throws DBException {
-        if ( connection != null ) {
-            try {
-                connection.close();
-            } catch ( SQLException e ) {
-                throw new DBException( e );
+        try ( Connection workerConnection = connection ) {
+            if ( readFailure != null ) {
+                throw readFailure;
             }
+            if ( insertFailure != null ) {
+                throw insertFailure;
+            }
+            flushInserts();
+            commitPendingReads();
+        } catch ( Exception failure ) {
+            // YCSB logs cleanup exceptions but still exports results.
+            if ( readsPerTransaction > 1 ) {
+                Measurements.getMeasurements().reportStatus( "CLEANUP", Status.ERROR );
+            }
+            throw new DBException( failure );
+        }
+    }
+
+    private void commitPendingReads() throws SQLException {
+        if ( pendingReads == 0 ) {
+            return;
+        }
+        try {
+            connection.commit();
+            pendingReads = 0;
+        } catch ( SQLException | RuntimeException failure ) {
+            abortReads( failure );
+            throw failure;
         }
     }
 

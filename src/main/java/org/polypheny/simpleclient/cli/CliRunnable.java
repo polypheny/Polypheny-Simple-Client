@@ -25,6 +25,7 @@
 
 package org.polypheny.simpleclient.cli;
 
+import java.io.IOException;
 import java.sql.SQLException;
 
 
@@ -35,6 +36,6 @@ public interface CliRunnable {
      *
      * @return Exit code
      */
-    int run() throws SQLException;
+    int run() throws SQLException, IOException;
 
 }

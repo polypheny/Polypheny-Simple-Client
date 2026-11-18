@@ -30,6 +30,7 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
 
@@ -79,12 +80,27 @@ public class DockerLauncher {
 
 
     public static void runJob( String containerName, String imageName, Map<String, String> environment, String network, List<String> command, File logFile, Map<File, String> volumes ) {
+        runJob( containerName, imageName, environment, network, command, logFile, volumes, null );
+    }
 
+    public static void runJob( String containerName, String imageName, Map<String, String> environment, String network,
+            List<String> command, File logFile, Map<File, String> volumes, File standardInput ) {
+        runJob( containerName, imageName, environment, network, command, logFile, volumes, standardInput, 0 );
+    }
+
+    public static void runJob( String containerName, String imageName, Map<String, String> environment, String network,
+            List<String> command, File logFile, Map<File, String> volumes, File standardInput, long timeoutSeconds ) {
+
+        Process process = null;
+        boolean finished = false;
         try {
             Files.createDirectories( logFile.toPath().toAbsolutePath().getParent() );
 
             List<String> args = new ArrayList<>( List.of( "docker", "run", "--rm", "--name", containerName ) );
 
+            if ( standardInput != null ) {
+                args.add( "-i" );
+            }
             environment.forEach( ( k, v ) -> args.addAll( List.of( "-e", String.format( "%s=%s", k, v ) ) ) );
 
             args.addAll( List.of( "--network", network ) );
@@ -101,11 +117,19 @@ public class DockerLauncher {
             args.add( imageName );
             args.addAll( command );
 
-            log.info( "Running Docker job {}", containerName );
+            log.info( "Running Docker job {}. Output: {}", containerName, logFile.getAbsolutePath() );
 
-            Process process = new ProcessBuilder( args ).redirectErrorStream( true ).redirectOutput( logFile ).start();
+            ProcessBuilder builder = new ProcessBuilder( args ).redirectErrorStream( true ).redirectOutput( logFile );
+            if ( standardInput != null ) {
+                builder.redirectInput( standardInput );
+            }
+            process = builder.start();
 
+            if ( timeoutSeconds > 0 && !process.waitFor( timeoutSeconds, TimeUnit.SECONDS ) ) {
+                throw new IllegalStateException( "Docker job timed out: " + containerName + ". See " + logFile );
+            }
             int exitCode = process.waitFor();
+            finished = true;
 
             if ( exitCode != 0 ) {
                 throw new RuntimeException( "Docker job failed with exit code " + exitCode + ". See log: " + logFile.getAbsolutePath() );
@@ -115,6 +139,51 @@ public class DockerLauncher {
             throw new IllegalStateException( "Docker job interrupted: " + containerName, e );
         } catch ( IOException e ) {
             throw new IllegalStateException( "Could not run Docker job: " + containerName, e );
+        } finally {
+            if ( process != null && !finished ) {
+                process.destroyForcibly();
+                removeUnfinishedJob( containerName, logFile );
+            }
+        }
+    }
+
+    private static void removeUnfinishedJob( String containerName, File logFile ) {
+        // Clear the interrupt temporarily so Docker can remove the container.
+        boolean interrupted = Thread.interrupted();
+        File cleanupLog = new File( logFile.getParentFile(), "cleanup-" + containerName + ".log" );
+        try {
+            int exit = dockerCommand( List.of( "rm", "-f", "-v", containerName ), cleanupLog, 20 );
+            if ( exit != 0 ) {
+                log.warn( "Could not confirm cleanup of Docker job {}. See {}", containerName, cleanupLog );
+            }
+        } catch ( InterruptedException e ) {
+            interrupted = true;
+            log.warn( "Cleanup interrupted for Docker job {}", containerName, e );
+        } catch ( IOException e ) {
+            log.error( "Could not clean Docker job {}", containerName, e );
+        } finally {
+            if ( interrupted ) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+
+    /** Bounded Docker control command; append diagnostics without buffering output in memory. */
+    public static int dockerCommand( List<String> arguments, File logFile, long timeoutSeconds ) throws IOException, InterruptedException {
+        Files.createDirectories( logFile.toPath().toAbsolutePath().getParent() );
+        List<String> command = new ArrayList<>( List.of( "docker" ) );
+        command.addAll( arguments );
+        Process process = new ProcessBuilder( command ).redirectErrorStream( true )
+                .redirectOutput( ProcessBuilder.Redirect.appendTo( logFile ) ).start();
+        try {
+            if ( !process.waitFor( timeoutSeconds, TimeUnit.SECONDS ) ) {
+                throw new IOException( "Docker command timed out: " + arguments.getFirst() + ". See " + logFile );
+            }
+            return process.exitValue();
+        } finally {
+            if ( process.isAlive() ) {
+                process.destroyForcibly();
+            }
         }
     }
 }

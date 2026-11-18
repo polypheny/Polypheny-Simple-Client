@@ -1,62 +1,28 @@
 package org.polypheny.simpleclient.main;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
+import java.nio.file.Path;
+import java.util.List;
 import java.util.Properties;
+import org.polypheny.simpleclient.main.ExternalBenchmarkPhases.Phase;
 import org.polypheny.simpleclient.scenario.ch2.Ch2Config;
 import org.polypheny.simpleclient.scenario.ch2.Ch2Runner;
 
-
 public class Ch2ExternalScenario {
-
-    public static void data() {
-        Ch2Config config = new Ch2Config( getProperties() );
-        Ch2Runner runner = createRunner( config );
-
-        runner.loadData( new File( "results/ch2" ) );
+    public static void execute( Path configuration, String task, Path outputRoot ) throws IOException {
+        execute( new Ch2Config( configuration ), task, outputRoot );
     }
 
-
-    public static void workload() {
-        Ch2Config config = new Ch2Config( getProperties() );
-        Ch2Runner runner = createRunner( config );
-        File outputDirectory = new File( "results/ch2" );
-
-        runner.run( outputDirectory );
-
-        Properties results = new Properties();
-        runner.analyze( results, outputDirectory );
-
-        System.out.println( "CH2 run log: " + results.getProperty( "ch2.runLog" ) );
+    public static void execute( Ch2Config config, String task, Path outputRoot ) throws IOException {
+        execute( config, ExternalBenchmarkPhases.forTask( "CH2", task, config.warmupTime > 0 ), outputRoot );
     }
 
-
-    private static Ch2Runner createRunner( Ch2Config config ) {
-        return new Ch2Runner(
-                config.imageName,
-                config.network,
-                config.warehouses,
-                config.transactionClients,
-                config.analyticalClients,
-                config.durationSeconds
-        );
+    public static void executeManaged( Path configuration, Path outputRoot ) throws IOException {
+        new Ch2BenchmarkJob( configuration, null ).runLocal( outputRoot );
     }
 
-
-    private static Properties getProperties() {
-        String resource = "/org/polypheny/simpleclient/scenario/external/ch2external.properties";
-        Properties properties = new Properties();
-
-        try ( InputStream input = Ch2ExternalScenario.class.getResourceAsStream( resource ) ) {
-            if ( input == null ) {
-                throw new IllegalStateException( "Properties file not found: " + resource );
-            }
-
-            properties.load( input );
-            return properties;
-        } catch ( IOException e ) {
-            throw new IllegalStateException( "Could not read properties file: " + resource, e );
-        }
+    static Properties execute( Ch2Config config, List<Phase> phases, Path outputRoot ) throws IOException {
+        return ExternalBenchmarkPhases.execute( "CH2", phases, outputRoot, List.of( "polypheny" ), config.properties,
+                target -> new Ch2Runner( config ), "" );
     }
 }

@@ -4,29 +4,22 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import org.polypheny.simpleclient.scenario.AbstractConfig;
+import org.polypheny.simpleclient.scenario.external.ExternalConfig;
 
-public class YcsbConfig extends AbstractConfig {
-    public final Properties properties;
-    public final Path file;
+public class YcsbConfig extends ExternalConfig {
     public final List<String> targets;
-    public final String imageName;
-    public final String network;
 
     public final String workload;
 
     public YcsbConfig( Path path ) throws IOException {
-        this( read( path ), path.toRealPath() );
+        this( read( path ) );
     }
 
-    public YcsbConfig( Properties properties, Path file ) {
-        super( "ycsb", "polypheny-mongoql", scenarioProperties( properties ) );
-        this.properties = properties;
-        this.file = file;
-        imageName = required( "imageName" );
-        network = required( "network" );
+    private YcsbConfig( Properties properties ) {
+        super( "ycsb", properties, "ycsb.threadcount" );
         targets = List.of( required( "targets" ).split( "\\s*,\\s*", -1 ) );
         if ( Set.copyOf( targets ).size() != targets.size() ) {
             throw new IllegalArgumentException( "Duplicate targets" );
@@ -38,42 +31,45 @@ public class YcsbConfig extends AbstractConfig {
         }
 
         workload = required( "workloadFile" );
+        if ( numberOfThreads < 1 || Long.parseLong( properties.getProperty( "ycsb.maxexecutiontime", "0" ) ) < 0 ) {
+            throw new IllegalArgumentException( "Threads must be positive and maxexecutiontime non-negative" );
+        }
         if ( Long.parseLong( required( "ycsb.recordcount" ) ) < 1
                 || Long.parseLong( required( "ycsb.operationcount" ) ) < 1
                 || Integer.parseInt( required( "ycsb.fieldcount" ) ) < 1
                 || Integer.parseInt( required( "ycsb.fieldlength" ) ) < 1 ) {
             throw new IllegalArgumentException( "YCSB counts and field sizes must be positive" );
         }
-        if ( Integer.parseInt( properties.getProperty( "jobTimeoutSeconds", "3600" ) ) < 1 ) {
-            throw new IllegalArgumentException( "jobTimeoutSeconds must be positive" );
+    }
+
+    public YcsbConfig( Path base, Map<String, String> overrides, String network, String namespace ) throws IOException {
+        this( loadManaged( base, overrides, network, namespace ) );
+    }
+
+    public void writeSetupProperties( Path destination ) throws IOException {
+        try ( var output = Files.newOutputStream( destination ) ) {
+            properties.store( output, null );
         }
     }
 
-    public String required( String key ) {
-        String value = properties.getProperty( key );
-        if ( value == null || value.isBlank() ) {
-            throw new IllegalArgumentException( "Missing property: " + key );
+    private static Properties loadManaged( Path base, Map<String, String> overrides, String network, String namespace ) throws IOException {
+        for ( String key : overrides.keySet() ) {
+            if ( key.equals( "target.polypheny.db.url" ) || key.equals( "target.polypheny.db.namespace" ) ) {
+                throw new IllegalArgumentException( "Connection URL and namespace are managed by Chronos" );
+            }
+            if ( !isCommonSetting( key ) && !key.startsWith( "ycsb." ) && !key.startsWith( "target.polypheny.db." )
+                    && !Set.of( "workloadFile", "targets" ).contains( key ) ) {
+                throw new IllegalArgumentException( "Unsupported YCSB job parameter: " + key );
+            }
         }
-        return value.trim();
-    }
-
-    private static Properties read( Path file ) throws IOException {
-        Properties properties = new Properties();
-        try ( var input = Files.newInputStream( file ) ) {
-            properties.load( input );
+        if ( overrides.containsKey( "targets" ) && !"polypheny".equals( overrides.get( "targets" ) ) ) {
+            throw new IllegalArgumentException( "Managed jobs support only targets=polypheny" );
         }
+        Properties properties = readManaged( base, overrides, network );
+        properties.setProperty( "targets", "polypheny" );
+        properties.setProperty( "target.polypheny.db.url", "jdbc:polypheny://polypheny:20590/" );
+        properties.setProperty( "target.polypheny.db.namespace", namespace );
+        configureMongoStore( properties, "ycsb_store" );
         return properties;
-    }
-
-    private static Properties scenarioProperties( Properties properties ) {
-        Properties scenario = new Properties();
-        scenario.setProperty( "numberOfThreads", properties.getProperty( "ycsb.threadcount", "1" ) );
-        scenario.setProperty( "numberOfWarmUpIterations", "0" );
-        return scenario;
-    }
-
-    @Override
-    public boolean usePreparedBatchForDataInsertion() {
-        return false;
     }
 }

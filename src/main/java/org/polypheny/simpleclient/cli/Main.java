@@ -26,6 +26,7 @@ package org.polypheny.simpleclient.cli;
 
 import com.github.rvesse.airline.Cli;
 import com.github.rvesse.airline.builder.CliBuilder;
+import java.io.IOException;
 import java.sql.SQLException;
 
 
@@ -33,7 +34,7 @@ import java.sql.SQLException;
 public class Main {
 
 
-    public static void main( String[] args ) throws SQLException {
+    public static void main( String[] args ) throws SQLException, IOException {
         CliBuilder<CliRunnable> builder = Cli.builder( "polypheny-simple-client.jar" );
         builder.withDescription( "Polypheny Simple Client" );
 

@@ -64,17 +64,21 @@ public abstract class ExternalBenchmarkRunner {
         DockerLauncher.runJob(
                 benchmarkName + UUID.randomUUID(),
                 imageName,
-                Map.of(),
+                environment(),
                 network,
                 command,
                 logFile,
-                volumes
+                volumes,
+                null,
+                timeoutSeconds()
         );
 
     }
-    public abstract void analyze( Properties results, File outputDirectory );
+    public abstract void analyze( Properties results, File outputDirectory ) throws IOException;
     protected abstract void prepareRun( File outputDirectory );
     protected abstract List<String> buildCommand();
+    protected Map<String, String> environment() { return Map.of(); }
+    protected long timeoutSeconds() { return 0; }
     protected Map<File, String> buildVolumes( File outputDirectory ) { return Map.of(); }
 }
 

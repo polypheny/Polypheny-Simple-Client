@@ -13,19 +13,29 @@ import org.polypheny.jdbc.PolyConnection;
 public final class YcsbSetup {
     public static void main( String[] args ) throws Exception {
         if ( args.length != 2 ) {
-            throw new IllegalArgumentException( "Expected <config.properties> <target>" );
+            throw new IllegalArgumentException( "Expected <config.properties or -> <target>" );
         }
         Properties properties = new Properties();
-        try ( var input = Files.newInputStream( Path.of( args[0] ) ) ) {
+        try ( var input = args[0].equals( "-" ) ? System.in : Files.newInputStream( Path.of( args[0] ) ) ) {
             properties.load( input );
         }
         switch ( args[1] ) {
+            case "polypheny-ready" -> checkPolypheny( properties );
             case "polypheny" -> setupPolypheny( properties );
             case "mongodb" -> setupMongoDb( properties );
             case "postgrenosql", "postgresql" -> setupPostgres( properties, args[1] );
             default -> throw new IllegalArgumentException( "Unknown target: " + args[1] );
         }
         System.out.println( "SETUP PASS: " + args[1] );
+    }
+
+    private static void checkPolypheny( Properties properties ) throws Exception {
+        Class.forName( "org.polypheny.jdbc.PolyphenyDriver" );
+        try ( var connection = DriverManager.getConnection( required( properties, "target.polypheny.db.url" ),
+                properties.getProperty( "target.polypheny.db.user", "pa" ), properties.getProperty( "target.polypheny.db.passwd", "" ) );
+                var schemas = connection.getMetaData().getSchemas() ) {
+            schemas.next();
+        }
     }
 
     private static void setupMongoDb( Properties properties ) throws Exception {

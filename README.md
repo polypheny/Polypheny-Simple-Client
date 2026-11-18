@@ -117,3 +117,64 @@ _Polypheny Simple Client_ builds upon the great work of several other open-sourc
 ## License
 
 The MIT License (MIT)
+
+### Chronos runner for CH2 and YCSB
+
+With JDK 21, build the deployment package from the Simple Client checkout.
+The default database artifact comes from the sibling Polypheny-DB checkout.
+
+```sh
+(cd ../Polypheny-DB && ./gradlew :dbms:shadowJar)
+./gradlew chronosRunnerBundle
+```
+
+Use `-PpolyphenyDbJar=/path/to/dbms.jar` to package an existing database build.
+For a Chronos server that requires the compatible client and job parser, pass
+`-PchronosCompatibilityJar=/path/to/working-runner.jar`. Use a runner verified
+against that server. The bundle build imports its `ChronosHttpClient` and
+`ChronosJob` classes, including their nested classes. The default uses the
+pinned published Chronos agent 2.5.1.
+
+Extract the ZIP from `build/distributions` on a host with Docker and JDK 21.
+Run from the extracted directory. Configure the system identifiers registered
+on your Chronos server once in the runner environment.
+
+```sh
+export CHRONOS_SUPPORTS='system-identifier'
+java -jar simpleclient.jar chronos --chronos https://chronos.example --environment default
+```
+
+The agent polls for matching jobs. Use `--job ID` for a single run.
+Use the CDL examples in `docker/ch2/chronos-job.json` and
+`docker/ycsb/chronos-job.json` when defining runs on your server.
+The agent builds the Docker images from the bundled context and Docker reuses
+unchanged layers. Each run creates its own network and containers and archives
+results and logs under `results/chronos-ch2` or `results/chronos-ycsb`.
+
+The local defaults are in each benchmark's `experiment.properties`. Override
+the file with `--ch2-config` or `--ycsb-config`. When moving a configuration
+file, set `chronos.buildContext` to the extracted root, using an absolute path
+or a path relative to the configuration file. Put image overrides in the local
+properties or the job CDL according to the examples. CH2 reports committed
+document counts in `polypheny/load/load.log` during data loading. The agent
+logs the absolute path when it starts the container, so you can follow it
+with `tail -f`.
+
+### Run CH2 or YCSB locally with Docker
+
+Build and extract the runner bundle using the commands above. Run these
+commands from its root with Docker running and JDK 21 installed.
+
+```sh
+java -jar simpleclient.jar ycsb-external all --managed --output results/ycsb-local
+java -jar simpleclient.jar ch2-external all --managed --output results/ch2-local
+```
+
+Managed runs build the images and start a fresh MongoDB-backed Polypheny
+instance. They run setup, load, optional warmup and workload, then remove the
+job's containers and network. Logs and results stay in the output directory.
+Use a new output directory for each run. Managed YCSB runs the Polypheny target.
+
+For an existing environment, omit `--managed`. The tasks are `setup` (alias
+`schema`), `data`, `warmup`, `workload` and `all`. Use `--config` to select
+an experiment properties file.
