@@ -22,6 +22,11 @@
  * SOFTWARE.
  */
 
+
+"""
+inspired by structure of: https://github.com/brianfrankcooper/YCSB/blob/master/mongodb/src/main/java/site/ycsb/db/MongoDbClient.java
+"""
+
 package org.polypheny.simpleclient.scenario.ycsb.binding;
 
 import java.nio.charset.StandardCharsets;

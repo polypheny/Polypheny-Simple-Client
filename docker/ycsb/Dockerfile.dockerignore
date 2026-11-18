@@ -1,0 +1,4 @@
+**
+!docker/ycsb/Dockerfile
+!docker/ycsb/binding/*.java
+!libs/polyphenyJdbcDrivers/new-driver.jar

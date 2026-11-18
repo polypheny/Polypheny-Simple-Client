@@ -1,3 +1,5 @@
+""" inspired structure by: https://github.com/couchbaselabs/ch2/blob/main/ch2driver/pytpcc/drivers/mongodbdriver.py """
+
 import polypheny
 import constants
 import json

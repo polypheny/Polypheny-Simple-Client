@@ -1,0 +1,12 @@
+{
+  "scenario": "ch2-external",
+  "store": "ch2-external-polypheny",
+  "dataStore": "mongodb",
+  "imageName": "polypheny-ch2:chronos",
+  "warehouses": "1",
+  "transactionClients": "1",
+  "analyticalClients": "0",
+  "durationSeconds": "10",
+  "warmupTime": "5",
+  "jobTimeoutSeconds": "3600"
+}

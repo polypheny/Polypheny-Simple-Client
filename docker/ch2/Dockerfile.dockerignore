@@ -1,0 +1,9 @@
+**
+!docker/ch2/Dockerfile
+!docker/ch2/polyphenydriver.py
+!docker/ch2/setup.py
+!docker/ch2/run_ch2.py
+!docker/ch2/measurements.py
+!docker/ch2/prism-read-exact.patch
+!docker/ch2/analytical_queries.py
+!docker/ch2/queries/**

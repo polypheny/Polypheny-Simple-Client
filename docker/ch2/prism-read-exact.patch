@@ -1,0 +1,46 @@
+--- rpc.py
++++ rpc.py
+@@ -35,13 +35,13 @@
+         self.exchange_version(self.VERSION)
+ 
+     def exchange_version(self, version):
+-        bl = self.con.recv(1)
++        bl = self.read_exact(1)
+         if len(bl) != 1:
+             raise EOFError
+         n = int.from_bytes(bl, byteorder='little')
+         if n > 127:
+             raise Error("Invalid version length")
+-        remote_version = self.con.recv(n)
++        remote_version = self.read_exact(n)
+         if remote_version[-1] != 0x0a:
+             raise Error("Invalid version message")
+ 
+@@ -55,15 +55,19 @@
+         bl = n.to_bytes(length=8, byteorder='little')
+         self.con.sendall(bl + serialized)
+ 
++    def read_exact(self, size):
++        chunks = []
++        while size:
++            chunk = self.con.recv(size)
++            if not chunk:
++                raise EOFError("Prism connection closed during response")
++            chunks.append(chunk)
++            size -= len(chunk)
++        return b"".join(chunks)
++
+     def recv_msg(self):
+-        bl = self.con.recv(8)
+-        if len(bl) != 8:
+-            raise EOFError
+-        n = int.from_bytes(bl, 'little')
+-        raw = self.con.recv(n)
+-        if len(raw) != n:
+-            raise EOFError
+-        return raw
++        size = int.from_bytes(self.read_exact(8), 'little')
++        return self.read_exact(size)
+ 
+     def close(self):
+         if self.con is not None:

@@ -1,0 +1,16 @@
+{
+  "scenario": "ycsb-external",
+  "store": "ycsb-external-polypheny",
+  "dataStore": "mongodb",
+  "imageName": "polypheny-ycsb:chronos",
+  "polyphenyImage": "polypheny-ycsb-db:chronos",
+  "mongoImage": "mongo:7.0",
+  "startupTimeoutSeconds": "180",
+  "jobTimeoutSeconds": "120",
+  "warmupTime": "10",
+  "ycsb.threadcount": "1",
+  "ycsb.recordcount": "100",
+  "ycsb.operationcount": "1000",
+  "ycsb.maxexecutiontime": "0",
+  "run": "1"
+}
